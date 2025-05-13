@@ -1,0 +1,8 @@
+{
+  "resources/ts/tallkit.ts": {
+    "file": "tallkit.js",
+    "name": "tallkit",
+    "src": "resources/ts/tallkit.ts",
+    "isEntry": true
+  }
+}

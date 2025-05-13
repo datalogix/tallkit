@@ -1,0 +1,70 @@
+{
+    "name": "datalogix/tallkit",
+    "description": "A set of components to utilize in your Laravel Blade views using TALL stack.",
+    "keywords": [
+        "TALL",
+        "laravel",
+        "blade",
+        "tailwind",
+        "alpine",
+        "livewire",
+        "kit",
+        "components"
+    ],
+    "homepage": "https://github.com/datalogix/tall-kit",
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Ricardo Gobbo de Souza",
+            "email": "ricardogobbosouza@yahoo.com.br"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "illuminate/container": "^10.0|^11.0|^12.0",
+        "illuminate/contracts": "^10.0|^11.0|^12.0",
+        "illuminate/support": "^10.0|^11.0|^12.0",
+        "illuminate/view": "^10.0|^11.0|^12.0",
+        "laravel/framework": "^12.7",
+        "livewire/livewire": "^3.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "TALLKit\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "TALLKit\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "dev": [
+            "@composer update",
+            "@composer test",
+            "pnpm install",
+            "pnpm dev"
+        ],
+        "lint": [
+            "@php pint",
+            "pnpm lint"
+        ],
+        "test": "vendor/bin/phpunit"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "TALLKit\\TALLKitServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
