@@ -2,7 +2,7 @@
 
 namespace TALLKit\Components\Table;
 
-use Illuminate\Support\Str;
+use TALLKit\Attributes\Mount;
 use TALLKit\View\BladeComponent;
 
 class Table extends BladeComponent
@@ -18,7 +18,8 @@ class Table extends BladeComponent
         ];
     }
 
-    protected function mounted(array $data)
+    #[Mount()]
+    protected function mount()
     {
         $this->rows = static::parseRows($this->rows);
         $this->cols = static::parseCols($this->cols, $this->rows);
@@ -40,7 +41,7 @@ class Table extends BladeComponent
 
         return $cols->mapWithKeys(function ($value, $key) {
             $name = data_get($value, 'name', is_array($value) ? $key : $value);
-            $newKey = Str::snake(is_numeric($key) ? $name : $key);
+            $newKey = str(is_numeric($key) ? $name : $key)->snake()->toString();
 
             return [$newKey => [
                 '_key' => $key,
@@ -61,7 +62,7 @@ class Table extends BladeComponent
         }
 
         foreach (['snake', 'kebab', 'studly'] as $function) {
-            if ($value = data_get($row, Str::$function($col))) {
+            if ($value = data_get($row, str($col)->$function())) {
                 return $value;
             }
         }

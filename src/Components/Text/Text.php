@@ -6,13 +6,11 @@ use TALLKit\View\BladeComponent;
 
 class Text extends BladeComponent
 {
-    protected function props()
-    {
-        return [
-            'inline' => false,
-            'variant' => null,
-            'color' => null,
-            'size' => null,
-        ];
-    }
+    public function __construct(
+        public ?string $text = null,
+        public ?bool $inline = null,
+        public ?string $variant = null,
+        public ?string $color = null,
+        public ?string $size = null,
+    ) {}
 }

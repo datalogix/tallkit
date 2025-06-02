@@ -56,9 +56,9 @@ $wireTarget = null;
 
                         focus:outline-hidden
                         focus:ring-2
-                        focus:ring-accent
+                        focus:ring-blue-500
                         focus:ring-offset-2
-                        focus:ring-offset-accent-foreground
+                        focus:ring-offset-neutral-800
                     ')
                     ->when($invalid, fn($c) => $c->classes('border-red-500'))
                     ->classes($attributes->pluck('class:input'))
@@ -67,7 +67,7 @@ $wireTarget = null;
 
         <div class="absolute top-0 bottom-0 flex items-center gap-x-1.5 pe-3 end-0 text-xs text-zinc-400">
             @if ($loading)
-                <tk:icon name="mdi:loading" :class="$iconClasses" wire:loading :wire:target="$wireTarget" />
+                <tk:loading :class="$iconClasses" wire:loading :wire:target="$wireTarget"/>
             @endif
 
             @if ($clearable)

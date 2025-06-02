@@ -9,12 +9,14 @@ export function alertComponent(timeout?: Milliseconds) {
     },
 
     dismiss() {
-      this.$root.classList.remove('opacity-100')
-      this.$root.classList.add('opacity-0')
+      const root = this.$el.closest('[data-tallkit-alert]')
 
-      this.$root.addEventListener(
+      root.classList.remove('opacity-100')
+      root.classList.add('opacity-0')
+
+      root.addEventListener(
         'transitionend',
-        () => this.$root.remove(),
+        () => root.remove(),
         { once: true }
       )
     }

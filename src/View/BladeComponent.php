@@ -3,166 +3,55 @@
 namespace TALLKit\View;
 
 use AllowDynamicProperties;
-use Closure;
-use Illuminate\Contracts\View\View;
-use Illuminate\Contracts\View\View as ViewContract;
-use Illuminate\Support\Arr;
-use Illuminate\Support\HtmlString;
+use Illuminate\Support\Str;
 use Illuminate\View\Component;
-use TALLKit\Concerns\Componentable;
+use Illuminate\View\ComponentAttributeBag;
+use Illuminate\View\ComponentSlot;
 
 #[AllowDynamicProperties]
-class BladeComponent extends Component
+abstract class BladeComponent extends Component
 {
-    use Componentable;
-
     public static array $aliases = [];
 
-    protected array $props = [];
-
-    private array $setVariables = [];
-
-    private array $smartAttributes = [];
-
-    protected function props()
-    {
-        return $this->props;
-    }
-
-    public function resolveView()
-    {
-        $view = $this->render();
-
-        if ($view instanceof View) {
-            return $view;
-        }
-
-        $resolver = function ($view) {
-            if ($view instanceof ViewContract) {
-                return new HtmlString($view->render());
-            }
-
-            return $this->extractBladeViewFromString($view);
-        };
-
-        if ($view instanceof Closure) {
-            return fn (array $data = []) => $resolver($view($data));
-        }
-
-        return function (array $data = []) use ($resolver, $view) {
-            return view($resolver($view))->with($this->run($data));
-        };
-    }
-
-    public function render()
-    {
-        return fn (array $data) => $this->blade()->with($this->run($data));
-    }
-
-    protected function setupProps($data)
-    {
-        foreach ($this->props() as $key => $prop) {
-            $this->manageProps($key, $prop, $data);
-        }
-    }
-
-    private function manageProps(string $key, mixed $prop, array $data)
-    {
-        $field = str($key)->camel()->toString();
-        $this->{$field} = data_get($data, $key, $this->getData($field, $prop));
-        $this->setVariables($field);
-    }
-
-    protected function setVariables($variables)
-    {
-        collect(Arr::wrap($variables))->filter()->each(
-            fn ($value) => $this->setVariables[] = $value,
-        );
-    }
-
-    protected function smartAttributes($attributes): void
-    {
-        collect(Arr::wrap($attributes))->filter()->each(
-            fn ($value) => $this->smartAttributes[] = $value,
-        );
-    }
-
-    protected function getData(string $attribute, mixed $default = null)
-    {
-        if ($this->attributes->has($kebab = str($attribute)->kebab()->toString())) {
-            $this->smartAttributes($kebab);
-
-            return $this->attributes->get($kebab);
-        }
-
-        if ($this->attributes->has($camel = str($attribute)->camel()->toString())) {
-            $this->smartAttributes($camel);
-
-            return $this->attributes->get($camel);
-        }
-
-        return $default;
-    }
-
-    protected function run(array $data)
-    {
-        $this->setupProps($data);
-
-        $this->mounted($data);
-
-        foreach ($this->setVariables as $attribute) {
-            $data[$attribute] = $this->{$attribute};
-        }
-
-        $this->processed($data);
-
-        $data['attributes'] = $this->attributes->except($this->smartAttributes);
-
-        return $data;
-    }
+    use Concerns\HandlesAssetInjection,
+        Concerns\HandlesAttributes,
+        Concerns\HandlesLifecycle,
+        Concerns\HandlesProps,
+        Concerns\HandlesView;
 
     public function classes(...$classes)
     {
         return new ClassBuilder($classes);
     }
 
-    protected function mounted(array $data)
+    public function isSlot($slot)
     {
-        //
+        return $slot instanceof ComponentSlot;
     }
 
-    protected function processed(array $data)
+    public function attributesAfter($prefix, array $default = [], string|bool $slot = true)
     {
-        //
-    }
-
-    public function attributesFromSlot($prop)
-    {
-        return $prop instanceof \Illuminate\View\ComponentSlot
-            ? $prop->attributes
-            : new \Illuminate\View\ComponentAttributeBag;
-    }
-
-    public function attributesAfter($prefix, $default = [], $mergeWithSlot = true)
-    {
-        $newAttributes = new \Illuminate\View\ComponentAttributeBag($default);
+        $attrs = new ComponentAttributeBag($default);
 
         foreach ($this->attributes->whereStartsWith($prefix)->getAttributes() as $key => $value) {
-            $newAttributes[substr($key, strlen($prefix))] = $value;
+            $attrs[substr($key, strlen($prefix))] = $value;
         }
 
-        if (! $mergeWithSlot) {
-            return $newAttributes;
+        if (! $slot) {
+            return $attrs;
         }
 
-        $prop = str(is_string($mergeWithSlot) ? $mergeWithSlot : $prefix)
+        $prop = Str::of(is_string($slot) ? $slot : $prefix)
             ->replaceLast(':', '')
+            ->camel()
             ->toString();
 
         if (! property_exists($this, $prop)) {
-            return $newAttributes;
+            return $attrs;
         }
 
-        return $newAttributes->merge($this->attributesFromSlot($this->{$prop})->getAttributes());
+        return $this->isSlot($this->{$prop})
+            ? $attrs->merge($this->{$prop}->attributes->getAttributes())
+            : $attrs;
     }
 }

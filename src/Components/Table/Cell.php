@@ -9,7 +9,7 @@ class Cell extends BladeComponent
     protected function props()
     {
         return [
-
+            'value' => null,
         ];
     }
 }

@@ -2,6 +2,7 @@
 
 namespace TALLKit\Components\Form;
 
+use TALLKit\Attributes\Mount;
 use TALLKit\Concerns\BoundValues;
 use TALLKit\Concerns\PrepareFormDataBinder;
 use TALLKit\View\BladeComponent;
@@ -21,7 +22,8 @@ class Form extends BladeComponent
         ];
     }
 
-    protected function mounted(array $data)
+    #[Mount()]
+    protected function mount()
     {
         $this->method = strtoupper($this->method);
         $this->spoofMethod = in_array($this->method, ['PUT', 'PATCH', 'DELETE']);

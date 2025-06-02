@@ -1,29 +1,19 @@
-<div class="flex items-center gap-2.5">
-    <div {{ $attributes
-        ->classes(match($size) {
-            'xl' => '[:where(&)]:size-16 [:where(&)]:text-base',
-            'lg' => '[:where(&)]:size-12 [:where(&)]:text-base',
-            'md' => '[:where(&)]:size-10 [:where(&)]:text-sm',
-            'sm' => '[:where(&)]:size-8 [:where(&)]:text-sm',
-            'xs' => '[:where(&)]:size-6 [:where(&)]:text-xs',
-            default => '[:where(&)]:size-10 [:where(&)]:text-sm',
-        })
-        ->when($circle,
-            fn ($c) => $c->classes('after:rounded-full rounded-full'),
-            fn ($c) => $c->classes(match($size) {
-                'xl' => 'after:rounded-2xl rounded-2xl',
-                'lg' => 'after:rounded-xl rounded-xl',
-                'md' => 'after:rounded-lg rounded-lg',
-                'sm' => 'after:rounded-md rounded-md',
-                'xs' => 'after:rounded-sm rounded-sm',
-                default => 'after:rounded-lg rounded-lg',
-            })
-        )
-        ->classes('relative isolate flex items-center justify-center')
-        ->classes('[:where(&)]:font-medium [:where(&)]:text-gray-800 [:where(&)]:bg-gray-100')
-        ->classes('[:where(&)]:dark:bg-gray-600 [:where(&)]:dark:text-white')
-        ->classes('after:absolute after:inset-0 after:inset-ring-[1px] after:inset-ring-black/7 dark:after:inset-ring-white/10')
-        ->classes(match($color) {
+<tk:element :$tooltip :attributes="$attributes
+    ->whereDoesntStartWith(['image:', 'initials:', 'icon:'])
+    ->classes(
+        'relative flex-none isolate flex items-center justify-center',
+        '[:where(&)]:font-medium [:where(&)]:text-zinc-800 [:where(&)]:bg-zinc-200',
+        '[:where(&)]:dark:bg-zinc-600 [:where(&)]:dark:text-white',
+        'after:absolute after:inset-0 after:inset-ring-[1px] after:inset-ring-black/7 dark:after:inset-ring-white/10',
+        match($size) {
+            'xl' => '[:where(&)]:size-16 [:where(&)]:text-base **:data-tallkit-icon:size-10',
+            'lg' => '[:where(&)]:size-12 [:where(&)]:text-base **:data-tallkit-icon:size-8',
+            default => '[:where(&)]:size-10 [:where(&)]:text-sm **:data-tallkit-icon:size-6',
+            'sm' => '[:where(&)]:size-8 [:where(&)]:text-sm **:data-tallkit-icon:size-5',
+            'xs' => '[:where(&)]:size-6 [:where(&)]:text-xs **:data-tallkit-icon:size-4',
+        },
+        match($color) {
+            'primary' => 'bg-[var(--color-accent)] text-[var(--color-accent-foreground)]',
             'red' => 'bg-red-200 text-red-800',
             'orange' => 'bg-orange-200 text-orange-800',
             'amber' => 'bg-amber-200 text-amber-800',
@@ -42,30 +32,26 @@
             'pink' => 'bg-pink-200 text-pink-800',
             'rose' => 'bg-rose-200 text-rose-800',
             default => '',
-        })
-    )}}>
-        @if($src)
-            <img src="{{ $src }}" alt="{{ $alt ?? $name }}" class="{{ $circle ? 'rounded-full' : 'rounded-sm' }}">
-        @elseif($initials && !$icon)
-            <span class="select-none">{{ $initials }}</span>
-        @else
-            <svg class="shrink-0 [:where(&)]:size-6 opacity-75 size-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
-            </svg>
-        @endif
-    </div>
-
-    @if ($name || $description || $slot->isNotEmpty())
-        <div class="font-medium dark:text-white flex flex-col -space-y-1">
-            @if ($name)
-                <div>{{ $name }}</div>
-            @endif
-
-            @if ($description || $slot->isNotEmpty())
-                <div class="text-sm text-gray-500 dark:text-gray-400">
-                    {{ $description ?? $slot }}
-                </div>
-            @endif
-        </div>
+        },
+    )
+    ->when($square,
+        fn ($c) => $c->classes(match($size) {
+            'xl' => 'after:rounded-2xl rounded-2xl',
+            'lg' => 'after:rounded-xl rounded-xl',
+            default => 'after:rounded-lg rounded-lg',
+            'sm' => 'after:rounded-md rounded-md',
+            'xs' => 'after:rounded-sm rounded-sm',
+        }),
+        fn ($c) => $c->classes('after:rounded-full rounded-full'),
+    )
+" data-tallkit-avatar>
+    @if ($src)
+        <img src="{{ $src }}" alt="{{ $alt ?? $name }}" {{ $attributesAfter('image:')->classes($square ? 'rounded-sm' : 'rounded-full') }} data-tallkit-avatar-image>
+    @elseif(($initials || $slot->isNotEmpty()) && !$icon)
+        <span {{ $attributesAfter('initials:')->classes('select-none truncate m-px') }}
+            data-tallkit-avatar-initials>{{ $initials ?? $slot }}</span>
+    @else
+        <tk:icon :attributes="$attributesAfter('icon:')->classes('opacity-75')" :icon="$icon ?? 'user'"
+            data-tallkit-avatar-icon />
     @endif
-</div>
+</tk:element>

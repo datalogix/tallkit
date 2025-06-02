@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 trait CanPretendToBeAFile
 {
-    public function pretendResponseIsFile($file, $contentType = null)
+    public function pretendResponseIsFile(string $file, ?string $contentType = null)
     {
         $contentType ??= $this->getContentType($file);
         $headers = ['Content-Type' => $contentType];

@@ -2,5 +2,5 @@
     py-4 px-6
     text-sm text-zinc-500 dark:text-zinc-300
 ') }}" scope="row">
-    {{ $slot }}
+    {{ $slot->isEmpty() ? $value : $slot }}
 </td>

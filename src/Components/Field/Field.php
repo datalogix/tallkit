@@ -6,14 +6,12 @@ use TALLKit\View\BladeComponent;
 
 class Field extends BladeComponent
 {
-    protected function props()
-    {
-        return [
-            'name' => null,
-            'id' => null,
-            'label' => null,
-            'description' => null,
-            'help' => null,
-        ];
+    public function __construct(
+        public ?string $name = null,
+        public ?string $id = null,
+        public ?string $label = null,
+        public ?string $description = null,
+        public ?string $help = null,
+    ) {
     }
 }

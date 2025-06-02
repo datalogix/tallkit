@@ -1,5 +1,5 @@
 <form {{ $attributes
-    ->merge(!$enctype && Str::contains($slot, 'type="file"') ? ['enctype' => 'multipart/form-data'] : [])
+    ->merge(!$enctype && str_contains($slot, 'type="file"') ? ['enctype' => 'multipart/form-data'] : [])
     ->merge(['method' => $method])
 }}>
     @unless(in_array($method, ['HEAD', 'GET', 'OPTIONS']))

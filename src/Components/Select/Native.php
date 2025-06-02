@@ -2,6 +2,7 @@
 
 namespace TALLKit\Components\Select;
 
+use TALLKit\Attributes\Mount;
 use TALLKit\View\BladeComponent;
 
 class Native extends BladeComponent
@@ -21,7 +22,8 @@ class Native extends BladeComponent
         ];
     }
 
-    protected function mounted(array $data)
+    #[Mount()]
+    protected function mount()
     {
         if ($this->name) {
             $this->label ??= $this->name;

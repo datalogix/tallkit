@@ -2,14 +2,12 @@
 
 namespace TALLKit\Components\Tooltip;
 
+use Illuminate\View\ComponentSlot;
 use TALLKit\View\BladeComponent;
 
 class Content extends BladeComponent
 {
-    protected function props()
-    {
-        return [
-            'kbd' => null,
-        ];
-    }
+    public function __construct(
+        public string|ComponentSlot|null $kbd = null,
+    ) {}
 }

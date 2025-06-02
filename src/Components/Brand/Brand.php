@@ -2,65 +2,26 @@
 
 namespace TALLKit\Components\Brand;
 
+use Illuminate\View\ComponentSlot;
+use TALLKit\Attributes\Mount;
 use TALLKit\View\BladeComponent;
 
 class Brand extends BladeComponent
 {
-    public function render()
+    public function __construct(
+        public ?string $size = null,
+        public string|bool|null $name = null,
+        public string|ComponentSlot|bool|null $logo = null,
+        public string|bool|null $alt = null,
+        public string|bool|null $href = null,
+    ) {}
+
+    #[Mount()]
+    protected function mount()
     {
-        return <<<'BLADE'
-        @props([
-            'name' => null,
-            'logo' => null,
-            'alt' => null,
-            'href' => '/',
-        ])
-
-        @php
-        $containerClasses = $classes()
-            ->add('h-10 flex items-center me-4')
-            ;
-
-        $textClasses = $classes()
-            ->add('text-sm font-medium truncate [:where(&)]:text-zinc-800 dark:[:where(&)]:text-zinc-100')
-            ;
-        @endphp
-
-        <?php if ($name): ?>
-            <a href="{{ $href }}" {{ $attributes->class([ $containerClasses, 'gap-2' ]) }} data-flux-brand>
-                <?php if ($logo instanceof \Illuminate\View\ComponentSlot): ?>
-                    <div {{ $logo->attributes->class('flex items-center justify-center [:where(&)]:h-6 [:where(&)]:min-w-6 [:where(&)]:rounded-sm overflow-hidden shrink-0') }}>
-                        {{ $logo }}
-                    </div>
-                <?php else: ?>
-                    <div class="flex items-center justify-center h-6 rounded-sm overflow-hidden shrink-0">
-                        <?php if ($logo): ?>
-                            <img src="{{ $logo }}" alt="{{ $alt }}" class="h-6" />
-                        <?php else: ?>
-                            {{ $slot }}
-                        <?php endif; ?>
-                    </div>
-                <?php endif; ?>
-
-                <div class="{{ $textClasses }}">{{ $name }}</div>
-            </a>
-        <?php else: ?>
-            <a href="{{ $href }}" {{ $attributes->class($containerClasses) }} data-flux-brand>
-                <?php if ($logo instanceof \Illuminate\View\ComponentSlot): ?>
-                    <div {{ $logo->attributes->class('flex items-center justify-center [:where(&)]:h-6 [:where(&)]:min-w-6 [:where(&)]:rounded-sm overflow-hidden shrink-0') }}>
-                        {{ $logo }}
-                    </div>
-                <?php else: ?>
-                    <div class="flex items-center justify-center h-6 rounded-sm overflow-hidden shrink-0">
-                        <?php if ($logo): ?>
-                            <img src="{{ $logo }}" alt="{{ $alt }}" class="h-6" />
-                        <?php else: ?>
-                            {{ $slot }}
-                        <?php endif; ?>
-                    </div>
-                <?php endif; ?>
-            </a>
-        <?php endif; ?>
-        BLADE;
+        $this->name = $this->name === true ? config('app.name') : $this->name;
+        $this->logo ??= find_image('logo');
+        $this->alt ??= $this->name ?: config('app.name');
+        $this->href ??= route_detect('home');
     }
 }

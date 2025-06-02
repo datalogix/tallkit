@@ -4,9 +4,14 @@ namespace TALLKit\Assets;
 
 use Illuminate\Foundation\Http\Events\RequestHandled;
 
-class InjectAssets
+class AssetInjector
 {
-    public static $hasRenderedAComponentThisRequest = false;
+    protected static bool $hasRenderedAComponentThisRequest = false;
+
+    public static function markComponentAsRendered()
+    {
+        static::$hasRenderedAComponentThisRequest = true;
+    }
 
     public static function boot()
     {
@@ -23,8 +28,8 @@ class InjectAssets
             $assetsBody = '';
 
             if (static::shouldInjectAssets()) {
-                $assetsHead .= AssetsManager::styles()."\n";
-                $assetsBody .= AssetsManager::scripts()."\n";
+                $assetsHead .= AssetManager::styles()."\n";
+                $assetsBody .= AssetManager::scripts()."\n";
             }
 
             if ($assetsHead === '' && $assetsBody === '') {
@@ -45,8 +50,8 @@ class InjectAssets
     {
         if (
             config('tallkit.inject_assets', true) === false
-            // || ! static::$hasRenderedAComponentThisRequest
-            || app(AssetsManager::class)->hasRenderedScripts
+            || ! static::$hasRenderedAComponentThisRequest
+            || app(AssetManager::class)->hasRenderedScripts
         ) {
             return false;
         }
@@ -54,7 +59,7 @@ class InjectAssets
         return true;
     }
 
-    protected static function injectAssets($html, $assetsHead, $assetsBody)
+    protected static function injectAssets(string $html, string $assetsHead, string $assetsBody)
     {
         $html = str($html);
 

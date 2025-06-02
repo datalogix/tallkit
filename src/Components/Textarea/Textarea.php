@@ -2,6 +2,7 @@
 
 namespace TALLKit\Components\Textarea;
 
+use TALLKit\Attributes\Mount;
 use TALLKit\View\BladeComponent;
 
 class Textarea extends BladeComponent
@@ -21,7 +22,8 @@ class Textarea extends BladeComponent
         ];
     }
 
-    protected function mounted(array $data)
+    #[Mount()]
+    protected function mount()
     {
         if ($this->name) {
             $this->label ??= $this->name;

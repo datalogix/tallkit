@@ -7,10 +7,12 @@ export function popover () {
     ..._toggleable,
 
     popover: null,
+    trigger: null,
 
     init() {
       _toggleable.init.call(this)
-      this.popover = this.$el.querySelector('[popover]')
+      this.popover = this.$el.lastElementChild?.matches('[popover]') && this.$el.lastElementChild
+      this.trigger = this.$el.firstElementChild !== this.popover ? this.$el.firstElementChild : this.$el
     },
 
     open() {

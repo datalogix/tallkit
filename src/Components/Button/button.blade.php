@@ -1,155 +1,129 @@
-
-@php $iconTrailing = $iconTrailing ??= $attributes->pluck('icon:trailing'); @endphp
-@php $iconLeading = $iconLeading ??= $attributes->pluck('icon:leading'); @endphp
-
-@props([
-    'href' => null,
-    'iconTrailing' => null,
-    'variant' => 'outline',
-    'iconLeading' => null,
-    'type' => 'button',
-    'loading' => null,
-    'size' => 'base',
-    'square' => null,
-    'inset' => null,
-    'icon' => null,
-    'kbd' => null,
-])
-
 @php
-$iconLeading = $icon ??= $iconLeading;
-$hasContent = $slot->isNotEmpty() || $text;
-// Button should be a square if it has no text contents...
-$square ??= !$hasContent;
+    $square ??= !$circle && !($slot->isNotEmpty() || $text);
+    $isTypeSubmitAndNotDisabledOnRender = $type === 'submit' && !$attributes->has('disabled');
+    $isJsMethod = str_starts_with($attributes->whereStartsWith('wire:click')->first() ?? '', '$js.');
+    $loading ??= $isTypeSubmitAndNotDisabledOnRender || $attributes->whereStartsWith('wire:click')->isNotEmpty() && !$isJsMethod;
 
-// When using the outline icon variant, we need to size it down to match the default icon sizes...
-$iconClasses = TALLKit::classes()->add($square && $size !== 'xs' ? 'size-5' : 'size-4');
+    if ($loading && $type !== 'submit' && !$isJsMethod) {
+        $attributes = $attributes->merge(['wire:loading.attr' => 'data-tallkit-button-loading']);
 
-$isTypeSubmitAndNotDisabledOnRender = $type === 'submit' && ! $attributes->has('disabled');
-
-$isJsMethod = str_starts_with($attributes->whereStartsWith('wire:click')->first() ?? '', '$js.');
-
-$loading ??= $loading ?? ($isTypeSubmitAndNotDisabledOnRender || $attributes->whereStartsWith('wire:click')->isNotEmpty() && ! $isJsMethod);
-
-if ($loading && $type !== 'submit' && ! $isJsMethod) {
-    $attributes = $attributes->merge(['wire:loading.attr' => 'data-flux-loading']);
-
-    // We need to add `wire:target` here because without it the loading indicator won't be scoped
-    // by method params, causing multiple buttons with the same method but different params to
-    // trigger each other's loading indicators...
-    if (! $attributes->has('wire:target') && $target = $attributes->whereStartsWith('wire:click')->first()) {
-        $attributes = $attributes->merge(['wire:target' => $target], escape: false);
+        if (!$attributes->has('wire:target') && $target = $attributes->whereStartsWith('wire:click')->first()) {
+            $attributes = $attributes->merge(['wire:target' => $target], escape: false);
+        }
     }
-}
-
-$classes = TALLKit::classes()
-    ->add('relative items-center font-medium justify-center gap-2 whitespace-nowrap')
-    ->add('disabled:opacity-75 dark:disabled:opacity-75 disabled:cursor-default disabled:pointer-events-none')
-    ->add(match ($size) { // Size...
-        'xl' => 'h-14 text-lg rounded-lg' . ' ' . ($square ? 'w-14' : 'px-8'),
-        'lg' => 'h-12 text-base rounded-lg' . ' ' . ($square ? 'w-12' : 'px-6'),
-        'base' => 'h-10 text-sm rounded-lg' . ' ' . ($square ? 'w-10' : 'px-4'),
-        'sm' => 'h-8 text-sm rounded-md' . ' ' . ($square ? 'w-8' : 'px-3'),
-        'xs' => 'h-6 text-xs rounded-md' . ' ' . ($square ? 'w-6' : 'px-2'),
-        default => 'h-10 text-sm rounded-lg' . ' ' . ($square ? 'w-10' : 'px-4'),
-    })
-    ->add('inline-flex') // Buttons are inline by default but links are blocks, so inline-flex is needed here to ensure link-buttons are displayed the same as buttons...
-   // ->add($inset ? match ($size) { // Inset...
-   //     'base' => $square
-   //         ? Flux::applyInset($inset, top: '-mt-2.5', right: '-me-2.5', bottom: '-mb-2.5', left: '-ms-2.5')
-   //         : Flux::applyInset($inset, top: '-mt-2.5', right: '-me-4', bottom: '-mb-3', left: '-ms-4'),
-   //     'sm' => $square
-   //         ? Flux::applyInset($inset, top: '-mt-1.5', right: '-me-1.5', bottom: '-mb-1.5', left: '-ms-1.5')
-   //         : Flux::applyInset($inset, top: '-mt-1.5', right: '-me-3', bottom: '-mb-1.5', left: '-ms-3'),
-   //     'xs' => $square
-   //         ? Flux::applyInset($inset, top: '-mt-1', right: '-me-1', bottom: '-mb-1', left: '-ms-1')
-   //         : Flux::applyInset($inset, top: '-mt-1', right: '-me-2', bottom: '-mb-1', left: '-ms-2'),
-   // } : '')
-    ->add(match ($variant) { // Background color...
-        'primary' => 'bg-[var(--color-accent)] hover:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_10%)]',
-        'filled' => 'bg-zinc-800/5 hover:bg-zinc-800/10 dark:bg-white/10 dark:hover:bg-white/20',
-        'outline' => 'bg-white hover:bg-zinc-50 dark:bg-zinc-700 dark:hover:bg-zinc-600/75',
-        'danger' => 'bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-500',
-        'ghost' => 'bg-transparent hover:bg-zinc-800/5 dark:hover:bg-white/15',
-        'subtle' => 'bg-transparent hover:bg-zinc-800/5 dark:hover:bg-white/15',
-    })
-    ->add(match ($variant) { // Text color...
-        'primary' => 'text-[var(--color-accent-foreground)]',
-        'filled' => 'text-zinc-800 dark:text-white',
-        'outline' => 'text-zinc-800 dark:text-white',
-        'danger' => 'text-white',
-        'ghost' => 'text-zinc-800 dark:text-white',
-        'subtle' => 'text-zinc-400 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-white',
-    })
-    ->add(match ($variant) { // Border color...
-        'primary' => 'border border-black/10 dark:border-0',
-        'outline' => 'border border-zinc-200 hover:border-zinc-200 border-b-zinc-300/80 dark:border-zinc-600 dark:hover:border-zinc-600',
-         default => '',
-    })
-    ->add(match ($variant) { // Shadows...
-        'primary' => 'shadow-[inset_0px_1px_--theme(--color-white/.2)]',
-        'danger' => 'shadow-[inset_0px_1px_var(--color-red-500),inset_0px_2px_--theme(--color-white/.15)] dark:shadow-none',
-        'outline' => match ($size) {
-            'xl' => 'shadow',
-            'lg' => 'shadow-sm',
-            'base' => 'shadow-xs',
-            'sm' => 'shadow-xs',
-            'xs' => 'shadow-none',
-            default => 'shadow-xs',
-        },
-        default => '',
-    })
-    ->add(match ($variant) { // Grouped border treatments...
-        'ghost' => '',
-        'subtle' => '',
-        'outline' => '[[data-flux-button-group]_&]:border-s-0 [:is([data-flux-button-group]>&:first-child,_[data-flux-button-group]_:first-child>&)]:border-s-[1px]',
-        'filled' => '[[data-flux-button-group]_&]:border-e [:is([data-flux-button-group]>&:last-child,_[data-flux-button-group]_:last-child>&)]:border-e-0 [[data-flux-button-group]_&]:border-zinc-200/80 dark:[[data-flux-button-group]_&]:border-zinc-900/50',
-        'danger' => '[[data-flux-button-group]_&]:border-e [:is([data-flux-button-group]>&:last-child,_[data-flux-button-group]_:last-child>&)]:border-e-0 [[data-flux-button-group]_&]:border-red-600 dark:[[data-flux-button-group]_&]:border-red-900/25',
-        'primary' => '[[data-flux-button-group]_&]:border-e-0 [:is([data-flux-button-group]>&:last-child,_[data-flux-button-group]_:last-child>&)]:border-e-[1px] dark:[:is([data-flux-button-group]>&:last-child,_[data-flux-button-group]_:last-child>&)]:border-e-0 dark:[:is([data-flux-button-group]>&:last-child,_[data-flux-button-group]_:last-child>&)]:border-s-[1px] [:is([data-flux-button-group]>&:not(:first-child),_[data-flux-button-group]_:not(:first-child)>&)]:border-s-[color-mix(in_srgb,var(--color-accent-foreground),transparent_85%)]',
-    })
-    ->add($loading ? [ // Loading states...
-        '*:transition-opacity',
-        $type === 'submit' ? '[&[disabled]>:not([data-flux-loading-indicator])]:opacity-0' : '[&[data-flux-loading]>:not([data-flux-loading-indicator])]:opacity-0',
-        $type === 'submit' ? '[&[disabled]>[data-flux-loading-indicator]]:opacity-100' : '[&[data-flux-loading]>[data-flux-loading-indicator]]:opacity-100',
-        $type === 'submit' ? '[&[disabled]]:pointer-events-none' : 'data-flux-loading:pointer-events-none',
-    ] : [])
-    ;
-
-    // Exempt subtle and ghost buttons from receiving border roundness overrides from button.group...
-    $attributes = $attributes->merge([
-        'data-flux-group-target' => ! in_array($variant, ['subtle', 'ghost']),
-    ]);
 @endphp
 
-<{{ $href ? 'a' : 'button' }} {{ $attributes->classes($classes)->merge($href ? ['href' => $href] : ['type' => $type]) }}>
-    <?php if ($loading): ?>
-        <div class="absolute inset-0 flex items-cocenter justify-center opacity-0">
-            <tk:icon icon="ph:spinner" :class="$iconClasses" />
+<tk:element :attributes="$attributes->whereDoesntStartWith(['icon:', 'kbd:', 'icon-trailing:', 'loading-indicator:', 'loading:'])
+        ->classes('relative items-center font-medium justify-center gap-2 whitespace-nowrap')
+        ->classes('disabled:opacity-75 dark:disabled:opacity-75 disabled:cursor-default disabled:pointer-events-none transition')
+        ->classes($circle ? 'rounded-full' : match ($circle) { // Rounded...
+            default => 'rounded-lg',
+            'sm' => 'rounded-md',
+            'xs' => 'rounded-md',
+        })
+        ->classes(match ($size) { // Size...
+            'xl' => 'h-14 text-lg' . ' ' . ($square ? 'w-14' : 'px-8'),
+            'lg' => 'h-12 text-base' . ' ' . ($square ? 'w-12' : 'px-6'),
+            default => 'h-10 text-sm' . ' ' . ($square ? 'w-10' : 'px-4'),
+            'sm' => 'h-8 text-sm' . ' ' . ($square ? 'w-8' : 'px-3'),
+            'xs' => 'h-6 text-xs' . ' ' . ($square ? 'w-6' : 'px-2'),
+        })
+        ->classes('inline-flex')
+        ->classes(match ($variant) { // Background color...
+            'primary' => 'bg-[var(--color-accent)] hover:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_10%)]',
+            'info' => 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600',
+            'success' => 'bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600',
+            'danger' => 'bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-500',
+            'filled' => 'bg-zinc-800/5 hover:bg-zinc-800/10 dark:bg-white/10 dark:hover:bg-white/20',
+            'ghost', 'subtle' => 'bg-transparent hover:bg-zinc-800/5 dark:hover:bg-white/15',
+            'red' => 'bg-red-500 dark:bg-red-600 hover:bg-red-600 dark:hover:bg-red-500',
+            'orange' => 'bg-orange-500 dark:bg-orange-600 hover:bg-orange-600 dark:hover:bg-orange-500',
+            'amber' => 'bg-amber-500 dark:bg-amber-500 hover:bg-amber-600 dark:hover:bg-amber-400',
+            'yellow' => 'bg-yellow-500 dark:bg-yellow-400 hover:bg-yellow-600 dark:hover:bg-yellow-300',
+            'lime' => 'bg-lime-500 dark:bg-lime-600 hover:bg-lime-600 dark:hover:bg-lime-500',
+            'green' => 'bg-green-500 dark:bg-green-600 hover:bg-green-600 dark:hover:bg-green-500',
+            'emerald' => 'bg-emerald-500 dark:bg-emerald-600 hover:bg-emerald-600 dark:hover:bg-emerald-500',
+            'teal' => 'bg-teal-500 dark:bg-teal-600 hover:bg-teal-600 dark:hover:bg-teal-500',
+            'cyan' => 'bg-cyan-500 dark:bg-cyan-600 hover:bg-cyan-600 dark:hover:bg-cyan-500',
+            'sky' => 'bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 dark:hover:bg-sky-500',
+            'blue' => 'bg-blue-500 dark:bg-blue-600 hover:bg-blue-600 dark:hover:bg-blue-500',
+            'indigo' => 'bg-indigo-500 dark:bg-indigo-600 hover:bg-indigo-600 dark:hover:bg-indigo-500',
+            'violet' => 'bg-violet-500 dark:bg-violet-600 hover:bg-violet-600 dark:hover:bg-violet-500',
+            'purple' => 'bg-purple-500 dark:bg-purple-600 hover:bg-purple-600 dark:hover:bg-purple-500',
+            'fuchsia' => 'bg-fuchsia-500 dark:bg-fuchsia-600 hover:bg-fuchsia-600 dark:hover:bg-fuchsia-500',
+            'pink' => 'bg-pink-500 dark:bg-pink-600 hover:bg-pink-600 dark:hover:bg-pink-500',
+            'rose' => 'bg-rose-500 dark:bg-rose-600 hover:bg-rose-600 dark:hover:bg-rose-500',
+            default => 'bg-white hover:bg-zinc-50 dark:bg-zinc-700 dark:hover:bg-zinc-600/75',
+        })
+        ->classes(match ($variant) { // Text color...
+            'primary' => 'text-[var(--color-accent-foreground)]',
+            'filled', 'outline', 'ghost' => 'text-zinc-800 dark:text-white',
+            'subtle' => 'text-zinc-400 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-white',
+            'amber', 'yellow' => 'text-white dark:text-zinc-950',
+            default => 'text-white',
+        })
+        ->classes(match ($variant) { // Border color...
+            'primary' => 'border border-black/10 dark:border-0',
+            'outline' => 'border border-zinc-200 hover:border-zinc-200 border-b-zinc-300/80 dark:border-zinc-600 dark:hover:border-zinc-600',
+            default => '',
+        })
+        ->classes(match ($variant) { // Shadows...
+            'primary' => 'shadow-[inset_0px_1px_--theme(--color-white/.2)]',
+            'outline' => match ($size) {
+                    'xl' => 'shadow',
+                    'lg' => 'shadow-sm',
+                    'xs' => 'shadow-none',
+                    default => 'shadow-xs',
+                },
+            default => '',
+        })
+        ->classes(match ($variant) { // Grouped border treatments...
+            'primary' => '[[data-tallkit-button-group]_&]:border-e-0 [:is([data-tallkit-button-group]>&:last-child,_[data-tallkit-button-group]_:last-child>&)]:border-e-[1px] dark:[:is([data-tallkit-button-group]>&:last-child,_[data-tallkit-button-group]_:last-child>&)]:border-e-0 dark:[:is([data-tallkit-button-group]>&:last-child,_[data-tallkit-button-group]_:last-child>&)]:border-s-[1px] [:is([data-tallkit-button-group]>&:not(:first-child),_[data-tallkit-button-group]_:not(:first-child)>&)]:border-s-[color-mix(in_srgb,var(--color-accent-foreground),transparent_85%)]',
+            'filled' => '[[data-tallkit-button-group]_&]:border-e [:is([data-tallkit-button-group]>&:last-child,_[data-tallkit-button-group]_:last-child>&)]:border-e-0 [[data-tallkit-button-group]_&]:border-zinc-200/80 dark:[[data-tallkit-button-group]_&]:border-zinc-900/50',
+            'outline' => '[[data-tallkit-button-group]_&]:border-s-0 [:is([data-tallkit-button-group]>&:first-child,_[data-tallkit-button-group]_:first-child>&)]:border-s-[1px]',
+            'danger' => '[[data-tallkit-button-group]_&]:border-e [:is([data-tallkit-button-group]>&:last-child,_[data-tallkit-button-group]_:last-child>&)]:border-e-0 [[data-tallkit-button-group]_&]:border-red-600 dark:[[data-tallkit-button-group]_&]:border-red-900/25',
+            default => '',
+        })
+        ->when($loading, fn($attrs) => $attrs->classes( // Loading states...
+            '*:transition-opacity',
+            $type === 'submit' ? '[&[disabled]>:not([data-tallkit-button-loading-indicator])]:opacity-0' : '[&[data-tallkit-button-loading]>:not([data-tallkit-button-loading-indicator])]:opacity-0',
+            $type === 'submit' ? '[&[disabled]>[data-tallkit-button-loading-indicator]]:opacity-100' : '[&[data-tallkit-button-loading]>[data-tallkit-button-loading-indicator]]:opacity-100',
+            $type === 'submit' ? '[&[disabled]]:pointer-events-none' : 'data-tallkit-button-loading:pointer-events-none',
+        ))
+        ->merge(['data-tallkit-button-group-target' => !in_array($variant, ['subtle', 'ghost'])])" :$href :$type
+    data-tallkit-button>
+    @if ($loading)
+        <div {{ $attributesAfter('loading-indicator:')->classes('absolute inset-0 flex items-center justify-center opacity-0') }} data-tallkit-button-loading-indicator>
+            <tk:loading :attributes="$attributesAfter('loading:')
+                ->classes($square && $size !== 'xs' ? 'size-5' : 'size-4')
+                ->when(is_string($loading), fn($attrs, $value) => $attrs->merge(['type' => $value]))" />
         </div>
-    <?php endif; ?>
+    @endif
 
-    <?php if (is_string($iconLeading) && $iconLeading !== ''): ?>
-        <tk:icon :icon="$iconLeading" :class="$iconClasses" />
-    <?php elseif ($iconLeading): ?>
-        {{ $iconLeading }}
-    <?php endif; ?>
+    @if (is_string($icon) && $icon !== '')
+        <tk:icon :$icon :attributes="$attributesAfter('icon:')->classes($square && $size !== 'xs' ? 'size-5' : 'size-4')"
+            data-tallkit-button-icon />
+    @elseif($icon)
+        <span {{ $attributesAfter('icon:') }}>{{ $icon }}</span>
+    @endif
 
-    <?php if ($loading && $hasContent): ?>
-        {{-- If we have a loading indicator, we need to wrap it in a span so it can be a target of *:opacity-0... --}}
+    @if ($loading && ($slot->isNotEmpty() || $text))
         <span>{{ $slot->isEmpty() ? __($text) : $slot }}</span>
-    <?php else: ?>
+    @else
         {{ $slot->isEmpty() ? __($text) : $slot }}
-    <?php endif; ?>
+    @endif
 
-    <?php if ($kbd): ?>
-        <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ $kbd }}</div>
-    <?php endif; ?>
+    @if ($kbd)
+        <div {{ $attributesAfter('kbd:')->classes('text-xs text-zinc-500 dark:text-zinc-400') }} data-tallkit-button-kbd>
+            {{ $kbd }}
+        </div>
+    @endif
 
-    <?php if (is_string($iconTrailing) && $iconTrailing !== ''): ?>
-        {{-- Adding the extra margin class inline on the icon component below was causing a double up, so it needs to be added here first... --}}
-        <?php $iconClasses->add($square ? '' : '-ms-1'); ?>
-        <tk:icon :icon="$iconTrailing" :class="$iconClasses" />
-    <?php elseif ($iconTrailing): ?>
-        {{ $iconTrailing }}
-    <?php endif; ?>
-</{{ $href ? 'a' : 'button' }}>
+    @if (is_string($iconTrailing) && $iconTrailing !== '')
+        <tk:icon :icon="$iconTrailing" :attributes="$attributesAfter('icon-trailing:')
+                ->classes($square && $size !== 'xs' ? 'size-5' : 'size-4')
+                ->classes($square ? '' : '-ms-1')" data-tallkit-icon-trailing />
+    @elseif($iconTrailing)
+        <span {{ $attributesAfter('icon-trailing:') }}>{{ $iconTrailing }}</span>
+    @endif
+</tk:element>

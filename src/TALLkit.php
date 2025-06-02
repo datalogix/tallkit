@@ -2,25 +2,20 @@
 
 namespace TALLKit;
 
-use TALLKit\Assets\AssetsManager;
+use TALLKit\Assets\AssetManager;
 use TALLKit\Binders\FormDataBinder;
 use TALLKit\View\ClassBuilder;
 
 class TALLKit
 {
-    public function scripts($options = [])
+    public function scripts(?array $options = null)
     {
-        return AssetsManager::scripts($options);
+        return AssetManager::scripts($options);
     }
 
     public function classes(...$classes)
     {
         return new ClassBuilder($classes);
-    }
-
-    public function inLivewire()
-    {
-        return \Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent();
     }
 
     public function bind($target)

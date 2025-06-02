@@ -6,16 +6,10 @@ use TALLKit\View\BladeComponent;
 
 class Heading extends BladeComponent
 {
-    protected function props()
-    {
-        return [
-            'size' => null,
-            'level' => null,
-        ];
-    }
-
-    protected function mounted(array $data)
-    {
-        $this->level = (int) $this->level;
-    }
+    public function __construct(
+        public ?string $text = null,
+        public ?string $size = null,
+        public ?bool $accent = null,
+        public ?int $level = null
+    ) {}
 }

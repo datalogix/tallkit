@@ -6,12 +6,8 @@ use TALLKit\View\BladeComponent;
 
 class Dropdown extends BladeComponent
 {
-    public function render()
-    {
-        return <<<'BLADE'
-        <div>
-            {{ $slot }}
-        </div>
-        BLADE;
-    }
+     public function __construct(
+        public ?string $position = null,
+        public ?string $align = null,
+    ) {}
 }

@@ -5,7 +5,7 @@ namespace TALLKit\Assets;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
 
-class AssetsManager
+class AssetManager
 {
     use CanPretendToBeAFile;
 
@@ -19,7 +19,7 @@ class AssetsManager
 
         app()->instance(static::class, $instance);
 
-        InjectAssets::boot();
+        AssetInjector::boot();
     }
 
     public function registerAssetDirective()
@@ -40,19 +40,18 @@ class AssetsManager
         ))->name('tallkit-script');
     }
 
-    public static function scripts($options = [])
+    public static function scripts(?array $options = null)
     {
         app(static::class)->hasRenderedScripts = true;
 
-        // $manifest = json_decode(file_get_contents(__DIR__ . '/../../dist/manifest.json'), true);
-        // $versionHash = $manifest['/tallkit.js'];
-        $versionHash = rand(1, 1000);
+        $manifest = json_decode(file_get_contents(__DIR__.'/../../dist/manifest.json'), true);
+        $versionHash = $manifest['/tallkit.js'];
         $nonce = isset($options) && isset($options['nonce']) ? ' nonce="'.$options['nonce'].'"' : '';
 
         return '<script src="'.route('tallkit-script', ['id' => $versionHash]).'" data-navigate-once'.$nonce.'></script>';
     }
 
-    public static function styles($options = [])
+    public static function styles(?array $options = null)
     {
         return '';
     }

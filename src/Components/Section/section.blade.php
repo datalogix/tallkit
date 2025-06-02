@@ -1,27 +1,31 @@
-<section class="flex justify-between items-center">
-    <div>
-        @if ($title || $subtitle)
-            <header>
-                @if ($title)
-                    <div class="text-lg font-medium text-gray-900">
-                        {!! __($title) !!}
-                    </div>
-                @endif
+<section {{ $attributes->whereDoesntStartWith(['header:', 'title:', 'subtitle:', 'actions:']) }} data-tallkit-section>
+    @if ($title || $subtitle || isset($header) || isset($actions))
+        <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+            @if ($title || $subtitle || isset($header))
+                <header {{ $attributesAfter('header:')->classes('flex-1') }} data-tallkit-section-header>
+                    @if ($title)
+                        <tk:heading :attributes="$attributesAfter('title:')" data-tallkit-section-title>
+                            {!! $isSlot($title) ? $title : __($title) !!}
+                        </tk:heading>
+                    @endif
 
-                @if ($subtitle)
-                    <div class="text-gray-500">
-                        {!! __($subtitle) !!}
-                    </div>
-                @endif
-            </header>
-        @endif
+                    @if ($subtitle)
+                        <tk:text :attributes="$attributesAfter('subtitle:')" data-tallkit-section-subtitle>
+                            {!! $isSlot($subtitle) ? $subtitle : __($subtitle) !!}
+                        </tk:text>
+                    @endif
 
-        {{ $slot }}
-    </div>
+                    {{ $header ?? '' }}
+                </header>
+            @endif
 
-    @isset ($actions)
-        <footer class="shrink-0">
-            {{ $actions }}
-        </footer>
-    @endisset
+            @isset ($actions)
+                <div {{ $attributesAfter('actions:')->classes('shrink-0') }} data-tallkit-section-actions>
+                    {{ $actions }}
+                </div>
+            @endisset
+        </div>
+    @endif
+
+    {{ $slot }}
 </section>

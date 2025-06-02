@@ -1,18 +1,11 @@
 <?php
 
-namespace TALLKit\View;
+namespace TALLKit\View\Compilers;
 
-use Illuminate\View\Compilers\ComponentTagCompiler;
+use Illuminate\View\Compilers\ComponentTagCompiler as BaseComponentTagCompiler;
 
-class TagCompiler extends ComponentTagCompiler
+class ComponentTagCompiler extends BaseComponentTagCompiler
 {
-    /**
-     * Compile the opening tags within the given string.
-     *
-     * @return string
-     *
-     * @throws \InvalidArgumentException
-     */
     protected function compileOpeningTags(string $value)
     {
         $pattern = "/
@@ -69,13 +62,6 @@ class TagCompiler extends ComponentTagCompiler
         }, $value);
     }
 
-    /**
-     * Compile the self-closing tags within the given string.
-     *
-     * @return string
-     *
-     * @throws \InvalidArgumentException
-     */
     protected function compileSelfClosingTags(string $value)
     {
         $pattern = "/
@@ -141,11 +127,6 @@ class TagCompiler extends ComponentTagCompiler
         }, $value);
     }
 
-    /**
-     * Compile the closing tags within the given string.
-     *
-     * @return string
-     */
     protected function compileClosingTags(string $value)
     {
         return preg_replace("/<\/\s*tk[-\:][\w\-\:\.]*\s*>/", ' @endComponentClass##END-COMPONENT-CLASS##', $value);

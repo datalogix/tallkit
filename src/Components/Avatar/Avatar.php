@@ -2,43 +2,47 @@
 
 namespace TALLKit\Components\Avatar;
 
+use Illuminate\Support\Str;
+use TALLKit\Attributes\Mount;
 use TALLKit\View\BladeComponent;
 
 class Avatar extends BladeComponent
 {
-    protected function props()
-    {
-        return [
-            'size' => null,
-            'alt' => null,
-            'src' => null,
-            'initials' => null,
-            'circle' => null,
-            'color' => null,
-            'icon' => null,
-            'name' => null,
-            'description' => null,
-        ];
-    }
+    public function __construct(
+        public ?string $size = null,
+        public ?string $alt = null,
+        public ?string $src = null,
+        public ?string $initials = null,
+        public ?bool $square = null,
+        public ?string $color = null,
+        public ?string $icon = null,
+        public ?string $name = null,
+        public string|bool|null $tooltip = null,
+    ) {}
 
-    protected function mounted(array $data)
+    #[Mount()]
+    protected function mount()
     {
         $this->initials = $this->generateInitials($this->initials ?? $this->name);
 
         if ($this->color === 'auto') {
             $this->color = $this->generateColor();
         }
+
+        if ($this->tooltip === true) {
+            $this->tooltip = $this->name ?? false;
+        }
     }
 
     protected function generateInitials($name)
     {
-        $parts = str($name)->title()->ucsplit()->filter();
+        $parts = Str::of($name)->title()->ucsplit()->filter();
 
         if ($parts->isEmpty()) {
             return null;
         }
 
-        if ($this->attributes->pluck('initials:single')) {
+        if ($this->attributes->pluck('initials:single') || $parts->count() === 1) {
             return strtoupper($parts[0][0]);
         }
 

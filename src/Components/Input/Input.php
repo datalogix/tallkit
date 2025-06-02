@@ -2,6 +2,7 @@
 
 namespace TALLKit\Components\Input;
 
+use TALLKit\Attributes\Mount;
 use TALLKit\View\BladeComponent;
 
 class Input extends BladeComponent
@@ -29,9 +30,12 @@ class Input extends BladeComponent
         ];
     }
 
-    protected function mounted(array $data)
+    #[Mount()]
+    protected function mount()
     {
-        $this->label ??= $this->name;
-        $this->id ??= uniqid($this->name);
+        if ($this->name) {
+            $this->label ??= $this->name;
+            $this->id ??= uniqid($this->name);
+        }
     }
 }

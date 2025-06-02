@@ -1,7 +1,13 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
+@source '../../src/Components/**/*.blade.php';
+
+[wire\:success][wire\:success] {
+  display: none !important;
+}
+
 @layer utilities {
-  table[data-tallkit-table] {
+  table[-table] {
     &.hover tbody tr:hover {
       @apply bg-zinc-50!;
     }
@@ -35,7 +41,6 @@ body.dark select[data-tallkit-select-native] {
     background-image: url("data:image/svg+xml,%3csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M8 9L12 5L16 9' stroke='%23ffffff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3e%3cpath d='M16 15L12 19L8 15' stroke='%23ffffff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3e%3c/svg%3e");
   }
 }
-
 
 .dropdown {
   @apply relative inline-block;
@@ -255,6 +260,7 @@ body.dark select[data-tallkit-select-native] {
     @apply top-auto bottom-full origin-bottom;
   }
 }
+
 @keyframes dropdown {
   0% {
     opacity: 0;
