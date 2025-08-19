@@ -3,9 +3,10 @@
 use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 
 if (! function_exists('route_detect')) {
-    function route_detect(array|string $routes, $parameters = null, string $default = '/')
+    function route_detect(array|string|null $routes, $parameters = null, ?string $default = '/')
     {
         foreach (array_filter(Arr::wrap($routes)) as $route) {
             if (Route::has($route)) {
@@ -25,7 +26,7 @@ if (! function_exists('make_model')) {
         }
 
         try {
-            return app(str($class)->studly()->prepend('\App\Models\\')->toString());
+            return app(Str::of($class)->studly()->prepend('\App\Models\\')->toString());
         } catch (BindingResolutionException $e) {
             //
         }
@@ -60,5 +61,30 @@ if (! function_exists('in_livewire')) {
     function in_livewire()
     {
         return \Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent();
+    }
+}
+
+if (! function_exists('is_current_href')) {
+    function is_current_href(?string $href = null)
+    {
+        $hrefForCurrentDetection = Str::startsWith($href, trim(config('app.url')))
+            ? Str::after($href, trim(config('app.url'), '/'))
+            : $href;
+
+        if ($hrefForCurrentDetection === '') {
+            $hrefForCurrentDetection = '/';
+        }
+
+        if ($hrefForCurrentDetection !== '/') {
+            $hrefForCurrentDetection = trim($hrefForCurrentDetection, '/');
+        }
+
+        if (! $hrefForCurrentDetection) {
+            return false;
+        }
+
+        return app('livewire')?->isLivewireRequest()
+            ? Str::is($hrefForCurrentDetection, app('livewire')->originalPath())
+            : request()->is([$hrefForCurrentDetection, "$hrefForCurrentDetection/*"]);
     }
 }

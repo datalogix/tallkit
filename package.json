@@ -1,6 +1,10 @@
 {
     "type": "module",
+    "scripts": {
+        "build": "vite build",
+        "watch": "vite build --watch"
+    },
     "devDependencies": {
-        "vite": "^6.2.5"
+        "vite": "^7.1.3"
     }
 }

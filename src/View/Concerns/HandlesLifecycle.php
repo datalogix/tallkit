@@ -3,12 +3,13 @@
 namespace TALLKit\View\Concerns;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 trait HandlesLifecycle
 {
-    private array $setVariables = [];
+    protected array $setVariables = [];
 
-    private array $smartAttributes = [];
+    protected array $smartAttributes = [];
 
     protected function run(array $data)
     {
@@ -38,16 +39,16 @@ trait HandlesLifecycle
 
     protected function getData(string $attribute, mixed $default = null)
     {
-        if ($this->attributes->has($kebab = str($attribute)->kebab()->toString())) {
+        if ($this->attributes->has($kebab = Str::kebab($attribute))) {
             $this->smartAttributes($kebab);
 
-            return $this->attributes->get($kebab);
+            return $this->attributes->get($kebab, $default);
         }
 
-        if ($this->attributes->has($camel = str($attribute)->camel()->toString())) {
+        if ($this->attributes->has($camel = Str::camel($attribute))) {
             $this->smartAttributes($camel);
 
-            return $this->attributes->get($camel);
+            return $this->attributes->get($camel, $default);
         }
 
         return $default;

@@ -1,104 +1,161 @@
-@php
-$iconClasses = TALLKit::classes();
-$wireTarget = null;
-@endphp
-<tk:field
-    :attributes="$attributes
-        ->whereStartsWith(['label:', 'description:', 'help:', 'error:'])
-        ->merge($attributesAfter('field:')->getAttributes())
-    "
-    :$name
-    :$id
->
-    <x-slot name="label" :attributes="$attributesFromSlot($label)">{{ $label }}</x-slot>
-    <x-slot name="description" :attributes="$attributesFromSlot($description)">{{ $description }}</x-slot>
-    <x-slot name="help" :attributes="$attributesFromSlot($help)">{{ $help }}</x-slot>
+@if ($type === 'file')
+    <tk:upload :$attributes>{{ $slot }}</tk:upload>
+@elseif ($type === 'checkbox')
+    <tk:checkbox :$attributes>{{ $slot }}</tk:checkbox>
+@elseif ($type === 'radio')
+    <tk:radio :$attributes>{{ $slot }}</tk:radio>
+@elseif ($type === 'reset' || $type === 'button')
+    <tk:button :$attributes :$type>{{ $slot }}</tk:button>
+@elseif ($type === 'submit')
+    <tk:submit :$attributes :$type>{{ $slot }}</tk:submit>
+@else
+    @php $invalid ??= $name && $errors->has($name); @endphp
+    <tk:field.wrapper :$attributes>
+        <div
+            {{ $buildDataAttribute('input') }}
+            {{ $attributes->only('class')->classes('w-full relative block group/input') }}
+        >
+            @if (is_string($icon) && $icon !== '')
+                <div class="pointer-events-none absolute top-0 bottom-0 flex items-center justify-center text-xs text-zinc-400/75 ps-3 start-0">
+                    <tk:icon
+                        :attributes="$attributesAfter('icon:')"
+                        :size="$adjustSize()"
+                        :$icon
+                    />
+                </div>
+            @elseif ($icon)
+                <tk:element
+                    :attributes="$attributesAfter('icon:')->classes('absolute top-0 bottom-0 flex items-center justify-center text-xs text-zinc-400/75 ps-3 start-0')"
+                    :label="$icon"
+                />
+            @endif
 
-    <div {{ $attributes->only('class')->classes('w-full relative block group/input') }}>
-        <?php if (is_string($iconLeading)): ?>
-        <div class="pointer-events-none absolute top-0 bottom-0 flex items-center justify-center text-xs text-zinc-400/75 ps-3 start-0">
-            <tk:icon :icon="$iconLeading" :class="$iconClasses" />
-        </div>
-    <?php elseif ($iconLeading): ?>
-        <div {{ $iconLeading->attributes->class('absolute top-0 bottom-0 flex items-center justify-center text-xs text-zinc-400/75 ps-3 start-0') }}>
-            {{ $iconLeading }}
-        </div>
-    <?php endif; ?>
-
-        <input
-            type="{{ $type }}"
-            @isset ($name) name="{{ $name }}" @endisset
-            @isset ($id) id="{{ $id }}" @endisset
-            @if (in_livewire() && $name) wire:model="{{ $name }}" @endif
-            {{
-                $attributes
+            <input
+                {{ $buildDataAttribute('control') }}
+                {{ $buildDataAttribute('group-target') }}
+                type="{{ $type }}"
+                @isset ($name) name="{{ $name }}" @endisset
+                @isset ($id) id="{{ $id }}" @endisset
+                @if ($size && $type === 'range') data-size="{{ $size }}" @endif
+                @if ($invalid) aria-invalid="true" data-invalid @endif
+                @if ($placeholder) placeholder="{{ __($placeholder) }}" @endif
+                @unless (in_livewire()) value="{{ $value }}" @endif
+                @if ($loading && in_livewire()) wire:loading.style="$paddingEnd(true)" @endif
+                @if ($loading && $wireTarget && in_livewire()) wire:target="{{ $wireTarget }}" @endif
+                @if ($mask) x-data x-mask="{{ $mask }}" @endif
+                {{ $attributes->whereDoesntStartWith([
+                        'input:', 'icon:', 'loading:', 'clearable:', 'kbd:', 'copyable:', 'viewable:', 'icon-trailing:',
+                        'field:', 'label:', 'information:', 'badge:', 'description:', 'help:', 'error:',
+                        'group:', 'prefix:', 'suffix:',
+                    ])
                     ->except('class')
-                    ->whereDoesntStartWith(['field:', 'label:', 'description:', 'help:', 'error:'])
-                    ->classes(match($size) {
-                        'sm' => 'p-2 text-xs',
-                        'normal' => 'p-3 text-sm',
-                        default => 'p-3 text-sm',
-                        'large' => 'p-4 text-base',
-                    })
-                    ->classes($rounded ? 'rounded-lg' : '')
-                    ->classes('
+                    ->classes(
+                        '
                         peer
-                        border border-gray-300 text-gray-900
-
-                        bg-white
                         block
                         w-full
+                        appearance-none
 
-                        dark:bg-gray-700
-                        dark:border-gray-600
-                        dark:placeholder-gray-400
-                        dark:text-white
+                        shadow-xs
+                        disabled:shadow-none
 
-                        focus:outline-hidden
-                        focus:ring-2
-                        focus:ring-blue-500
-                        focus:ring-offset-2
-                        focus:ring-offset-neutral-800
-                    ')
-                    ->when($invalid, fn($c) => $c->classes('border-red-500'))
-                    ->classes($attributes->pluck('class:input'))
-            }}
-        />
+                        border
+                        border-zinc-300 dark:border-white/10
+                        [&[data-invalid]]:border-red-500 dark:[&[data-invalid]]:border-red-400
 
-        <div class="absolute top-0 bottom-0 flex items-center gap-x-1.5 pe-3 end-0 text-xs text-zinc-400">
-            @if ($loading)
-                <tk:loading :class="$iconClasses" wire:loading :wire:target="$wireTarget"/>
-            @endif
+                        text-zinc-700
+                        placeholder-zinc-400
 
-            @if ($clearable)
-                <tk:input.clearable inset="left right" :$size />
-            @endif
+                        disabled:text-zinc-500
+                        disabled:placeholder-zinc-400/70
 
-            @if ($kbd)
-                <span class="pointer-events-none">{{ $kbd }}</span>
-            @endif
+                        dark:text-zinc-300
+                        dark:disabled:text-zinc-400
+                        dark:placeholder-zinc-400
+                        dark:disabled:placeholder-zinc-500
 
-            @if ($expandable)
-                <tk:input.expandable inset="left right" :$size />
-            @endif
+                        bg-white
+                        dark:bg-white/10
+                        disabled:opacity-50
+                        ',
+                        match ($size) {
+                            'xs' => 'h-8 py-1.5 text-xs rounded-md ' . ($icon ? 'ps-8' : 'ps-2') . ' pe-2',
+                            'sm' => 'h-10 py-2 text-sm rounded-md ' . ($icon ? 'ps-9' : 'ps-2.5') . ' pe-2.5',
+                            default => 'h-12 py-3 text-base rounded-lg ' . ($icon ? 'ps-10' : 'ps-3') . ' pe-3',
+                            'lg' => 'h-14 py-3.5 text-lg rounded-lg ' . ($icon ? 'ps-12' : 'ps-3.5') . ' pe-3.5',
+                            'xl' => 'h-16 py-4 text-xl rounded-xl ' . ($icon ? 'ps-14' : 'ps-4') . ' pe-4',
+                            '2xl' => 'h-18 py-4.5 text-2xl rounded-xl ' . ($icon ? 'ps-16' : 'ps-4.5') . ' pe-4.5',
+                            '3xl' => 'h-20 py-5 text-3xl rounded-2xl ' . ($icon ? 'ps-18' : 'ps-5') . ' pe-5',
+                        },
+                        match ($type) {
+                            'color' => 'py-px pe-1 ' . ($icon ? '' : 'ps-1'),
+                            'range' => 'py-0 ' . match ($size) {
+                                'xs' => 'h-1.5',
+                                'sm' => 'h-2.5',
+                                default => 'h-3',
+                                'lg' => 'h-3.5',
+                                'xl' => 'h-4',
+                                '2xl' => 'h-4.5',
+                                '3xl' => 'h-5',
+                            },
+                            default => 'focus:ring-blue-500 focus:border-blue-500',
+                        },
+                        $attributes->pluck('input:class')
+                    )
+                }}
+            />
 
-            @if ($copyable)
-                <tk:input.copyable inset="left right" :$size />
-            @endif
+            <div class="absolute top-0 bottom-0 flex items-center gap-x-1.5 pe-3 end-0 text-xs text-zinc-400">
+                @if ($loading)
+                    <tk:loading
+                        :attributes="$attributesAfter('loading:')->when(in_livewire(), fn($attrs) => $attrs->merge([
+                            'wire:loading' => true,
+                            'wire:target' => $wireTarget
+                        ]))"
+                        :size="$adjustSize()"
+                    />
+                @endif
 
-            @if ($viewable)
-                <tk:input.viewable inset="left right" :$size />
-            @endif
+                @if ($clearable)
+                    <tk:input.clearable
+                        :attributes="$attributesAfter('clearable:')"
+                        :size="$adjustSize()"
+                    />
+                @endif
 
-            <?php if (is_string($iconTrailing)): ?>
-                <?php
-                    $trailingIconClasses = clone $iconClasses;
-                    $trailingIconClasses->add('pointer-events-none text-zinc-400/75');
-                ?>
-                <tk:icon :icon="$iconTrailing" :class="$trailingIconClasses" />
-            <?php elseif ($iconTrailing): ?>
-                {{ $iconTrailing }}
-            <?php endif; ?>
+                @if ($kbd)
+                    <span {{ $attributesAfter('kbd:')->classes('pointer-events-none') }}>
+                        {{ $kbd }}
+                    </span>
+                @endif
+
+                @if ($copyable)
+                    <tk:input.copyable
+                        :attributes="$attributesAfter('copyable:')"
+                        :size="$adjustSize()"
+                    />
+                @endif
+
+                @if ($viewable)
+                    <tk:input.viewable
+                        :attributes="$attributesAfter('viewable:')"
+                        :size="$adjustSize()"
+                    />
+                @endif
+
+                @if (is_string($iconTrailing) && $iconTrailing !== '')
+                    <tk:icon
+                        :attributes="$attributesAfter('icon-trailing:')->classes('pointer-events-none text-zinc-400/75')"
+                        :size="$adjustSize()"
+                        :$icon
+                    />
+                @elseif ($iconTrailing)
+                    <tk:element
+                        :attributes="$attributesAfter('icon-trailing:')"
+                        :label="$iconTrailing"
+                    />
+                @endif
+            </div>
         </div>
-    </div>
-</tk:field>
+    </tk:field>
+@endif

@@ -20,18 +20,11 @@ class Fonts extends BladeComponent
     #[Mount()]
     protected function mount()
     {
-        $this->url = $this->constructUrl($this->families, ! $this->display && $this->preload ? 'swap' : $this->display);
+        $this->url = static::constructUrl($this->families, ! $this->display && $this->preload ? 'swap' : $this->display);
         $this->setVariables('url');
     }
 
-    /**
-     * Construct url.
-     *
-     * @param  string|array  $families
-     * @param  string|null  $display
-     * @return string
-     */
-    private function constructUrl($families, $display = null)
+    public static function constructUrl($families, $display = null)
     {
         if (filter_var($families, FILTER_VALIDATE_URL) !== false) {
             return $families;

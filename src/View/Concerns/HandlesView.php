@@ -54,9 +54,7 @@ trait HandlesView
             return fn (array $data = []) => $resolver($view($data));
         }
 
-        return function (array $data = []) use ($resolver, $view) {
-            return view($resolver($view))->with($this->run($data));
-        };
+        return fn (array $data = []) => view($resolver($view))->with($this->run($data));
     }
 
     public function render()

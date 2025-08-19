@@ -3,6 +3,7 @@
 namespace TALLKit\Assets;
 
 use Illuminate\Foundation\Http\Events\RequestHandled;
+use Illuminate\Support\Str;
 
 class AssetInjector
 {
@@ -16,7 +17,7 @@ class AssetInjector
     public static function boot()
     {
         app('events')->listen(RequestHandled::class, function ($handled) {
-            if (! str($handled->response->headers->get('content-type'))->contains('text/html')) {
+            if (Str::doesntContain($handled->response->headers->get('content-type'), 'text/html', true)) {
                 return;
             }
 
@@ -38,7 +39,7 @@ class AssetInjector
 
             $html = $handled->response->getContent();
 
-            if (str($html)->contains('</html>')) {
+            if (Str::contains($html, '</html>', true)) {
                 $originalContent = $handled->response->original;
                 $handled->response->setContent(static::injectAssets($html, $assetsHead, $assetsBody));
                 $handled->response->original = $originalContent;
@@ -61,7 +62,7 @@ class AssetInjector
 
     protected static function injectAssets(string $html, string $assetsHead, string $assetsBody)
     {
-        $html = str($html);
+        $html = Str::of($html);
 
         if ($html->test('/<\s*\/\s*head\s*>/i') && $html->test('/<\s*\/\s*body\s*>/i')) {
             return $html

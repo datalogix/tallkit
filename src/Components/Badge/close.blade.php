@@ -1,7 +1,22 @@
-<tk:element :attributes="$attributes->whereDoesntStartWith(['icon:'])->classes('p-1 -my-1 -me-1 opacity-50 hover:opacity-100')" as="button" data-tallkit-badge-close>
-    @if ($slot->isEmpty())
-        <tk:icon :attributes="$attributesAfter('icon:')" :icon="$icon ?? 'close'" size="sm" data-tallkit-badge-close-icon />
-    @else
-        {{ $slot }}
-    @endif
-</tk:element>
+<tk:button
+    variant="none"
+    tooltip="{{ __('Close') }}"
+    aria-label="{{ __('Close') }}"
+    :icon="$slot->isEmpty() ? $icon ?? 'close' : null"
+    :attributes="$attributes->classes(
+        'p-px -my-1 -me-1 text-current! opacity-50 hover:opacity-100',
+        match ($size) {
+            'xs' => '**:data-tallkit-icon:size-3',
+            'sm' => '**:data-tallkit-icon:size-3.5',
+            default => '**:data-tallkit-icon:size-4',
+            'lg' => ' **:data-tallkit-icon:size-4.5',
+            'xl' => '**:data-tallkit-icon:size-5',
+            '2xl' => '**:data-tallkit-icon:size-5.5',
+            '3xl' => '**:data-tallkit-icon:size-6',
+        }
+    )"
+>
+    {{ $slot }}
+</tk:button>
+
+

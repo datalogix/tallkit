@@ -1,44 +1,50 @@
-<div {{ $attributes->whereDoesntStartWith(['image:', 'container:', 'title:', 'subtitle:', 'content:'])->classes(
-    'bg-white dark:bg-white/10',
-    'border border-zinc-200 dark:border-white/10',
-    'overflow-hidden shadow-sm [:where(&)]:rounded-xl'
-) }} data-tallkit-card>
+<div {{
+    $attributes
+        ->whereDoesntStartWith(['image:', 'container:', 'title:', 'subtitle:', 'content:'])
+        ->classes(
+            'bg-white dark:bg-zinc-800',
+            'border border-zinc-300 dark:border-white/10',
+            'overflow-hidden shadow-sm [:where(&)]:rounded-xl'
+        )
+}}>
     @if ($image)
-        <img src="{{ $image }}" {{ $attributesAfter('image:')->merge(['alt' => __((string) $title)])->classes('w-full object-cover') }} data-tallkit-card-image />
+        <img
+            {{ $attributesAfter('image:')->classes('w-full object-cover') }}
+            src="{{ $image }}"
+            alt="{{ __((string) $title) }}"
+        />
     @endif
 
     {{ $header ?? '' }}
 
-    <div {{ $attributesAfter('container:')->classes('[:where(&)]:p-6 flex flex-col gap-6') }}
-        data-tallkit-card-container>
-
+    <div {{ $attributesAfter('container:')->classes('[:where(&)]:p-6 flex flex-col gap-6') }}>
         @if ($title || $subtitle || isset($actions))
             <div class="flex justify-between gap-6">
                 <div class="flex-1">
-                    @if ($title)
-                        <tk:heading :attributes="$attributesAfter('title:')" data-tallkit-card-title>
-                            {!! $isSlot($title) ? $title : __($title) !!}
-                        </tk:heading>
-                    @endif
+                    <tk:heading
+                        :attributes="$attributesAfter('title:')"
+                        :label="$title"
+                        :$size
+                    />
 
-                    @if ($subtitle)
-                        <tk:text :attributes="$attributesAfter('subtitle:')" data-tallkit-card-subtitle>
-                            {!! $isSlot($subtitle) ? $subtitle : __($subtitle) !!}
-                        </tk:text>
-                    @endif
+                    <tk:text
+                        :attributes="$attributesAfter('subtitle:')"
+                        :label="$subtitle"
+                        :$size
+                    />
                 </div>
 
                 @isset ($actions)
-                    <div {{ $attributesAfter('actions:')->classes('shrink-0') }} data-tallkit-card-actions>
+                    <div {{ $attributesAfter('actions:')->classes('shrink-0') }}>
                         {{ $actions }}
                     </div>
                 @endisset
             </div>
         @endif
 
-        @if ($slot->isNotEmpty() || $text)
-            <div {{ $attributesAfter('content:') }} data-tallkit-card-content>
-                {{ $slot->isEmpty() ? __($text) : $slot }}
+        @if ($slot->isNotEmpty() || $content)
+            <div {{ $attributesAfter('content:') }}>
+                {{ $slot->isEmpty() ? __($content) : $slot }}
             </div>
         @endif
     </div>

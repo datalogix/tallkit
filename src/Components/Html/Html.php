@@ -14,7 +14,7 @@ class Html extends BladeComponent
         public string|false $viewport = 'width=device-width, initial-scale=1',
         public bool $csrfToken = true,
         public array $metaTags = [],
-        public array $meta = [],
+        public bool|array $meta = false,
         public string|array $vite = [
             'resources/css/app.css',
             'resources/css/app.scss',
@@ -32,6 +32,9 @@ class Html extends BladeComponent
         public string|false $stackStyles = 'styles',
         public string|false $stackScripts = 'scripts',
         public array $components = [],
+        public bool $toast = true,
+        public ?bool $livewire = null,
+        public string|bool $appearance = true,
     ) {}
 
     #[Mount()]
@@ -41,5 +44,11 @@ class Html extends BladeComponent
         $this->title ??= config('app.name');
         $this->vite = collect($this->vite)->unique()->filter(fn ($path) => file_exists(base_path($path)))->toArray();
         $this->googleFonts = is_string($this->googleFonts) ? ['families' => $this->googleFonts] : $this->googleFonts;
+        $this->livewire ??= class_exists(\Livewire\Livewire::class);
+    }
+
+    public function baseComponentKey()
+    {
+        return null;
     }
 }

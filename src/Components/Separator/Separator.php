@@ -9,6 +9,6 @@ class Separator extends BladeComponent
     public function __construct(
         public ?bool $vertical = null,
         public ?string $variant = null,
-        public ?string $text = null,
+        public ?string $label = null,
     ) {}
 }

@@ -2,47 +2,53 @@
 
 namespace TALLKit\Components\Avatar;
 
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use TALLKit\Attributes\Mount;
+use TALLKit\Concerns\InteractsWithUser;
 use TALLKit\View\BladeComponent;
 
 class Avatar extends BladeComponent
 {
+    use InteractsWithUser;
+
     public function __construct(
-        public ?string $size = null,
         public ?string $alt = null,
         public ?string $src = null,
         public ?string $initials = null,
-        public ?bool $square = null,
-        public ?string $color = null,
-        public ?string $icon = null,
-        public ?string $name = null,
+        public string|bool|null $icon = null,
         public string|bool|null $tooltip = null,
+        public ?string $size = null,
+        public ?bool $square = null,
+        public ?string $variant = null,
     ) {}
+
+    protected function mergeCustomAppendedAttributes()
+    {
+        return [];
+    }
 
     #[Mount()]
     protected function mount()
     {
         $this->initials = $this->generateInitials($this->initials ?? $this->name);
-
-        if ($this->color === 'auto') {
-            $this->color = $this->generateColor();
-        }
+        $this->src ??= $this->findImage($this->email ?? $this->username, $this->attributes->pluck('ttl'));
 
         if ($this->tooltip === true) {
             $this->tooltip = $this->name ?? false;
         }
     }
 
-    protected function generateInitials($name)
+    protected function generateInitials($value)
     {
-        $parts = Str::of($name)->title()->ucsplit()->filter();
+        $parts = Str::of($value)->title()->ucsplit()->filter();
 
         if ($parts->isEmpty()) {
             return null;
         }
 
-        if ($this->attributes->pluck('initials:single') || $parts->count() === 1) {
+        if ($this->attributes->pluck('initials:single') || ($parts->count() === 1 && strlen($parts->first()) === 1)) {
             return strtoupper($parts[0][0]);
         }
 
@@ -53,12 +59,39 @@ class Avatar extends BladeComponent
         return strtoupper($parts[0][0]).strtolower($parts[0][1]);
     }
 
-    protected function generateColor()
+    public function generateColor()
     {
         $colors = ['red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose'];
         $colorSeed = $this->attributes->pluck('color:seed') ?? $this->name ?? $this->icon ?? $this->initials;
         $hash = crc32((string) $colorSeed);
 
         return $colors[$hash % count($colors)];
+    }
+
+    protected function findImage($value, $ttl = null)
+    {
+        if (! $value) {
+            return null;
+        }
+
+        if (Str::isUrl($value)) {
+            return $value;
+        }
+
+        return Cache::remember("tallkit-avatar-{$value}", $ttl ?? 60 * 60 * 24, function () use ($value) {
+            $response = Http::get("https://unavatar.io/{$value}?json");
+
+            if (! $response->successful()) {
+                return '';
+            }
+
+            $url = $response->json('url');
+
+            if (Str::contains($url, 'fallback', true)) {
+                return '';
+            }
+
+            return $url;
+        });
     }
 }

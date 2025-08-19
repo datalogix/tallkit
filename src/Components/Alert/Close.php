@@ -9,5 +9,6 @@ class Close extends BladeComponent
     public function __construct(
         public ?string $type = null,
         public ?string $icon = null,
+        public ?string $size = null,
     ) {}
 }

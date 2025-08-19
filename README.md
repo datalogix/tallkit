@@ -1,0 +1,22 @@
+- Auth
+- Layouts
+- FormBuilder
+- DataTableBuilder
+
+- Upload (File upload)
+- Table (with pagination)
+- Pagination
+- DataTable (with a filter e etc...)
+- CreditCard
+- Accordion
+- Tabs
+- Modal
+- Editor
+- Color Picker
+- Date Picker
+- Context
+- Command
+- Chart
+- Breadcrumbs
+- Calendar
+- Autocomplete

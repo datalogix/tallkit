@@ -2,6 +2,8 @@
 
 namespace TALLKit\View\Concerns;
 
+use Illuminate\Support\Str;
+
 trait HandlesProps
 {
     protected array $props = [];
@@ -20,13 +22,17 @@ trait HandlesProps
         }
 
         foreach ($this->props() as $prop => $value) {
-            $this->manageProp($data, $prop, $value);
+            $this->manageProp(
+                $data,
+                is_numeric($prop) ? $value : $prop,
+                is_numeric($prop) ? null : $value,
+            );
         }
     }
 
-    private function manageProp(array $data, string $prop, mixed $value = null)
+    protected function manageProp(array $data, string $prop, mixed $value = null)
     {
-        $field = str($prop)->camel()->toString();
+        $field = Str::camel($prop);
         $this->{$field} = $this->getData($field, data_get($data, $prop, $value));
         $this->setVariables($field);
     }

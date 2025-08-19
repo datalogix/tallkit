@@ -4,12 +4,4 @@ namespace TALLKit\Components\Input;
 
 use TALLKit\View\BladeComponent;
 
-class Viewable extends BladeComponent
-{
-    protected function props()
-    {
-        return [
-
-        ];
-    }
-}
+class Viewable extends BladeComponent {}

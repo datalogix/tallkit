@@ -16,30 +16,29 @@ class Sidebar extends BladeComponent
                 <tk:brand href="#" logo="https://fluxui.dev/img/demo/logo.png" name="Acme Inc." class="px-2 dark:hidden" />
                 <tk:brand href="#" logo="https://fluxui.dev/img/demo/dark-mode-logo.png" name="Acme Inc." class="px-2 hidden dark:flex" />
 
-
-                <tk:navlist variant="outline">
-                    <tk:navlist.group :heading="__('Platform')" class="grid">
-                        <tk:navlist.item icon="home" wire:navigate>
+                <tk:nav list>
+                    <tk:nav.group :heading="__('Platform')" class="grid">
+                        <tk:nav.item icon="home" wire:navigate>
                             {{ __('Dashboard') }}
-                        </tk:navlist.item>
-                    </tk:navlist.group>
-                </tk:navlist>
+                        </tk:nav.item>
+                    </tk:nav.group>
+                </tk:nav>
 
                 <tk:spacer />
 
-                <tk:navlist variant="outline">
-                    <tk:navlist.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
+                <tk:nav list>
+                    <tk:nav.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
                     {{ __('Repository') }}
-                    </tk:navlist.item>
+                    </tk:nav.item>
 
-                    <tk:navlist.item icon="book-open-text" href="https://laravel.com/docs/starter-kits" target="_blank">
+                    <tk:nav.item icon="book-open-text" href="https://laravel.com/docs/starter-kits" target="_blank">
                     {{ __('Documentation') }}
-                    </tk:navlist.item>
-                </tk:navlist>
+                    </tk:nav.item>
+                </tk:nav>
 
                 <!-- Desktop User Menu -->
                 <tk:dropdown position="bottom" align="start">
-                    <tk:profile
+                    <tk:avatar.profile
                         :name="'Ricardo'"
                         icon-trailing="chevrons-up-down"
                     />
@@ -90,7 +89,7 @@ class Sidebar extends BladeComponent
                 <tk:spacer />
 
                 <tk:dropdown position="top" align="end">
-                    <tk:profile
+                    <tk:avatar.profile
                         :initials="'RG'"
                         icon-trailing="chevron-down"
                     />

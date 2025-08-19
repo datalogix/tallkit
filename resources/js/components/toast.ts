@@ -1,18 +1,52 @@
-import { popover } from "../utils"
+import { bind } from '../utils'
 
-export function toast () {
-  const _popover = popover()
-
+export function toast() {
   return {
-    ..._popover,
+    toasts: [],
+    positions: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
 
-    text: '',
-    heading: '',
-
-    open({ text, heading }) {
-      this.text = text ?? ''
-      this.heading = heading ?? ''
-      _popover.open.call(this)
+    init() {
+      bind(this.$el, {
+        ['@toast.document'](e) {
+          this.addToast(e.detail)
+        }
+      })
     },
+
+    addToast(props) {
+      const toast = window.Alpine.reactive({
+        id: Date.now() + Math.random(),
+        ...props,
+        duration: props.duration ?? 5000,
+        position: props.position ?? 'bottom-right',
+        visible: false,
+      })
+
+      this.toasts.push(toast)
+      this.$nextTick(() => toast.visible = true)
+
+      if (toast.duration) {
+        setTimeout(
+          () => this.removeToast(toast.id),
+          toast.duration
+        )
+      }
+    },
+
+    removeToast(id) {
+      const toast = this.toasts.find(t => t.id === id)
+      if (!toast) return
+
+      toast.visible = false
+
+      setTimeout(() => {
+        this.toasts = this.toasts.filter(t => t.id !== id)
+      }, 300)
+    },
+
+    getToastsByPosition(position) {
+      return this.toasts.filter(t => t.position === position)
+    }
   }
 }
+

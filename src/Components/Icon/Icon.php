@@ -3,27 +3,46 @@
 namespace TALLKit\Components\Icon;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use TALLKit\Attributes\Mount;
 use TALLKit\View\BladeComponent;
 
 class Icon extends BladeComponent
 {
-    public static $collections = ['mdi', 'ph'];
+    private static $collections = [
+        'material-symbols',
+        'material-symbols-light',
+        'ic',
+        'mdi',
+        'solar',
+        'tabler',
+        'hugeicons',
+        'fluent',
+        'ph',
+        'heroicons',
+        'arcticons',
+        'openmoji',
+        'game-icons',
+    ];
+
+    public static function setCollections(array $collections)
+    {
+        static::$collections = $collections;
+    }
 
     public function __construct(
-        public ?string $size = null,
-        public ?string $icon = null,
         public ?string $name = null,
+        public ?string $icon = null,
+        public ?string $size = null,
+        public ?string $svg = null,
     ) {}
 
     #[Mount()]
     protected function mount()
     {
-        $this->svg = null;
-        $this->setVariables(['svg']);
-
         $iconName = $this->name ?? $this->icon;
 
         if (! $iconName) {
@@ -31,37 +50,48 @@ class Icon extends BladeComponent
         }
 
         $names = array_unique(array_merge(
-            str_contains($iconName, ':') ? [$iconName] : [],
-            Arr::map(static::$collections, fn ($collection) => $collection.':'.str($iconName)->after(':')),
+            Str::contains($iconName, ':') ? [$iconName] : [],
+            Arr::map(static::$collections, fn ($collection) => $collection.':'.Str::after($iconName, ':')),
         ));
 
         foreach ($names as $name) {
-            if (! $this->svg) {
-                $this->svg = static::getOrFetchSvg($name);
+            if ($this->svg) {
+                break;
             }
+
+            $this->svg = static::getOrFetchSvg($name);
         }
     }
 
-    protected static function getOrFetchSvg(string $name)
+    public static function getOrFetchSvg($name)
     {
-        $path = storage_path('app/tallkit/icons/'.str($name)->snake().'.svg');
-
-        if (File::exists($path)) {
-            return File::get($path);
-        }
-
-        $url = "https://api.iconify.design/{$name}.svg";
-        $response = Http::get($url);
-
-        if (! $response->successful()) {
+        if (! $name) {
             return null;
         }
 
-        $contents = $response->body();
+        return Cache::rememberForever("tallkit-icon-{$name}", function () use ($name) {
+            $path = storage_path('app/tallkit/icons/'.Str::slug($name, '_').'.svg');
 
-        File::ensureDirectoryExists(dirname($path));
-        File::put($path, $contents);
+            if (File::exists($path)) {
+                return File::get($path);
+            }
 
-        return $contents;
+            $response = Http::get("https://api.iconify.design/{$name}.svg");
+
+            if (! $response->successful()) {
+                return '';
+            }
+
+            $contents = $response->body();
+
+            if (Str::doesntContain($contents, '<svg', true)) {
+                return '';
+            }
+
+            File::ensureDirectoryExists(dirname($path));
+            File::put($path, $contents);
+
+            return $contents;
+        });
     }
 }

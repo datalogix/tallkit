@@ -6,11 +6,9 @@ use TALLKit\View\BladeComponent;
 
 class Header extends BladeComponent
 {
-    protected function props()
-    {
-        return [
-            'sticky' => null,
-            'container' => null,
-        ];
-    }
+    public function __construct(
+        public ?bool $sticky = null,
+        public ?bool $container = null,
+        public ?string $variant = null,
+    ) {}
 }

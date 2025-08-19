@@ -3,6 +3,7 @@
 namespace TALLKit\Assets;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 trait CanPretendToBeAFile
 {
@@ -30,7 +31,7 @@ trait CanPretendToBeAFile
         $headers['Cache-Control'] = $cacheControl;
         $headers['Last-Modified'] = $this->httpDate($lastModified);
 
-        if (str($file)->endsWith('.br')) {
+        if (Str::endsWith($file, '.br')) {
             $headers['Content-Encoding'] = 'br';
         }
 
@@ -51,11 +52,11 @@ trait CanPretendToBeAFile
 
     protected function getContentType($file)
     {
-        if (str($file)->endsWith('.css')) {
+        if (Str::endsWith($file, '.css')) {
             return 'text/css; charset=utf-8';
         }
 
-        if (str($file)->endsWith('.js')) {
+        if (Str::endsWith($file, '.js')) {
             return 'application/javascript; charset=utf-8';
         }
     }

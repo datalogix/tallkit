@@ -7,11 +7,7 @@ use TALLKit\View\BladeComponent;
 class Field extends BladeComponent
 {
     public function __construct(
-        public ?string $name = null,
-        public ?string $id = null,
-        public ?string $label = null,
-        public ?string $description = null,
-        public ?string $help = null,
-    ) {
-    }
+        public ?string $variant = null,
+        public ?string $align = null,
+    ) {}
 }

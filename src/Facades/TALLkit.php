@@ -1,13 +1,13 @@
 <?php
 
-namespace TALLkit\Facades;
+namespace TALLKit\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @see \TALLkit\TALLkit
+ * @see \TALLKit\TALLKit
  */
-class TALLkit extends Facade
+class TALLKit extends Facade
 {
     public static function getFacadeAccessor()
     {

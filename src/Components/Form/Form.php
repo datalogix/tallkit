@@ -2,24 +2,24 @@
 
 namespace TALLKit\Components\Form;
 
+use TALLKit\Attributes\Finish;
 use TALLKit\Attributes\Mount;
 use TALLKit\Concerns\BoundValues;
-use TALLKit\Concerns\PrepareFormDataBinder;
+use TALLKit\Facades\TALLKit;
 use TALLKit\View\BladeComponent;
 
 class Form extends BladeComponent
 {
-    use BoundValues, PrepareFormDataBinder;
+    use BoundValues;
 
-    protected function props()
-    {
-        return [
-            'method' => 'post',
-            'enctype' => null,
-            'bind' => null,
-            'route' => null,
-            'action' => null,
-        ];
+    public function __construct(
+        public ?string $method = 'post',
+        public ?string $enctype = null,
+        public mixed $bind = null,
+        public ?string $route = null,
+        public ?string $action = null,
+    ) {
+        TALLKit::bind($bind);
     }
 
     #[Mount()]
@@ -28,12 +28,14 @@ class Form extends BladeComponent
         $this->method = strtoupper($this->method);
         $this->spoofMethod = in_array($this->method, ['PUT', 'PATCH', 'DELETE']);
         $this->setVariables('spoofMethod');
-        $this->action ??= route_detect($this->route, $this->bind ?? $this->getBoundTarget(), request()->url());
-        $this->startFormDataBinder($this->bind);
+        $this->action = in_livewire()
+            ? ($this->action ?? 'submit')
+            : route_detect([$this->route, $this->action], $this->bind ?? $this->getBoundTarget(), request()->url());
     }
 
+    #[Finish()]
     protected function finish()
     {
-        $this->endFormDataBinder();
+        TALLKit::endBind();
     }
 }

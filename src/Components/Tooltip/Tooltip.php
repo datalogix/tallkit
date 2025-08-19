@@ -12,6 +12,9 @@ class Tooltip extends BladeComponent
         public ?string $align = null,
         public string|ComponentSlot|null $content = null,
         public string|ComponentSlot|null $kbd = null,
-        public ?bool $toggleable = null,
+        public ?string $mode = null,
+        public ?string $variant = null,
+        public ?string $size = null,
+        public null|bool|string $arrow = null,
     ) {}
 }

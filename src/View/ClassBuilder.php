@@ -3,6 +3,7 @@
 namespace TALLKit\View;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Illuminate\Support\Traits\Conditionable;
 use Stringable;
 
@@ -35,7 +36,7 @@ class ClassBuilder implements Stringable
     {
         return $this->classes->unique()
             ->filter()
-            ->map(fn ($class) => str($class)->trim()->toString())
+            ->map(fn ($class) => Str::trim($class))
             ->join(' ');
     }
 }

@@ -18,27 +18,28 @@ trait HandlesAttributes
 
     protected function bootAttributes()
     {
-        $this->mount = $this->getFunctionsByAttribute(Mount::class);
-        $this->process = $this->getFunctionsByAttribute(Process::class);
-        $this->finish = $this->getFunctionsByAttribute(Finish::class);
+        $reflection = new ReflectionClass($this);
+
+        $this->mount = $this->getFunctionsByAttribute($reflection, Mount::class);
+        $this->process = $this->getFunctionsByAttribute($reflection, Process::class);
+        $this->finish = $this->getFunctionsByAttribute($reflection, Finish::class);
     }
 
-    private function getFunctionsByAttribute(string $name)
+    private function getFunctionsByAttribute(ReflectionClass $reflection, string $name)
     {
         $methods = [];
-
-        $reflection = new ReflectionClass($this);
 
         foreach ($reflection->getMethods() as $method) {
             $attribute = Arr::first($method->getAttributes($name));
 
-            if (! is_null($attribute)) {
+            if ($attribute) {
                 $instance = $attribute->newInstance();
-
-                data_set($methods, $instance->priority, $method->getName());
+                $methods[$instance->priority][] = $method->getName();
             }
         }
 
-        return Arr::sort($methods, fn ($value, $key) => $key);
+        ksort($methods);
+
+        return array_merge(...array_values($methods));
     }
 }

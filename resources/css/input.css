@@ -1,0 +1,26 @@
+
+/* Base thumb style */
+input[data-tallkit-input][type="range"]::-webkit-slider-thumb {
+  @apply appearance-none size-5 bg-blue-400 rounded-full shadow transition-colors duration-150;
+}
+
+/* Size variants */
+input[data-tallkit-input][type="range"][data-size="xs"]::-webkit-slider-thumb { @apply size-3; }
+input[data-tallkit-input][type="range"][data-size="sm"]::-webkit-slider-thumb { @apply size-4; }
+input[data-tallkit-input][type="range"][data-size="md"]::-webkit-slider-thumb { @apply size-5; }
+input[data-tallkit-input][type="range"][data-size="lg"]::-webkit-slider-thumb { @apply size-6; }
+input[data-tallkit-input][type="range"][data-size="xl"]::-webkit-slider-thumb { @apply size-7; }
+input[data-tallkit-input][type="range"][data-size="2xl"]::-webkit-slider-thumb { @apply size-8; }
+input[data-tallkit-input][type="range"][data-size="3xl"]::-webkit-slider-thumb { @apply size-9; }
+
+/* Firefox support */
+input[data-tallkit-input][type="range"]::-moz-range-thumb {
+  @apply appearance-none size-5 bg-blue-500 rounded-full shadow transition-colors duration-150;
+}
+input[data-tallkit-input][type="range"][data-size="xs"]::-moz-range-thumb { @apply size-3; }
+input[data-tallkit-input][type="range"][data-size="sm"]::-moz-range-thumb { @apply size-4; }
+input[data-tallkit-input][type="range"][data-size="md"]::-moz-range-thumb { @apply size-5; }
+input[data-tallkit-input][type="range"][data-size="lg"]::-moz-range-thumb { @apply size-6; }
+input[data-tallkit-input][type="range"][data-size="xl"]::-moz-range-thumb { @apply size-7; }
+input[data-tallkit-input][type="range"][data-size="2xl"]::-moz-range-thumb { @apply size-8; }
+input[data-tallkit-input][type="range"][data-size="3xl"]::-moz-range-thumb { @apply size-9; }

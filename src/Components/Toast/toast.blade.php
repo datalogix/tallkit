@@ -1,51 +1,86 @@
-<div class="w-0 h-0 overflow-hidden" x-data="toast" @toast.document="open($event.detail)">
-    <div popover="manual" data-position="bottom right" class="m-0 p-6 bg-transparent duration-500
-            opacity-0
-            translate-0
-            transition-all
-            &:translate-0
-            transition-discrete
-
-            [&:is(:popover-open)]:opacity-100
-            [&:is(:popover-open)]:translate-0
-            [&:is(:popover-open)]:transition-all
-            [&:is(:popover-open)]:transition-discrete
-
-            [@starting-style]:[&:is(:popover-open)]:opacity-0
-            [@starting-style]:[&:is(:popover-open)]:-translate-x-5
-        " aria-atomic="true">
+<div
+    x-data="toast"
+    {{ $attributes
+        ->whereDoesntStartWith(['position:', 'container:', 'area:', 'content:', 'icon-', 'heading:', 'text:', 'actions:', 'close:'])
+        ->classes('fixed inset-0 overflow-hidden pointer-events-none z-9999999')
+    }}
+>
+    <template x-for="position in positions" :key="position">
         <div
-            class="max-w-sm p-2 rounded-xl shadow-lg bg-white border border-zinc-200 border-b-zinc-300/80 dark:bg-zinc-700 dark:border-zinc-600">
-            <div class="flex items-start gap-4">
-                <div class="flex-1 py-1.5 ps-2.5 flex gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"
-                        class="block shrink-0 mt-0.5 size-4 text-lime-600 dark:text-lime-400">
-                        <path fill-rule="evenodd"
-                            d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14Zm3.844-8.791a.75.75 0 0 0-1.188-.918l-3.7 4.79-1.649-1.833a.75.75 0 1 0-1.114 1.004l2.25 2.5a.75.75 0 0 0 1.15-.043l4.25-5.5Z"
-                            clip-rule="evenodd"></path>
-                    </svg>
-
-                    <div>
-                        <tk:heading size="sm" class="[&:not(:empty)]:mb-2" x-html="heading" />
-                        <tk:text x-html="text" />
+            {{ $attributesAfter('position:')->classes('absolute space-y-2 pointer-events-auto') }}
+            :class="{
+                'top-5 left-5 items-start': position === 'top-left',
+                'top-5 right-5 items-end': position === 'top-right',
+                'bottom-5 left-5 items-start': position === 'bottom-left',
+                'bottom-5 right-5 items-end': position === 'bottom-right',
+            }"
+        >
+            <template
+                x-for="toast in getToastsByPosition(position)"
+                :key="toast.id"
+            >
+                <div
+                    {{ $attributesAfter('container:')->classes('max-w-sm p-2 rounded-xl shadow-lg bg-white border border-zinc-300 dark:bg-zinc-700 dark:border-zinc-600') }}
+                    x-show="toast.visible"
+                    x-bind="{
+                        'x-transition:enter': 'transition ease-out duration-300',
+                        'x-transition:enter-start': position.includes('left') ? '-translate-x-full opacity-0' : 'translate-x-full opacity-0',
+                        'x-transition:enter-end': 'translate-x-0 opacity-100',
+                        'x-transition:leave': 'transition ease-in duration-300',
+                        'x-transition:leave-start': 'translate-x-0 opacity-100',
+                        'x-transition:leave-end': position.includes('left') ? '-translate-x-full opacity-0' : 'translate-x-full opacity-0',
+                    }"
+                >
+                    <div {{ $attributesAfter('area:')->classes('flex items-start gap-4') }}>
+                        <div {{ $attributesAfter('content:')->classes('flex-1 py-1.5 ps-2.5 flex gap-2') }}>
+                            <tk:icon
+                                :attributes="$attributesAfter('icon-success:')->classes('mt-0.5 shrink-0 text-green-500 dark:text-green-400')"
+                                x-show="toast.type === 'success'"
+                                name="check-circle"
+                                size="xs"
+                            />
+                            <tk:icon
+                                :attributes="$attributesAfter('icon-info:')->classes('mt-0.5 shrink-0 text-blue-500 dark:text-blue-400')"
+                                x-show="toast.type === 'info'"
+                                name="info"
+                                size="xs"
+                            />
+                            <tk:icon
+                                :attributes="$attributesAfter('icon-danger:')->classes('mt-0.5 shrink-0 text-red-500 dark:text-red-400')"
+                                x-show="toast.type === 'danger'"
+                                name="cancel"
+                                size="xs"
+                            />
+                            <tk:icon
+                                :attributes="$attributesAfter('icon-warning:')->classes('mt-0.5 shrink-0 text-amber-500 dark:text-amber-400')"
+                                x-show="toast.type === 'warn'"
+                                name="warning"
+                                size="xs"
+                            />
+                            <div class="flex flex-col gap-2">
+                                <div
+                                    {{ $attributesAfter('heading:')->classes('text-sm font-medium text-zinc-800 dark:text-white') }}
+                                    x-html="toast.heading || toast.text"
+                                ></div>
+                                <div
+                                    {{ $attributesAfter('text:')->classes('text-sm font-normal text-zinc-500 dark:text-zinc-300') }}
+                                    x-show="toast.heading && toast.text"
+                                    x-html="toast.text"
+                                ></div>
+                            </div>
+                        </div>
+                        <div {{ $attributesAfter('actions:')->classes('flex items-center') }}>
+                            <tk:button
+                                :attributes="$attributesAfter('close:')"
+                                x-on:click="removeToast(toast.id)"
+                                icon="times"
+                                variant="subtle"
+                                size="xs"
+                            />
+                        </div>
                     </div>
                 </div>
-
-                <div class="flex items-center">
-                    <button type="button" @click="close"
-                        class="inline-flex items-center font-medium justify-center gap-2 truncate disabled:opacity-50 dark:disabled:opacity-75 disabled:cursor-default h-8 text-sm rounded-md w-8 bg-transparent hover:bg-zinc-800/5 dark:hover:bg-white/15 text-zinc-400 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-white"
-                        as="button">
-                        <div>
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-                                aria-hidden="true" data-slot="icon">
-                                <path
-                                    d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z">
-                                </path>
-                            </svg>
-                        </div>
-                    </button>
-                </div>
-            </div>
+            </template>
         </div>
-    </div>
+    </template>
 </div>

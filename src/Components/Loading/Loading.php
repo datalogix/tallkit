@@ -7,7 +7,7 @@ use TALLKit\View\BladeComponent;
 class Loading extends BladeComponent
 {
     public function __construct(
-        public ?string $type = null,
+        public ?string $variant = null,
         public ?string $size = null,
     ) {}
 }

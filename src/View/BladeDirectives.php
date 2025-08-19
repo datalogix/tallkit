@@ -3,6 +3,7 @@
 namespace TALLKit\View;
 
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Str;
 
 class BladeDirectives
 {
@@ -31,7 +32,7 @@ class BladeDirectives
         $directiveArguments = array_pad(array_map('trim', $directiveArguments), 2, '()');
 
         // Prepare arguments to uses
-        if (! str_starts_with($directiveArguments[1], '(')) {
+        if (! Str::startsWith($directiveArguments[1], '(')) {
             $ar = $directiveArguments;
             $directiveArguments = [];
             $directiveArguments[] = $ar[0];

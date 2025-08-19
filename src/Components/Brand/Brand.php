@@ -19,8 +19,8 @@ class Brand extends BladeComponent
     #[Mount()]
     protected function mount()
     {
-        $this->name = $this->name === true ? config('app.name') : $this->name;
         $this->logo ??= find_image('logo');
+        $this->name = $this->name === true || ! $this->logo ? config('app.name') : $this->name;
         $this->alt ??= $this->name ?: config('app.name');
         $this->href ??= route_detect('home');
     }

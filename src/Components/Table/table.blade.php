@@ -1,52 +1,131 @@
-<div {{ $attributesAfter('container:') }}>
+@php
+$hasRowExpanded = isset($expanded) || isset($rowExpanded) || Str::contains($slot, 'role="row-expanded"', true);
+$hasRowSelection = $rowSelection || Str::contains($slot, 'role="row-selection"', true);
+$colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 0);
+@endphp
+
+<div {{
+    $attributesAfter('container:')
+        ->classes([
+            'overflow-hidden',
+            'border border-zinc-800/10 dark:border-white/20 rounded-md' => $card || ($dense && $card === null)
+        ])
+        ->merge($hasRowSelection || $hasRowExpanded ? ['x-data' => 'table'] : [])
+}}>
     <div {{ $attributesAfter('area:')->classes('overflow-x-auto') }}>
-        <table data-tallkit-table {{
-    $attributes->classes('[:where(&)]:min-w-full
+        <table {{
+            $attributes
+                ->whereDoesntStartWith([
+                    'container:', 'area:',
+                    'columns:', 'thead:', 'select-all:', 'column:', 'column-', 'th:', 'th-',
+                    'rows:', 'tbody:', 'row:', 'row-', 'cell:', 'cell-', 'td:', 'td-',
+                    'no-records:', 'footer:', 'tfoot:'
+                ])
+                ->classes('
+                    relative
+                    [:where(&)]:min-w-full
                     text-zinc-800
-                    divide-y
-                    divide-zinc-800/10
-                    dark:divide-white/20
-                    text-zinc-800
+                    divide-y divide-zinc-800/10 dark:divide-white/20
                     whitespace-nowrap',
-        $hover ? 'hover' : '',
-        $stripped ? 'stripped' : ''
-    ) }}>
-            @if (!str_contains($slot, 'thead') && $cols->isNotEmpty())
-            <tk:table.columns>
-                @foreach ($cols as $key => $col)
-                <tk:table.column>
-                    @isset(${'col_' . $key})
-                        {{ ${'col_' . $key}($col, $key, $cols, $rows) }}
-                    @else
-                    {!! __(Str::headline(data_get($col, 'name', $key))) !!}
+                )
+        }}>
+            @if (Str::doesntContain($slot, '<thead', true) && $cols->isNotEmpty())
+                <tk:table.columns :attributes="$attributesAfter('columns:')->merge($attributesAfter('thead:')->toArray())">
+                    @if ($hasRowExpanded)
+                        <tk:table.column.expanded />
                     @endif
-                </tk:table.column>
-                @endforeach
-            </tk:table.columns>
+
+                    @if ($hasRowSelection)
+                        <tk:table.column.select-all :attributes="$attributesAfter('select-all:')">
+                            @if ($isSlot($selectAll))
+                                {{ $selectAll}}
+                            @elseif ($selectAll === false)
+                                &nbsp;
+                            @endif
+                        </tk:table.column.select-all>
+                    @endif
+
+                    @foreach ($cols as $key => $col)
+                        <tk:table.column :attributes="$attributesAfter('column:')
+                            ->merge($attributesAfter('column-'.$key.':')->toArray())
+                            ->merge($attributesAfter('th:')->toArray())
+                            ->merge($attributesAfter('th-'.$key.':')->toArray())
+                            ->merge(Arr::wrap(data_forget($col, '_key')))
+                            ->classes(['w-0' => $key === 'actions'])
+                        ">
+                            @isset (${'col_' . $key})
+                                {{ ${'col_' . $key}($col, $key, data_get($col, 'name', $key), $cols, $rows) }}
+                            @endisset
+                        </tk:table.column>
+                    @endforeach
+                </tk:table.columns>
             @endif
 
-            @if (!str_contains($slot, 'tbody') && $cols->isNotEmpty())
-            <tk:table.rows>
-                @forelse ($rows as $row)
-                <tk:table.row>
-                    @foreach ($cols as $key => $col)
-                    <tk:table.cell>
-                        @isset(${'row_' . $key})
-                            {{ ${'row_' . $key}($row, $key, $col, $cols, $rows) }}
-                        @else
-                        {!! $getRowValue($row, $key) !!}
+            @if (Str::doesntContain($slot, '<tbody', true) && $cols->isNotEmpty())
+                <tk:table.rows :attributes="$attributesAfter('rows:')->merge($attributesAfter('tbody:')->toArray())">
+                    @forelse ($rows as $index => $row)
+                        <tk:table.row
+                            wire:key="{{ data_get($row, $rowKey ?? 'id', $index) }}"
+                            data-id="{{ data_get($row, $rowKey ?? 'id', $index) }}"
+                            :attributes="$attributesAfter('row:')
+                                ->merge($hasRowSelection ? ['data-state' => 'unchecked'] : [])
+                                ->merge($hasRowExpanded ? ['data-expanded' => 'close'] : [])
+                            "
+                        >
+                            @if ($hasRowExpanded)
+                                <tk:table.cell.expanded :attributes="$attributesAfter('cell-expanded:')">
+                                    {{ $cellExpanded ?? '' }}
+                                </tk:table.cell.expanded>
+                            @endif
+
+                            @if ($hasRowSelection)
+                                <tk:table.cell.selection :attributes="$attributesAfter('cell-selection:')">
+                                    @if ($isSlot($rowSelection))
+                                        {{ $rowSelection}}
+                                    @endif
+                                </tk:table.cell.selection>
+                            @endif
+
+                            @foreach ($cols as $key => $col)
+                                <tk:table.cell :attributes="$attributesAfter('cell:')
+                                        ->merge($attributesAfter('cell-'.$key.':')->toArray())
+                                        ->merge($attributesAfter('td:')->toArray())
+                                        ->merge($attributesAfter('td-'.$key.':')->toArray())
+                                        ->merge(['align' => data_get($col, 'align', $key === 'actions' ? 'center' : null)])
+                                    ">
+                                    @isset (${'row_' . $key})
+                                        {{ ${'row_' . $key}($row, $key, $getRowValue($row, $key), $col, $cols, $rows) }}
+                                    @else
+                                        {!! $getRowValue($row, $key)() !!}
+                                    @endif
+                                </tk:table.cell>
+                            @endforeach
+                        </tk:table.row>
+
+                        @if ($hasRowExpanded)
+                            <tk:table.row.expanded :attributes="$attributesAfter('row-expanded:')->merge(['colspan' => $colspan])">
+                                @if (isset($expanded))
+                                    {{ $expanded($row, $cols, $rows) }}
+                                @elseif (isset($rowExpanded))
+                                     {{ $rowExpanded($row, $cols, $rows) }}
+                                @endif
+                            </tk:table.row.expanded>
                         @endif
-                    </tk:table.cell>
-                    @endforeach
-                </tk:table.row>
-                @empty
-                <tk:table.row>
-                    <tk:table.cell :attributes="$attributesAfter('empty:')" colspan="{{ $cols->count() }}">
-                        {!! $empty ?: __('No records found') !!}
-                    </tk:table.cell>
-                </tk:table.row>
-                @endforelse
-            </tk:table.rows>
+                    @empty
+                        <tk:table.row.no-records :attributes="$attributesAfter('no-records:')->merge(['colspan' => $colspan])">
+                            {{ $noRecords }}
+                        </tk:table.row.no-records>
+                    @endforelse
+                </tk:table.rows>
+            @endif
+
+            @if (Str::doesntContain($slot, '<tfoot', true) && isset($footer))
+                <tk:table.footer :attributes="$attributesAfter('footer:')
+                    ->merge($attributesAfter('tfoot:')->toArray())
+                    ->merge(['cell:colspan' => $colspan])
+                ">
+                    {{ $footer }}
+                </tk:table.footer>
             @endif
 
             {{ $slot }}

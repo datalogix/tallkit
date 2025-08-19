@@ -7,7 +7,7 @@ use TALLKit\Attributes\Finish;
 
 trait HandlesAssetInjection
 {
-    #[Finish]
+    #[Finish()]
     protected function finishAssets()
     {
         AssetInjector::markComponentAsRendered();

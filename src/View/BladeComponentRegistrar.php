@@ -37,17 +37,13 @@ class BladeComponentRegistrar
 
             $componentName = Str::of($file->getRelativePathname())
                 ->replaceLast('.php', '')
+                ->replaceEnd('Index', '')
                 ->explode('/')
                 ->map(fn ($part) => Str::kebab($part))
                 ->unique()
                 ->join('.');
 
             $components[$componentName] = $componentClass;
-            $aliases = $componentClass::$aliases ?? [];
-
-            foreach ($aliases as $alias) {
-                $components[$alias] = $componentClass;
-            }
         }
 
         return $components;

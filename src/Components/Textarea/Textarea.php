@@ -2,32 +2,15 @@
 
 namespace TALLKit\Components\Textarea;
 
-use TALLKit\Attributes\Mount;
+use TALLKit\Concerns\InteractsWithField;
 use TALLKit\View\BladeComponent;
 
 class Textarea extends BladeComponent
 {
-    protected function props()
-    {
-        return [
-            'name' => null,
-            'label' => null,
-            'id' => null,
-            'description' => null,
-            'help' => null,
-            'size' => null,
-            'resize' => 'vertical',
-            'rows' => 'auto',
-            'invalid' => null,
-        ];
-    }
+    use InteractsWithField;
 
-    #[Mount()]
-    protected function mount()
-    {
-        if ($this->name) {
-            $this->label ??= $this->name;
-            $this->id ??= uniqid($this->name);
-        }
-    }
+    public function __construct(
+        public ?string $resize = null,
+        public null|string|int $rows = null,
+    ) {}
 }
