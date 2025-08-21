@@ -6,7 +6,6 @@ use TALLKit\Attributes\Finish;
 use TALLKit\Attributes\Mount;
 use TALLKit\Binders\FormDataBinder;
 use TALLKit\Concerns\BoundValues;
-use TALLKit\Facades\TALLKit;
 use TALLKit\View\BladeComponent;
 
 class Form extends BladeComponent
@@ -37,6 +36,6 @@ class Form extends BladeComponent
     #[Finish()]
     protected function finish()
     {
-        TALLKit::endBind();
+        app(FormDataBinder::class)->endBind();
     }
 }
