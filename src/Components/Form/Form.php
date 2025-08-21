@@ -4,6 +4,7 @@ namespace TALLKit\Components\Form;
 
 use TALLKit\Attributes\Finish;
 use TALLKit\Attributes\Mount;
+use TALLKit\Binders\FormDataBinder;
 use TALLKit\Concerns\BoundValues;
 use TALLKit\Facades\TALLKit;
 use TALLKit\View\BladeComponent;
@@ -19,7 +20,7 @@ class Form extends BladeComponent
         public ?string $route = null,
         public ?string $action = null,
     ) {
-        TALLKit::bind($bind);
+        app(FormDataBinder::class)->bind($bind);
     }
 
     #[Mount()]
