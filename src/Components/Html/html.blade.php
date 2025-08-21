@@ -15,7 +15,7 @@
     @if ($typekit) <link href="https://use.typekit.net/{{ $typekit }}.css" rel="stylesheet"> @endif
     @foreach ($styles as $style) <link href="{{ $style }}" rel="stylesheet"> @endforeach
     @if ($stackStyles) @stack($stackStyles) @endif
-    @if (Vite::isRunningHot() || Vite::manifestHash($viteBuildDirectory !== null)) @vite($vite, $viteBuildDirectory) @endif
+    @if (Vite::isRunningHot() || Vite::manifestHash($viteBuildDirectory) !== null) @vite($vite, $viteBuildDirectory) @endif
 </head>
 <body {{
     $attributes
@@ -27,7 +27,6 @@
             'antialiased',
         )
 }}>
-
     @if ($googleFonts) <tk:google.fonts :attributes="$attributesAfter('google-fonts:')->merge($googleFonts)->merge(['noscript' => true])" /> @endif
     @if ($gtm) <tk:google.gtm :id="$gtm" noscript /> @endif
     {{ $slot }}
