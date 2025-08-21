@@ -2,17 +2,20 @@ import { bind } from '../utils'
 
 export function checkboxGroup() {
   return {
+    get checkboxes () {
+      return this.$el.querySelectorAll('[data-tallkit-checkbox]')
+    },
+
     init() {
-      const checkboxes = this.$el.querySelectorAll('[data-tallkit-checkbox]')
-      const checkValue = (value) => checkboxes.forEach(
+      const checkValue = (value) => this.checkboxes.forEach(
         checkbox => checkbox.checked = (Array.isArray(value) ? value : [value]).includes(checkbox.value)
       )
 
       checkValue(this.value)
 
-      bind(checkboxes, {
+      bind(this.checkboxes, {
         ['@change']() {
-          this.$root.value = Array.from(checkboxes).filter(checkbox => checkbox.checked).map(checkbox => checkbox.value)
+          this.$root.value = Array.from(this.checkboxes).filter(checkbox => checkbox.checked).map(checkbox => checkbox.value)
           this.$root.dispatchEvent(new Event('input', { bubbles: true }))
           this.$root.dispatchEvent(new Event('change', { bubbles: true }))
         },

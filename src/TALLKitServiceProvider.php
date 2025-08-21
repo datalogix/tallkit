@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\View\ComponentAttributeBag;
 use TALLKit\Assets\AssetManager;
 use TALLKit\Binders\FormDataBinder;
+use TALLKit\Livewire\ComponentMixin;
 use TALLKit\View\BladeComponentRegistrar;
 use TALLKit\View\BladeDirectives;
 use TALLKit\View\Compilers\ComponentTagCompiler;
@@ -25,6 +26,10 @@ class TALLKitServiceProvider extends ServiceProvider
 
     public function boot()
     {
+        if (class_exists(\Livewire\Livewire::class)) {
+            \Livewire\Component::mixin(new ComponentMixin);
+        }
+
         ComponentAttributeBag::mixin(new ComponentAttributeBagMixin);
         BladeDirectives::register();
 

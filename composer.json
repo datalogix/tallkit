@@ -50,12 +50,12 @@
             "pnpm watch"
         ],
         "lint": [
-            "@php pint",
-            "exit;pnpm lint"
+            "vendor/bin/pint",
+            "pnpm lint"
         ],
         "test": [
             "@composer lint",
-            "exit;vendor/bin/phpunit"
+            "vendor/bin/phpunit"
         ]
     },
     "extra": {

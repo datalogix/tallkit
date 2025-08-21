@@ -2,6 +2,18 @@ import { bind } from "../utils"
 
 export function label() {
   return {
+
+    get control () {
+      let control = this.$el.parentElement?.querySelector('[data-tallkit-control]')
+      const validSelectors = 'input, select, textarea, [contenteditable=""], [contenteditable="true"], [role="textbox"]'
+
+      if (control && !control.matches(validSelectors)) {
+        control = control.querySelector(validSelectors)
+      }
+
+      return control
+    },
+
     init() {
       if (
         this.$el.tagName.toLowerCase() === 'label' &&
@@ -11,19 +23,13 @@ export function label() {
         return
       }
 
-      let control = this.$el.parentElement?.querySelector('[data-tallkit-control]')
-      const validSelectors = 'input, select, textarea, [contenteditable=""], [contenteditable="true"], [role="textbox"]'
-
-      if (control && !control.matches(validSelectors)) {
-        control = control.querySelector(validSelectors)
-      }
-
-      if (!control) {
+      if (!this.control) {
         return
       }
 
       bind(this.$el, {
         ['@click']() {
+          const control = this.control
           const tag = control.tagName.toLowerCase()
           const type = control.getAttribute('type')?.toLowerCase()
           const isEditable = control.hasAttribute('contenteditable') || control.getAttribute('role') === 'textbox'

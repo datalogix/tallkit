@@ -5,10 +5,12 @@ export function inputCopyable() {
     copied: false,
     timeout: null,
 
-    init() {
-      const input = this.$el.closest('[data-tallkit-input]').querySelector('input')
+    get input () {
+      return this.$el.closest('[data-tallkit-input]').querySelector('input')
+    },
 
-      if (!input) {
+    init() {
+      if (!this.input) {
         return
       }
 
@@ -18,7 +20,7 @@ export function inputCopyable() {
           this.copied = true
           this.popover && this.popover.showPopover()
 
-          navigator.clipboard && navigator.clipboard.writeText(input.value)
+          navigator.clipboard && navigator.clipboard.writeText(this.input.value)
 
           this.timeout = setTimeout(() => {
             this.popover && this.popover.hidePopover()

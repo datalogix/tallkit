@@ -3,7 +3,7 @@ import { bind } from '../utils'
 export function toast() {
   return {
     toasts: [],
-    positions: ['top-left', 'top-right', 'bottom-left', 'bottom-right'],
+    positions: ['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right'],
 
     init() {
       bind(this.$el, {
@@ -21,6 +21,14 @@ export function toast() {
         position: props.position ?? 'bottom-right',
         visible: false,
       })
+
+      if (toast.position === 'top') {
+        toast.position = 'top-right'
+      }
+
+      if (toast.position === 'bottom') {
+        toast.position = 'bottom-right'
+      }
 
       this.toasts.push(toast)
       this.$nextTick(() => toast.visible = true)

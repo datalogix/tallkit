@@ -2,7 +2,6 @@
 
 namespace TALLKit;
 
-use Illuminate\Support\Js;
 use TALLKit\Assets\AssetManager;
 use TALLKit\Binders\FormDataBinder;
 use TALLKit\Components\Icon\Icon;
@@ -35,10 +34,8 @@ class TALLKit
         Icon::setCollections($collections);
     }
 
-    public function toast($text, $heading = null, $duration = null, $type = null, $position = null)
+    public function toast(...$args)
     {
-        $data = compact('text', 'heading', 'duration', 'type', 'position');
-
-        app('livewire')->current()->js('$tallkit.toast('.Js::encode($data).')');
+        app('livewire')->current()->toast(...$args);
     }
 }

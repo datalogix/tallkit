@@ -11,5 +11,6 @@ class Error extends BladeComponent
         public ?string $size = null,
         public ?string $message = null,
         public null|bool|string $icon = null,
+        public ?string $bag = null,
     ) {}
 }

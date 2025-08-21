@@ -1,8 +1,11 @@
 export function radioGroup() {
   return {
+    get radios () {
+      return this.$el.querySelectorAll('[data-tallkit-radio]')
+    },
+
     init() {
-      const radios = this.$el.querySelectorAll('[data-tallkit-radio]')
-      const checkValue = (value) => radios.forEach(
+      const checkValue = (value) => this.radios.forEach(
         radio => radio.checked = (Array.isArray(value) ? value : [value]).includes(radio.value)
       )
 

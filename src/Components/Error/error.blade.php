@@ -1,5 +1,6 @@
 @php
-$message ??= $name ? $errors->first($name) : $slot;
+$errorBag = $errors->getBag($bag ?? 'default');
+$message ??= $name ? $errorBag->first($name) : $slot;
 @endphp
 
 <div {{

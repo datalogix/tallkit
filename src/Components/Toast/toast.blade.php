@@ -7,12 +7,15 @@
 >
     <template x-for="position in positions" :key="position">
         <div
-            {{ $attributesAfter('position:')->classes('absolute space-y-2 pointer-events-auto') }}
+            {{ $attributesAfter('position:')->classes('absolute pointer-events-auto flex flex-col') }}
             :class="{
-                'top-5 left-5 items-start': position === 'top-left',
-                'top-5 right-5 items-end': position === 'top-right',
-                'bottom-5 left-5 items-start': position === 'bottom-left',
-                'bottom-5 right-5 items-end': position === 'bottom-right',
+                'flex-col-reverse': position.includes('top'),
+                'top-2 left-2 items-start': position === 'top-left',
+                'top-2 left-1/2 -translate-x-1/2 items-center': position === 'top-center',
+                'top-2 right-2 items-end': position === 'top-right',
+                'bottom-2 left-2 items-start': position === 'bottom-left',
+                'bottom-2 left-1/2 -translate-x-1/2 items-center': position === 'bottom-center',
+                'bottom-2 right-2 items-end': position === 'bottom-right',
             }"
         >
             <template
@@ -20,15 +23,29 @@
                 :key="toast.id"
             >
                 <div
-                    {{ $attributesAfter('container:')->classes('max-w-sm p-2 rounded-xl shadow-lg bg-white border border-zinc-300 dark:bg-zinc-700 dark:border-zinc-600') }}
+                    {{ $attributesAfter('container:')->classes('max-w-sm m-1 p-2 rounded-xl shadow-lg bg-white border border-zinc-300 dark:bg-zinc-700 dark:border-zinc-600') }}
                     x-show="toast.visible"
                     x-bind="{
                         'x-transition:enter': 'transition ease-out duration-300',
-                        'x-transition:enter-start': position.includes('left') ? '-translate-x-full opacity-0' : 'translate-x-full opacity-0',
-                        'x-transition:enter-end': 'translate-x-0 opacity-100',
+                        'x-transition:enter-start': {
+                            'top-left': '-translate-x-full opacity-0',
+                            'top-center': '-translate-y-full opacity-0',
+                            'top-right': 'translate-x-full opacity-0',
+                            'bottom-left': '-translate-x-full opacity-0',
+                            'bottom-center': 'translate-y-full opacity-0',
+                            'bottom-right': 'translate-x-full opacity-0',
+                        }[position],
+                        'x-transition:enter-end': 'translate-x-0 translate-y-0 opacity-100',
                         'x-transition:leave': 'transition ease-in duration-300',
-                        'x-transition:leave-start': 'translate-x-0 opacity-100',
-                        'x-transition:leave-end': position.includes('left') ? '-translate-x-full opacity-0' : 'translate-x-full opacity-0',
+                        'x-transition:leave-start': 'translate-x-0 translate-y-0 opacity-100',
+                        'x-transition:leave-end': {
+                            'top-left': '-translate-x-full opacity-0',
+                            'top-center': '-translate-y-full opacity-0',
+                            'top-right': 'translate-x-full opacity-0',
+                            'bottom-left': '-translate-x-full opacity-0',
+                            'bottom-center': 'translate-y-full opacity-0',
+                            'bottom-right': 'translate-x-full opacity-0',
+                        }[position],
                     }"
                 >
                     <div {{ $attributesAfter('area:')->classes('flex items-start gap-4') }}>
