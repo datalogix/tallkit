@@ -1,4 +1,5 @@
-import { bind, popover } from '../utils'
+import { popover } from './popover'
+import { bind } from '../utils'
 
 export function submenu() {
   const _popover = popover({ mode: 'manual', position: 'right', align: 'start' })

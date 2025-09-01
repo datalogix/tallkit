@@ -3,7 +3,8 @@
     x-on:click="$tallkit.appearance.toggle({{ $animate === false ? null : 'event' }}, {{ is_array($animate) ? Js::from($animate) : 'null' }})"
     :$attributes
     variant="subtle"
-    aria-label="{{ __('Toggle light and dark mode') }}"
+    aria-label="Toggle light and dark mode"
+    tooltip="Toggle light and dark mode"
     icon="ph:sun"
     icon:class="block dark:hidden"
     icon-trailing="ph:moon"

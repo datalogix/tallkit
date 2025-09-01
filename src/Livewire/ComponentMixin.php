@@ -2,12 +2,17 @@
 
 namespace TALLKit\Livewire;
 
+use TALLKit\Facades\TALLKit;
+
 class ComponentMixin
 {
     public function toast()
     {
-        return function (?string $text = null, ?string $heading = null, ?string $type = null, ?int $duration = null, ?string $position = null) {
-            $this->js('$tallkit.toast', $text, $heading, $type, $duration, $position);
-        };
+        return fn (...$args) => TALLKit::toast(...$args);
+    }
+
+    public function alert()
+    {
+        return fn (...$args) => TALLKit::alert(...$args);
     }
 }

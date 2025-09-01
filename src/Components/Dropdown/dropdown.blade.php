@@ -4,7 +4,7 @@
         position: @js($position ?? 'bottom'),
         align: @js($align ?? 'start'),
     })"
-    {{ $attributes->classes('inline-block') }}
+    {{ $attributes->classes('inline-flex') }}
 >
     {{ $slot }}
 </div>

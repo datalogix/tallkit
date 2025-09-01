@@ -1,4 +1,4 @@
-import { popover } from '../utils'
+import { popover } from './popover'
 
 export function dropdown({ mode, position, align }) {
   return popover({

@@ -13,7 +13,7 @@
     <tk:field.wrapper :$attributes>
         <div
             {{ $buildDataAttribute('input') }}
-            {{ $attributes->only('class')->classes('w-full relative block group/input') }}
+            {{ $attributes->only('class')->classes('w-full relative block group/input')->merge(['wire:ignore' => $viewable]) }}
         >
             @if (is_string($icon) && $icon !== '')
                 <div class="pointer-events-none absolute top-0 bottom-0 flex items-center justify-center text-xs text-zinc-400/75 ps-3 start-0">

@@ -1,4 +1,5 @@
-import { bind, toggleable } from '../utils'
+import { bind } from '../utils'
+import { toggleable } from './toggleable'
 
 export function disclosure() {
   const _toggleable = toggleable()

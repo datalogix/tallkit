@@ -1,22 +1,22 @@
-@php $attrs = $attributes->whereDoesntStartWith(['dropdown:', 'menu:', 'item:', 'avatar:', 'profile:']); @endphp
+@php $attrs = $attributes->whereDoesntStartWith(['dropdown:', 'menu:', 'avatar:', 'profile:']); @endphp
 <tk:dropdown :attributes="$attributesAfter('dropdown:')">
     @if ($profile)
-        <tk:avatar.profile :attributes="$attrs->merge($attributesAfter('profile:')->getAttributes())"
-        />
+        <tk:avatar.profile :attributes="$attrs->merge($attributesAfter('profile:')->getAttributes())" />
     @else
         <tk:avatar :attributes="$attrs->merge($attributesAfter('avatar:')->getAttributes())->classes('cursor-pointer')" />
     @endif
 
-    <tk:menu :attributes="$attributesAfter('menu:')">
+    <tk:menu
+        :attributes="$attributesAfter('menu:')"
+        :$items
+    >
         @unless ($profile)
-            <tk:avatar.profile :attributes="$attrs->merge($attributesAfter('profile:')->getAttributes())" />
+            <x-slot:prepend>
+                <tk:avatar.profile :attributes="$attrs->merge($attributesAfter('profile:')->getAttributes())" />
 
-            <tk:menu.separator />
+                <tk:menu.separator />
+            </x-slot:prepend>
         @endunless
-
-        @foreach (collect($items) as $item)
-            <tk:menu.item :attributes="$attributesAfter('item:')->merge($item)" />
-        @endforeach
 
         {{ $slot }}
     </tk:menu>

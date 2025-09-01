@@ -35,7 +35,7 @@
             )
     }}
 >
-    @if ($icon)
+    @if ($icon !== false)
         <tk:icon
             :attributes="$attributesAfter('icon:')->classes('shrink-0 me-3')"
             :$size

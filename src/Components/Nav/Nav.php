@@ -11,5 +11,6 @@ class Nav extends BladeComponent
         public ?string $variant = null,
         public ?string $size = null,
         public ?bool $scrollable = null,
+        public mixed $items = null,
     ) {}
 }

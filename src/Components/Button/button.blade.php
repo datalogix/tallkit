@@ -62,7 +62,7 @@ if ($loading && $type !== 'submit' && !$isJsMethod) {
                 'info' => 'bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600',
                 'success' => 'bg-green-600 dark:bg-green-700 hover:bg-green-700  dark:hover:bg-green-600',
                 'danger' => 'bg-red-600 dark:bg-red-700 hover:bg-red-700 dark:hover:bg-red-600',
-                'outline' => 'bg-white hover:bg-zinc-50 dark:bg-zinc-700 dark:hover:bg-zinc-600/75',
+                'outline' => 'bg-white hover:bg-zinc-50 dark:bg-zinc-700 dark:hover:bg-zinc-600',
                 'filled' => 'bg-zinc-800/5 dark:bg-white/10 hover:bg-zinc-800/10 dark:hover:bg-white/20',
                 'subtle', 'ghost' => 'bg-transparent hover:bg-zinc-800/5 dark:hover:bg-white/15',
                 'none' => 'bg-transparent',
@@ -85,7 +85,7 @@ if ($loading && $type !== 'submit' && !$isJsMethod) {
                 'rose' => 'bg-rose-500 dark:bg-rose-600 hover:bg-rose-600 dark:hover:bg-rose-500',
                 default => '
                     text-zinc-800 dark:text-white
-                    bg-white hover:bg-zinc-50 dark:bg-zinc-700 dark:hover:bg-zinc-600/75
+                    bg-white hover:bg-zinc-100 dark:bg-zinc-700 dark:hover:bg-zinc-600
                     border border-zinc-300 hover:border-zinc-300 dark:border-zinc-600 dark:hover:border-zinc-600
                 ',
             },

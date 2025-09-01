@@ -1,12 +1,17 @@
-- Auth
 - Layouts
+- Pagina com menu lateral
+
+- Review Colors
+- Review element (flex/inline-flex)
+- Review components (js) with livewire
+- Review `aria-label` and `tooltip` with same values
+
 - FormBuilder
+- Table (with pagination)
 - DataTableBuilder
+- DataTable (with a filter e etc...)
 
 - Upload (File upload)
-- Table (with pagination)
-- Pagination
-- DataTable (with a filter e etc...)
 - CreditCard
 - Accordion
 - Tabs

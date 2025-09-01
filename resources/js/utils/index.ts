@@ -1,5 +1,4 @@
 export * from './bind'
-export * from './popover'
-export * from './sticky'
 export * from './timeout'
-export * from './toggleable'
+export * from './scripts'
+export * from './styles'

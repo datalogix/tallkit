@@ -1,7 +1,7 @@
 <tk:button
     variant="none"
-    tooltip="{{ __('Close') }}"
-    aria-label="{{ __('Close') }}"
+    tooltip="Close"
+    aria-label="Close"
     :icon="$slot->isEmpty() ? $icon ?? 'close' : null"
     :attributes="$attributes->classes(
         'rounded-md p-2 focus:ring-2',

@@ -26,7 +26,7 @@
                     {{ $attributesAfter('container:')->classes('max-w-sm m-1 p-2 rounded-xl shadow-lg bg-white border border-zinc-300 dark:bg-zinc-700 dark:border-zinc-600') }}
                     x-show="toast.visible"
                     x-bind="{
-                        'x-transition:enter': 'transition ease-out duration-300',
+                        'x-transition:enter': 'transition ease-out duration-350',
                         'x-transition:enter-start': {
                             'top-left': '-translate-x-full opacity-0',
                             'top-center': '-translate-y-full opacity-0',
@@ -35,9 +35,9 @@
                             'bottom-center': 'translate-y-full opacity-0',
                             'bottom-right': 'translate-x-full opacity-0',
                         }[position],
-                        'x-transition:enter-end': 'translate-x-0 translate-y-0 opacity-100',
-                        'x-transition:leave': 'transition ease-in duration-300',
-                        'x-transition:leave-start': 'translate-x-0 translate-y-0 opacity-100',
+                        'x-transition:enter-end': 'translate-0 opacity-100',
+                        'x-transition:leave': 'transition ease-in duration-200',
+                        'x-transition:leave-start': 'translate-0 opacity-100',
                         'x-transition:leave-end': {
                             'top-left': '-translate-x-full opacity-0',
                             'top-center': '-translate-y-full opacity-0',

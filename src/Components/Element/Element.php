@@ -27,6 +27,7 @@ class Element extends BladeComponent
         public bool|string|ComponentSlot|null $badge = null,
         public bool|string|ComponentSlot|null $prepend = null,
         public bool|string|ComponentSlot|null $append = null,
+        public ?string $ariaLabel = null,
     ) {}
 
     #[Mount()]

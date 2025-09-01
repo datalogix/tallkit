@@ -21,9 +21,7 @@ export function inputViewable() {
       })
 
       let observer = new MutationObserver(() => {
-        let type = this.viewed ? 'text' : 'password';
-        if (this.input.getAttribute('type') === type) return
-        this.input.setAttribute('type', type)
+        this.viewed = this.input.getAttribute('type') !== 'password'
       })
 
       observer.observe(this.input, {

@@ -4,6 +4,7 @@ use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
+use TALLKit\Facades\TALLKit;
 
 if (! function_exists('route_detect')) {
     function route_detect(array|string|null $routes, $parameters = null, ?string $default = '/')
@@ -86,5 +87,19 @@ if (! function_exists('is_current_href')) {
         return app('livewire')?->isLivewireRequest()
             ? Str::is($hrefForCurrentDetection, app('livewire')->originalPath())
             : request()->is([$hrefForCurrentDetection, "$hrefForCurrentDetection/*"]);
+    }
+}
+
+if (! function_exists('toast')) {
+    function toast(...$args)
+    {
+        return TALLKit::toast(...$args);
+    }
+}
+
+if (! function_exists('alert')) {
+    function alert(...$args)
+    {
+        return TALLKit::alert(...$args);
     }
 }

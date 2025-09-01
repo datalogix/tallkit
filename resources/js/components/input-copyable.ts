@@ -18,12 +18,12 @@ export function inputCopyable() {
         ['@click']() {
           clearTimeout(this.timeout)
           this.copied = true
-          this.popover && this.popover.showPopover()
+          this.popoverElement && this.popoverElement.showPopover()
 
           navigator.clipboard && navigator.clipboard.writeText(this.input.value)
 
           this.timeout = setTimeout(() => {
-            this.popover && this.popover.hidePopover()
+            this.popoverElement && this.popoverElement.hidePopover()
             this.copied = false
           }, 1000)
         }

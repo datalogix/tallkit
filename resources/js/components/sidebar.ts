@@ -1,7 +1,10 @@
-import { bind, toggleable, sticky as _sticky } from "../utils"
+import { bind } from "../utils"
+import { toggleable } from "./toggleable"
+import { sticky as stickyComponent } from "./sticky"
 
 export function sidebar(name?: string, sticky?: boolean, stashable?: boolean) {
   const _toggleable = toggleable()
+  const _sticky = stickyComponent()
 
   return {
     ..._toggleable,
@@ -10,7 +13,7 @@ export function sidebar(name?: string, sticky?: boolean, stashable?: boolean) {
       _toggleable.init.call(this)
 
       if (sticky) {
-        _sticky().init.call(this)
+        _sticky.init.call(this)
       }
 
       if (stashable) {

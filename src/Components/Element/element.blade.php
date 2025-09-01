@@ -4,6 +4,7 @@
         ->when($as !== 'p', fn ($attrs) => $attrs->classes('flex items-center gap-1.5'))
         ->when($as === 'a', fn ($attrs) => $attrs->merge(['wire:navigate' => $navigate !== false, 'href' => $href, 'data-current' => $current ?? is_current_href($href)]))
         ->when($as === 'button', fn ($attrs) => $attrs->merge(['type' => $type ?? 'button', 'data-current' => $current, 'wire:click' => $action]))
+        ->when($ariaLabel, fn ($attrs, $value) => $attrs->merge(['aria-label' => __($value)]))
         ->merge([$dataKey('has-icon') => !!$icon && $name])
     }}>
         {{ $prepend ?? '' }}

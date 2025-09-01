@@ -1,7 +1,7 @@
 
 /* Base thumb style */
 input[data-tallkit-input][type="range"]::-webkit-slider-thumb {
-  @apply appearance-none size-5 bg-blue-400 rounded-full shadow transition-colors duration-150;
+  @apply appearance-none size-5 bg-blue-500 rounded-full shadow transition-colors duration-150;
 }
 
 /* Size variants */
