@@ -46,7 +46,6 @@ export function sidebar(name?: string, sticky?: boolean, stashable?: boolean) {
     },
 
     close() {
-      console.log('s')
       this.$el.removeAttribute('data-show-stashed-sidebar')
       _toggleable.close.call(this)
     },

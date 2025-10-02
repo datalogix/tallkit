@@ -28,8 +28,7 @@ if ($loading && $type !== 'submit' && !$isJsMethod) {
         ->whereDoesntStartWith(['loading-indicator:', 'loading:'])
         ->classes(
             '
-                relative
-                inline-flex justify-center
+                relative justify-center
                 font-medium whitespace-nowrap
                 disabled:opacity-50 dark:disabled:opacity-50
                 disabled:cursor-default disabled:pointer-events-none

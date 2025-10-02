@@ -1,4 +1,4 @@
-<section {{ $attributes->whereDoesntStartWith(['header:', 'title:', 'subtitle:', 'actions:'])->classes('space-y-6') }}>
+<section {{ $attributes->whereDoesntStartWith(['header:', 'title:', 'subtitle:', 'actions:', 'separator:'])->classes('space-y-6') }}>
     @if ($title || $subtitle || isset($header) || isset($actions))
         <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
             @if ($title || $subtitle || isset($header))
@@ -23,6 +23,10 @@
                 </div>
             @endisset
         </div>
+
+        @if ($separator || ($title && ($subtitle || isset($header) || isset($actions))))
+            <tk:separator :attributes="$attributesAfter('separator:')" />
+        @endif
     @endif
 
     {{ $slot }}

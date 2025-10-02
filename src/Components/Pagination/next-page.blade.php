@@ -22,6 +22,5 @@ $disabled = !$paginator->hasMorePages();
     :wire:click="in_livewire() ? $wireClick : false"
     :wire:loading.attr="in_livewire() ? 'disabled' : false"
     icon="chevron-right"
-    aria-label="pagination.next"
     tooltip="pagination.next"
 />

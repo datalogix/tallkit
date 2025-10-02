@@ -1,9 +1,11 @@
 <tk:fieldset
-    x-data="checkboxGroup"
     :attributes="$attributes
         ->whereDoesntStartWith([
             'name', 'id', 'help', 'showError', 'prefix', 'suffix',
             'heading:', 'checkbox:', 'error:',
+
+            // ignore wire:model on fieldset
+            'wire:model',
         ])
         ->classes('[&_[data-tallkit-heading]]:mb-2 [&>[data-tallkit-heading]:not(:first-of-type)]:pt-2')
     "

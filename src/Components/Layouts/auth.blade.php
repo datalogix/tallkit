@@ -8,7 +8,7 @@ $hasHero = $bg || isset($hero) || count($attributesAfter('hero:')->all()) > 1;
     ->classes(['lg:grid-cols-2' => $hasHero])
 }}>
     <div {{ $attributesAfter('area:')->classes('p-4 relative', $right ? 'order-last' : 'order-first') }}>
-        @if ($appearance)
+        @if ($appearance !== false)
             <tk:appearance.toggle :attributes="$attributesAfter('appearance:')->classes('absolute right-4 top-4 hidden lg:flex')" />
         @endif
 
@@ -31,8 +31,9 @@ $hasHero = $bg || isset($hero) || count($attributesAfter('hero:')->all()) > 1;
                         w-full lg:p-6
                         border-none lg:border-solid
                         bg-transparent dark:bg-transparent lg:bg-white lg:dark:bg-zinc-800
+                        shadow-none lg:shadow
                     ')"
-                    container:class="p-0 lg:p-6"
+                    container:class="p-4 lg:p-6"
                 >
                     {{ $slot }}
                 </tk:card>

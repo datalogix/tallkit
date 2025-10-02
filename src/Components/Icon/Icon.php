@@ -70,7 +70,7 @@ class Icon extends BladeComponent
         }
 
         return Cache::rememberForever("tallkit-icon-{$name}", function () use ($name) {
-            $path = storage_path('app/tallkit/icons/'.Str::slug($name, '_').'.svg');
+            $path = storage_path('app/tallkit/icons/'.Str::snake($name).'.svg');
 
             if (File::exists($path)) {
                 return File::get($path);

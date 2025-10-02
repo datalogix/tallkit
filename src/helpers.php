@@ -66,7 +66,7 @@ if (! function_exists('in_livewire')) {
 }
 
 if (! function_exists('is_current_href')) {
-    function is_current_href(?string $href = null)
+    function is_current_href(?string $href = null, ?bool $exact = null)
     {
         $hrefForCurrentDetection = Str::startsWith($href, trim(config('app.url')))
             ? Str::after($href, trim(config('app.url'), '/'))
@@ -86,7 +86,7 @@ if (! function_exists('is_current_href')) {
 
         return app('livewire')?->isLivewireRequest()
             ? Str::is($hrefForCurrentDetection, app('livewire')->originalPath())
-            : request()->is([$hrefForCurrentDetection, "$hrefForCurrentDetection/*"]);
+            : request()->is($exact ? $hrefForCurrentDetection : [$hrefForCurrentDetection, "$hrefForCurrentDetection/*"]);
     }
 }
 

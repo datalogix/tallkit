@@ -1,1 +1,7 @@
-<tk:input :$attributes type="password" />
+<tk:input
+    :$attributes
+    type="password"
+    name="password"
+    placeholder
+    viewable
+/>

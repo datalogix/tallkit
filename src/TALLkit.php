@@ -42,7 +42,7 @@ class TALLKit
         ?int $duration = null,
         ?string $position = null,
     ) {
-        return app('livewire')->current()?->js('$tallkit.toast', $text, $heading, $type, $duration, $position);
+        return app('livewire')->current()?->js('$tk.toast', $text, $heading, $type, $duration, $position);
     }
 
     public function alert(

@@ -1,5 +1,9 @@
+@php $invalid ??= $name && $errors->has($name); @endphp
+
 <tk:field.wrapper
     :$attributes
+    :$name
+    :$id
     :label="$slot->isEmpty() ? $label : $slot"
     variant="inline"
 >
@@ -40,13 +44,14 @@
 
                     border border-zinc-300 dark:border-white/10
                     disabled:border-zinc-200 dark:disabled:border-white/5
+                    [&[data-invalid]]:border-red-500 dark:[&[data-invalid]]:border-red-400
 
                     shadow-xs
                     disabled:opacity-75
                     disabled:checked:opacity-50
                     disabled:shadow-none
                     checked:shadow-none
-                    checked:border-none
+                    checked:not-[data-invalid]:border-none
                     ',
                     match($variant) {
                         'accent' => 'checked:bg-[var(--color-accent)]',
@@ -73,6 +78,7 @@
             }}
             @isset ($name) name="{{ $name }}" @endisset
             @isset ($id) id="{{ $id }}" @endisset
+            @if ($invalid) aria-invalid="true" data-invalid @endif
             @checked($checked)
             value="{{ $value }}"
             type="radio"

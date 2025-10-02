@@ -1,6 +1,6 @@
 <div {{
     $attributes
-        ->whereDoesntStartWith(['image:', 'container:', 'title:', 'subtitle:', 'content:'])
+        ->whereDoesntStartWith(['image:', 'container:', 'title:', 'subtitle:', 'separator:', 'content:'])
         ->classes(
             'bg-white dark:bg-zinc-800',
             'border border-zinc-300 dark:border-white/10',
@@ -40,6 +40,10 @@
                     </div>
                 @endisset
             </div>
+
+            @if ($separator || ($title && ($subtitle || isset($actions))))
+                <tk:separator :attributes="$attributesAfter('separator:')" />
+            @endif
         @endif
 
         @if ($slot->isNotEmpty() || $content)

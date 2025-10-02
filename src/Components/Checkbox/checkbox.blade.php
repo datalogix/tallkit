@@ -1,5 +1,9 @@
+@php $invalid ??= $name && $errors->has($name); @endphp
+
 <tk:field.wrapper
     :$attributes
+    :$name
+    :$id
     :label="$slot->isEmpty() ? $label : $slot"
     variant="inline"
 >
@@ -23,7 +27,7 @@
             $attributes->whereDoesntStartWith([
                     'field:', 'label:', 'information:', 'badge:', 'description:', 'help:', 'error:',
                     'group:', 'prefix:', 'suffix:',
-                    'control:', 'icon-area:', 'icon:',
+                    'control:', 'icon-area:', 'icon-on:', 'icon-off:',
                 ])
                 ->classes(
                     '
@@ -38,16 +42,16 @@
                     bg-white dark:bg-white/10
                     [print-color-adjust:exact]
 
-
                     border border-zinc-300 dark:border-white/10
                     disabled:border-zinc-200 dark:disabled:border-white/5
+                    [&[data-invalid]]:border-red-500 dark:[&[data-invalid]]:border-red-400
 
                     shadow-xs
                     disabled:opacity-75
                     disabled:checked:opacity-50
                     disabled:shadow-none
                     checked:shadow-none
-                    checked:border-none
+                    checked:not-[data-invalid]:border-none
                     ',
                     match($variant) {
                         'accent' => 'checked:bg-[var(--color-accent)]',
@@ -74,18 +78,25 @@
             }}
             @isset ($name) name="{{ $name }}" @endisset
             @isset ($id) id="{{ $id }}" @endisset
+            @if ($invalid) aria-invalid="true" data-invalid @endif
             @checked($checked)
             value="{{ $value }}"
             type="checkbox"
         />
 
         <div {{ $attributesAfter('icon-area:')
-            ->classes('absolute transition opacity-0 peer-checked:opacity-100 pointer-events-none size-full flex justify-center items-center')
+            ->classes('
+                absolute transition pointer-events-none size-full flex justify-center items-center
+                [&_.checked]:hidden
+                [&_.unchecked]:block
+                peer-checked:[&_.checked]:block
+                peer-checked:[&_.unchecked]:hidden
+            ')
         }}>
             <tk:icon
-                name="check"
-                :attributes="$attributesAfter('icon:')->classes(
-                    'size-full m-px',
+                :name="$iconOn ?? 'check'"
+                :attributes="$attributesAfter('icon-on:')->classes(
+                    'size-full m-px checked',
                     match($variant) {
                         'accent' => 'text-[var(--color-accent-foreground)]',
                         default => 'text-white dark:text-zinc-800',
@@ -110,6 +121,12 @@
                 )"
             />
 
+            @if ($iconOff)
+                <tk:icon
+                    :name="$iconOff"
+                    :attributes="$attributesAfter('icon-off:')->classes('size-full m-px unchecked')"
+                />
+            @endif
         </div>
     </div>
 </tk:field.wrapper>

@@ -1,9 +1,7 @@
 <tk:form.section
-    :attributes="$attributes->whereDoesntStartWith(['email:', 'login:'])"
+    :attributes="$attributes->whereDoesntStartWith(['email:', 'submit:', 'login:'])"
     title="Forgot password"
     subtitle="Enter your email address and we'll send you a password reset link."
-    submit:label="Send password reset link"
-    submit:variant="accent"
 >
     <tk:input
         :attributes="$attributesAfter('email:')"
@@ -11,6 +9,12 @@
         required
         autofocus
         placeholder="email@example.com"
+    />
+
+    <tk:submit
+        :attributes="$attributesAfter('submit:')->classes('w-full')"
+        label="Send password reset link"
+        variant="accent"
     />
 
     @if ($login)

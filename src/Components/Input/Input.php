@@ -25,7 +25,7 @@ class Input extends BladeComponent
     ) {}
 
     #[Mount()]
-    protected function mountType()
+    protected function mount()
     {
         $this->type ??= $this->detectType();
         $this->mask = $this->detectMask();
@@ -69,7 +69,7 @@ class Input extends BladeComponent
             'file' => ['image', 'picture', 'photo', 'logo', 'background', 'audio', 'video', 'file', 'document'],
             'password' => ['password', 'password_confirmation', 'new_password', 'new_password_confirmation'],
             'url' => ['url', 'website', 'youtube', 'vimeo', 'facebook', 'twitter', 'instagram', 'linkedin'],
-            'time' => ['time'],
+            'time' => ['time', 'hour'],
             'tel' => ['phone', 'whatsapp'],
         ];
 
@@ -84,7 +84,7 @@ class Input extends BladeComponent
 
     protected function detectMask()
     {
-        if ($this->mask === false || $this->type !== 'text') {
+        if ($this->mask === false || ! in_array($this->type, ['text', 'tel'])) {
             return null;
         }
 

@@ -1,9 +1,7 @@
 <tk:form.section
-    :attributes="$attributes->whereDoesntStartWith(['email:', 'new-password:', 'new-password-confirmation:'])"
+    :attributes="$attributes->whereDoesntStartWith(['email:', 'new-password:', 'new-password-confirmation:', 'submit:'])"
     title="Reset password"
     subtitle="Please enter your new password below:"
-    submit:label="Reset password"
-    submit:variant="accent"
 >
     <tk:input
         :attributes="$attributesAfter('email:')"
@@ -12,7 +10,7 @@
         autocomplete="email"
     />
 
-    <tk:input
+    <tk:password
         :attributes="$attributesAfter('new-password:')"
         label="New password"
         name="password"
@@ -21,12 +19,18 @@
         placeholder
     />
 
-    <tk:input
+    <tk:password
         :attributes="$attributesAfter('new-password-confirmation:')"
         label="New password confirmation"
         name="password_confirmation"
         required
         autocomplete="new-password"
         placeholder
+    />
+
+    <tk:submit
+        :attributes="$attributesAfter('submit:')->classes('w-full')"
+        label="Reset password"
+        variant="accent"
     />
 </tk:form.section>

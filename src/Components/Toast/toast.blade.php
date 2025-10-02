@@ -1,5 +1,6 @@
 <div
     x-data="toast"
+    tabindex="-1"
     {{ $attributes
         ->whereDoesntStartWith(['position:', 'container:', 'area:', 'content:', 'icon-', 'heading:', 'text:', 'actions:', 'close:'])
         ->classes('fixed inset-0 overflow-hidden pointer-events-none z-9999999')

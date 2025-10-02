@@ -1,11 +1,14 @@
-
 <tk:form.section
-    :attributes="$attributes->whereDoesntStartWith(['logout:'])"
+    :attributes="$attributes->whereDoesntStartWith(['submit:', 'logout:'])"
     title="Verify Your Email Address"
     subtitle="Before proceeding, please check your email for a verification link."
-    submit:label="Resend verification email"
-    submit:variant="accent"
 >
+    <tk:submit
+        :attributes="$attributesAfter('submit:')->classes('w-full')"
+        label="Resend verification email"
+        variant="accent"
+    />
+
     @if ($logout)
         <x-slot:append>
             <tk:link

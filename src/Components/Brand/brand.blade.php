@@ -2,7 +2,7 @@
     as="div"
     :name="$baseComponentKey()"
     :$href
-    :attributes="$attributes->whereDoesntStartWith(['logo:', 'image:', 'name:'])->classes('py-2 inline-flex justify-center gap-2')"
+    :attributes="$attributes->whereDoesntStartWith(['logo:', 'image:', 'name:'])->classes('py-2 justify-center gap-2')"
 >
     @if ($isSlot($logo))
         <div {{ $logo->attributes->classes('flex items-center justify-center [:where(&)]:min-w-6 [:where(&)]:rounded-sm overflow-hidden shrink-0') }}>

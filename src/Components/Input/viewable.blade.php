@@ -1,8 +1,8 @@
 <tk:button
     x-data="inputViewable"
     :attributes="$attributes->classes('mx-2 -me-1')"
+    tabindex="-1"
     variant="none"
-    aria-label="Toggle password visibility"
     tooltip="Toggle password visibility"
     icon="eye"
     icon:class="hidden"
@@ -10,6 +10,7 @@
     icon-trailing="eye-off"
     icon-trailing:class="hidden"
     icon-trailing::class="{ 'hidden': viewed }"
+    wire:replace.self
 >
     {{ $slot }}
 </tk:button>

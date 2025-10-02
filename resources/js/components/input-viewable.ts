@@ -4,14 +4,20 @@ export function inputViewable() {
   return {
     viewed: false,
 
+    get container () {
+      return this.$el.closest('[data-tallkit-input]')
+    },
+
     get input () {
-      return this.$el.closest('[data-tallkit-input]').querySelector('input')
+      return this.container.querySelector('input')
     },
 
     init() {
       if (!this.input) {
         return
       }
+
+      this.input.setAttribute('type', this.viewed ? 'text' : 'password')
 
       bind(this.$el, {
         ['@click']() {
@@ -20,11 +26,11 @@ export function inputViewable() {
         }
       })
 
-      let observer = new MutationObserver(() => {
+      const inputObserver = new MutationObserver(() => {
         this.viewed = this.input.getAttribute('type') !== 'password'
       })
 
-      observer.observe(this.input, {
+      inputObserver.observe(this.input, {
         attributes: true,
         attributeFilter: ['type']
       })

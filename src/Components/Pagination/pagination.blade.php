@@ -2,19 +2,23 @@
 $scrollIntoViewJsSnippet = ($scrollTo !== false)
     ? "(\$el.closest('{$scrollTo}') || document.querySelector('{$scrollTo}')).scrollIntoView()"
     : false;
+$isPaginator = $paginator instanceof \Illuminate\Contracts\Pagination\Paginator || $paginator instanceof \Illuminate\Contracts\Pagination\CursorPaginator;
+$isArrayable = Arr::arrayable($paginator);
 @endphp
 
-@if ($total !== false || $paginator->hasPages())
+@if ($total !== false || ($isPaginator && $paginator->hasPages()) || $isArrayable)
     <div {{ $attributes
         ->whereDoesntStartWith(['separator:', 'nav:', 'results:', 'total:', 'pages:', 'page:', 'first-page:', 'prev-page:', 'next:', 'last-page:', 'dots:'])
         ->classes('space-y-3')
     }}>
         <tk:separator :attributes="$attributesAfter('separator:')" />
 
-        @if ($paginator->hasPages() && $paginator instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator)
+        @if (isset($results))
+            {{ $results($paginator) }}
+        @elseif ($paginator instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator && $paginator->hasPages())
             <nav
                 role="navigation"
-                aria-label="{!! __('Pagination Navigation') !!}"
+                aria-label="{{ __('Pagination Navigation') }}"
                 {{ $attributesAfter('nav:')->classes('flex gap-1 items-center justify-between') }}
             >
                 @if (isset($results))
@@ -60,7 +64,7 @@ $scrollIntoViewJsSnippet = ($scrollTo !== false)
                                 <tk:text
                                     :attributes="$attributesAfter('dots:')->classes('px-px hidden lg:inline-flex')"
                                     :label="$element"
-                                    aria-disabled="true"
+                                        aria-disabled="true"
                                 />
                             @endif
 
@@ -92,10 +96,10 @@ $scrollIntoViewJsSnippet = ($scrollTo !== false)
                     @endif
                 </div>
             </nav>
-        @elseif ($paginator->hasPages())
+        @elseif ($isPaginator && $paginator->hasPages())
             <nav
                 role="navigation"
-                aria-label="{!! __('Pagination Navigation') !!}"
+                aria-label="{{ __('Pagination Navigation') }}"
                 {{ $attributesAfter('nav:')->classes('flex gap-1 items-center justify-end') }}
             >
                 <tk:pagination.prev-page
@@ -110,13 +114,17 @@ $scrollIntoViewJsSnippet = ($scrollTo !== false)
                     size="xs"
                 />
             </nav>
-        @elseif (isset($results))
-            {{ $results($paginator) }}
-        @else
+        @elseif ($isPaginator)
             <tk:text :attributes="$attributesAfter('total:')->classes('text-gray-700 dark:text-gray-400')">
                 <span>{!! __('Total:') !!}</span>
                 <span class="font-medium">{{ $paginator->total() }}</span>
                 <span>{!! trans_choice('pagination.results', $paginator->total()) !!}</span>
+            </tk:text>
+        @elseif ($isArrayable)
+            <tk:text :attributes="$attributesAfter('total:')->classes('text-gray-700 dark:text-gray-400')">
+                <span>{!! __('Total:') !!}</span>
+                <span class="font-medium">{{ collect($paginator)->count() }}</span>
+                <span>{!! trans_choice('pagination.results', collect($paginator)->count()) !!}</span>
             </tk:text>
         @endif
     </div>

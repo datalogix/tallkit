@@ -1,4 +1,5 @@
 @php $attrs = $attributes->whereDoesntStartWith(['dropdown:', 'menu:', 'avatar:', 'profile:']); @endphp
+
 <tk:dropdown :attributes="$attributesAfter('dropdown:')">
     @if ($profile)
         <tk:avatar.profile :attributes="$attrs->merge($attributesAfter('profile:')->getAttributes())" />
@@ -14,7 +15,9 @@
             <x-slot:prepend>
                 <tk:avatar.profile :attributes="$attrs->merge($attributesAfter('profile:')->getAttributes())" />
 
-                <tk:menu.separator />
+                @if ($slot->isNotEmpty() || collect($items)->isNotEmpty())
+                    <tk:menu.separator />
+                @endif
             </x-slot:prepend>
         @endunless
 

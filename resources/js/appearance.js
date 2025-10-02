@@ -1,12 +1,5 @@
-
 export const appearance = {
-  get mode() {
-    return window.localStorage.getItem('tallkit.appearance') || 'system'
-  },
-
-  set mode(value) {
-    this.apply(value)
-  },
+  mode: window.localStorage.getItem('tallkit.appearance') || 'system',
 
   init() {
     this.apply(this.mode)
@@ -25,17 +18,19 @@ export const appearance = {
   },
 
   isLight() {
-    return document.documentElement.classList.contains('light')
+    return !this.isDark()
   },
 
   applyDark(storage = true) {
     document.documentElement.classList.add('dark')
     if (storage) window.localStorage.setItem('tallkit.appearance', 'dark')
+    this.mode = 'dark'
   },
 
   applyLight(storage = true) {
     document.documentElement.classList.remove('dark')
     if (storage) window.localStorage.setItem('tallkit.appearance', 'light')
+    this.mode = 'light'
   },
 
   apply(appearance) {
@@ -43,6 +38,7 @@ export const appearance = {
       const media = window.matchMedia('(prefers-color-scheme: dark)')
       window.localStorage.removeItem('tallkit.appearance')
       media.matches ? this.applyDark(false) : this.applyLight(false)
+      this.mode = 'system'
     } else if (appearance === 'dark') {
       this.applyDark()
     } else if (appearance === 'light') {

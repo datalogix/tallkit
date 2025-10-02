@@ -1,11 +1,16 @@
 <tk:button
     x-data="inputClearable"
-    :attributes="$attributes->classes('mx-2 -me-1 [[data-tallkit-input]:has(input:placeholder-shown)_&]:hidden [[data-tallkit-input]:has(input[disabled])_&]:hidden')"
+    :attributes="$attributes->classes('
+        mx-2 -me-1
+        [[data-tallkit-input]:has(input:placeholder-shown)_&]:hidden
+        [[data-tallkit-input]:has(input[disabled])_&]:hidden
+        [[data-tallkit-input]:has(input:invalid)_&]:hidden
+    ')"
+    tabindex="-1"
     variant="none"
-    aria-label="Clear input"
     tooltip="Clear input"
     icon="times"
-    tabindex="-1"
+    wire:replace.self
 >
     {{ $slot }}
 </tk:button>

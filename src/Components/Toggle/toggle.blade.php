@@ -1,8 +1,17 @@
-<tk:field.wrapper :$attributes variant="inline">
+@php $invalid ??= $name && $errors->has($name); @endphp
+
+<tk:field.wrapper
+    :$attributes
+    :$name
+    :$id
+    :label="$slot->isEmpty() ? $label : $slot"
+    variant="inline"
+>
     <label
         {{ $buildDataAttribute('control') }}
         {{ $attributes->only('disabled') }}
         {{ $attributesAfter('control:')->classes('
+                inline-flex
                 relative
                 rounded-full
 
@@ -10,11 +19,13 @@
                 [print-color-adjust:exact]
 
                 has-[input:disabled]:opacity-50
-                has-[input:checked]:border-0
+                has-[input:checked:not([data-invalid])]:border-0
 
                 dark:bg-transparent
                 dark:border
                 dark:border-white/20
+
+                has-[input[data-invalid]]:border-red-400 dark:has-[input[data-invalid]]:border-red-500
             ',
              match ($size) {
                 'xs' => 'w-8 h-5 [&_span]:size-3 [&_[data-tallkit-icon]]:size-2.5',
@@ -61,6 +72,7 @@
             }}
             @isset ($name) name="{{ $name }}" @endisset
             @isset ($id) id="{{ $id }}" @endisset
+            @if ($invalid) aria-invalid="true" data-invalid @endif
             @checked($checked)
             value="{{ $value }}"
             type="checkbox"
@@ -107,10 +119,4 @@
             @endif
         </span>
     </label>
-
-    @if ($slot->isNotEmpty())
-        <x-slot:label>
-            {{ $slot }}
-        </x-slot:label>
-    @endif
 </tk:field.wrapper>

@@ -30,6 +30,6 @@
     '[&>*:not(:first-child):not(:last-child):not(:only-child)>[data-tallkit-input]>[data-tallkit-group-target]]:rounded-none',
     '[&>*:first-child:not(:last-child)>[data-tallkit-input]>[data-tallkit-group-target]]:rounded-e-none',
     '[&>*:last-child:not(:first-child)>[data-tallkit-input]>[data-tallkit-group-target]]:rounded-s-none',
-) }}>
+)->whereDoesntStartWith(['variant', 'size', 'circle', 'square']) }}>
     {{ $slot }}
 </div>

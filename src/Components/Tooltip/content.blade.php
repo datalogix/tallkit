@@ -7,6 +7,7 @@
             'group relative overflow-visible text-white border border-white/10',
             match ($variant) {
                 'accent' => 'bg-[var(--color-accent)] text-[var(--color-accent-foreground)]',
+                default => 'bg-zinc-800 dark:bg-zinc-700',
                 'red' => 'bg-red-600 dark:bg-red-500',
                 'orange' => 'bg-orange-600 dark:bg-orange-500',
                 'amber' => 'bg-amber-600 dark:bg-amber-500',
@@ -24,7 +25,6 @@
                 'fuchsia' => 'bg-fuchsia-600 dark:bg-fuchsia-500',
                 'pink' => 'bg-pink-600 dark:bg-pink-500',
                 'rose' => 'bg-rose-600 dark:bg-rose-500',
-                default => 'bg-zinc-800 dark:bg-zinc-700',
             },
             match ($size) {
                 'xs' => 'py-1 px-1.5 text-[10px] font-light rounded',

@@ -1,6 +1,5 @@
 <tk:button
     variant="none"
-    aria-label="Close"
     tooltip="Close"
     :icon="$slot->isEmpty() ? $icon ?? 'close' : null"
     :attributes="$attributes->classes(

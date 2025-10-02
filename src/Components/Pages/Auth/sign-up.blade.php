@@ -1,9 +1,7 @@
 <tk:formi.section
-    :attributes="$attributes->whereDoesntStartWith(['name:', 'email:', 'password:', 'password-confirmation:', 'terms:', 'login:'])"
+    :attributes="$attributes->whereDoesntStartWith(['name:', 'email:', 'password:', 'password-confirmation:', 'terms:', 'submit:', 'login:'])"
     title="Create an account"
     subtitle="Enter your details below to create your account:"
-    submit:label="Create account"
-    submit:variant="accent"
 >
     <tk:input
         :attributes="$attributesAfter('name:')"
@@ -22,7 +20,7 @@
         placeholder="email@example.com"
     />
 
-    <tk:input
+    <tk:password
         :attributes="$attributesAfter('password:')"
         name="password"
         required
@@ -30,7 +28,7 @@
         placeholder
     />
 
-    <tk:input
+    <tk:password
         :attributes="$attributesAfter('password-confirmation:')"
         name="password_confirmation"
         required
@@ -44,6 +42,12 @@
         required
         variant="accent"
         size="sm"
+    />
+
+    <tk:submit
+        :attributes="$attributesAfter('submit:')->classes('w-full')"
+        label="Create account"
+        variant="accent"
     />
 
     @if ($login)

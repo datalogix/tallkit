@@ -1,6 +1,10 @@
 @php
 $errorBag = $errors->getBag($bag ?? 'default');
 $message ??= $name ? $errorBag->first($name) : $slot;
+
+if ($name && (is_null($message) || $message === '')) {
+    $message = $errorBag->first($name . '.*');
+}
 @endphp
 
 <div {{

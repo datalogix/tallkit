@@ -2,6 +2,8 @@
 
 namespace TALLKit\Concerns;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use TALLKit\Attributes\Mount;
 
 trait InteractsWithOptions
@@ -22,8 +24,20 @@ trait InteractsWithOptions
 
     protected function parseOptions()
     {
-        return collect($this->options)->mapWithKeys(function ($value, $key) {
-            $optionValue = data_get($value, $this->optionValue ?? 'id', $key);
+        $options = $this->options;
+
+        if (is_string($options) && class_exists($options)) {
+            $options = app($options);
+        }
+
+        if ($options instanceof Model || $options instanceof Builder) {
+            $options = $options->get();
+        }
+
+        $useValueAsKey = is_array($options) && array_keys($options) === range(0, count($options) - 1);
+
+        return collect($options)->mapWithKeys(function ($value, $key) use ($useValueAsKey) {
+            $optionValue = data_get($value, $this->optionValue ?? 'id', $useValueAsKey ? $value : $key);
             $optionLabel = data_get($value, $this->optionLabel ?? 'name', $value);
 
             if (! $this->optionGroupChildren && ! is_array($optionLabel)) {

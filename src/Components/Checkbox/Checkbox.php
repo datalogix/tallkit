@@ -15,6 +15,8 @@ class Checkbox extends BladeComponent
     public function __construct(
         public mixed $checked = null,
         public ?string $variant = null,
+        public ?string $iconOn = null,
+        public ?string $iconOff = null,
     ) {}
 
     #[Mount]

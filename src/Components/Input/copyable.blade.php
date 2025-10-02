@@ -1,6 +1,7 @@
 <tk:button
     x-data="inputCopyable"
     :attributes="$attributes->classes('mx-2 -me-1')"
+    tabindex="-1"
     variant="none"
     aria-label="Copy to clipboard"
     tooltip="Copied"

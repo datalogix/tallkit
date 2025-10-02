@@ -3,9 +3,8 @@
     x-on:click="$dispatch('sidebar-{{ $name }}-toggle')"
     :attributes="$attributes->classes('shrink-0')->merge([$dataKey() => $name])"
     variant="subtle"
-    aria-label="Toggle sidebar"
     tooltip="Toggle sidebar"
-    icon="bars-2"
+    icon="menu"
 >
     {{ $slot }}
 </tk:button>

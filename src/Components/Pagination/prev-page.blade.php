@@ -22,6 +22,5 @@ $disabled = $paginator->onFirstPage();
     :wire:click="in_livewire() ? $wireClick : false"
     :wire:loading.attr="in_livewire() ? 'disabled' : false"
     icon="chevron-left"
-    aria-label="pagination.previous"
     tooltip="pagination.previous"
 />

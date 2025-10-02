@@ -8,10 +8,7 @@ $current = $paginator->currentPage() === $page;
 <tk:button
     :attributes="$attributes->merge($current
         ? ['aria-current' => 'page']
-        : [
-            'tooltip' => __('Go to page :page', ['page' => $page]),
-            'aria-label' => __('Go to page :page', ['page' => $page]),
-        ]
+        : ['tooltip' => __('Go to page :page', ['page' => $page])]
     )"
     :disabled="$current"
     :href="in_livewire() ? false : $paginator->url($page)"

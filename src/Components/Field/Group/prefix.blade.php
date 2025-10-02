@@ -1,6 +1,6 @@
 <tk:element :attributes="$attributes->classes(
     '
-    flex items-center px-4 whitespace-nowrap
+    px-4 whitespace-nowrap
     [:where(&)]:text-zinc-800 dark:[:where(&)]:text-white/85
     [:where(&)]:bg-zinc-800/5 dark:[:where(&)]:bg-white/20
     border-zinc-300 dark:border-white/10

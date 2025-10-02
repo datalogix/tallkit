@@ -15,6 +15,5 @@ $disabled = $paginator->onLastPage();
     :wire:click="in_livewire() ? $wireClick : false"
     :wire:loading.attr="in_livewire() ? 'disabled' : false"
     icon="chevron-double-right"
-    aria-label="pagination.last"
     tooltip="pagination.last"
 />

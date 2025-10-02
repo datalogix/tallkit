@@ -7,11 +7,21 @@ export function inputClearable() {
     },
 
     init() {
+      const button = this.$el
+
       if (!this.input) {
         return
       }
 
-      bind(this.$el, {
+      button.style.display = this.input.value ? 'inline-flex ' : 'none';
+
+      bind(this.input, {
+        ['@input']() {
+          button.style.display = this.$el.value ? 'inline-flex ' : 'none';
+        }
+      })
+
+      bind(button, {
         ['@click']() {
           this.input.value = ''
           this.input.dispatchEvent(new Event('input', { bubbles: false }))

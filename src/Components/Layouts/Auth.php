@@ -9,8 +9,8 @@ use TALLKit\View\BladeComponent;
 class Auth extends BladeComponent
 {
     public function __construct(
-        public bool $appearance = true,
-        public bool $right = false,
+        public ?bool $appearance = null,
+        public ?bool $right = null,
         public mixed $bg = null,
     ) {}
 

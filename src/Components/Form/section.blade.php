@@ -2,6 +2,7 @@
     :attributes="$attributesAfter('section:')"
     :$title
     :$subtitle
+    :$separator
 >
     <tk:alert.session :attributes="$attributesAfter('alert:')" />
 

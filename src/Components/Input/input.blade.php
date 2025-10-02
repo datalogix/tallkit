@@ -7,13 +7,19 @@
 @elseif ($type === 'reset' || $type === 'button')
     <tk:button :$attributes :$type>{{ $slot }}</tk:button>
 @elseif ($type === 'submit')
-    <tk:submit :$attributes :$type>{{ $slot }}</tk:submit>
+    <tk:submit :$attributes>{{ $slot }}</tk:submit>
 @else
     @php $invalid ??= $name && $errors->has($name); @endphp
-    <tk:field.wrapper :$attributes>
+
+    <tk:field.wrapper
+        :$attributes
+        :$name
+        :$id
+        :$label
+    >
         <div
             {{ $buildDataAttribute('input') }}
-            {{ $attributes->only('class')->classes('w-full relative block group/input')->merge(['wire:ignore' => $viewable]) }}
+            {{ $attributes->only('class')->classes('w-full relative block group/input') }}
         >
             @if (is_string($icon) && $icon !== '')
                 <div class="pointer-events-none absolute top-0 bottom-0 flex items-center justify-center text-xs text-zinc-400/75 ps-3 start-0">
@@ -105,57 +111,59 @@
                 }}
             />
 
-            <div class="absolute top-0 bottom-0 flex items-center gap-x-1.5 pe-3 end-0 text-xs text-zinc-400">
-                @if ($loading)
-                    <tk:loading
-                        :attributes="$attributesAfter('loading:')->when(in_livewire(), fn($attrs) => $attrs->merge([
-                            'wire:loading' => true,
-                            'wire:target' => $wireTarget
-                        ]))"
-                        :size="$adjustSize()"
-                    />
-                @endif
+            @if ($loading || $clearable || $kbd || $copyable || $viewable || $iconTrailing)
+                <div class="absolute top-0 bottom-0 flex items-center gap-x-1.5 pe-3 end-0 text-xs text-zinc-400">
+                    @if ($loading)
+                        <tk:loading
+                            :attributes="$attributesAfter('loading:')->when(in_livewire(), fn($attrs) => $attrs->merge([
+                                'wire:loading' => true,
+                                'wire:target' => $wireTarget
+                            ]))"
+                            :size="$adjustSize()"
+                        />
+                    @endif
 
-                @if ($clearable)
-                    <tk:input.clearable
-                        :attributes="$attributesAfter('clearable:')"
-                        :size="$adjustSize()"
-                    />
-                @endif
+                    @if ($clearable)
+                        <tk:input.clearable
+                            :attributes="$attributesAfter('clearable:')"
+                            :size="$adjustSize()"
+                        />
+                    @endif
 
-                @if ($kbd)
-                    <span {{ $attributesAfter('kbd:')->classes('pointer-events-none') }}>
-                        {{ $kbd }}
-                    </span>
-                @endif
+                    @if ($kbd)
+                        <span {{ $attributesAfter('kbd:')->classes('pointer-events-none') }}>
+                            {{ $kbd }}
+                        </span>
+                    @endif
 
-                @if ($copyable)
-                    <tk:input.copyable
-                        :attributes="$attributesAfter('copyable:')"
-                        :size="$adjustSize()"
-                    />
-                @endif
+                    @if ($copyable)
+                        <tk:input.copyable
+                            :attributes="$attributesAfter('copyable:')"
+                            :size="$adjustSize()"
+                        />
+                    @endif
 
-                @if ($viewable)
-                    <tk:input.viewable
-                        :attributes="$attributesAfter('viewable:')"
-                        :size="$adjustSize()"
-                    />
-                @endif
+                    @if ($viewable)
+                        <tk:input.viewable
+                            :attributes="$attributesAfter('viewable:')"
+                            :size="$adjustSize()"
+                        />
+                    @endif
 
-                @if (is_string($iconTrailing) && $iconTrailing !== '')
-                    <tk:icon
-                        :attributes="$attributesAfter('icon-trailing:')->classes('pointer-events-none text-zinc-400/75')"
-                        :size="$adjustSize()"
-                        :$icon
-                    />
-                @elseif ($iconTrailing)
-                    <tk:element
-                        :attributes="$attributesAfter('icon-trailing:')"
-                        :label="$iconTrailing"
-                    />
-                @endif
-            </div>
+                    @if (is_string($iconTrailing) && $iconTrailing !== '')
+                        <tk:icon
+                            :attributes="$attributesAfter('icon-trailing:')->classes('pointer-events-none text-zinc-400/75')"
+                            :size="$adjustSize()"
+                            :$icon
+                        />
+                    @elseif ($iconTrailing)
+                        <tk:element
+                            :attributes="$attributesAfter('icon-trailing:')"
+                            :label="$iconTrailing"
+                        />
+                    @endif
+                </div>
+            @endif
         </div>
     </tk:field>
 @endif

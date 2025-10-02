@@ -1,5 +1,8 @@
 <tk:field.wrapper
     :$attributes
+    :$name
+    :$id
+    :$label
     label:as="{{ $attributes->has('label:for') ? 'label' : 'span' }}"
 >
     <div {{ $attributes->only('class')->classes(
@@ -43,7 +46,7 @@
                 :attributes="$attributesAfter('prefix:')"
                 :$size
             >
-                {{ $prefix }}
+                {!! $prefix !!}
             </tk:field.group.prefix>
         @endif
 
@@ -54,7 +57,7 @@
                 :attributes="$attributesAfter('suffix:')"
                 :$size
             >
-                {{ $suffix }}
+                {!! $suffix !!}
             </tk:field.group.suffix>
         @endif
     </div>

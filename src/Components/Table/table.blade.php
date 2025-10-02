@@ -19,7 +19,8 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                     'container:', 'area:',
                     'columns:', 'thead:', 'select-all:', 'column:', 'column-', 'th:', 'th-',
                     'rows:', 'tbody:', 'row:', 'row-', 'cell:', 'cell-', 'td:', 'td-',
-                    'no-records:', 'footer:', 'tfoot:'
+                    'no-records:', 'footer:', 'tfoot:',
+                    'pagination:',
                 ])
                 ->classes('
                     relative
@@ -61,7 +62,7 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                 </tk:table.columns>
             @endif
 
-            @if (Str::doesntContain($slot, '<tbody', true) && $cols->isNotEmpty())
+            @if (Str::doesntContain($slot, '<tbody', true) && $cols->isNotEmpty() && ($pagination === false || $rows->isNotEmpty()))
                 <tk:table.rows :attributes="$attributesAfter('rows:')->merge($attributesAfter('tbody:')->toArray())">
                     @forelse ($rows as $index => $row)
                         <tk:table.row
@@ -112,9 +113,11 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                             </tk:table.row.expanded>
                         @endif
                     @empty
-                        <tk:table.row.no-records :attributes="$attributesAfter('no-records:')->merge(['colspan' => $colspan])">
-                            {{ $noRecords }}
-                        </tk:table.row.no-records>
+                        @if ($pagination === false)
+                            <tk:table.row.no-records :attributes="$attributesAfter('no-records:')->merge(['colspan' => $colspan])">
+                                {{ $noRecords }}
+                            </tk:table.row.no-records>
+                        @endif
                     @endforelse
                 </tk:table.rows>
             @endif
@@ -131,4 +134,11 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
             {{ $slot }}
         </table>
     </div>
+
+    @if ($pagination !== false && $rows !== null)
+        <tk:pagination
+            :attributes="$attributesAfter('pagination:')"
+            :paginator="$rows"
+        />
+    @endif
 </div>

@@ -48,8 +48,8 @@ export function popover ({ mode, position, align }) {
           ['@click.outside'](e) {
             if ((
               this.popoverElement.hasAttribute('data-keep-open')
-              || e.target.hasAttribute('data-keep-open')
-              || e.target?.parentElement.hasAttribute('data-keep-open')
+              || e.target?.hasAttribute('data-keep-open')
+              || e.target?.parentElement?.hasAttribute('data-keep-open')
             ) && this.popoverElement.contains(e.target)) {
               return
             }

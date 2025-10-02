@@ -10,7 +10,7 @@
         :label="$label ?? Str::headline($name)"
         :as="$sortable ? 'button' : null"
         :attributes="$attributesAfter('container:')->classes(
-            'group/sortable',
+            'flex group/sortable',
             match ($align) {
                 'center' => 'text-center justify-center',
                 'right' => 'text-end justify-end',

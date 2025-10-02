@@ -1,17 +1,10 @@
-- Layouts
-- Pagina com menu lateral
-
-- Review Colors
-- Review element (flex/inline-flex)
-- Review components (js) with livewire
-- Review `aria-label` and `tooltip` with same values
-
-- FormBuilder
-- Table (with pagination)
-- DataTableBuilder
-- DataTable (with a filter e etc...)
-
 - Upload (File upload)
+- Revisar Concerns\AppendsCustomAttributes
+- Revisar components (js) com livewire
+
+- DataTable (with a filter e etc...)
+- FormBuilder
+- DataTableBuilder
 - CreditCard
 - Accordion
 - Tabs
@@ -23,5 +16,4 @@
 - Command
 - Chart
 - Breadcrumbs
-- Calendar
 - Autocomplete

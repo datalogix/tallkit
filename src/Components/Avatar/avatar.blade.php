@@ -4,10 +4,14 @@
     :attributes="$attributes
         ->whereDoesntStartWith(['image:', 'initials:', 'icon:'])
         ->classes(
-            'inline-flex justify-center',
-            'relative flex-none isolate [:where(&)]:font-medium',
-            'after:absolute after:inset-0 after:inset-ring-[1px] after:inset-ring-black/7 dark:after:inset-ring-white/10',
-            '[:where(&)]:bg-zinc-200 [:where(&)]:dark:bg-zinc-600 [:where(&)]:text-zinc-800 [:where(&)]:dark:text-white',
+            '
+                justify-center
+                relative flex-none isolate
+                after:absolute after:inset-0 after:inset-ring-[1px] after:inset-ring-black/7 dark:after:inset-ring-white/10
+                [:where(&)]:bg-zinc-200 [:where(&)]:dark:bg-zinc-600
+                [:where(&)]:text-zinc-800 [:where(&)]:dark:text-white
+                [:where(&)]:font-medium
+            ',
             match ($size) {
                 'xs' => '[:where(&)]:size-6 [:where(&)]:text-[11px]',
                 'sm' => '[:where(&)]:size-8 [:where(&)]:text-xs',
@@ -23,6 +27,7 @@
                 'outline' => '',
                 'ghost' => 'bg-transparent',
                 'subtle' => 'bg-transparent text-zinc-500',
+                default => '',
                 'red' => 'bg-red-200 text-red-800',
                 'orange' => 'bg-orange-200 text-orange-800',
                 'amber' => 'bg-amber-200 text-amber-800',
@@ -40,7 +45,6 @@
                 'fuchsia' => 'bg-fuchsia-200 text-fuchsia-800',
                 'pink' => 'bg-pink-200 text-pink-800',
                 'rose' => 'bg-rose-200 text-rose-800',
-                default => '',
             },
         )
         ->when(

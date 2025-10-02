@@ -1,9 +1,7 @@
 <tk:form.section
-    :attributes="$attributes->whereDoesntStartWith(['email:', 'password:', 'forgot-password:', 'remember:', 'sign-up:'])"
+    :attributes="$attributes->whereDoesntStartWith(['email:', 'password:', 'forgot-password:', 'remember:', 'submit:', 'sign-up:'])"
     title="Sign in to your account"
     subtitle="Enter your access details below to sign in:"
-    submit:label="Sign in"
-    submit:variant="accent"
 >
     <tk:input
         :attributes="$attributesAfter('email:')"
@@ -14,7 +12,7 @@
         placeholder="email@example.com"
     />
 
-    <tk:input
+    <tk:password
         :attributes="$attributesAfter('password:')"
         name="password"
         required
@@ -27,16 +25,23 @@
                     :attributes="$attributesAfter('forgot-password:')"
                     :href="$forgotPassword"
                     label="Forgot your password?"
+                    tabindex="-1"
                 />
 
             </x-slot:label-append>
         @endif
-    </tk:input>
+    </tk:password>
 
     <tk:checkbox
         :attributes="$attributesAfter('remember:')"
         name="remember"
         label="Remember me"
+    />
+
+    <tk:submit
+        :attributes="$attributesAfter('submit:')->classes('w-full')"
+        label="Sign in"
+        variant="accent"
     />
 
     @if ($signUp)

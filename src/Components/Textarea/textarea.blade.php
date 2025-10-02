@@ -1,5 +1,11 @@
 @php $invalid ??= $name && $errors->has($name); @endphp
-<tk:field.wrapper :$attributes>
+
+<tk:field.wrapper
+    :$attributes
+    :$name
+    :$id
+    :$label
+>
     <textarea
         {{ $buildDataAttribute('control') }}
         {{ $buildDataAttribute('group-target') }}

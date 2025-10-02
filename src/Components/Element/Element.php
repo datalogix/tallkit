@@ -18,6 +18,7 @@ class Element extends BladeComponent
         public ?string $action = null,
         public ?string $as = null,
         public ?string $type = null,
+        public ?bool $exact = null,
         public ?bool $current = null,
         public ?bool $iconDot = null,
         public string|ComponentSlot|null $icon = null,
@@ -27,7 +28,8 @@ class Element extends BladeComponent
         public bool|string|ComponentSlot|null $badge = null,
         public bool|string|ComponentSlot|null $prepend = null,
         public bool|string|ComponentSlot|null $append = null,
-        public ?string $ariaLabel = null,
+        public bool|string|null $ariaLabel = null,
+        public ?string $tooltip = null,
     ) {}
 
     #[Mount()]
@@ -35,6 +37,7 @@ class Element extends BladeComponent
     {
         $this->as ??= 'span';
         $this->href ??= route_detect($this->route, $this->routeParameters, $this->href);
+        $this->ariaLabel = $this->ariaLabel === true || $this->ariaLabel === null ? $this->tooltip : $this->ariaLabel;
 
         if ($this->href) {
             $this->as = 'a';

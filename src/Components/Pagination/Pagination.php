@@ -4,13 +4,14 @@ namespace TALLKit\Components\Pagination;
 
 use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Contracts\Pagination\Paginator;
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Pagination\UrlWindow;
 use TALLKit\View\BladeComponent;
 
 class Pagination extends BladeComponent
 {
     public function __construct(
-        public Paginator|CursorPaginator $paginator,
+        public Paginator|CursorPaginator|Arrayable|array $paginator,
         public bool|string $scrollTo = 'body',
         public ?bool $total = null,
         public ?bool $firstPage = null,

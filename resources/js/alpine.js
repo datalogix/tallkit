@@ -30,6 +30,7 @@ export function setupAlpine () {
     window.Alpine.data(name, component)
   })
 
-  window.Alpine.magic('tallkit', () => window.tallkit)
-  window.Alpine.magic('tk', () => window.tallkit)
+  window.Alpine.store('tallkit', tallkit)
+  window.Alpine.magic('tallkit', () => Alpine.store('tallkit'))
+  window.Alpine.magic('tk', () => Alpine.store('tallkit'))
 }

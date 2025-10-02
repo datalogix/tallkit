@@ -8,7 +8,6 @@
         ->whereDoesntStartWith(['close:'])
         ->classes(
             '
-            inline-flex
             transition
             font-medium whitespace-nowrap
             [print-color-adjust:exact]
@@ -46,6 +45,7 @@
             $border,
             fn ($c) => $c->classes(match ($variant) {
                 'accent' => 'border-[var(--color-accent)]',
+                default => 'border-zinc-400',
                 'red' => 'border-red-400',
                 'orange' => 'border-orange-400',
                 'amber' => 'border-amber-400',
@@ -63,13 +63,13 @@
                 'fuchsia' => 'border-fuchsia-400',
                 'pink' => 'border-pink-400',
                 'rose' => 'border-rose-400',
-                default => 'border-zinc-400',
             })
         )
         ->when(
             $solid,
             fn ($c) => $c->classes(match ($variant) {
                 'accent' => 'text-[var(--color-accent-foreground)] bg-[var(--color-accent)] [&:is(button)]:hover:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_15%)]',
+                default => 'text-white dark:text-white bg-zinc-600 dark:bg-zinc-600 [&:is(button)]:hover:bg-zinc-700 dark:[&:is(button)]:hover:bg-zinc-500',
                 'red' => 'text-white dark:text-white bg-red-500 dark:bg-red-600 [&:is(button)]:hover:bg-red-600 dark:[&:is(button)]:hover:bg-red-500',
                 'orange' => 'text-white dark:text-white bg-orange-500 dark:bg-orange-600 [&:is(button)]:hover:bg-orange-600 dark:[&:is(button)]:hover:bg-orange-500',
                 'amber' => 'text-white dark:text-white bg-amber-500 dark:bg-amber-600 [&:is(button)]:hover:bg-amber-600 dark:[&:is(button)]:hover:bg-amber-500',
@@ -87,7 +87,6 @@
                 'fuchsia' => 'text-white dark:text-white bg-fuchsia-500 dark:bg-fuchsia-600 [&:is(button)]:hover:bg-fuchsia-600 dark:[&:is(button)]:hover:bg-fuchsia-500',
                 'pink' => 'text-white dark:text-white bg-pink-500 dark:bg-pink-600 [&:is(button)]:hover:bg-pink-600 dark:[&:is(button)]:hover:bg-pink-500',
                 'rose' => 'text-white dark:text-white bg-rose-500 dark:bg-rose-600 [&:is(button)]:hover:bg-rose-600 dark:[&:is(button)]:hover:bg-rose-500',
-                default => 'text-white dark:text-white bg-zinc-600 dark:bg-zinc-600 [&:is(button)]:hover:bg-zinc-700 dark:[&:is(button)]:hover:bg-zinc-500',
             }),
             fn ($c) => $c->classes(match ($variant) {
                 'accent' => '
@@ -97,6 +96,7 @@
                     [&:is(button)]:hover:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_30%)]
                     dark:[&:is(button)]:hover:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_50%)]
                 ',
+                default => 'text-zinc-700 dark:text-zinc-200 bg-zinc-400/15 dark:bg-zinc-400/40 [&:is(button)]:hover:bg-zinc-400/25 dark:[&:is(button)]:hover:bg-zinc-400/50',
                 'red' => 'text-red-700 dark:text-red-200 bg-red-400/20 dark:bg-red-400/40 [&:is(button)]:hover:bg-red-400/30 dark:[&:is(button)]:hover:bg-red-400/50',
                 'orange' => 'text-orange-700 dark:text-orange-200 bg-orange-400/20 dark:bg-orange-400/40 [&:is(button)]:hover:bg-orange-400/30 dark:[&:is(button)]:hover:bg-orange-400/50',
                 'amber' => 'text-amber-700 dark:text-amber-200 bg-amber-400/25 dark:bg-amber-400/40 [&:is(button)]:hover:bg-amber-400/40 dark:[&:is(button)]:hover:bg-amber-400/50',
@@ -114,7 +114,6 @@
                 'fuchsia' => 'text-fuchsia-700 dark:text-fuchsia-200 bg-fuchsia-400/20 dark:bg-fuchsia-400/40 [&:is(button)]:hover:bg-fuchsia-400/30 dark:[&:is(button)]:hover:bg-fuchsia-400/50',
                 'pink' => 'text-pink-700 dark:text-pink-200 bg-pink-400/20 dark:bg-pink-400/40 [&:is(button)]:hover:bg-pink-400/30 dark:[&:is(button)]:hover:bg-pink-400/50',
                 'rose' => 'text-rose-700 dark:text-rose-200 bg-rose-400/20 dark:bg-rose-400/40 [&:is(button)]:hover:bg-rose-400/30 dark:[&:is(button)]:hover:bg-rose-400/50',
-                default => 'text-zinc-700 dark:text-zinc-200 bg-zinc-400/15 dark:bg-zinc-400/40 [&:is(button)]:hover:bg-zinc-400/25 dark:[&:is(button)]:hover:bg-zinc-400/50',
             })
         )
     "

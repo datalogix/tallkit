@@ -3,9 +3,13 @@
 namespace TALLKit\Components\Table;
 
 use Carbon\CarbonInterface;
+use Illuminate\Contracts\Pagination\CursorPaginator;
+use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Illuminate\View\ComponentSlot;
 use TALLKit\Attributes\Mount;
@@ -17,6 +21,7 @@ class Table extends BladeComponent
         public mixed $resource = null,
         public mixed $rows = null,
         public mixed $cols = null,
+        public ?bool $pagination = null,
         public ?bool $sortable = null,
         public ?bool $dense = null,
         public ?bool $card = null,
@@ -46,16 +51,31 @@ class Table extends BladeComponent
             return $this->resource;
         }
 
-        return make_model($this->resource)?->all();
+        return make_model($this->resource);
+    }
+
+    protected function parseRows()
+    {
+        $rows = $this->rows ?? $this->parseResource();
+
+        return match (true) {
+            $rows instanceof Model => $rows->paginate(),
+            $rows instanceof Builder => $rows->paginate(),
+            $rows instanceof Paginator => $rows,
+            $rows instanceof CursorPaginator => $rows,
+            $rows === null => null,
+            default => collect($rows),
+        };
     }
 
     protected function parseColsAndRows()
     {
         $cols = collect($this->cols);
-        $rows = collect($this->rows ?? $this->parseResource());
+        $rows = $this->parseRows();
+
         $displayIdColumn = $this->displayIdColumn;
 
-        if ($cols->isEmpty() && $rows->isNotEmpty()) {
+        if ($cols->isEmpty() && $rows?->isNotEmpty()) {
             $cols = collect($rows->first())->keys();
         } elseif ($displayIdColumn === null) {
             $displayIdColumn = true;
