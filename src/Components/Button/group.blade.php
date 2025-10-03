@@ -2,7 +2,7 @@
     'flex group/button',
 
     /* All inputs borders... */
-    '[&>[data-tallkit-input]:last-child:ot(:first-child)>[data-tallkit-group-target]:not([data-invalid])]:border-s-0',
+    '[&>[data-tallkit-input]:last-child:not(:first-child)>[data-tallkit-group-target]:not([data-invalid])]:border-s-0',
     '[&>[data-tallkit-input]:not(:first-child):not(:last-child)>[data-tallkit-group-target]:not([data-invalid])]:border-s-0',
     '[&>[data-tallkit-input]:has(+[data-tallkit-input-group-suffix])>[data-tallkit-group-target]:not([data-invalid])]:border-e-0',
 
