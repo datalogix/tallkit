@@ -9,7 +9,7 @@
             :attributes="$attributesAfter('row:')"
             role="row-foot"
         >
-            @if (Str::contains($contents, '<td', true))
+            @if (Str::contains($slot, '<td', true))
                 {{ $slot }}
             @else
                 <tk:table.cell :attributes="$attributesAfter('cell:')">

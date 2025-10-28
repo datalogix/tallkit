@@ -8,7 +8,7 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
     $attributesAfter('container:')
         ->classes([
             'overflow-hidden',
-            'border border-zinc-800/10 dark:border-white/20 rounded-md' => $card || ($dense && $card === null)
+            'border border-zinc-800/10 dark:border-white/20 rounded-md' => $dense || $border
         ])
         ->merge($hasRowSelection || $hasRowExpanded ? ['x-data' => 'table'] : [])
 }}>
@@ -89,15 +89,15 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
 
                             @foreach ($cols as $key => $col)
                                 <tk:table.cell :attributes="$attributesAfter('cell:')
-                                        ->merge($attributesAfter('cell-'.$key.':')->toArray())
-                                        ->merge($attributesAfter('td:')->toArray())
-                                        ->merge($attributesAfter('td-'.$key.':')->toArray())
-                                        ->merge(['align' => data_get($col, 'align', $key === 'actions' ? 'center' : null)])
-                                    ">
+                                    ->merge($attributesAfter('cell-'.$key.':')->toArray())
+                                    ->merge($attributesAfter('td:')->toArray())
+                                    ->merge($attributesAfter('td-'.$key.':')->toArray())
+                                    ->merge(['align' => data_get($col, 'align', $key === 'actions' ? 'center' : null)])
+                                ">
                                     @isset (${'row_' . $key})
-                                        {{ ${'row_' . $key}($row, $key, $getRowValue($row, $key), $col, $cols, $rows) }}
+                                        {{ ${'row_' . $key}($row, $key, $getRowValue($row, $key, $col), $col, $cols, $rows) }}
                                     @else
-                                        {!! $getRowValue($row, $key)() !!}
+                                        {!! $getRowValue($row, $key, $col)() !!}
                                     @endif
                                 </tk:table.cell>
                             @endforeach

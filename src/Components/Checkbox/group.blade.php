@@ -3,9 +3,7 @@
         ->whereDoesntStartWith([
             'name', 'id', 'help', 'showError', 'prefix', 'suffix',
             'heading:', 'checkbox:', 'error:',
-
-            // ignore wire:model on fieldset
-            'wire:model',
+            'wire:model', // ignore wire:model on fieldset
         ])
         ->classes('[&_[data-tallkit-heading]]:mb-2 [&>[data-tallkit-heading]:not(:first-of-type)]:pt-2')
     "
@@ -29,6 +27,9 @@
                     :show-error="false"
                     :$name
                     :$size
+                    :$variant
+                    :$iconOn
+                    :$iconOff
                 />
             @endforeach
         @else
@@ -39,6 +40,9 @@
                 :show-error="false"
                 :$name
                 :$size
+                :$variant
+                :$iconOn
+                :$iconOff
             />
         @endif
     @endforeach

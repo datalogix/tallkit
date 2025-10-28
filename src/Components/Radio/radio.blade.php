@@ -20,8 +20,8 @@
                 'xl' => 'size-8',
                 '2xl' => 'size-10',
                 '3xl' => 'size-12',
-            }
-        ) }}
+            })
+        }}
     >
         <input {{
             $attributes->whereDoesntStartWith([

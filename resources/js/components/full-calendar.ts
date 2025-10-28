@@ -11,10 +11,10 @@ export function fullCalendar(options: {
     },
 
     async init() {
-      if (! window.FullCalendar) {
-        await this.$tk.loadScript([
+      if (!window.FullCalendar) {
+        await this.$tallkit.loadScript([
           'https://cdn.jsdelivr.net/npm/fullcalendar@6/index.global.min.js',
-          options.locale
+          options.locale && options.locale !== 'en'
             ? `https://cdn.jsdelivr.net/npm/@fullcalendar/core@6/locales/${options.locale}.global.min.js`
             : 'https://cdn.jsdelivr.net/npm/@fullcalendar/core@6/locales-all.global.min.js'
         ])

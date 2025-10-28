@@ -5,6 +5,6 @@
         "watch": "vite build --watch"
     },
     "devDependencies": {
-        "vite": "^7.1.4"
+        "vite": "^7.1.12"
     }
 }

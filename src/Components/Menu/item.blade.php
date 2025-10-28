@@ -9,7 +9,7 @@
     suffix:class="ms-auto"
     :attributes="$attributes->classes(
         '
-        px-2 py-1.5
+        px-2.5 py-2
         w-full focus:outline-hidden
         text-start
         [[disabled]_&]:opacity-50 [&[disabled]]:opacity-50

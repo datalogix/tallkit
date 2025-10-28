@@ -10,4 +10,8 @@ class Group extends BladeComponent
 {
     use InteractsWithField;
     use InteractsWithOptions;
+
+    public function __construct(
+        public ?string $variant = null,
+    ) {}
 }

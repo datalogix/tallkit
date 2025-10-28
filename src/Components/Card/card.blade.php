@@ -41,7 +41,7 @@
                 @endisset
             </div>
 
-            @if ($separator || ($title && ($subtitle || isset($actions))))
+            @if ($separator || ($separator === null && ($title && ($subtitle || isset($actions))) && ($slot->isNotEmpty() || $content)))
                 <tk:separator :attributes="$attributesAfter('separator:')" />
             @endif
         @endif

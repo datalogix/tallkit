@@ -1,4 +1,9 @@
-<section {{ $attributes->whereDoesntStartWith(['header:', 'title:', 'subtitle:', 'actions:', 'separator:'])->classes('space-y-6') }}>
+<section {{ $attributes->whereDoesntStartWith(['header:', 'title:', 'subtitle:', 'actions:', 'separator:'])
+    ->classes([
+        'space-y-6',
+        '[&:has(>[data-tallkit-separator]+:is([data-tallkit-card],[data-tallkit-table-container]))>[data-tallkit-separator]]:hidden' => !$separator
+    ])
+}}>
     @if ($title || $subtitle || isset($header) || isset($actions))
         <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
             @if ($title || $subtitle || isset($header))
@@ -24,10 +29,11 @@
             @endisset
         </div>
 
-        @if ($separator || ($title && ($subtitle || isset($header) || isset($actions))))
+        @if ($separator || ($separator === null && ($title && ($subtitle || isset($header) || isset($actions))) && $slot->isNotEmpty()))
             <tk:separator :attributes="$attributesAfter('separator:')" />
         @endif
     @endif
 
     {{ $slot }}
 </section>
+

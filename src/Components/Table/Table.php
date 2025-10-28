@@ -23,8 +23,8 @@ class Table extends BladeComponent
         public mixed $cols = null,
         public ?bool $pagination = null,
         public ?bool $sortable = null,
+        public ?bool $border = null,
         public ?bool $dense = null,
-        public ?bool $card = null,
         public ?bool $stripped = null,
         public ?bool $hover = null,
         public ?bool $verticalLines = null,
@@ -122,21 +122,17 @@ class Table extends BladeComponent
         ];
     }
 
-    public function getRowValue($row, $col)
+    public function getRowValue($row, $key, $col)
     {
-        return function () use ($row, $col) {
-            $value = data_get($row, "{$col}_formatted", data_get($row, $col));
+        return function () use ($row, $key, $col) {
+            $value = data_get($row, "{$key}_formatted", data_get($row, $key));
+
+            if ($value instanceof Model) {
+                $value = data_get($value, $key, data_get($value, 'name', data_get($value, 'title', data_get($value, 'text', $value))));
+            }
 
             if ($value instanceof EloquentCollection) {
-                $value = $value->map(fn ($item) => data_get($item, 'name', data_get($item, 'title', data_get($item, 'text', $item))));
-            }
-
-            if ($value instanceof Arrayable) {
-                $value = $value->toArray();
-            }
-
-            if ($value instanceof Jsonable) {
-                $value = $value->toJson();
+                $value = $value->map(fn ($item) => data_get($value, $key, data_get($item, 'name', data_get($item, 'title', data_get($item, 'text', $item)))));
             }
 
             if ($value instanceof CarbonInterface) {
@@ -149,12 +145,36 @@ class Table extends BladeComponent
                 }
             }
 
+            if (is_object($value) && method_exists($value, 'format')) {
+                $value = $value->format();
+            }
+
+            if ($value instanceof Arrayable) {
+                $value = $value->toArray();
+            }
+
+            if ($value instanceof Jsonable) {
+                $value = $value->toJson();
+            }
+
             if (is_array($value)) {
                 $value = implode('<br />', $value);
             }
 
             if (is_string($value)) {
                 $value = nl2br($value);
+            }
+
+            if ($value instanceof \BackedEnum) {
+                $value = $value->value;
+            }
+
+            if ($value instanceof \UnitEnum) {
+                $value = $value->name;
+            }
+
+            if ($col['translate'] ?? false) {
+                $value = __($value);
             }
 
             return $value;

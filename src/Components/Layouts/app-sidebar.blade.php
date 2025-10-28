@@ -24,7 +24,7 @@
         <tk:spacer />
 
         @if ($appearance !== false)
-            <tk:appearance.group
+            <tk:appearance.selector
                 :attributes="$attributesAfter('sidebar-appearance:')->classes('justify-center gap-1')"
                 variant="subtle"
                 size="sm"

@@ -28,8 +28,8 @@ export function menuRadio() {
           }
 
           this.$el.closest('[data-tallkit-menu-radio-group]')
-            .querySelectorAll('[data-tallkit-menu-radio]')
-            .forEach(radio => {
+            ?.querySelectorAll('[data-tallkit-menu-radio]')
+            ?.forEach(radio => {
               if (radio !== this.$el) {
                 radio.removeAttribute('data-checked')
               }
