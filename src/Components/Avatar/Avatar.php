@@ -78,20 +78,28 @@ class Avatar extends BladeComponent
             return $value;
         }
 
-        return Cache::remember("tallkit-avatar-{$value}", $ttl ?? 60 * 60 * 24, function () use ($value) {
-            $response = Http::get("https://unavatar.io/{$value}?json");
+        return Cache::remember("tallkit-avatar-{$value}", $ttl ?? 60 * 60 * 24 * 30, function () use ($value) {
+            try {
+                $response = Http::timeout(3)
+                    ->retry(2, 200)
+                    ->get("https://unavatar.io/{$value}?json");
 
-            if (! $response->successful()) {
+                if (! $response->successful()) {
+                    return '';
+                }
+
+                $url = $response->json('url');
+
+                if (Str::contains($url, 'fallback', true)) {
+                    return '';
+                }
+
+                return $url;
+            } catch (\Throwable $e) {
+                report($e);
+
                 return '';
             }
-
-            $url = $response->json('url');
-
-            if (Str::contains($url, 'fallback', true)) {
-                return '';
-            }
-
-            return $url;
         });
     }
 }
