@@ -2,12 +2,12 @@
     'min-w-0',
     match ($variant) {
         default => '
-            *:data-tallkit-label:mb-2 [&>[data-tallkit-label]:has(+[data-tallkit-text])]:mb-1.5
+            [&>[data-tallkit-label]]:mb-2 [&>[data-tallkit-label]:has(+[data-tallkit-text])]:mb-1.5
             [&>[data-tallkit-label]+[data-tallkit-text]]:mt-0
-            [&>[data-tallkit-label]+[data-tallkit-text]]:mb-3
+            [&>[data-tallkit-label]+[data-tallkit-text]]:mb-2
             [&>*:not([data-tallkit-label])+[data-tallkit-text]]:mt-2
             [&:not(:has([data-tallkit-field])):has([data-tallkit-control][disabled])>[data-tallkit-label]]:opacity-50
-            *:data-tallkit-error:mt-1.5
+            [&_[data-tallkit-error]]:mt-1.5
         ',
         'inline' => '',
     },

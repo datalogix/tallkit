@@ -1,6 +1,6 @@
 @php
 $hasRowExpanded = isset($expanded) || isset($rowExpanded) || Str::contains($slot, 'role="row-expanded"', true);
-$hasRowSelection = $rowSelection || Str::contains($slot, 'role="row-selection"', true);
+$hasRowSelection = $rowSelection || Str::contains($slot, 'role="row-selection"', true) || $selectAll;
 $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 0);
 @endphp
 
@@ -66,11 +66,11 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                 <tk:table.rows :attributes="$attributesAfter('rows:')->merge($attributesAfter('tbody:')->toArray())">
                     @forelse ($rows as $index => $row)
                         <tk:table.row
-                            wire:key="{{ data_get($row, $rowKey ?? 'id', $index) }}"
                             data-id="{{ data_get($row, $rowKey ?? 'id', $index) }}"
                             :attributes="$attributesAfter('row:')
                                 ->merge($hasRowSelection ? ['data-state' => 'unchecked'] : [])
                                 ->merge($hasRowExpanded ? ['data-expanded' => 'close'] : [])
+                                ->merge(in_livewire() ? ['wire:key' => data_get($row, $rowKey ?? 'id', $index)] : [], false)
                             "
                         >
                             @if ($hasRowExpanded)
@@ -93,6 +93,7 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                                     ->merge($attributesAfter('td:')->toArray())
                                     ->merge($attributesAfter('td-'.$key.':')->toArray())
                                     ->merge(['align' => data_get($col, 'align', $key === 'actions' ? 'center' : null)])
+                                    ->merge(['sticky' => data_get($col, 'sticky')])
                                 ">
                                     @isset (${'row_' . $key})
                                         {{ ${'row_' . $key}($row, $key, $getRowValue($row, $key, $col), $col, $cols, $rows) }}

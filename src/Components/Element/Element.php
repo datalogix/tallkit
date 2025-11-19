@@ -12,6 +12,7 @@ class Element extends BladeComponent
         public ?string $name = null,
         public bool|string|ComponentSlot|null $label = null,
         public ?string $href = null,
+        public bool|string|null $external = null,
         public ?string $route = null,
         public mixed $routeParameters = null,
         public ?bool $navigate = null,

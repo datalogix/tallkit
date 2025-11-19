@@ -1,6 +1,6 @@
 @php
 $invalid ??= $name && $errors->has($name);
-$files = $getFiles($value);
+$files = $getFiles($value ?? (in_livewire() ? $this->$name : null));
 @endphp
 
 <tk:field.wrapper
@@ -57,17 +57,40 @@ $files = $getFiles($value);
             @foreach ($files as $file)
                 <div class="{{ $multiple ? 'h-48 w-54' : 'size-full' }} relative flex flex-col rounded-lg overflow-hidden border border-zinc-300 dark:border-white/10 transition-all duration-200">
                     @if ($file->type === 'image')
-                        <img src="{{ $file->url }}" class="size-full object-cover" />
+                        <img
+                            src="{{ $file->url }}"
+                            class="size-full object-cover"
+                        />
                     @elseif ($file->type === 'video')
-                        <video src="{{ $file->url }}" controls class="size-full"></video>
+                        <video
+                            src="{{ $file->url }}"
+                            controls
+                            class="size-full"
+                        ></video>
                     @elseif ($file->type === 'audio')
-                        <audio src="{{ $file->url }}" controls class="h-32 w-full"></audio>
+                        <audio
+                            src="{{ $file->url }}"
+                            controls
+                            class="h-32 w-full"
+                        ></audio>
                     @else
-                        <tk:icon name="ph:file-{{ $file->type }}" class="size-full" />
+                        <tk:icon
+                            name="ph:file-{{ $file->type }}"
+                            class="size-full"
+                        />
+                        <tk:text
+                            :label="$file->name ?? null"
+                            class="w-full p-2 truncate text-center"
+                        />
                     @endif
 
                     <tk:dropdown position="bottom">
-                        <tk:button icon="dots-vertical" size="xs" class="absolute top-1 right-1" />
+                        <tk:button
+                            icon="dots-vertical"
+                            size="xs"
+                            class="absolute top-1 right-1"
+                        />
+
                         <tk:menu class="max-w-48">
                             @if (!$multiple)
                                 <tk:menu.item

@@ -11,11 +11,13 @@
                     <tk:heading
                         :attributes="$attributesAfter('title:')"
                         :label="$title"
+                        :$size
                     />
 
                     <tk:text
                         :attributes="$attributesAfter('subtitle:')"
                         :label="$subtitle"
+                        :$size
                     />
 
                     {{ $header ?? '' }}
@@ -23,13 +25,13 @@
             @endif
 
             @isset ($actions)
-                <div {{ $attributesAfter('actions:')->classes('shrink-0') }}>
+                <div {{ $attributesAfter('actions:')->classes('shrink-0 flex items-center gap-2') }}>
                     {{ $actions }}
                 </div>
             @endisset
         </div>
 
-        @if ($separator || ($separator === null && ($title && ($subtitle || isset($header) || isset($actions))) && $slot->isNotEmpty()))
+        @if ($separator || ($separator === null && ($title && ($subtitle || isset($header)) || isset($actions)) && $slot->isNotEmpty()))
             <tk:separator :attributes="$attributesAfter('separator:')" />
         @endif
     @endif

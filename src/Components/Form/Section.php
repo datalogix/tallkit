@@ -10,5 +10,6 @@ class Section extends BladeComponent
         public ?string $title = null,
         public ?string $subtitle = null,
         public ?bool $separator = null,
+        public ?string $size = null,
     ) {}
 }

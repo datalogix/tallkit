@@ -9,7 +9,7 @@
     >
         {{ $heading }}
 
-        <x-slot name="suffix" {{ $attributesAfter('suffix:')->classes('ms-auto') }}>
+        <x-slot:suffix {{ $attributesAfter('suffix:') }}>
             @if (is_string($iconTrailing) && $iconTrailing !== '')
                 <tk:icon
                     :icon="$iconTrailing"
@@ -27,7 +27,7 @@
                     :attributes="$attributesAfter('icon:')->classes('text-zinc-400 [[data-tallkit-menu-item]:hover_&]:text-current hidden rtl:inline')"
                 />
             @endif
-        </x-slot>
+        </x-slot:suffix>
     </tk:menu.item>
 
     <tk:menu :attributes="$attributesAfter('menu:')->classes('-ml-2')">

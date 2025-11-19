@@ -9,6 +9,7 @@ class SignUp extends BladeComponent
 {
     public function __construct(
         public ?string $login = null,
+        public ?string $size = null,
     ) {}
 
     #[Mount()]

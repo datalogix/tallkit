@@ -10,7 +10,7 @@ if ($name && (is_null($message) || $message === '')) {
 <div {{
         $attributes->whereDoesntStartWith(['icon:'])
             ->classes([
-                'font-medium text-red-400 flex items-center gap-2',
+                'font-medium text-red-500 dark:text-red-400 flex items-center gap-2',
                  match ($size) {
                     'xs' => 'text-[11px]',
                     'sm' => 'text-xs',

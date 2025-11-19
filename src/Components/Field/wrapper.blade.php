@@ -1,4 +1,4 @@
-@if ($label || $description)
+@if ($label || $description || $help || $prefix || $suffix)
     <tk:field :$variant :$align :attributes="$attributesAfter('field:')">
         @if ($variant === 'inline' && (!$align || Str::contains($align, 'left', true)))
             {{ $slot }}

@@ -42,7 +42,8 @@
                     bg-white dark:bg-white/10
                     [print-color-adjust:exact]
 
-                    border border-zinc-300 dark:border-white/10
+                    border
+                    border-zinc-300 dark:border-white/10
                     disabled:border-zinc-200 dark:disabled:border-white/5
                     [&[data-invalid]]:border-red-500 dark:[&[data-invalid]]:border-red-400
 
@@ -99,7 +100,7 @@
                     'size-full m-px checked',
                     match($variant) {
                         'accent' => 'text-[var(--color-accent-foreground)]',
-                        default => 'text-white dark:text-zinc-800',
+                        default => 'text-white dark:text-zinc-700',
                         'red' => 'text-white',
                         'orange' => 'text-white',
                         'amber' => 'text-white',

@@ -17,7 +17,6 @@ class Upload extends BladeComponent
     public function __construct(
         public ?bool $multiple = null,
         public ?bool $droppable = null,
-        public $value = null,
     ) {}
 
     public function getFiles($value)
@@ -27,6 +26,7 @@ class Upload extends BladeComponent
                 $extension = $file->getClientOriginalExtension();
 
                 return (object) [
+                    'name' => $file->getClientOriginalName(),
                     'path' => $file->getRealPath(),
                     'url' => $file->temporaryUrl(),
                     'extension' => $extension,
@@ -39,13 +39,12 @@ class Upload extends BladeComponent
                     return;
                 }
 
-                $extension = File::extension($file);
-
                 return (object) [
+                    'name' => File::basename($file),
                     'path' => Storage::path($file),
                     'url' => Storage::url($file),
-                    'extension' => $extension,
-                    'type' => $this->getTypeFromExtension($extension),
+                    'extension' => File::extension($file),
+                    'type' => $this->getTypeFromExtension(File::extension($file)),
                 ];
             }
         })->filter();

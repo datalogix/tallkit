@@ -1,9 +1,22 @@
+@php
+$external ??= $attributes->get('target') === '_blank';
+@endphp
+
 <tk:tooltip.wrapper :$attributes :$tooltip>
     <{{ $as }} {{ $attributes
         ->whereDoesntStartWith(['tooltip:', 'icon-wrapper:', 'icon:', 'icon-dot:', 'content:', 'suffix:', 'icon-trailing:', 'badge:', 'information:'])
-        ->when($as !== 'p', fn ($attrs) => $attrs->classes('inline-flex items-center gap-1.5'))
-        ->when($as === 'a', fn ($attrs) => $attrs->merge(['wire:navigate' => $navigate !== false, 'href' => $href, 'data-current' => $current ?? is_current_href($href, $exact)]))
-        ->when($as === 'button', fn ($attrs) => $attrs->merge(['type' => $type ?? 'button', 'data-current' => $current, 'wire:click' => $action]))
+        ->when($as !== 'p' || $icon, fn ($attrs) => $attrs->classes('inline-flex items-center gap-1.5'))
+        ->when($as === 'a', fn ($attrs) => $attrs->merge([
+            'target' => $external === true ? '_blank' : $external,
+            'wire:navigate' => in_livewire() && !$external && $navigate !== false,
+            'href' => $href,
+            'data-current' => $current ?? is_current_href($href, $exact),
+        ]))
+        ->when($as === 'button', fn ($attrs) => $attrs->merge([
+            'type' => $type ?? 'button',
+            'data-current' => $current,
+            'wire:click' => in_livewire() ? $action : false,
+        ], false))
         ->when($ariaLabel, fn ($attrs, $value) => $attrs->merge(['aria-label' => __($value)]))
         ->merge([$dataKey('has-icon') => !!$icon && $name])
     }}>
@@ -24,7 +37,7 @@
                 @endif
 
                 @if ($iconDot)
-                    <span class="absolute top-[-1px] end-[-1px]">
+                    <span class="absolute -top-2 end-px">
                         <tk:element :attributes="$attributesAfter('icon-dot:')->classes('size-[6px] rounded-full bg-zinc-500 dark:bg-zinc-400')" />
                     </span>
                 @endif
@@ -53,7 +66,7 @@
                 {{ $slot }}
             </tk:element>
         @else
-            {!! $slot->hasActualContent() || $label === true ? $slot : ($isSlot($label) ? $label : __($label)) !!}
+            {!! $slot->hasActualContent() || $label === true ? $slot : ($isSlot($label) ? $label : nl2br(__($label))) !!}
         @endif
 
         @if (isset($suffix) && $suffix !== '')

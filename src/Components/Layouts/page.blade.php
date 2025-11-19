@@ -1,6 +1,18 @@
 <tk:section :attributes="$attributes->whereDoesntStartWith(['container:', 'menu:', 'nav:', 'select:', 'content:'])">
+    @isset ($header)
+        <x-slot:header>
+            {{ $header }}
+        </x-slot:header>
+    @endisset
+
+    @isset ($actions)
+        <x-slot:actions>
+            {{ $actions }}
+        </x-slot:actions>
+    @endisset
+
     <div {{ $attributesAfter('container:')->classes(
-        'flex  items-start',
+        'flex items-start',
         match ($breakpoint) {
             'sm' => 'max-sm:flex-col',
             default => 'max-md:flex-col',
@@ -11,7 +23,7 @@
     ) }}>
         @if (collect($menu)->isNotEmpty())
             <div {{ $attributesAfter('menu:')->classes(
-                'w-full me-10 pb-6',
+                'w-full me-16 pb-6',
                 match ($breakpoint) {
                     'sm' => 'sm:w-[220px]',
                     default => 'md:w-[220px]',
@@ -33,6 +45,7 @@
                     )"
                     :items="$menu"
                 />
+
                 @php
                 $options = collect($menu)->map(fn ($item) => [
                     'id' => data_get($item, 'href') ?? route_detect(data_get($item, 'route'), data_get($item, 'routeParameters'), null),
@@ -59,7 +72,7 @@
             </div>
         @endif
 
-        <div {{ $attributesAfter('content:')->classes('flex-1 w-full') }}>
+        <div {{ $attributesAfter('content:')->classes('flex-1 w-full space-y-6') }}>
             {{ $slot }}
         </div>
     </div>

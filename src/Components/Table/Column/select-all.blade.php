@@ -10,7 +10,7 @@
             :attributes="$attributesAfter('checkbox:')"
             role="checkbox"
             x-model="selectAllChecked"
-            @change="toggleAll"
+            x-on:change="toggleAll"
             :label="false"
             size="sm"
         />

@@ -1,3 +1,6 @@
+@aware(['size'])
+@props(['size'])
+
 @if ($expandable && $heading)
     <div
         x-data="disclosure"
@@ -5,40 +8,55 @@
         @if ($expanded !== false) data-open @endif
     >
         <tk:button
-            :attributes="$attributesAfter('heading:')->classes('w-full justify-start')"
+            :attributes="$attributesAfter('heading:')->classes('w-full justify-start p-2.5')"
             variant="subtle"
-            icon:class="me-2"
-            :size="$adjustSize()"
+            icon:class="me-1.5"
+            :$size
             :label="$heading"
         >
-            <x-slot name="icon">
-                <tk:icon icon="chevron-down" :size="$adjustSize(move: -2)" class="hidden group-data-[open]/disclosure:block" />
-                <tk:icon icon="chevron-right" :size="$adjustSize(move: -2)" class="block group-data-[open]/disclosure:hidden" />
-            </x-slot>
+            <x-slot:icon>
+                <tk:icon
+                    :size="$adjustSize($size)"
+                    icon="chevron-down"
+                    class="hidden group-data-[open]/disclosure:block"
+                />
+
+                <tk:icon
+                    :size="$adjustSize($size)"
+                    icon="chevron-right"
+                    class="block group-data-[open]/disclosure:hidden"
+                />
+            </x-slot:icon>
         </tk:button>
 
-        <div {{ $attributesAfter('container:')->classes(
-            'relative hidden group-data-[open]/disclosure:block space-y-[2px]',
-        )->when($line !== false, fn($attrs) => $attrs->classes(match($size) {
-            'xs' => 'ps-7',
-            'sm' => 'ps-7',
-            default => 'ps-8',
-            'lg' => 'ps-11',
-            'xl' => 'ps-14',
-            '2xl' => 'ps-16',
-            '3xl' => 'ps-20',
-        })) }}>
+        <div
+            {{
+                $attributesAfter('container:')
+                ->classes('relative hidden group-data-[open]/disclosure:block space-y-[2px]')
+                ->when($line !== false, fn($attrs) => $attrs->classes(match($size) {
+                    'xs' => 'ps-9',
+                    'sm' => 'ps-9',
+                    default => 'ps-10',
+                    'lg' => 'ps-11',
+                    'xl' => 'ps-12',
+                    '2xl' => 'ps-13',
+                    '3xl' => 'ps-14',
+                }))
+                ->when($collapse === true, fn($attrs) => $attrs->merge(['x-show' => 'opened', 'x-collapse' => '']))
+                ->when(is_string($collapse), fn($attrs) => $attrs->merge(['x-show' => 'opened', 'x-collapse.'.$collapse => '']))
+            }}
+        >
             @if ($line !== false)
                 <div {{ $attributesAfter('line:')->classes(
-                    'absolute inset-y-[3px] w-px bg-zinc-200 dark:bg-white/30 start-0',
+                    'absolute inset-y-[3px] w-px bg-zinc-200 dark:bg-white/20 start-0',
                     match($size) {
-                        'xs' => 'ms-4',
-                        'sm' => 'ms-4',
+                        'xs' => 'ms-4.5',
+                        'sm' => 'ms-4.5',
                         default => 'ms-5',
-                        'lg' => 'ms-6.5',
-                        'xl' => 'ms-8',
-                        '2xl' => 'ms-10',
-                        '3xl' => 'ms-12',
+                        'lg' => 'ms-5.5',
+                        'xl' => 'ms-6',
+                        '2xl' => 'ms-6.5',
+                        '3xl' => 'ms-7',
                     }
                 ) }}></div>
             @endif
@@ -49,8 +67,8 @@
 @elseif ($heading)
     <div {{ $attributes->whereDoesntStartWith(['heading:', 'container:'])->classes('block space-y-[2px]') }}>
         <tk:heading
-            :attributes="$attributesAfter('heading:')->classes('leading-none text-zinc-500 dark:text-zinc-400 px-3 py-2')"
-            :size="$adjustSize(move: -2)"
+            :attributes="$attributesAfter('heading:')->classes('leading-none text-zinc-400 p-2.5')"
+            :size="$adjustSize($size)"
             :label="$heading"
         />
 

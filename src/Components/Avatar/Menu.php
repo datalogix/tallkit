@@ -9,5 +9,6 @@ class Menu extends BladeComponent
     public function __construct(
         public ?bool $profile = null,
         public mixed $items = null,
+        public ?string $size = null,
     ) {}
 }

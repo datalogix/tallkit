@@ -9,6 +9,7 @@ class VerifyEmail extends BladeComponent
 {
     public function __construct(
         public ?string $logout = null,
+        public ?string $size = null,
     ) {}
 
     #[Mount()]

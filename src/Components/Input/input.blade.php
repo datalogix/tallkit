@@ -66,7 +66,8 @@
                         disabled:shadow-none
 
                         border
-                        border-zinc-300 dark:border-white/10
+                        border-zinc-200 border-b-zinc-300/80 dark:border-white/10
+                        disabled:border-b-zinc-200 dark:disabled:border-white/5
                         [&[data-invalid]]:border-red-500 dark:[&[data-invalid]]:border-red-400
 
                         text-zinc-700
@@ -82,16 +83,17 @@
 
                         bg-white
                         dark:bg-white/10
-                        disabled:opacity-50
+                        disabled:opacity-75
+                        dark:disabled:opacity-50
                         ',
                         match ($size) {
                             'xs' => 'h-8 py-1.5 text-xs rounded-md ' . ($icon ? 'ps-8' : 'ps-2') . ' pe-2',
-                            'sm' => 'h-10 py-2 text-sm rounded-md ' . ($icon ? 'ps-9' : 'ps-2.5') . ' pe-2.5',
-                            default => 'h-12 py-3 text-base rounded-lg ' . ($icon ? 'ps-10' : 'ps-3') . ' pe-3',
-                            'lg' => 'h-14 py-3.5 text-lg rounded-lg ' . ($icon ? 'ps-12' : 'ps-3.5') . ' pe-3.5',
-                            'xl' => 'h-16 py-4 text-xl rounded-xl ' . ($icon ? 'ps-14' : 'ps-4') . ' pe-4',
-                            '2xl' => 'h-18 py-4.5 text-2xl rounded-xl ' . ($icon ? 'ps-16' : 'ps-4.5') . ' pe-4.5',
-                            '3xl' => 'h-20 py-5 text-3xl rounded-2xl ' . ($icon ? 'ps-18' : 'ps-5') . ' pe-5',
+                            'sm' => 'h-9 py-1.5 text-sm rounded-md ' . ($icon ? 'ps-9' : 'ps-2.5') . ' pe-2.5',
+                            default => ' h-10 py-2 text-base rounded-lg ' . ($icon ? 'ps-10' : 'ps-3') . ' pe-3',
+                            'lg' => 'h-12 py-2 text-lg rounded-lg ' . ($icon ? 'ps-11' : 'ps-3.5') . ' pe-3.5',
+                            'xl' => 'h-14 py-2.5 text-xl rounded-lg ' . ($icon ? 'ps-12' : 'ps-4') . ' pe-4',
+                            '2xl' => 'h-16 py-2.5 text-2xl rounded-xl ' . ($icon ? 'ps-13' : 'ps-4.5') . ' pe-4.5',
+                            '3xl' => 'h-18 py-3 text-3xl rounded-xl ' . ($icon ? 'ps-14' : 'ps-5') . ' pe-5',
                         },
                         match ($type) {
                             'color' => 'py-px pe-1 ' . ($icon ? '' : 'ps-1'),
@@ -112,7 +114,7 @@
             />
 
             @if ($loading || $clearable || $kbd || $copyable || $viewable || $iconTrailing)
-                <div class="absolute top-0 bottom-0 flex items-center gap-x-1.5 pe-3 end-0 text-xs text-zinc-400">
+                <div class="absolute top-0 bottom-0 flex items-center gap-x-1.5 pe-3 end-0 text-xs text-zinc-400 pointer-events-none">
                     @if ($loading)
                         <tk:loading
                             :attributes="$attributesAfter('loading:')->when(in_livewire(), fn($attrs) => $attrs->merge([
@@ -125,34 +127,34 @@
 
                     @if ($clearable)
                         <tk:input.clearable
-                            :attributes="$attributesAfter('clearable:')"
+                            :attributes="$attributesAfter('clearable:')->classes('pointer-events-auto')"
                             :size="$adjustSize()"
                         />
                     @endif
 
                     @if ($kbd)
-                        <span {{ $attributesAfter('kbd:')->classes('pointer-events-none') }}>
+                        <span {{ $attributesAfter('kbd:') }}>
                             {{ $kbd }}
                         </span>
                     @endif
 
                     @if ($copyable)
                         <tk:input.copyable
-                            :attributes="$attributesAfter('copyable:')"
+                            :attributes="$attributesAfter('copyable:')->classes('pointer-events-auto')"
                             :size="$adjustSize()"
                         />
                     @endif
 
                     @if ($viewable)
                         <tk:input.viewable
-                            :attributes="$attributesAfter('viewable:')"
+                            :attributes="$attributesAfter('viewable:')->classes('pointer-events-auto')"
                             :size="$adjustSize()"
                         />
                     @endif
 
                     @if (is_string($iconTrailing) && $iconTrailing !== '')
                         <tk:icon
-                            :attributes="$attributesAfter('icon-trailing:')->classes('pointer-events-none text-zinc-400/75')"
+                            :attributes="$attributesAfter('icon-trailing:')->classes('text-zinc-400/75')"
                             :size="$adjustSize()"
                             :$icon
                         />

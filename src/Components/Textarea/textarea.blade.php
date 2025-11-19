@@ -19,13 +19,13 @@
                 'group:', 'prefix:', 'suffix:',
             ])
             ->classes(match ($size) {
-                'xs' => 'p-1.5 text-xs rounded-md',
+                'xs' => 'p-2 text-xs rounded-md',
                 'sm' => 'p-2 text-sm rounded-md',
                 default => 'p-3 text-base rounded-lg',
                 'lg' => 'p-3.5 text-lg rounded-lg',
-                'xl' => 'p-4 text-xl rounded-xl',
+                'xl' => 'p-4 text-xl rounded-lg',
                 '2xl' => 'p-4.5 text-2xl rounded-xl',
-                '3xl' => 'p-5 text-3xl rounded-2xl',
+                '3xl' => 'p-5 text-3xl rounded-xl',
             })
             ->classes(match ($resize) {
                 'none' => 'resize-none',
@@ -44,8 +44,8 @@
                 disabled:shadow-none
 
                 border
-                border-zinc-300 dark:border-white/10
-                disabled:border-zinc-200 dark:disabled:border-white/5
+                border-zinc-200 border-b-zinc-300/80 dark:border-white/10
+                disabled:border-b-zinc-200 dark:disabled:border-white/5
                 [&[data-invalid]]:border-red-500 dark:[&[data-invalid]]:border-red-400
 
                 text-zinc-700
@@ -61,7 +61,8 @@
 
                 bg-white
                 dark:bg-white/10
-                disabled:opacity-50
+                disabled:opacity-75
+                dark:disabled:opacity-50
 
                 focus:ring-blue-500
                 focus:border-blue-500

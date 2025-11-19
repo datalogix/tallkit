@@ -73,4 +73,48 @@ class TALLKit
             'size' => $size,
         ]);
     }
+
+    public function modal(string $name, bool $scope = false)
+    {
+        return new class($name, $scope)
+        {
+            public function __construct(
+                public string $name,
+                public ?bool $scope
+            ) {}
+
+            public function show()
+            {
+                $component = app('livewire')->current();
+
+                if (! $component) {
+                    return;
+                }
+
+                $component->dispatch('modal-show', name: $this->name, scope: $this->scope ? $component->getId() : null);
+            }
+
+            public function close()
+            {
+                $component = app('livewire')->current();
+
+                if (! $component) {
+                    return;
+                }
+
+                $component->dispatch('modal-close', name: $this->name, scope: $this->scope ? $component->getId() : null);
+            }
+        };
+    }
+
+    public function modals()
+    {
+        return new class
+        {
+            public function close()
+            {
+                app('livewire')->current()?->dispatch('modal-close');
+            }
+        };
+    }
 }

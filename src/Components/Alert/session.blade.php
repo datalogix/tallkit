@@ -1,5 +1,5 @@
 @session($name)
-    <tk:alert
-        :attributes="$attributes->merge(is_array($value) ? $value : ['message' => $value], false)"
-    />
+    <tk:alert :attributes="$attributes->merge(is_array($value) ? $value : ['message' => $value], false)">
+        {{ $slot }}
+    </tk:alert>
 @endsession

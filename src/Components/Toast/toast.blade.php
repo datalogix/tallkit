@@ -24,7 +24,12 @@
                 :key="toast.id"
             >
                 <div
-                    {{ $attributesAfter('container:')->classes('max-w-sm m-1 p-2 rounded-xl shadow-lg bg-white border border-zinc-300 dark:bg-zinc-700 dark:border-zinc-600') }}
+                    {{ $attributesAfter('container:')->classes('
+                        max-w-sm m-1 p-2
+                        rounded-xl shadow-lg
+                        bg-white dark:bg-zinc-700
+                        border border-zinc-200 dark:border-white/10
+                    ') }}
                     x-show="toast.visible"
                     x-bind="{
                         'x-transition:enter': 'transition ease-out duration-350',
@@ -87,7 +92,7 @@
                                 ></div>
                             </div>
                         </div>
-                        <div {{ $attributesAfter('actions:')->classes('flex items-center') }}>
+                        <div {{ $attributesAfter('actions:')->classes('flex items-center gap-2') }}>
                             <tk:button
                                 :attributes="$attributesAfter('close:')"
                                 x-on:click="removeToast(toast.id)"

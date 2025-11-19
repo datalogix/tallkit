@@ -26,6 +26,7 @@ export function inputClearable() {
           this.input.value = ''
           this.input.dispatchEvent(new Event('input', { bubbles: false }))
           this.input.dispatchEvent(new Event('change', { bubbles: false }))
+          this.input.dispatchEvent(new Event('cleared', { bubbles: false }))
           this.input.focus()
         }
       })

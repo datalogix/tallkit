@@ -3,8 +3,8 @@
         ->whereDoesntStartWith(['image:', 'container:', 'title:', 'subtitle:', 'separator:', 'content:'])
         ->classes(
             'bg-white dark:bg-zinc-800',
-            'border border-zinc-300 dark:border-white/10',
-            'overflow-hidden shadow-sm [:where(&)]:rounded-xl'
+            'border border-zinc-100 dark:border-white/10',
+            'overflow-hidden shadow-sm [:where(&)]:rounded-lg',
         )
 }}>
     @if ($image)
@@ -35,7 +35,7 @@
                 </div>
 
                 @isset ($actions)
-                    <div {{ $attributesAfter('actions:')->classes('shrink-0') }}>
+                    <div {{ $attributesAfter('actions:')->classes('shrink-0 flex items-center gap-2') }}>
                         {{ $actions }}
                     </div>
                 @endisset

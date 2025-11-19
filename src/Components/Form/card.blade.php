@@ -3,8 +3,14 @@
     :$title
     :$subtitle
     :$separator
+    :$size
 >
-    <tk:alert.session :attributes="$attributesAfter('alert:')" />
+    <tk:alert.session
+        :attributes="$attributesAfter('alert:')"
+        :$size
+    >
+        {{ $alert ?? '' }}
+    </tk:alert.session>
 
     {{ $prepend ?? ''}}
 

@@ -10,6 +10,7 @@ class Login extends BladeComponent
     public function __construct(
         public ?string $forgotPassword = null,
         public ?string $signUp = null,
+        public ?string $size = null,
     ) {}
 
     #[Mount()]

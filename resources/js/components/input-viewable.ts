@@ -23,6 +23,7 @@ export function inputViewable() {
         ['@click']() {
           this.viewed = !this.viewed
           this.input.setAttribute('type', this.viewed ? 'text' : 'password')
+          this.input.dispatchEvent(new Event('viewed', { bubbles: false }))
         }
       })
 

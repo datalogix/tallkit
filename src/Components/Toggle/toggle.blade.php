@@ -15,15 +15,15 @@
                 relative
                 rounded-full
 
-                bg-zinc-800/15 dark:bg-zinc-700
                 [print-color-adjust:exact]
 
-                has-[input:disabled]:opacity-50
-                has-[input:checked:not([data-invalid])]:border-0
-
+                bg-zinc-300
                 dark:bg-transparent
                 dark:border
                 dark:border-white/20
+
+                has-[input:disabled]:opacity-50
+                has-[input:checked:not([data-invalid])]:border-0
 
                 has-[input[data-invalid]]:border-red-400 dark:has-[input[data-invalid]]:border-red-500
             ',

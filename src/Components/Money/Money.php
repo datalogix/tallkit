@@ -2,6 +2,7 @@
 
 namespace TALLKit\Components\Money;
 
+use Illuminate\Support\Str;
 use TALLKit\Attributes\Mount;
 use TALLKit\View\BladeComponent;
 
@@ -29,7 +30,7 @@ class Money extends BladeComponent
             default => 'EUR',
         };
 
-        if ($config = data_get($currencies, $this->currency)) {
+        if ($config = data_get($currencies, Str::upper($this->currency))) {
             $this->symbol ??= $config['symbol'];
             $this->delimiter ??= $config['delimiter'];
             $this->thousands ??= $config['thousands'];

@@ -61,7 +61,8 @@ if (! function_exists('find_image')) {
 if (! function_exists('in_livewire')) {
     function in_livewire()
     {
-        return \Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent();
+        return class_exists(\Livewire\Livewire::class)
+            && \Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent();
     }
 }
 

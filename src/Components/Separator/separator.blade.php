@@ -2,9 +2,9 @@
 $contentClasses = $classes('border-0 [print-color-adjust:exact]')
     ->add(match ($variant) {
         'accent' => 'bg-[var(--color-accent)]',
-        'strong' => 'bg-zinc-800 dark:bg-white',
-        'subtle' => 'bg-zinc-800/5 dark:bg-white/10',
-        default => 'bg-zinc-800/15 dark:bg-white/20',
+        'strong' => 'bg-zinc-800/50 dark:bg-white/50',
+        'subtle' => 'bg-zinc-800/10 dark:bg-white/10',
+        default => 'bg-zinc-800/20 dark:bg-white/20',
         'red' => 'bg-red-600 dark:bg-red-500',
         'orange' => 'bg-orange-600 dark:bg-orange-500',
         'amber' => 'bg-amber-600 dark:bg-amber-500',

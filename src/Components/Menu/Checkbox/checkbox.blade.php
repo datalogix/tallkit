@@ -9,12 +9,9 @@ $iconUnchecked ??= $attributes->pluck('icon-unchecked');
         'role' => 'menuitemcheckbox',
         'data-checked' => $checked,
     ])"
-    :$variant
-    :$size
-    :$keepOpen
     icon:class="w-7"
 >
-    <x-slot name="icon">
+    <x-slot:icon>
         <tk:icon
             :attributes="$attributesAfter('icon-checked:')->classes('hidden group-data-checked/menu-checkbox:block')"
             :$icon
@@ -25,7 +22,7 @@ $iconUnchecked ??= $attributes->pluck('icon-unchecked');
             :icon="$iconUnchecked"
             size="sm"
         />
-    </x-slot>
+    </x-slot:icon>
 
     {{ $slot }}
 </tk:menu.item>

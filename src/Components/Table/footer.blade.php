@@ -1,6 +1,6 @@
 <tfoot {{ $attributes
     ->whereDoesntStartWith(['row:', 'cell:'])
-    ->classes('**:font-semibold **:text-zinc-900 **:dark:text-white')
+    ->classes('*:font-semibold *:text-zinc-900 dark:*:text-white')
 }}>
     @if (Str::contains($slot, '<tr', true))
         {{ $slot }}

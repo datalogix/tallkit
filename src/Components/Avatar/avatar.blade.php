@@ -8,8 +8,8 @@
                 justify-center
                 relative flex-none isolate
                 after:absolute after:inset-0 after:inset-ring-[1px] after:inset-ring-black/7 dark:after:inset-ring-white/10
-                [:where(&)]:bg-zinc-200 [:where(&)]:dark:bg-zinc-600
-                [:where(&)]:text-zinc-800 [:where(&)]:dark:text-white
+                [:where(&)]:bg-zinc-200 dark:[:where(&)]:bg-white/10
+                [:where(&)]:text-zinc-800 dark:[:where(&)]:text-white
                 [:where(&)]:font-medium
             ',
             match ($size) {
@@ -23,6 +23,7 @@
             },
             match ($variant === 'auto' ? $generateColor() : $variant) {
                 'accent' => 'bg-[var(--color-accent)] text-[var(--color-accent-foreground)]',
+                'inverse' => 'text-white bg-zinc-800 dark:text-zinc-800 dark:bg-white',
                 'filled' => 'bg-zinc-800/5 dark:bg-white/10',
                 'outline' => '',
                 'ghost' => 'bg-transparent',
@@ -72,7 +73,7 @@
         />
     @elseif (($initials || $slot->isNotEmpty()) && !$icon)
         <span {{ $attributesAfter('initials:')->classes('select-none truncate m-px') }}>
-            {{ $initials ?? $slot }}
+            {{ $initials ?: $slot }}
         </span>
     @else
         <tk:icon

@@ -1,25 +1,26 @@
 @aware(['paginator'])
 
 @php
-$wireKey = method_exists($paginator, 'getCursorName')
+$disabled = $paginator->onFirstPage();
+
+$wireKey = method_exists($paginator, 'getCursorName') && in_livewire()
     ? 'cursor-' . $paginator->getCursorName() . '-' . optional($paginator->previousCursor())->encode()
     : false;
 
-$wireClick = method_exists($paginator, 'getCursorName')
+$action = method_exists($paginator, 'getCursorName')
     ? "setPage('{$paginator->previousCursor()?->encode()}','{$paginator->getCursorName()}')"
     : "previousPage('{$paginator->getPageName()}')";
-
-$disabled = $paginator->onFirstPage();
 @endphp
 
 <tk:button
-    :attributes="$attributes->merge(['wire:key' => $wireKey])"
+    :$attributes
     :aria-disabled="$disabled"
     :aria-hidden="$disabled"
     :disabled="$disabled"
     :rel="in_livewire() ? false : 'prev'"
     :href="in_livewire() ? false : $paginator->previousPageUrl()"
-    :wire:click="in_livewire() ? $wireClick : false"
+    :action="$action"
+    :wire:key="$wireKey"
     :wire:loading.attr="in_livewire() ? 'disabled' : false"
     icon="chevron-left"
     tooltip="pagination.previous"

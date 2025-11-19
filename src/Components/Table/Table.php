@@ -47,11 +47,9 @@ class Table extends BladeComponent
 
     protected function parseResource()
     {
-        if (! is_string($this->resource)) {
-            return $this->resource;
-        }
-
-        return make_model($this->resource);
+        return is_string($this->resource)
+            ? make_model($this->resource)
+            : $this->resource;
     }
 
     protected function parseRows()

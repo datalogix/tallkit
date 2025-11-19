@@ -8,20 +8,17 @@ export function popover ({ mode, position, align }) {
   const component = {
     ..._toggleable,
 
+    trigger: null,
     popoverElement: null,
 
     get isTouch () {
       return window.matchMedia('(hover: none)').matches
     },
 
-
-    get trigger() {
-      return this.$root.firstElementChild !== this.popoverElement ? this.$root.firstElementChild : this.$root
-    },
-
     init() {
       _toggleable.init.call(this)
 
+      this.trigger = this.$root.firstElementChild !== this.popoverElement ? this.$root.firstElementChild : this.$root
       this.popoverElement = this.$root.lastElementChild?.matches('[popover]') && this.$root.lastElementChild
 
       if (!this.popoverElement) return
@@ -91,6 +88,7 @@ export function popover ({ mode, position, align }) {
       this.$root.setAttribute('aria-expanded', 'true')
 
       window.addEventListener('scroll', this.boundSetPosition, true)
+      window.addEventListener('resize', this.boundSetPosition, true)
 
       this.resizeObserver = new ResizeObserver(this.boundSetPosition)
       this.resizeObserver.observe(this.trigger)
@@ -113,7 +111,9 @@ export function popover ({ mode, position, align }) {
     onClose() {
       _toggleable.close.call(this)
       this.$root.setAttribute('aria-expanded', 'false')
+
       window.removeEventListener('scroll', this.boundSetPosition, true)
+      window.removeEventListener('resize', this.boundSetPosition, true)
 
       this.resizeObserver?.disconnect()
       this.resizeObserver = null

@@ -69,6 +69,7 @@
             $solid,
             fn ($c) => $c->classes(match ($variant) {
                 'accent' => 'text-[var(--color-accent-foreground)] bg-[var(--color-accent)] [&:is(button)]:hover:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_15%)]',
+                'inverse' => 'text-white dark:text-zinc-700 bg-zinc-700 dark:bg-white [&:is(button)]:hover:bg-zinc-500 dark:[&:is(button)]:hover:bg-zinc-300',
                 default => 'text-white dark:text-white bg-zinc-600 dark:bg-zinc-600 [&:is(button)]:hover:bg-zinc-700 dark:[&:is(button)]:hover:bg-zinc-500',
                 'red' => 'text-white dark:text-white bg-red-500 dark:bg-red-600 [&:is(button)]:hover:bg-red-600 dark:[&:is(button)]:hover:bg-red-500',
                 'orange' => 'text-white dark:text-white bg-orange-500 dark:bg-orange-600 [&:is(button)]:hover:bg-orange-600 dark:[&:is(button)]:hover:bg-orange-500',
@@ -96,7 +97,8 @@
                     [&:is(button)]:hover:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_30%)]
                     dark:[&:is(button)]:hover:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_50%)]
                 ',
-                default => 'text-zinc-700 dark:text-zinc-200 bg-zinc-400/15 dark:bg-zinc-400/40 [&:is(button)]:hover:bg-zinc-400/25 dark:[&:is(button)]:hover:bg-zinc-400/50',
+                'inverse' => 'text-white dark:text-zinc-700 bg-zinc-700/90 dark:bg-white/90 [&:is(button)]:hover:bg-zinc-500 dark:[&:is(button)]:hover:bg-zinc-300',
+                default => 'text-zinc-700 dark:text-zinc-200 bg-zinc-400/20 dark:bg-zinc-400/40 [&:is(button)]:hover:bg-zinc-400/30 dark:[&:is(button)]:hover:bg-zinc-400/50',
                 'red' => 'text-red-700 dark:text-red-200 bg-red-400/20 dark:bg-red-400/40 [&:is(button)]:hover:bg-red-400/30 dark:[&:is(button)]:hover:bg-red-400/50',
                 'orange' => 'text-orange-700 dark:text-orange-200 bg-orange-400/20 dark:bg-orange-400/40 [&:is(button)]:hover:bg-orange-400/30 dark:[&:is(button)]:hover:bg-orange-400/50',
                 'amber' => 'text-amber-700 dark:text-amber-200 bg-amber-400/25 dark:bg-amber-400/40 [&:is(button)]:hover:bg-amber-400/40 dark:[&:is(button)]:hover:bg-amber-400/50',
@@ -121,11 +123,11 @@
     {{ $slot }}
 
     @if ($close)
-        <x-slot name="append">
+        <x-slot:append>
             <tk:badge.close
                 :attributes="$attributesAfter('close:')"
                 :$size
             />
-        </x-slot>
+        </x-slot:append>
     @endif
 </tk:element>

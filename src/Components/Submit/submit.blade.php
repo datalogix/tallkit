@@ -1,3 +1,7 @@
-<tk:button :attributes="$attributes->merge(['type' => 'submit', 'label' => 'Send'])">
+<tk:button
+    :$attributes
+    type="submit"
+    label="Send"
+>
     {{ $slot }}
 </tk:button>

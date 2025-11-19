@@ -8,6 +8,7 @@ class Cell extends BladeComponent
 {
     public function __construct(
         public ?string $align = null,
-        public ?string $label = null
+        public ?string $label = null,
+        public ?bool $sticky = null,
     ) {}
 }

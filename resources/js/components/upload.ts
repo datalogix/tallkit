@@ -9,22 +9,22 @@ export function upload({ droppable = false } = {}) {
     },
 
     init() {
-      if (droppable) {
-        bind(this.$root.querySelector('[data-tallkit-upload-button]'), {
-          ['@dragover.prevent']() {
-            this.dragOver = true
-          },
+      if (!droppable) return
 
-          ['@dragleave.prevent']() {
-            this.dragOver = false
-          },
+      bind(this.$root.querySelector('[data-tallkit-upload-button]'), {
+        ['@dragover.prevent']() {
+          this.dragOver = true
+        },
 
-          ['@drop.prevent'](event) {
-            this.$refs.fileInput.files = event.dataTransfer.files
-            this.$refs.fileInput.dispatchEvent(new Event('change', { bubbles: true }))
-          }
-        })
-      }
+        ['@dragleave.prevent']() {
+          this.dragOver = false
+        },
+
+        ['@drop.prevent'](event) {
+          this.$refs.fileInput.files = event.dataTransfer.files
+          this.$refs.fileInput.dispatchEvent(new Event('change', { bubbles: true }))
+        }
+      })
     },
 
     selectFile() {

@@ -4,16 +4,14 @@
 >
     @if ($slot->isEmpty())
         <tk:button
-            :attributes="$attributesAfter('open:')"
-            class="hidden! group-data-[expanded=close]:flex!"
+            :attributes="$attributesAfter('open:')->classes('hidden! group-data-[expanded=close]:flex!')"
             role="row-expanded"
             icon="chevron-down"
             size="xs"
             variant="subtle"
         />
         <tk:button
-            :attributes="$attributesAfter('close:')"
-            class="hidden! group-data-[expanded=open]:flex!"
+            :attributes="$attributesAfter('close:')->classes('hidden! group-data-[expanded=open]:flex!')"
             role="row-expanded"
             icon="chevron-up"
             size="xs"

@@ -3,7 +3,7 @@
     role="alert"
     {{
         $attributes
-            ->whereDoesntStartWith(['icon:', 'content:', 'title:', 'text:', 'list:', 'dismissible-content:', 'dismissible:'])
+            ->whereDoesntStartWith(['icon:', 'content:', 'title:', 'text:', 'list:', 'actions:', 'dismissible-content:', 'dismissible:'])
             ->classes(
                 'transition-opacity duration-300 opacity-100',
                 'flex p-4 mb-4 text-base',
@@ -15,10 +15,10 @@
                     default => 'text-zinc-800 bg-zinc-100 dark:bg-zinc-700 dark:text-zinc-300',
                 },
                 match ($border) {
-                    'top' => 'border-t-4',
-                    'left' => 'border-l-4',
-                    'right' => 'border-r-4',
-                    'bottom' => 'border-b-4',
+                    'top' => 'border-t-3',
+                    'left' => 'border-l-3',
+                    'right' => 'border-r-3',
+                    'bottom' => 'border-b-3',
                     true => 'border rounded-lg',
                     default => 'border-none rounded-lg',
                 },
@@ -65,13 +65,19 @@
             </tk:text>
         @endif
 
-        @if ($list)
+        @if (is_array($message) && filled($message))
             <ul {{ $attributesAfter('list:')->classes('list-disc list-inside') }}>
-                @foreach ($list as $item)
-                    <li>{!! __($item) !!}</li>
+                @foreach ($message as $item)
+                    <li>{!! nl2br(__($item)) !!}</li>
                 @endforeach
             </ul>
         @endif
+
+        @isset ($actions)
+            <div {{ $attributesAfter('actions:')->classes('flex items-center gap-2 mt-4') }}>
+                {{ $actions }}
+            </div>
+        @endisset
     </div>
 
     @if ($dismissible)

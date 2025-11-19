@@ -1,14 +1,11 @@
-- Upload (File upload)
-- Revisar Concerns\AppendsCustomAttributes
 - Revisar components (js) com livewire
+- Upload
 
-- DataTable (with a filter e etc...)
-- FormBuilder
-- DataTableBuilder
+- Form -> Error List (Novo)
+
 - CreditCard
 - Accordion
 - Tabs
-- Modal
 - Editor
 - Color Picker
 - Date Picker
@@ -17,3 +14,7 @@
 - Chart
 - Breadcrumbs
 - Autocomplete
+
+- DataTable (with a filter e etc...)
+- FormBuilder
+- DataTableBuilder

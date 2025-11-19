@@ -2,7 +2,7 @@
     as="div"
     :name="$baseComponentKey()"
     :$href
-    :attributes="$attributes->whereDoesntStartWith(['logo:', 'image:', 'name:'])->classes('py-2 justify-center gap-2')"
+    :attributes="$attributes->whereDoesntStartWith(['logo:', 'image:', 'image-dark:', 'name:'])->classes('py-2 justify-center gap-2')"
 >
     @if ($isSlot($logo))
         <div {{ $logo->attributes->classes('flex items-center justify-center [:where(&)]:min-w-6 [:where(&)]:rounded-sm overflow-hidden shrink-0') }}>
@@ -22,10 +22,27 @@
                     '3xl' => 'h-48',
                 })
         }}>
+            @if ($isSlot($logoDark))
+                {{ $logoDark }}
+            @elseif ($logoDark)
+                <img
+                    src="{{ $logoDark }}"
+                    {{
+                        $attributesAfter('image-dark:')
+                            ->classes('hidden dark:block h-full')
+                            ->merge($alt ? ['alt' => $alt] : [])
+                    }}
+                />
+            @endif
+
             @if ($logo)
                 <img
                     src="{{ $logo }}"
-                    {{ $attributesAfter('image:')->classes('h-full')->merge($alt ? ['alt' => $alt] : []) }}
+                    {{
+                        $attributesAfter('image:')
+                            ->classes(['block dark:hidden' => !!$logoDark, 'h-full'])
+                            ->merge($alt ? ['alt' => $alt] : [])
+                    }}
                 />
             @else
                 {{ $slot }}
@@ -42,10 +59,10 @@
                         'xs' => 'text-sm',
                         'sm' => 'text-base',
                         default => 'text-lg',
-                        'lg' => 'text-2xl',
-                        'xl' => 'text-3xl',
-                        '2xl' => 'text-4xl',
-                        '3xl' => 'text-5xl',
+                        'lg' => 'text-xl',
+                        'xl' => 'text-2xl',
+                        '2xl' => 'text-3xl',
+                        '3xl' => 'text-4xl',
                     })
             }}
         >

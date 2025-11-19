@@ -6,18 +6,18 @@
         :attributes="$attributesAfter('system:')"
         x-on:click="$tallkit.appearance.apply('system')"
         icon="ph:monitor"
-        ::class="{ 'bg-current/20!': $tallkit.appearance.mode === 'system' }"
+        ::class="{ 'bg-current/10! dark:bg-current/20!': $tallkit.appearance.mode === 'system' }"
     />
     <tk:button
         :attributes="$attributesAfter('light:')"
         x-on:click="$tallkit.appearance.apply('light')"
         icon="ph:sun"
-        ::class="{ 'bg-current/20!': $tallkit.appearance.mode === 'light' }"
+        ::class="{ 'bg-current/10! dark:bg-current/20!': $tallkit.appearance.mode === 'light' }"
     />
     <tk:button
         :attributes="$attributesAfter('dark:')"
         x-on:click="$tallkit.appearance.apply('dark')"
         icon="ph:moon"
-        ::class="{ 'bg-current/20!': $tallkit.appearance.mode === 'dark' }"
+        ::class="{ 'bg-current/10! dark:bg-current/20!: $tallkit.appearance.mode === 'dark' }"
     />
 </tk:button.group>

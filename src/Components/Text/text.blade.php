@@ -13,9 +13,9 @@
         },
         match ($variant) {
             'accent' => 'text-[var(--color-accent-content)]',
-            'strong' => '[:where(&)]:text-zinc-900/90 [:where(&)]:dark:text-white/90',
-            'subtle' => '[:where(&)]:text-zinc-700/50 [:where(&)]:dark:text-white/50',
-            default => '[:where(&)]:text-zinc-800/70 [:where(&)]:dark:text-white/70',
+            'strong' => '[:where(&)]:text-zinc-800 dark:[:where(&)]:text-white',
+            'subtle' => '[:where(&)]:text-zinc-400 dark:[:where(&)]:text-white/50',
+            default => '[:where(&)]:text-zinc-500 dark:[:where(&)]:text-white/80',
             'red' => 'text-red-600 dark:text-red-400',
             'orange' => 'text-orange-600 dark:text-orange-400',
             'amber' => 'text-amber-600 dark:text-amber-500',

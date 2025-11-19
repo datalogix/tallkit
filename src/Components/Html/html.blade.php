@@ -22,8 +22,8 @@
         ->whereDoesntStartWith(['html:', 'head:', 'meta:', 'google-fonts:', 'components:', 'toast:'])
         ->classes(
             'min-h-dvh',
-            '[:where(&)]:bg-white [:where(&)]:dark:bg-zinc-900',
-            '[:where(&)]:text-zinc-700 [:where(&)]:dark:text-white/70',
+            '[:where(&)]:bg-white dark:[:where(&)]:bg-zinc-900',
+            '[:where(&)]:text-zinc-700 dark:[:where(&)]:text-white/70',
             'antialiased',
         )
 }}>

@@ -4,9 +4,9 @@
         ->classes(
             '
             -mx-[.4rem] px-[.4rem]
-            [&+&>[data-tallkit-menu-group-separator-top]]:hidden
-            [&:first-child>[data-tallkit-menu-group-separator-top]]:hidden
-            [&:last-child>[data-tallkit-menu-group-separator-bottom]]:hidden
+            [&+&>[data-tallkit-menu-group-separator-top-container]]:hidden
+            [&:first-child>[data-tallkit-menu-group-separator-top-container]]:hidden
+            [&:last-child>[data-tallkit-menu-group-separator-bottom-container]]:hidden
             '
         )
         ->merge([

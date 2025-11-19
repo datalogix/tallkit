@@ -11,12 +11,14 @@ use TALLKit\View\BladeComponent;
 class Pagination extends BladeComponent
 {
     public function __construct(
-        public Paginator|CursorPaginator|Arrayable|array $paginator,
+        public Paginator|CursorPaginator|Arrayable|array|null $paginator,
         public bool|string $scrollTo = 'body',
         public ?bool $total = null,
         public ?bool $firstPage = null,
         public ?bool $lastPage = null,
         public ?int $eachSide = null,
+        public ?string $size = null,
+        public ?bool $separator = null,
     ) {}
 
     public function elements()

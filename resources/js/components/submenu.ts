@@ -11,8 +11,10 @@ export function submenu() {
 
     init() {
       _popover.init.call(this)
+      _popover.trigger = this.$root.firstElementChild !== this.popoverElement ? this.$root.firstElementChild : this.$root
+      _popover.popoverElement = this.$root.lastElementChild?.matches('[popover]') && this.$root.lastElementChild
 
-      bind(_popover.popover, {
+      bind(_popover.popoverElement, {
         ['@mouseenter']() {
           this.inside = true
           _popover.trigger.setAttribute('data-active', '')

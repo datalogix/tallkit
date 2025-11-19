@@ -19,12 +19,12 @@
             :$size
             :$arrow
         >
-            {!! __($content) !!}
+            {!! nl2br(__($content)) !!}
 
             @if ($kbd)
-                <x-slot name="kbd" :attributes="$attributesAfter('kbd:')">
+                <x-slot:kbd :attributes="$attributesAfter('kbd:')">
                     {{ $kbd }}
-                </x-slot>
+                </x-slot:kbd>
             @endif
         </tk:tooltip.content>
     @endif
