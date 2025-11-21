@@ -3,7 +3,7 @@
     role="alert"
     {{
         $attributes
-            ->whereDoesntStartWith(['icon:', 'content:', 'title:', 'text:', 'list:', 'actions:', 'dismissible-content:', 'dismissible:'])
+            ->whereDoesntStartWith(['icon:', 'content:', 'title:', 'text:', 'list:', 'list-item:', 'actions:', 'dismissible-content:', 'dismissible:'])
             ->classes(
                 'transition-opacity duration-300 opacity-100',
                 'flex p-4 mb-4 text-base',
@@ -68,7 +68,14 @@
         @if (is_array($message) && filled($message))
             <ul {{ $attributesAfter('list:')->classes('list-disc list-inside') }}>
                 @foreach ($message as $item)
-                    <li>{!! nl2br(__($item)) !!}</li>
+                    <li>
+                        <tk:text
+                            :attributes="$attributesAfter('list-item:')->classes('text-current')"
+                            :label="$item"
+                            :$size
+                            as="span"
+                        />
+                    </li>
                 @endforeach
             </ul>
         @endif

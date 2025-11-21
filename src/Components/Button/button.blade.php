@@ -59,7 +59,7 @@ if ($loading && $type !== 'submit' && !$isJsMethod) {
             },
             match ($variant) { // Background color...
                 'accent' => 'bg-[var(--color-accent)] hover:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_15%)]',
-                'inverse' => 'bg-zinc-700 hover:bg-zinc-600/75 dark:bg-white dark:hover:bg-zinc-100',
+                'inverse' => 'bg-zinc-700 hover:bg-zinc-600/75 dark:bg-zinc-200 dark:hover:bg-zinc-300/75',
                 'info' => 'bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600',
                 'success' => 'bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-600',
                 'danger' => 'bg-red-600 dark:bg-red-700 hover:bg-red-700 dark:hover:bg-red-600',

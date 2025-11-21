@@ -1,6 +1,6 @@
 <div
     x-data="modalTrigger(@js($name), @js($shortcut))"
-    {{ $attributes->class('contents') }}
+    {{ $attributes->classes('contents') }}
 >
     {{ $slot }}
 </div>

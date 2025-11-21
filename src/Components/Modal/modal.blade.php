@@ -104,11 +104,13 @@
     <div {{ $attributesAfter('content:')->classes($variant === 'bare' ? '' : 'p-6') }}>
         <tk:heading
             :attributes="$attributesAfter('title:')"
+            :$size
             :label="$title"
         />
 
         <tk:text
             :attributes="$attributesAfter('message:')"
+            :$size
             :label="$subtitle"
         />
 
@@ -119,9 +121,9 @@
         @elseif ($closable !== false)
             <tk:modal.close
                 :attributes="$attributesAfter('close:')->classes('absolute top-0 end-0 mt-4 me-4')"
+                :size="$adjustSize($size)"
                 variant="ghost"
                 icon="close"
-                size="sm"
                 aria-label="Close modal"
             />
         @endif

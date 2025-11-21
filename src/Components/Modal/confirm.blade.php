@@ -1,5 +1,6 @@
 <tk:modal
     :attributes="$attributes->whereDoesntStartWith(['form:', 'actions:', 'cancel:', 'confirm:'])->classes('max-w-sm')"
+    :$size
     :title="$title ?? match($variant) {
         default => 'Are you sure?',
         'delete' => 'Do you really want to delete this record?',
@@ -20,10 +21,12 @@
         <div {{ $attributesAfter('actions:')->classes('flex items-center gap-2 mt-10') }}>
             <tk:modal.close
                 :attributes="$attributesAfter('cancel:')"
+                :$size
                 label="Cancel"
             />
             <tk:submit
                 :attributes="$attributesAfter('confirm:')->classes('ms-auto')"
+                :$size
                 label="Confirm"
                 :variant="match($variant) {
                     default => 'inverse',

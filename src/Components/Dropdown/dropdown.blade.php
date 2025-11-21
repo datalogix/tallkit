@@ -1,6 +1,6 @@
 <div
-    x-data="dropdown({
-        mode: @js($hover ? 'hover' : 'dropdown'),
+    x-data="popover({
+        mode: @js($mode ?? ($hover ? 'hover' : 'dropdown')),
         position: @js($position ?? 'bottom'),
         align: @js($align ?? 'start'),
     })"

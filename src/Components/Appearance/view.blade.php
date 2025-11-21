@@ -15,9 +15,9 @@
             <div>
                 {{ $slot }}
 
-                {{-- @if ($livewire)
+                @if ($livewire)
                     @livewire($livewire)
-                @endif --}}
+                @endif
             </div>
         </div>
     </div>

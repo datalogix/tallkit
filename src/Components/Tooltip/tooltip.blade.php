@@ -1,6 +1,6 @@
 <div
-    x-data="tooltip({
-        mode: @js($mode),
+    x-data="popover({
+        mode: @js($mode ?? 'hover'),
         position: @js($position ?? 'top'),
         align: @js($align ?? 'center')
     })"

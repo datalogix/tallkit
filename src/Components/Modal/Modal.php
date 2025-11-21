@@ -9,9 +9,10 @@ use TALLKit\View\BladeComponent;
 class Modal extends BladeComponent
 {
     public function __construct(
+        public ?string $name = null,
         public ?string $title = null,
         public ?string $subtitle = null,
-        public ?string $name = null,
+        public ?string $size = null,
         public ?string $shortcut = null,
         public ?bool $dismissible = null,
         public null|string|bool $persist = null,

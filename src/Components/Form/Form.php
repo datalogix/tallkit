@@ -18,6 +18,7 @@ class Form extends BladeComponent
         public mixed $bind = null,
         public ?string $route = null,
         public ?string $action = null,
+        public string|bool|null $errorGroup = null,
     ) {
         app(FormDataBinder::class)->bind($bind);
     }

@@ -10,6 +10,8 @@ export function popover ({ mode, position, align }) {
 
     trigger: null,
     popoverElement: null,
+    mouseX: 0,
+    mouseY: 0,
 
     get isTouch () {
       return window.matchMedia('(hover: none)').matches
@@ -58,7 +60,7 @@ export function popover ({ mode, position, align }) {
             this.close()
           },
         })
-      } else if (mode !== 'manual') {
+      } else if (mode === 'hover') {
         bind(this.trigger, {
           ['@mouseenter']() {
             this.open()
@@ -69,6 +71,25 @@ export function popover ({ mode, position, align }) {
           },
 
           ['@keyup.escape.window']() {
+            this.close()
+          },
+        })
+      } else if (mode === 'context') {
+        bind(this.trigger, {
+          ['@contextmenu.prevent'](event) {
+            this.close()
+            this.mouseX = event.clientX
+            this.mouseY = event.clientY
+            this.open()
+          },
+
+          ['@keyup.escape.window.prevent']() {
+            this.close()
+          },
+        })
+
+        bind(this.popoverElement, {
+          ['@click.outside']() {
             this.close()
           },
         })
@@ -132,11 +153,26 @@ export function popover ({ mode, position, align }) {
     },
 
     setPosition() {
-      const scrollTop = window.scrollY
-      const scrollLeft = window.scrollX
-      const triggerRect = this.trigger.getBoundingClientRect()
+      let triggerRect;
+
+      if (mode === 'context') {
+        triggerRect = {
+          top: this.mouseY,
+          bottom: this.mouseY,
+          left: this.mouseX,
+          right: this.mouseX,
+          height: 0,
+          width: 0,
+        }
+      } else {
+        triggerRect = this.trigger.getBoundingClientRect()
+      }
+
       const triggerHeight = triggerRect.height
       const triggerWidth = triggerRect.width
+      const scrollTop = window.scrollY
+      const scrollLeft = window.scrollX
+
       const tooltipHeight = this.popoverElement.offsetHeight
       const tooltipWidth = this.popoverElement.offsetWidth
       const margin = 4
