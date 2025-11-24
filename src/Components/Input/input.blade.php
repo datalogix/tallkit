@@ -106,7 +106,7 @@
                                 '2xl' => 'h-4.5',
                                 '3xl' => 'h-5',
                             },
-                            default => 'focus:ring-blue-500 focus:border-blue-500',
+                            default => '',
                         },
                         $attributes->pluck('input:class')
                     )

@@ -74,9 +74,6 @@
                     disabled:opacity-75
                     dark:disabled:opacity-50
 
-                    focus:ring-blue-500
-                    focus:border-blue-500
-
                     has-[option.placeholder:checked]:text-zinc-400 dark:has-[option.placeholder:checked]:text-zinc-400
                     dark:[&_option]:bg-zinc-700 dark:[&_*]:text-white
                     dark:[&_*:checked]:bg-white/10 dark:[&_*:checked)]:text-white

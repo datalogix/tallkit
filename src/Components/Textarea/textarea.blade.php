@@ -63,9 +63,6 @@
                 dark:bg-white/10
                 disabled:opacity-75
                 dark:disabled:opacity-50
-
-                focus:ring-blue-500
-                focus:border-blue-500
             ')
         }}
     >{{ $value }}</textarea>
