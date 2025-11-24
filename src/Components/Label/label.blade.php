@@ -28,13 +28,13 @@ $textClasses = $classes(
         </div>
     @endif
 
-    <{{ $as ?? 'label'}}
+    <{{ $as ?? ($for ? 'label' : 'span') }}
         x-data="label"
         {{ $attributesAfter('container:')
             ->classes(['inline-flex', 'flex-1' => $hasPrependOrAppend])
             ->merge([$dataKey() => $hasPrependOrAppend ? false : ''])
         }}
-        @isset ($for) for="{{ $for }}" @endisset
+        @if ($for && $as !== 'label') for="{{ $for }}" @endif
     >
         <tk:element
             :$label
