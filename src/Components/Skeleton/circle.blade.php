@@ -1,3 +1,3 @@
-<div {{ $attributes->classes('[:where(&)]:size-10 [:where(&)]:rounded-full [:where(&)]:bg-zinc-400/20') }}>
+<tk:skeleton :attributes="$attributes->classes('[:where(&)]:size-10 [:where(&)]:rounded-full')">
     {{ $slot }}
-</div>
+</tk:skeleton>
