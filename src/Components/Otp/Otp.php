@@ -12,5 +12,6 @@ class Otp extends BladeComponent
     public function __construct(
         public ?int $length = null,
         public ?bool $private = null,
+        public ?string $mode = null,
     ) {}
 }

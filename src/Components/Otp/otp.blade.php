@@ -5,13 +5,24 @@
     :$label
 >
     <div
-        {{ $attributes->classes('flex items-center gap-2 isolate w-fit [&_[data-tallkit-input-group]]:w-auto') }}
-        {{ $buildDataAttribute('control') }}
+        x-data="otp"
+        x-modelable="value"
+        wire:ignore
         role="group"
+        {{ $buildDataAttribute('control') }}
+        {{
+            $attributes
+            ->whereDoesntStartWith(['input:'])
+            ->classes('
+                flex items-center gap-2
+                isolate w-fit
+                [&_[data-tallkit-input-group]]:w-auto
+            ')
+        }}
     >
         @if ($slot->isEmpty() && $length)
             @for ($i = 0; $i < $length; $i++)
-                <tk:otp.input type="{{ $private ? 'password' : 'text' }}" />
+                <tk:otp.input :attributes="$attributesAfter('input:')" />
             @endfor
         @else
             {{ $slot }}
