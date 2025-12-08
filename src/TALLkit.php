@@ -61,7 +61,7 @@ class TALLKit
             return;
         }
 
-        return Session::flash($name ?? 'status', [
+        Session::flash($name ?? 'status', [
             'message' => $message,
             'type' => $type,
             'icon' => $icon,
@@ -74,13 +74,47 @@ class TALLKit
         ]);
     }
 
+    public function toasts()
+    {
+        return new class($this)
+        {
+            public function __construct(
+                protected TALLKit $tallkit,
+            ) {}
+
+            public function __call(string $method, array $arguments)
+            {
+                $arguments['type'] = $method;
+
+                return $this->tallkit->toast(...$arguments);
+            }
+        };
+    }
+
+    public function alerts()
+    {
+        return new class($this)
+        {
+            public function __construct(
+                protected TALLKit $tallkit,
+            ) {}
+
+            public function __call(string $method, array $arguments)
+            {
+                $arguments['type'] = $method;
+
+                return $this->tallkit->alert(...$arguments);
+            }
+        };
+    }
+
     public function modal(string $name, bool $scope = false)
     {
         return new class($name, $scope)
         {
             public function __construct(
-                public string $name,
-                public ?bool $scope
+                protected string $name,
+                protected ?bool $scope
             ) {}
 
             public function show()

@@ -2,13 +2,14 @@
 
 namespace TALLKit\Components\Form;
 
+use Illuminate\View\ComponentSlot;
 use TALLKit\View\BladeComponent;
 
 class Section extends BladeComponent
 {
     public function __construct(
-        public ?string $title = null,
-        public ?string $subtitle = null,
+        public string|ComponentSlot|null $title = null,
+        public string|ComponentSlot|null $subtitle = null,
         public ?bool $separator = null,
         public ?string $size = null,
     ) {}

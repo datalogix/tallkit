@@ -5,7 +5,7 @@
         :src="$image"
     />
 
-    @if ($name || $description || $slot->isNotEmpty())
+    @if ($name || $description || $slot->hasActualContent())
         <div {{ $attributesAfter('content:')->classes('grid flex-1 -space-y-px! truncate') }}>
             @if ($name)
                 <tk:heading
@@ -15,7 +15,7 @@
                 />
             @endif
 
-            @if ($slot->isNotEmpty() || $description)
+            @if ($slot->hasActualContent() || $description)
                 <tk:text
                     as="span"
                     :attributes="$attributesAfter('description:')->classes('truncate block')"

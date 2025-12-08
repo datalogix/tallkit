@@ -1,57 +1,42 @@
-<div {{
-    $attributes
-        ->whereDoesntStartWith(['image:', 'container:', 'title:', 'subtitle:', 'separator:', 'content:'])
-        ->classes(
-            'bg-white dark:bg-zinc-800',
-            'border border-zinc-100 dark:border-white/10',
-            'overflow-hidden shadow-sm [:where(&)]:rounded-lg',
-        )
-}}>
+<div {{ $attributes->whereDoesntStartWith(['image:', 'section:', 'icon', 'badge', 'title:', 'subtitle:', 'separator:', 'content:'])->classes(
+    'bg-white dark:bg-zinc-800',
+    'border border-zinc-100 dark:border-white/10',
+    'overflow-hidden shadow-sm [:where(&)]:rounded-lg',
+) }}>
     @if ($image)
         <img
             {{ $attributesAfter('image:')->classes('w-full object-cover') }}
             src="{{ $image }}"
-            alt="{{ __((string) $title) }}"
+            alt="{{ __($alt ?? (string) $title) }}"
         />
     @endif
 
     {{ $header ?? '' }}
 
-    <div {{ $attributesAfter('container:')->classes('[:where(&)]:p-6 flex flex-col gap-6') }}>
-        @if ($title || $subtitle || isset($actions))
-            <div class="flex justify-between gap-6">
-                <div class="flex-1">
-                    <tk:heading
-                        :attributes="$attributesAfter('title:')"
-                        :label="$title"
-                        :$size
-                    />
+    <tk:section
+        :attributes="$attributesAfter('section:')
+            ->merge($attributesAfter('icon', prepend: true)->getAttributes())
+            ->merge($attributesAfter('badge', prepend: true)->getAttributes())
+            ->merge($attributesAfter('title:', prepend: true)->getAttributes())
+            ->merge($attributesAfter('subtitle:', prepend: true)->getAttributes())
+            ->merge($attributesAfter('separator:', prepend: true)->getAttributes())
+            ->merge($attributesAfter('content:', prepend: true)->getAttributes())
+            ->classes('[:where(&)]:p-6')
+        "
+        :$title
+        :$subtitle
+        :$separator
+        :$size
+        :$content
+    >
+        @isset ($actions)
+            <x-slot:actions>
+                {{ $actions }}
+            </x-slot:actions>
+        @endisset
 
-                    <tk:text
-                        :attributes="$attributesAfter('subtitle:')"
-                        :label="$subtitle"
-                        :$size
-                    />
-                </div>
-
-                @isset ($actions)
-                    <div {{ $attributesAfter('actions:')->classes('shrink-0 flex items-center gap-2') }}>
-                        {{ $actions }}
-                    </div>
-                @endisset
-            </div>
-
-            @if ($separator || ($separator === null && ($title && ($subtitle || isset($actions))) && ($slot->isNotEmpty() || $content)))
-                <tk:separator :attributes="$attributesAfter('separator:')" />
-            @endif
-        @endif
-
-        @if ($slot->isNotEmpty() || $content)
-            <div {{ $attributesAfter('content:') }}>
-                {{ $slot->isEmpty() ? __($content) : $slot }}
-            </div>
-        @endif
-    </div>
+        {{ $slot }}
+    </tk:section>
 
     {{ $footer ?? '' }}
 </div>

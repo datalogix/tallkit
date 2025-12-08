@@ -78,7 +78,7 @@ class Avatar extends BladeComponent
             return $value;
         }
 
-        return Cache::remember("tallkit-avatar-{$value}", $ttl ?? 60 * 60 * 24 * 30, function () use ($value) {
+        return Cache::driver('file')->remember("tallkit-avatar-{$value}", $ttl ?? 60 * 60 * 24 * 30, function () use ($value) {
             try {
                 $response = Http::timeout(3)
                     ->retry(2, 200)

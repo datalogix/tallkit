@@ -3,7 +3,7 @@
     @selected($selected)
     @isset($value) value="{{ $value }}" @endisset
 >
-    @if ($slot->isNotEmpty())
+    @if ($slot->hasActualContent())
         {{ $slot }}
     @elseif (is_array($label) || is_object($label))
         @json($label)

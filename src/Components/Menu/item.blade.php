@@ -1,6 +1,6 @@
 <tk:element
     :name="$baseComponentKey()"
-    as="button"
+    :as="$as ?? 'button'"
     :icon:size="$adjustSize()"
     :icon:class="'me-1.5'"
     :icon-dot:class="'me-1'"
@@ -17,7 +17,7 @@
             'lg' => 'text-base font-medium',
             'xl' => 'text-lg font-semibold',
             '2xl' => 'text-xl font-semibold',
-            '3xl' => 'text-xl font-bold',
+            '3xl' => 'text-2xl font-bold',
         }
     )"
     :attributes="$attributes->classes(
@@ -49,6 +49,6 @@
     {{ $slot }}
 
     <x-slot:append>
-        {{ $submenu ?? '' }}
+        {{ $append ?? $submenu ?? '' }}
     </x-slot:append>
 </tk:element>

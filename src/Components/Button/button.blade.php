@@ -1,8 +1,8 @@
 @php
 $variant = $variant ?: 'outline';
-$label = $attributes->has('label');
-$hasContent = $slot->isNotEmpty() || $label;
-$square ??= !$circle && !($slot->isNotEmpty() || $label);
+$label = $attributes->get('label');
+$hasContent = $slot->hasActualContent() || $label;
+$square ??= !$circle && !($hasContent || $attributes->get('badge'));
 $isTypeSubmitAndNotDisabledOnRender = $type === 'submit' && !$attributes->has('disabled');
 $isJsMethod = Str::startsWith($attributes->whereStartsWith('wire:click')->first() ?? '', '$js.');
 $loading ??= $isTypeSubmitAndNotDisabledOnRender || $attributes->whereStartsWith('wire:click')->isNotEmpty() && !$isJsMethod;
@@ -63,7 +63,7 @@ if ($loading && $type !== 'submit' && !$isJsMethod) {
                 'info' => 'bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600',
                 'success' => 'bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-600',
                 'danger' => 'bg-red-600 dark:bg-red-700 hover:bg-red-700 dark:hover:bg-red-600',
-                'outline' => 'bg-white hover:bg-zinc-800/5 dark:bg-zinc-700 dark:hover:bg-zinc-700/75',
+                'outline' => 'bg-white hover:bg-zinc-800/5 dark:bg-zinc-700 dark:hover:bg-zinc-600/75',
                 'filled' => 'bg-zinc-800/5 dark:bg-white/10 hover:bg-zinc-800/10 dark:hover:bg-white/20',
                 'subtle', 'ghost' => 'bg-transparent hover:bg-zinc-800/15 dark:hover:bg-white/15',
                 'none' => 'bg-transparent',
@@ -86,7 +86,7 @@ if ($loading && $type !== 'submit' && !$isJsMethod) {
                 'rose' => 'bg-rose-500 dark:bg-rose-600 hover:bg-rose-600 dark:hover:bg-rose-500',
                 default => '
                     text-zinc-800 dark:text-white
-                    bg-white hover:bg-zinc-50 dark:bg-zinc-700 dark:hover:bg-zinc-600/75
+                    bg-white hover:bg-zinc-800/5 dark:bg-zinc-700 dark:hover:bg-zinc-600/75
                     border border-zinc-200 hover:border-zinc-200 border-b-zinc-300/80 dark:border-white/10 dark:hover:border-white/10
                 ',
             },

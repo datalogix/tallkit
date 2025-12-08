@@ -4,18 +4,18 @@ $external ??= $attributes->get('target') === '_blank';
 
 <tk:tooltip.wrapper :$attributes :$tooltip>
     <{{ $as }} {{ $attributes
-        ->whereDoesntStartWith(['tooltip:', 'icon-wrapper:', 'icon:', 'icon-dot:', 'content:', 'suffix:', 'icon-trailing:', 'badge:', 'information:'])
+        ->whereDoesntStartWith(['tooltip:', 'icon-wrapper:', 'icon:', 'icon-dot:', 'content:', 'suffix:', 'icon-trailing:', 'badge:', 'info:'])
         ->when($as !== 'p' || $icon, fn ($attrs) => $attrs->classes('inline-flex items-center gap-1.5'))
         ->when($as === 'a', fn ($attrs) => $attrs->merge([
             'target' => $external === true ? '_blank' : $external,
-            'wire:navigate' => in_livewire() && !$external && $navigate !== false,
+            'wire:navigate' => !$external && $navigate !== false,
             'href' => $href,
             'data-current' => $current ?? is_current_href($href, $exact),
         ]))
         ->when($as === 'button', fn ($attrs) => $attrs->merge([
             'type' => $type ?? 'button',
             'data-current' => $current,
-            'wire:click' => in_livewire() ? $action : false,
+            'wire:click' => $action,
         ], false))
         ->when($ariaLabel, fn ($attrs, $value) => $attrs->merge(['aria-label' => __($value)]))
         ->merge([$dataKey('has-icon') => !!$icon && $name])
@@ -37,8 +37,18 @@ $external ??= $attributes->get('target') === '_blank';
                 @endif
 
                 @if ($iconDot)
-                    <span class="absolute -top-2 end-px">
-                        <tk:element :attributes="$attributesAfter('icon-dot:')->classes('size-[6px] rounded-full bg-zinc-500 dark:bg-zinc-400')" />
+                    <span class="absolute -top-2 end-.5">
+                        <tk:element
+                            :attributes="$attributesAfter('icon-dot:')->classes([
+                                'rounded-full bg-zinc-500 dark:bg-zinc-400 size-2',
+                                '
+                                    flex items-center justify-center
+                                    text-white tracking-tighter font-bold
+                                    text-[11px] size-4.5
+                                ' => is_string($iconDot) && strlen($iconDot) <= 2,
+                            ])"
+                            :label="is_string($iconDot) && strlen($iconDot) <= 2 ? $iconDot : null"
+                        />
                     </span>
                 @endif
             </span>
@@ -58,7 +68,7 @@ $external ??= $attributes->get('target') === '_blank';
             {{ $iconEmpty ?? '' }}
         @endif
 
-        @if (count($attributesAfter('content:')->toArray()) > 1 && ($slot->isNotEmpty() || $label))
+        @if (count($attributesAfter('content:')->toArray()) > 1 && ($slot->hasActualContent() || $label))
             <tk:element
                 :attributes="$attributesAfter('content:')"
                 :$label
@@ -66,25 +76,25 @@ $external ??= $attributes->get('target') === '_blank';
                 {{ $slot }}
             </tk:element>
         @else
-            {!! $slot->hasActualContent() || $label === true ? $slot : ($isSlot($label) ? $label : nl2br(__($label))) !!}
+            {!! $slot->hasActualContent() || $label === true ? $slot : ($isSlot($label) ? $label : __($label)) !!}
         @endif
 
         @if (isset($suffix) && $suffix !== '')
             <tk:element
-                :attributes="$attributesAfter('suffix:')->classes('text-xs text-zinc-500 dark:text-zinc-400')"
+                :attributes="$attributesAfter('suffix:')->classes('ms-auto text-xs text-zinc-500 dark:text-zinc-400')"
                 :label="$suffix"
             />
         @endif
 
-        @if ((is_string($iconTrailing) && $iconTrailing !== '') || $information)
+        @if ((is_string($iconTrailing) && $iconTrailing !== '') || $info)
             <tk:icon
-                :attributes="$attributesAfter('icon-trailing:')->merge($attributesAfter('information:')->getAttributes())"
-                :icon="$information ? 'help' : $iconTrailing"
-                :tooltip="$information"
+                :attributes="$attributesAfter('icon-trailing:')->merge($attributesAfter('info:')->getAttributes())"
+                :icon="$info ? 'help' : $iconTrailing"
+                :tooltip="$info"
             />
         @elseif ($iconTrailing)
             <tk:element
-                :attributes="$attributesAfter('icon-trailing:')"
+                :attributes="$attributesAfter('icon-trailing:')->classes('ms-auto')"
                 :label="$iconTrailing"
             />
         @else
@@ -93,7 +103,7 @@ $external ??= $attributes->get('target') === '_blank';
 
         @if (isset($badge) && $badge !== '')
             <tk:badge
-                :attributes="$attributesAfter('badge:')"
+                :attributes="$attributesAfter('badge:')->classes('ms-auto')"
                 :label="$badge"
             />
         @endif

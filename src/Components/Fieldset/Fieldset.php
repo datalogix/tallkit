@@ -12,7 +12,7 @@ class Fieldset extends BladeComponent
         public null|bool|string|ComponentSlot $legend = null,
         public null|bool|string|ComponentSlot $description = null,
         public null|bool|string|ComponentSlot $badge = null,
-        public null|bool|string|ComponentSlot $information = null,
+        public null|bool|string|ComponentSlot $info = null,
         public ?string $size = null,
     ) {}
 }

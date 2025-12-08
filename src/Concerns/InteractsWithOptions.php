@@ -37,7 +37,7 @@ trait InteractsWithOptions
         $useValueAsKey = is_array($options) && array_keys($options) === range(0, count($options) - 1);
 
         return collect($options)->mapWithKeys(function ($value, $key) use ($useValueAsKey) {
-            $optionValue = data_get($value, $this->optionValue ?? 'id', $useValueAsKey ? $value : $key);
+            $optionValue = data_get($value, $this->optionValue ?? 'id') ?? ($useValueAsKey ? $value : $key);
             $optionLabel = data_get($value, $this->optionLabel ?? 'name', $value);
 
             if (! $this->optionGroupChildren && ! is_array($optionLabel)) {

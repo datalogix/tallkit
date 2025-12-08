@@ -1,11 +1,11 @@
 <?php
 
-namespace TALLKit\Components\Pages\Auth;
+namespace TALLKit\Components\Page\Auth;
 
 use TALLKit\Attributes\Mount;
 use TALLKit\View\BladeComponent;
 
-class ForgotPassword extends BladeComponent
+class SignUp extends BladeComponent
 {
     public function __construct(
         public ?string $login = null,

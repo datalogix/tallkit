@@ -1,15 +1,22 @@
 - Revisar components (js) com livewire
 - Upload
 
+- Notifications
+- OPT
+- Editor
+- Tabs
 - CreditCard
 - Accordion
-- Tabs
-- Editor
-- Color Picker
-- Date Picker
 - Command
 - Chart
+- Slider
 - Autocomplete
+- Color Picker
+- Date Picker
+- Time Picker
+- Composer
+- Kanban
+- Pillbox
 
 - DataTable (with a filter e etc...)
 - FormBuilder

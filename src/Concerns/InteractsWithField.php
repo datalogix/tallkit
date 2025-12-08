@@ -12,7 +12,7 @@ trait InteractsWithField
 
     protected function customAppendedAttributes()
     {
-        return ['name', 'label', 'labelAppend', 'labelPrepend', 'id', 'description', 'help', 'badge', 'information', 'size', 'showError', 'prefix', 'suffix'];
+        return ['name', 'label', 'labelAppend', 'labelPrepend', 'id', 'description', 'help', 'badge', 'info', 'size', 'showError', 'prefix', 'suffix'];
     }
 
     #[Mount(20)]

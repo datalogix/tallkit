@@ -22,7 +22,7 @@
             {{ $attributes->only('class')->classes('w-full relative block group/input') }}
         >
             @if (is_string($icon) && $icon !== '')
-                <div class="pointer-events-none absolute top-0 bottom-0 flex items-center justify-center text-xs text-zinc-400/75 ps-3 start-0">
+                <div class="pointer-events-none absolute top-0 bottom-0 ps-3 start-0 flex items-center justify-center text-xs text-zinc-400/75 dark:text-white/60">
                     <tk:icon
                         :attributes="$attributesAfter('icon:')"
                         :size="$adjustSize()"
@@ -31,7 +31,7 @@
                 </div>
             @elseif ($icon)
                 <tk:element
-                    :attributes="$attributesAfter('icon:')->classes('absolute top-0 bottom-0 flex items-center justify-center text-xs text-zinc-400/75 ps-3 start-0')"
+                    :attributes="$attributesAfter('icon:')->classes('absolute top-0 bottom-0 ps-3 start-0 flex items-center justify-center text-xs text-zinc-400/75 dark:text-white/60')"
                     :label="$icon"
                 />
             @endif
@@ -51,7 +51,7 @@
                 @if ($mask) x-data x-mask="{{ $mask }}" @endif
                 {{ $attributes->whereDoesntStartWith([
                         'input:', 'icon:', 'loading:', 'clearable:', 'kbd:', 'copyable:', 'viewable:', 'icon-trailing:',
-                        'field:', 'label:', 'information:', 'badge:', 'description:', 'help:', 'error:',
+                        'field:', 'label:', 'info:', 'badge:', 'description:', 'help:', 'error:',
                         'group:', 'prefix:', 'suffix:',
                     ])
                     ->except('class')
@@ -114,7 +114,8 @@
             />
 
             @if ($loading || $clearable || $kbd || $copyable || $viewable || $iconTrailing)
-                <div class="absolute top-0 bottom-0 flex items-center gap-x-1.5 pe-3 end-0 text-xs text-zinc-400 pointer-events-none">
+                <div class="absolute top-0 bottom-0 flex items-center gap-x-1.5 pe-3 end-0 text-xs text-zinc-400"
+                ">
                     @if ($loading)
                         <tk:loading
                             :attributes="$attributesAfter('loading:')->when(in_livewire(), fn($attrs) => $attrs->merge([
@@ -127,34 +128,34 @@
 
                     @if ($clearable)
                         <tk:input.clearable
-                            :attributes="$attributesAfter('clearable:')->classes('pointer-events-auto')"
+                            :attributes="$attributesAfter('clearable:')"
                             :size="$adjustSize()"
                         />
                     @endif
 
                     @if ($kbd)
-                        <span {{ $attributesAfter('kbd:') }}>
+                        <span {{ $attributesAfter('kbd:')->classes('pointer-events-none') }}>
                             {{ $kbd }}
                         </span>
                     @endif
 
                     @if ($copyable)
                         <tk:input.copyable
-                            :attributes="$attributesAfter('copyable:')->classes('pointer-events-auto')"
+                            :attributes="$attributesAfter('copyable:')"
                             :size="$adjustSize()"
                         />
                     @endif
 
                     @if ($viewable)
                         <tk:input.viewable
-                            :attributes="$attributesAfter('viewable:')->classes('pointer-events-auto')"
+                            :attributes="$attributesAfter('viewable:')"
                             :size="$adjustSize()"
                         />
                     @endif
 
                     @if (is_string($iconTrailing) && $iconTrailing !== '')
                         <tk:icon
-                            :attributes="$attributesAfter('icon-trailing:')->classes('text-zinc-400/75')"
+                            :attributes="$attributesAfter('icon-trailing:')->classes('text-zinc-400/75 dark:text-white/60 pointer-events-none')"
                             :size="$adjustSize()"
                             :$icon
                         />

@@ -98,7 +98,15 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                                     @isset (${'row_' . $key})
                                         {{ ${'row_' . $key}($row, $key, $getRowValue($row, $key, $col), $col, $cols, $rows) }}
                                     @else
-                                        {!! $getRowValue($row, $key, $col)() !!}
+                                        @php
+                                        $rowValue = $getRowValue($row, $key, $col)();
+                                        @endphp
+
+                                        @if (is_bool($rowValue))
+                                            <tk:icon :name="$rowValue === true ? 'check' : 'times'" />
+                                        @else
+                                            {!! $rowValue !!}
+                                        @endif
                                     @endif
                                 </tk:table.cell>
                             @endforeach

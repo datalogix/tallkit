@@ -14,7 +14,7 @@ $textClasses = $classes(
 )
 @endphp
 
-@if ($slot->isNotEmpty() || $label)
+@if ($slot->hasActualContent() || $label)
     @if ($hasPrependOrAppend)
         <div
             {{ $dataKey() }}
@@ -41,8 +41,8 @@ $textClasses = $classes(
             :icon:size="$adjustSize()"
             :icon-trailing:size="$adjustSize()"
             :badge:size="$adjustSize()"
-            :attributes="$attributes->whereDoesntStartWith(['area:', 'label-prepend:', 'label-append:', 'container:', 'information:', $dataKey()])
-                ->merge($attributesAfter('information:', prepend: 'icon-trailing:')->getAttributes())
+            :attributes="$attributes->whereDoesntStartWith(['area:', 'label-prepend:', 'label-append:', 'container:', 'info:', $dataKey()])
+                ->merge($attributesAfter('info:', prepend: 'icon-trailing:')->getAttributes())
                 ->classes($textClasses)
             "
         >

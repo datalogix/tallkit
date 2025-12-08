@@ -71,7 +71,7 @@
                     ->merge(['src' => $src, 'alt' => $alt ?? $name])
             }}
         />
-    @elseif (($initials || $slot->isNotEmpty()) && !$icon)
+    @elseif (($initials || $slot->hasActualContent()) && !$icon)
         <span {{ $attributesAfter('initials:')->classes('select-none truncate m-px') }}>
             {{ $initials ?: $slot }}
         </span>

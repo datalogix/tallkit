@@ -1,4 +1,4 @@
-@php $attrs = $attributes->whereDoesntStartWith(['dropdown:', 'menu:', 'avatar:', 'profile:']); @endphp
+@php $attrs = $attributes->whereDoesntStartWith(['dropdown:', 'menu:', 'avatar:', 'profile:', 'menu-separator:']); @endphp
 
 <tk:dropdown :attributes="$attributesAfter('dropdown:')">
     @if ($profile)
@@ -8,7 +8,7 @@
          />
     @else
         <tk:avatar
-            :attributes="$attrs->merge($attributesAfter('avatar:')->getAttributes())->classes('cursor-pointer')"
+            :attributes="$attrs->merge($attributesAfter('avatar:')->getAttributes())->classes('cursor-pointer hover:opacity-75')"
             :$size
         />
     @endif
@@ -18,18 +18,18 @@
         :$items
         :$size
     >
-        @unless ($profile)
-            <x-slot:prepend>
+        <x-slot:prepend>
+            @unless ($profile)
                 <tk:avatar.profile
                     :attributes="$attrs->merge($attributesAfter('profile:')->getAttributes())"
                     :$size
                 />
 
-                @if ($slot->isNotEmpty() || collect($items)->isNotEmpty())
-                    <tk:menu.separator />
-                @endif
-            </x-slot:prepend>
-        @endunless
+                <tk:menu.separator :attributes="$attributesAfter('menu-separator:')" />
+            @endunless
+
+            {{ $prepend ?? '' }}
+        </x-slot:prepend>
 
         {{ $slot }}
     </tk:menu>
