@@ -44,8 +44,8 @@ class AssetManager
     {
         app(static::class)->hasRenderedScripts = true;
 
-        $manifest = json_decode(file_get_contents(__DIR__.'/../../dist/manifest.json'), true);
-        $versionHash = $manifest['/tallkit.js'];
+        $manifest = json_decode(@file_get_contents(__DIR__.'/../../dist/manifest.json'), true);
+        $versionHash = $manifest['/tallkit.js'] ?? rand();
         $nonce = isset($options) && isset($options['nonce']) ? ' nonce="'.$options['nonce'].'"' : '';
 
         return '<script src="'.route('tallkit-script', ['id' => $versionHash]).'" data-navigate-once'.$nonce.'></script>';
