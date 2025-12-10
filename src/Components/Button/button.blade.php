@@ -48,7 +48,7 @@ if ($loading && $type !== 'submit' && !$isJsMethod) {
                 'accent' => 'text-[var(--color-accent-foreground)]',
                 'filled', 'outline', 'ghost' => 'text-zinc-800 dark:text-white',
                 'inverse' => 'text-white dark:text-zinc-800',
-                'subtle', 'none' => 'text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-white',
+                'subtle', 'none' => 'text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-white [&[data-active]]:text-zinc-800 dark:[&[data-active]]:text-white',
                 'amber', 'yellow', 'warning' => 'text-white dark:text-zinc-950',
                 default => 'text-white',
             },

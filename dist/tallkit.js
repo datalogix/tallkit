@@ -152,6 +152,10 @@
       }
     };
   }
+  const __vite_glob_0_0 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    addressForm
+  }, Symbol.toStringTag, { value: "Module" }));
   function alertComponent(timeout$1) {
     return {
       timeoutId: null,
@@ -181,6 +185,10 @@
       }
     };
   }
+  const __vite_glob_0_1 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    alertComponent
+  }, Symbol.toStringTag, { value: "Module" }));
   function sticky() {
     return {
       init() {
@@ -191,58 +199,47 @@
       }
     };
   }
+  const __vite_glob_0_19 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    sticky
+  }, Symbol.toStringTag, { value: "Module" }));
   function aside() {
     return {
       ...sticky()
     };
   }
-  function toast$1() {
+  const __vite_glob_0_2 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    aside
+  }, Symbol.toStringTag, { value: "Module" }));
+  function badge() {
     return {
-      toasts: [],
-      positions: ["top-left", "top-center", "top-right", "bottom-left", "bottom-center", "bottom-right"],
       init() {
-        bind(this.$el, {
-          ["@toast.document"](e) {
-            this.addToast(e.detail);
+        bind(this.$el.querySelector("[data-tallkit-badge-close]"), {
+          ["@click"]() {
+            const root = this.$el.closest("[data-tallkit-badge]");
+            if (!root) {
+              return;
+            }
+            root.classList.remove("opacity-100");
+            root.classList.add("opacity-0");
+            root.addEventListener(
+              "transitionend",
+              () => {
+                root?.remove();
+                this.$dispatch("close");
+              },
+              { once: true }
+            );
           }
         });
-      },
-      addToast(props) {
-        const toast2 = window.Alpine.reactive({
-          id: Date.now() + Math.random(),
-          ...props,
-          duration: props.duration ?? 5e3,
-          position: props.position ?? "bottom-right",
-          visible: false
-        });
-        if (toast2.position === "top") {
-          toast2.position = "top-right";
-        }
-        if (toast2.position === "bottom") {
-          toast2.position = "bottom-right";
-        }
-        this.toasts.push(toast2);
-        this.$nextTick(() => toast2.visible = true);
-        if (toast2.duration) {
-          setTimeout(
-            () => this.removeToast(toast2.id),
-            toast2.duration
-          );
-        }
-      },
-      removeToast(id) {
-        const toast2 = this.toasts.find((t) => t.id === id);
-        if (!toast2) return;
-        toast2.visible = false;
-        setTimeout(() => {
-          this.toasts = this.toasts.filter((t) => t.id !== id);
-        }, 300);
-      },
-      getToastsByPosition(position) {
-        return this.toasts.filter((t) => t.position === position);
       }
     };
   }
+  const __vite_glob_0_3 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    badge
+  }, Symbol.toStringTag, { value: "Module" }));
   function toggleable() {
     return {
       opened: false,
@@ -276,6 +273,10 @@
       }
     };
   }
+  const __vite_glob_0_23 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    toggleable
+  }, Symbol.toStringTag, { value: "Module" }));
   const CREDIT_CARD_DEFAULT = {
     opened: true,
     types: [],
@@ -311,122 +312,73 @@
       }
     };
   }
+  const __vite_glob_0_4 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    creditCard
+  }, Symbol.toStringTag, { value: "Module" }));
+  function disclosure() {
+    const _toggleable = toggleable();
+    return {
+      ..._toggleable,
+      init() {
+        _toggleable.init.call(this, this.$root.hasAttribute("data-open"));
+        new MutationObserver(() => {
+          this.opened = this.$root.hasAttribute("data-open");
+        }).observe(this.$root, { attributeFilter: ["data-open"] });
+        bind(this.$root.querySelector("button"), {
+          ["@click"]() {
+            this.toggle();
+          }
+        });
+      },
+      open() {
+        this.$root.setAttribute("data-open", "");
+        _toggleable.open.call(this);
+      },
+      close() {
+        this.$root.removeAttribute("data-open");
+        _toggleable.close.call(this);
+      }
+    };
+  }
+  const __vite_glob_0_5 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    disclosure
+  }, Symbol.toStringTag, { value: "Module" }));
+  function fullCalendar(options) {
+    return {
+      fullCalendar: null,
+      getOptions() {
+        return window.Alpine.evaluate(this.$el, this.$el.getAttribute("data-options") || "{}");
+      },
+      async init() {
+        if (!window.FullCalendar) {
+          await this.$tallkit.loadScript([
+            "https://cdn.jsdelivr.net/npm/fullcalendar@6/index.global.min.js",
+            options.locale && options.locale !== "en" ? `https://cdn.jsdelivr.net/npm/@fullcalendar/core@6/locales/${options.locale}.global.min.js` : "https://cdn.jsdelivr.net/npm/@fullcalendar/core@6/locales-all.global.min.js"
+          ]);
+        }
+        this.fullCalendar = new window.FullCalendar.Calendar(this.$el, {
+          ...options,
+          ...this.getOptions()
+        });
+        this.fullCalendar.render();
+      }
+    };
+  }
+  const __vite_glob_0_6 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    fullCalendar
+  }, Symbol.toStringTag, { value: "Module" }));
   function header() {
     return {
       ...sticky()
     };
   }
-  function sidebar(name, sticky$1, stashable) {
-    const _toggleable = toggleable();
-    const _sticky = sticky();
-    return {
-      ..._toggleable,
-      init() {
-        _toggleable.init.call(this);
-        if (sticky$1) {
-          _sticky.init.call(this);
-        }
-        if (stashable) {
-          this.$el.removeAttribute("data-mobile-cloak");
-          this.screenLg = window.innerWidth >= 1024;
-          bind(this.$el, {
-            ["x-bind:data-stashed"]() {
-              return !this.screenLg;
-            },
-            ["x-resize.document"]() {
-              this.screenLg = window.innerWidth >= 1024;
-            },
-            [`@sidebar-${name ?? ""}-close.window`]() {
-              this.close();
-            },
-            [`@sidebar-${name ?? ""}-toggle.window`]() {
-              this.toggle();
-            }
-          });
-        }
-      },
-      open() {
-        this.$el.setAttribute("data-show-stashed-sidebar", "");
-        _toggleable.open.call(this);
-      },
-      close() {
-        this.$el.removeAttribute("data-show-stashed-sidebar");
-        _toggleable.close.call(this);
-      }
-    };
-  }
-  function table() {
-    return {
-      processedRows: /* @__PURE__ */ new Set(),
-      rows: [],
-      selected: [],
-      selectedIds: [],
-      selectAllChecked: false,
-      init() {
-        this.update();
-        const observer = new MutationObserver(() => this.update());
-        observer.observe(this.$el.querySelector("tbody"), { childList: true, subtree: true });
-      },
-      update() {
-        this.rows = Array.from(this.$el.querySelectorAll('tbody>tr[role="row"]')).map((tr) => {
-          const selection = tr.querySelector("[role=row-selection]");
-          const expanded = tr.querySelectorAll("[role=row-expanded]");
-          const row = {
-            el: tr,
-            id: tr.dataset.id,
-            selection,
-            expanded
-          };
-          if (!this.processedRows.has(row.id)) {
-            this.processedRows.add(row.id);
-            bind(selection, {
-              ["@click"]() {
-                this._updateRowState(row);
-                this._syncSelect();
-              }
-            });
-            bind(expanded, {
-              ["@click"]() {
-                row.el.dataset.expanded = row.el.dataset.expanded === "open" ? "close" : "open";
-              }
-            });
-          }
-          return row;
-        });
-        this.rows.forEach((row) => {
-          if (row.selection) {
-            row.selection.checked = this.selectedIds.includes(row.id);
-          }
-          if (this.selectAllChecked) {
-            row.selection.checked = true;
-          }
-          this._updateRowState(row);
-        });
-        this._syncSelect();
-      },
-      toggleAll() {
-        this.rows.forEach((row) => {
-          if (!row.selection) return;
-          row.selection.checked = this.selectAllChecked;
-          this._updateRowState(row);
-        });
-        this._syncSelect();
-      },
-      _updateRowState(row) {
-        if (row.selection) {
-          row.el.dataset.state = row.selection.checked ? "checked" : "unchecked";
-        }
-        if (row.expanded && !row.el.dataset.expanded) {
-          row.el.dataset.expanded = "close";
-        }
-      },
-      _syncSelect() {
-        this.selected = this.rows.filter((row) => row.selection?.checked);
-        this.selectedIds = this.selected.map((row) => row.id);
-        this.selectAllChecked = this.rows.length && this.rows.every((row) => row.selection?.checked);
-      }
-    };
-  }
+  const __vite_glob_0_7 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    header
+  }, Symbol.toStringTag, { value: "Module" }));
   function inputClearable() {
     return {
       get input() {
@@ -455,6 +407,10 @@
       }
     };
   }
+  const __vite_glob_0_8 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    inputClearable
+  }, Symbol.toStringTag, { value: "Module" }));
   function inputCopyable() {
     return {
       copied: false,
@@ -484,6 +440,10 @@
       }
     };
   }
+  const __vite_glob_0_9 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    inputCopyable
+  }, Symbol.toStringTag, { value: "Module" }));
   function inputViewable() {
     return {
       viewed: false,
@@ -515,6 +475,10 @@
       }
     };
   }
+  const __vite_glob_0_10 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    inputViewable
+  }, Symbol.toStringTag, { value: "Module" }));
   function label() {
     return {
       get control() {
@@ -564,75 +528,10 @@
       }
     };
   }
-  function badge() {
-    return {
-      init() {
-        bind(this.$el.querySelector("[data-tallkit-badge-close]"), {
-          ["@click"]() {
-            const root = this.$el.closest("[data-tallkit-badge]");
-            if (!root) {
-              return;
-            }
-            root.classList.remove("opacity-100");
-            root.classList.add("opacity-0");
-            root.addEventListener(
-              "transitionend",
-              () => {
-                root?.remove();
-                this.$dispatch("close");
-              },
-              { once: true }
-            );
-          }
-        });
-      }
-    };
-  }
-  function disclosure() {
-    const _toggleable = toggleable();
-    return {
-      ..._toggleable,
-      init() {
-        _toggleable.init.call(this, this.$root.hasAttribute("data-open"));
-        new MutationObserver(() => {
-          this.opened = this.$root.hasAttribute("data-open");
-        }).observe(this.$root, { attributeFilter: ["data-open"] });
-        bind(this.$root.querySelector("button"), {
-          ["@click"]() {
-            this.toggle();
-          }
-        });
-      },
-      open() {
-        this.$root.setAttribute("data-open", "");
-        _toggleable.open.call(this);
-      },
-      close() {
-        this.$root.removeAttribute("data-open");
-        _toggleable.close.call(this);
-      }
-    };
-  }
-  function menu() {
-    return {
-      init() {
-        bind(this.$el.querySelectorAll("[data-tallkit-menu-item]"), {
-          ["@mouseenter"]() {
-            if (this.$el.disabled) {
-              return;
-            }
-            this.$el.setAttribute("data-active", "");
-          },
-          ["@mouseleave"]() {
-            if (this.$el.disabled) {
-              return;
-            }
-            this.$el.removeAttribute("data-active");
-          }
-        });
-      }
-    };
-  }
+  const __vite_glob_0_11 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    label
+  }, Symbol.toStringTag, { value: "Module" }));
   function menuCheckbox() {
     return {
       get checked() {
@@ -661,6 +560,10 @@
       }
     };
   }
+  const __vite_glob_0_12 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    menuCheckbox
+  }, Symbol.toStringTag, { value: "Module" }));
   function menuRadio() {
     return {
       get checked() {
@@ -694,6 +597,58 @@
       }
     };
   }
+  const __vite_glob_0_13 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    menuRadio
+  }, Symbol.toStringTag, { value: "Module" }));
+  function menu() {
+    return {
+      init() {
+        bind(this.$el.querySelectorAll("[data-tallkit-menu-item]"), {
+          ["@mouseenter"]() {
+            if (this.$el.disabled) {
+              return;
+            }
+            this.$el.setAttribute("data-active", "");
+          },
+          ["@mouseleave"]() {
+            if (this.$el.disabled) {
+              return;
+            }
+            this.$el.removeAttribute("data-active");
+          }
+        });
+      }
+    };
+  }
+  const __vite_glob_0_14 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    menu
+  }, Symbol.toStringTag, { value: "Module" }));
+  function modalTrigger(name, shortcut) {
+    return {
+      init() {
+        bind(this.$el, {
+          ["@click"]() {
+            if (this.$el.querySelector("button[disabled]")) return;
+            this.$dispatch("modal-show", { name });
+          }
+        });
+        if (shortcut) {
+          bind(this.$el, {
+            [`@keydown.${shortcut}.document`](event) {
+              event.preventDefault();
+              this.$dispatch("modal-show", { name });
+            }
+          });
+        }
+      }
+    };
+  }
+  const __vite_glob_0_15 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    modalTrigger
+  }, Symbol.toStringTag, { value: "Module" }));
   function modal(name, dismissible, persist) {
     return {
       init() {
@@ -740,26 +695,10 @@
       }
     };
   }
-  function modalTrigger(name, shortcut) {
-    return {
-      init() {
-        bind(this.$el, {
-          ["@click"]() {
-            if (this.$el.querySelector("button[disabled]")) return;
-            this.$dispatch("modal-show", { name });
-          }
-        });
-        if (shortcut) {
-          bind(this.$el, {
-            [`@keydown.${shortcut}.document`](event) {
-              event.preventDefault();
-              this.$dispatch("modal-show", { name });
-            }
-          });
-        }
-      }
-    };
-  }
+  const __vite_glob_0_16 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    modal
+  }, Symbol.toStringTag, { value: "Module" }));
   function popover({ mode, position, align }) {
     const _toggleable = toggleable();
     let _rAF = null;
@@ -964,6 +903,53 @@
     component.boundSetPosition = component.boundSetPosition.bind(component);
     return component;
   }
+  const __vite_glob_0_17 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    popover
+  }, Symbol.toStringTag, { value: "Module" }));
+  function sidebar(name, sticky$1, stashable) {
+    const _toggleable = toggleable();
+    const _sticky = sticky();
+    return {
+      ..._toggleable,
+      init() {
+        _toggleable.init.call(this);
+        if (sticky$1) {
+          _sticky.init.call(this);
+        }
+        if (stashable) {
+          this.$el.removeAttribute("data-mobile-cloak");
+          this.screenLg = window.innerWidth >= 1024;
+          bind(this.$el, {
+            ["x-bind:data-stashed"]() {
+              return !this.screenLg;
+            },
+            ["x-resize.document"]() {
+              this.screenLg = window.innerWidth >= 1024;
+            },
+            [`@sidebar-${name ?? ""}-close.window`]() {
+              this.close();
+            },
+            [`@sidebar-${name ?? ""}-toggle.window`]() {
+              this.toggle();
+            }
+          });
+        }
+      },
+      open() {
+        this.$el.setAttribute("data-show-stashed-sidebar", "");
+        _toggleable.open.call(this);
+      },
+      close() {
+        this.$el.removeAttribute("data-show-stashed-sidebar");
+        _toggleable.close.call(this);
+      }
+    };
+  }
+  const __vite_glob_0_18 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    sidebar
+  }, Symbol.toStringTag, { value: "Module" }));
   function submenu() {
     const _popover = popover({ mode: "manual", position: "right", align: "start" });
     return {
@@ -1007,27 +993,137 @@
       }
     };
   }
-  function fullCalendar(options) {
+  const __vite_glob_0_20 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    submenu
+  }, Symbol.toStringTag, { value: "Module" }));
+  function table() {
     return {
-      fullCalendar: null,
-      getOptions() {
-        return window.Alpine.evaluate(this.$el, this.$el.getAttribute("data-options") || "{}");
+      processedRows: /* @__PURE__ */ new Set(),
+      rows: [],
+      selected: [],
+      selectedIds: [],
+      selectAllChecked: false,
+      init() {
+        this.update();
+        const observer = new MutationObserver(() => this.update());
+        observer.observe(this.$el.querySelector("tbody"), { childList: true, subtree: true });
       },
-      async init() {
-        if (!window.FullCalendar) {
-          await this.$tallkit.loadScript([
-            "https://cdn.jsdelivr.net/npm/fullcalendar@6/index.global.min.js",
-            options.locale && options.locale !== "en" ? `https://cdn.jsdelivr.net/npm/@fullcalendar/core@6/locales/${options.locale}.global.min.js` : "https://cdn.jsdelivr.net/npm/@fullcalendar/core@6/locales-all.global.min.js"
-          ]);
-        }
-        this.fullCalendar = new window.FullCalendar.Calendar(this.$el, {
-          ...options,
-          ...this.getOptions()
+      update() {
+        this.rows = Array.from(this.$el.querySelectorAll('tbody>tr[role="row"]')).map((tr) => {
+          const selection = tr.querySelector("[role=row-selection]");
+          const expanded = tr.querySelectorAll("[role=row-expanded]");
+          const row = {
+            el: tr,
+            id: tr.dataset.id,
+            selection,
+            expanded
+          };
+          if (!this.processedRows.has(row.id)) {
+            this.processedRows.add(row.id);
+            bind(selection, {
+              ["@click"]() {
+                this._updateRowState(row);
+                this._syncSelect();
+              }
+            });
+            bind(expanded, {
+              ["@click"]() {
+                row.el.dataset.expanded = row.el.dataset.expanded === "open" ? "close" : "open";
+              }
+            });
+          }
+          return row;
         });
-        this.fullCalendar.render();
+        this.rows.forEach((row) => {
+          if (row.selection) {
+            row.selection.checked = this.selectedIds.includes(row.id);
+          }
+          if (this.selectAllChecked) {
+            row.selection.checked = true;
+          }
+          this._updateRowState(row);
+        });
+        this._syncSelect();
+      },
+      toggleAll() {
+        this.rows.forEach((row) => {
+          if (!row.selection) return;
+          row.selection.checked = this.selectAllChecked;
+          this._updateRowState(row);
+        });
+        this._syncSelect();
+      },
+      _updateRowState(row) {
+        if (row.selection) {
+          row.el.dataset.state = row.selection.checked ? "checked" : "unchecked";
+        }
+        if (row.expanded && !row.el.dataset.expanded) {
+          row.el.dataset.expanded = "close";
+        }
+      },
+      _syncSelect() {
+        this.selected = this.rows.filter((row) => row.selection?.checked);
+        this.selectedIds = this.selected.map((row) => row.id);
+        this.selectAllChecked = this.rows.length && this.rows.every((row) => row.selection?.checked);
       }
     };
   }
+  const __vite_glob_0_21 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    table
+  }, Symbol.toStringTag, { value: "Module" }));
+  function toast$1() {
+    return {
+      toasts: [],
+      positions: ["top-left", "top-center", "top-right", "bottom-left", "bottom-center", "bottom-right"],
+      init() {
+        bind(this.$el, {
+          ["@toast.document"](e) {
+            this.addToast(e.detail);
+          }
+        });
+      },
+      addToast(props) {
+        const toast2 = window.Alpine.reactive({
+          id: Date.now() + Math.random(),
+          ...props,
+          duration: props.duration ?? 5e3,
+          position: props.position ?? "bottom-right",
+          visible: false
+        });
+        if (toast2.position === "top") {
+          toast2.position = "top-right";
+        }
+        if (toast2.position === "bottom") {
+          toast2.position = "bottom-right";
+        }
+        this.toasts.push(toast2);
+        this.$nextTick(() => toast2.visible = true);
+        if (toast2.duration) {
+          setTimeout(
+            () => this.removeToast(toast2.id),
+            toast2.duration
+          );
+        }
+      },
+      removeToast(id) {
+        const toast2 = this.toasts.find((t) => t.id === id);
+        if (!toast2) return;
+        toast2.visible = false;
+        setTimeout(() => {
+          this.toasts = this.toasts.filter((t) => t.id !== id);
+        }, 300);
+      },
+      getToastsByPosition(position) {
+        return this.toasts.filter((t) => t.position === position);
+      }
+    };
+  }
+  const __vite_glob_0_22 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    toast: toast$1
+  }, Symbol.toStringTag, { value: "Module" }));
   function upload({ droppable = false } = {}) {
     return {
       dragOver: false,
@@ -1062,32 +1158,8 @@
       }
     };
   }
-  const components = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_24 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
-    addressForm,
-    alertComponent,
-    aside,
-    badge,
-    creditCard,
-    disclosure,
-    fullCalendar,
-    header,
-    inputClearable,
-    inputCopyable,
-    inputViewable,
-    label,
-    menu,
-    menuCheckbox,
-    menuRadio,
-    modal,
-    modalTrigger,
-    popover,
-    sidebar,
-    sticky,
-    submenu,
-    table,
-    toast: toast$1,
-    toggleable,
     upload
   }, Symbol.toStringTag, { value: "Module" }));
   async function loadAlpine() {
@@ -1111,12 +1183,20 @@
     if (!window.Alpine) {
       return;
     }
-    Object.entries(components).forEach(([name, component]) => {
-      window.Alpine.data(name, component);
-    });
+    registerAlpineComponents();
     window.Alpine.store("tallkit", tallkit);
     window.Alpine.magic("tallkit", () => Alpine.store("tallkit"));
     window.Alpine.magic("tk", () => Alpine.store("tallkit"));
+  }
+  function registerAlpineComponents() {
+    const components = Object.fromEntries(
+      Object.values([__vite_glob_0_0, __vite_glob_0_1, __vite_glob_0_2, __vite_glob_0_3, __vite_glob_0_4, __vite_glob_0_5, __vite_glob_0_6, __vite_glob_0_7, __vite_glob_0_8, __vite_glob_0_9, __vite_glob_0_10, __vite_glob_0_11, __vite_glob_0_12, __vite_glob_0_13, __vite_glob_0_14, __vite_glob_0_15, __vite_glob_0_16, __vite_glob_0_17, __vite_glob_0_18, __vite_glob_0_19, __vite_glob_0_20, __vite_glob_0_21, __vite_glob_0_22, __vite_glob_0_23, __vite_glob_0_24]).flatMap(
+        (module) => Object.entries(module).filter(([, v]) => typeof v === "function")
+      )
+    );
+    for (const [name, fn] of Object.entries(components)) {
+      window.Alpine.data(name, fn);
+    }
   }
   const appearance = {
     mode: window.localStorage.getItem("tallkit.appearance") || "system",

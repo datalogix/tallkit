@@ -35,16 +35,6 @@ class TALLKit
         return Icon::setCollections($collections);
     }
 
-    public function toast(
-        ?string $text = null,
-        ?string $heading = null,
-        ?string $type = null,
-        ?int $duration = null,
-        ?string $position = null,
-    ) {
-        return app('livewire')->current()?->js('$tallkit.toast', $text, $heading, $type, $duration, $position);
-    }
-
     public function alert(
         null|string|array $message = null,
         ?string $type = null,
@@ -72,23 +62,6 @@ class TALLKit
             'timeout' => $timeout,
             'size' => $size,
         ]);
-    }
-
-    public function toasts()
-    {
-        return new class($this)
-        {
-            public function __construct(
-                protected TALLKit $tallkit,
-            ) {}
-
-            public function __call(string $method, array $arguments)
-            {
-                $arguments['type'] = $method;
-
-                return $this->tallkit->toast(...$arguments);
-            }
-        };
     }
 
     public function alerts()
@@ -148,6 +121,33 @@ class TALLKit
             public function close()
             {
                 app('livewire')->current()?->dispatch('modal-close');
+            }
+        };
+    }
+
+    public function toast(
+        ?string $text = null,
+        ?string $heading = null,
+        ?string $type = null,
+        ?int $duration = null,
+        ?string $position = null,
+    ) {
+        return app('livewire')->current()?->js('$tallkit.toast', $text, $heading, $type, $duration, $position);
+    }
+
+    public function toasts()
+    {
+        return new class($this)
+        {
+            public function __construct(
+                protected TALLKit $tallkit,
+            ) {}
+
+            public function __call(string $method, array $arguments)
+            {
+                $arguments['type'] = $method;
+
+                return $this->tallkit->toast(...$arguments);
             }
         };
     }

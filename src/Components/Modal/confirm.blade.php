@@ -14,6 +14,8 @@
         {{ $slot }}
     </x-slot:trigger>
 
+    {{ $content ?? '' }}
+
     <div {{ $attributesAfter('actions:')->classes('flex items-center gap-2 mt-10') }}>
         <tk:modal.close
             :attributes="$attributesAfter('cancel:')"

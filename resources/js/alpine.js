@@ -1,4 +1,3 @@
-import * as components from './components'
 import { loadScript } from './utils'
 
 async function loadAlpine () {
@@ -26,11 +25,22 @@ export function setupAlpine () {
     return
   }
 
-  Object.entries(components).forEach(([name, component]) => {
-    window.Alpine.data(name, component)
-  })
+  registerAlpineComponents()
 
   window.Alpine.store('tallkit', tallkit)
   window.Alpine.magic('tallkit', () => Alpine.store('tallkit'))
   window.Alpine.magic('tk', () => Alpine.store('tallkit'))
+}
+
+export function registerAlpineComponents() {
+  const components = Object.fromEntries(
+    Object.values(import.meta.glob('./components/*.{js,ts}', { eager: true }))
+      .flatMap(module =>
+        Object.entries(module).filter(([, v]) => typeof v === 'function')
+      )
+  )
+
+  for (const [name, fn] of Object.entries(components)) {
+    window.Alpine.data(name, fn);
+  }
 }
