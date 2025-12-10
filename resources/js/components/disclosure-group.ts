@@ -1,4 +1,4 @@
-export function disclosureGroup(exclusive = false) {
+export function disclosureGroup(exclusive?: boolean) {
   return {
     init () {
       if (exclusive) {
