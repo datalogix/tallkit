@@ -1,10 +1,10 @@
 <?php
 
-namespace TALLKit\Components\Pages\Auth;
+namespace TALLKit\Components\Page\Auth;
 
 use TALLKit\View\BladeComponent;
 
-class ConfirmPassword extends BladeComponent
+class ResetPassword extends BladeComponent
 {
     public function __construct(
         public ?string $size = null,

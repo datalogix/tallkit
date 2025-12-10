@@ -18,7 +18,7 @@ class Wrapper extends BladeComponent
         public null|bool|string|ComponentSlot $description = null,
         public null|bool|string|ComponentSlot $help = null,
         public null|bool|string|ComponentSlot $badge = null,
-        public null|bool|string|ComponentSlot $information = null,
+        public null|bool|string|ComponentSlot $info = null,
         public null|bool|string|ComponentSlot $prefix = null,
         public null|bool|string|ComponentSlot $suffix = null,
         public ?string $size = null,

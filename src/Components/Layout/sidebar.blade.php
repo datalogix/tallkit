@@ -1,5 +1,5 @@
 <div {{ $attributes
-    ->whereDoesntStartWith(['header:', 'brand:', 'menu:', 'appearance:', 'user-menu:', 'sidebar:', 'sidebar-', 'main:'])
+    ->whereDoesntStartWith(['header:', 'area:', 'brand:', 'menu:', 'spacer:', 'appearance:', 'appearance-', 'user-menu:', 'sidebar:', 'sidebar-', 'main:'])
     ->classes('min-h-screen')
 }}>
     <tk:sidebar
@@ -19,6 +19,9 @@
             {{ $brand ?? '' }}
         </tk:brand>
 
+        {{ $prepend ?? '' }}
+        {{ $header ?? '' }}
+
         <tk:nav
             :attributes="$attributesAfter('sidebar-menu:')"
             :items="$menu"
@@ -28,44 +31,30 @@
         </tk:nav>
 
         {{ $sidebar ?? '' }}
-
-        <tk:spacer />
-
-        @if ($appearance !== false)
-            <tk:appearance.selector
-                :attributes="$attributesAfter('sidebar-appearance:')->classes('justify-center gap-1')"
-                variant="subtle"
-                size="sm"
-            />
-        @endif
-
-        @if ($userMenu || isset($avatarMenu))
-            <tk:avatar.menu
-                :attributes="$attributesAfter('sidebar-user-menu:')"
-                :items="$userMenu"
-                profile
-            >
-                {{ $avatarMenu ?? '' }}
-            </tk:avatar.menu>
-        @endif
+        {{ $append ?? '' }}
     </tk:sidebar>
 
     <tk:header
-        :attributes="$attributesAfter('header:')->classes('lg:hidden gap-2')"
+        :attributes="$attributesAfter('header:')->classes('gap-2')"
     >
         <tk:sidebar.toggle
             :attributes="$attributesAfter('sidebar-open:')->classes('lg:hidden')"
         />
 
-        {{ $header ?? '' }}
+        {{ $prepend ?? '' }}
 
-        <tk:spacer />
+        <tk:spacer :attributes="$attributesAfter('spacer:')" />
 
-        @if ($appearance !== false)
+        {{ $append ?? '' }}
+        {{ $search ?? '' }}
+
+        @if ($appearance === 'toggle' || (($appearance === null || $appearance === true) && !($userMenu || isset($avatarMenu))))
             <tk:appearance.toggle
                 :attributes="$attributesAfter('appearance:')"
             />
         @endif
+
+        {{ $notification ?? '' }}
 
         @if ($userMenu || isset($avatarMenu))
             <tk:avatar.menu
@@ -73,6 +62,16 @@
                 :items="$userMenu"
             >
                 {{ $avatarMenu ?? '' }}
+
+                @if ($appearance === 'selector' || $appearance === null || $appearance === true)
+                    <x-slot:prepend>
+                        <tk:appearance.menu-item
+                            :attributes="$attributesAfter('appearance-menu-item:')"
+                        />
+
+                        <tk:menu.separator />
+                    </x-slot:prepend>
+                @endif
             </tk:avatar.menu>
         @endif
     </tk:header>

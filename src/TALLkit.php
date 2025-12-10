@@ -35,16 +35,6 @@ class TALLKit
         return Icon::setCollections($collections);
     }
 
-    public function toast(
-        ?string $text = null,
-        ?string $heading = null,
-        ?string $type = null,
-        ?int $duration = null,
-        ?string $position = null,
-    ) {
-        return app('livewire')->current()?->js('$tallkit.toast', $text, $heading, $type, $duration, $position);
-    }
-
     public function alert(
         null|string|array $message = null,
         ?string $type = null,
@@ -61,7 +51,7 @@ class TALLKit
             return;
         }
 
-        return Session::flash($name ?? 'status', [
+        Session::flash($name ?? 'status', [
             'message' => $message,
             'type' => $type,
             'icon' => $icon,
@@ -74,13 +64,30 @@ class TALLKit
         ]);
     }
 
+    public function alerts()
+    {
+        return new class($this)
+        {
+            public function __construct(
+                protected TALLKit $tallkit,
+            ) {}
+
+            public function __call(string $method, array $arguments)
+            {
+                $arguments['type'] = $method;
+
+                return $this->tallkit->alert(...$arguments);
+            }
+        };
+    }
+
     public function modal(string $name, bool $scope = false)
     {
         return new class($name, $scope)
         {
             public function __construct(
-                public string $name,
-                public ?bool $scope
+                protected string $name,
+                protected ?bool $scope
             ) {}
 
             public function show()
@@ -114,6 +121,33 @@ class TALLKit
             public function close()
             {
                 app('livewire')->current()?->dispatch('modal-close');
+            }
+        };
+    }
+
+    public function toast(
+        ?string $text = null,
+        ?string $heading = null,
+        ?string $type = null,
+        ?int $duration = null,
+        ?string $position = null,
+    ) {
+        return app('livewire')->current()?->js('$tallkit.toast', $text, $heading, $type, $duration, $position);
+    }
+
+    public function toasts()
+    {
+        return new class($this)
+        {
+            public function __construct(
+                protected TALLKit $tallkit,
+            ) {}
+
+            public function __call(string $method, array $arguments)
+            {
+                $arguments['type'] = $method;
+
+                return $this->tallkit->toast(...$arguments);
             }
         };
     }

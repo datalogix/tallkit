@@ -2,15 +2,32 @@ import { createHash } from 'crypto'
 import { writeFileSync } from 'fs'
 import { resolve } from 'path'
 import { defineConfig } from 'vite'
+import terser from '@rollup/plugin-terser'
 
 export default defineConfig({
   build: {
+    minify: false,
     lib: {
       entry: resolve(__dirname, 'resources/js/tallkit.js'),
       name: 'TALLKit',
-      fileName: () => 'tallkit.js',
-      formats: ['umd']
-    }
+    },
+    rollupOptions: {
+      output: [
+        {
+          dir: 'dist',
+          entryFileNames: 'tallkit.js',
+          format: 'umd',
+          name: 'TALLKit',
+        },
+        {
+          dir: 'dist',
+          entryFileNames: 'tallkit.min.js',
+          format: 'umd',
+          name: 'TALLKit',
+          plugins: [terser()],
+        }
+      ]
+    },
   },
   plugins: [
     {

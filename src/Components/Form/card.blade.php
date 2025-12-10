@@ -1,10 +1,25 @@
 <tk:card
-    :attributes="$attributesAfter('card:')"
+    :attributes="$attributesAfter('card:')
+        ->merge($attributesAfter('icon', prepend: true)->getAttributes())
+        ->merge($attributesAfter('badge', prepend: true)->getAttributes())
+    "
     :$title
     :$subtitle
     :$separator
     :$size
 >
+    @isset ($header)
+        <x-slot:header>
+            {{ $header }}
+        </x-slot:header>
+    @endisset
+
+    @isset ($actions)
+        <x-slot:actions>
+            {{ $actions }}
+        </x-slot:actions>
+    @endisset
+
     <tk:alert.session
         :attributes="$attributesAfter('alert:')"
         :$size
@@ -14,7 +29,7 @@
 
     {{ $prepend ?? ''}}
 
-    <tk:form :attributes="$attributes->whereDoesntStartWith(['card:', 'alert:'])">
+    <tk:form :attributes="$attributes->whereDoesntStartWith(['card:', 'icon', 'badge', 'alert:'])">
         {{ $slot }}
     </tk:form>
 

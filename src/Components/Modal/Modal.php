@@ -25,7 +25,7 @@ class Modal extends BladeComponent
     #[Mount()]
     public function mount()
     {
-        $this->closable ??= $this->variant === 'bare' ? false : true;
         $this->name ??= Str::random();
+        $this->closable ??= $this->variant === 'bare' ? false : true;
     }
 }

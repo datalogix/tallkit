@@ -6,14 +6,14 @@ use TALLKit\Facades\TALLKit;
 
 class ComponentMixin
 {
-    public function toast()
-    {
-        return fn (...$args) => TALLKit::toast(...$args);
-    }
-
     public function alert()
     {
         return fn (...$args) => TALLKit::alert(...$args);
+    }
+
+    public function alerts()
+    {
+        return fn () => TALLKit::alerts();
     }
 
     public function modal()
@@ -24,5 +24,15 @@ class ComponentMixin
     public function modals()
     {
         return fn () => TALLKit::modals();
+    }
+
+    public function toast()
+    {
+        return fn (...$args) => TALLKit::toast(...$args);
+    }
+
+    public function toasts()
+    {
+        return fn () => TALLKit::toasts();
     }
 }

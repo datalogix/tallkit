@@ -30,7 +30,7 @@ $contentClasses = $classes('border-0 [print-color-adjust:exact]')
     ;
 @endphp
 
-@if ($slot->isNotEmpty() || $label)
+@if ($slot->hasActualContent() || $label)
     <div role="none" class="flex items-center w-full">
         <div {{ $attributes->whereDoesntStartWith(['content:'])->classes($contentClasses->add('grow')) }}></div>
 

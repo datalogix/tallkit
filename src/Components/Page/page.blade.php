@@ -1,4 +1,4 @@
-<tk:section :attributes="$attributes->whereDoesntStartWith(['container:', 'menu:', 'nav:', 'select:', 'content:'])">
+<tk:section :attributes="$attributes->whereDoesntStartWith(['container:', 'menu:', 'nav:', 'select:', 'area:'])">
     @isset ($header)
         <x-slot:header>
             {{ $header }}
@@ -48,11 +48,12 @@
 
                 @php
                 $options = collect($menu)->map(fn ($item) => [
-                    'id' => data_get($item, 'href') ?? route_detect(data_get($item, 'route'), data_get($item, 'routeParameters'), null),
+                    'id' => data_get($item, 'href') ?? route_detect(data_get($item, 'route'), data_get($item, 'parameters'), null),
                     'name' => data_get($item, 'label') ?? data_get($item, 'name') ?? data_get($item, 'title'),
                     'current' => data_get($item, 'current'),
                 ]);
                 @endphp
+
                 <tk:select
                     :attributes="$attributesAfter('select:')->classes(
                         match ($breakpoint) {
@@ -72,7 +73,7 @@
             </div>
         @endif
 
-        <div {{ $attributesAfter('content:')->classes('flex-1 w-full space-y-6') }}>
+        <div {{ $attributesAfter('area:')->classes('flex-1 w-full space-y-6') }}>
             {{ $slot }}
         </div>
     </div>

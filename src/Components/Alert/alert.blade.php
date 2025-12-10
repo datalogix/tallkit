@@ -55,7 +55,7 @@
             :$size
         />
 
-        @if ($slot->isNotEmpty() || ($message && is_string($message)))
+        @if ($slot->hasActualContent() || ($message && is_string($message)))
             <tk:text
                 :attributes="$attributesAfter('text:')->classes('text-current')"
                 :label="$message"

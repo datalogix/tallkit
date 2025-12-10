@@ -5,6 +5,7 @@
         "watch": "vite build --watch"
     },
     "devDependencies": {
-        "vite": "^7.2.2"
+        "@rollup/plugin-terser": "^0.4.4",
+        "vite": "^7.2.7"
     }
 }

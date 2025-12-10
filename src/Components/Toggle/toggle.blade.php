@@ -65,7 +65,7 @@
     >
         <input {{
                 $attributes->whereDoesntStartWith([
-                    'field:', 'label:', 'information:', 'badge:', 'description:', 'help:', 'error:',
+                    'field:', 'label:', 'info:', 'badge:', 'description:', 'help:', 'error:',
                     'group:', 'prefix:', 'suffix:',
                     'control:', 'icon:', 'icon-on:', 'icon-off:'
                 ])->classes('sr-only peer')

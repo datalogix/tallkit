@@ -14,7 +14,7 @@
         @if ($invalid) aria-invalid="true" data-invalid @endif
         @if ($multiple) multiple size="{{ $rows ?? 5 }}" @endif
         {{ $attributes->whereDoesntStartWith([
-                'field:', 'label:', 'information:', 'badge:', 'description:', 'help:', 'error:',
+                'field:', 'label:', 'info:', 'badge:', 'description:', 'help:', 'error:',
                 'group:', 'prefix:', 'suffix:',
             ])
             ->when(
@@ -97,7 +97,7 @@
             />
         @endif
 
-        @if ($slot->isNotEmpty())
+        @if ($slot->hasActualContent())
             {{ $slot }}
         @else
             @foreach ($options as $optionItemValue => $optionItemLabel)

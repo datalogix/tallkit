@@ -10,6 +10,7 @@ use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Str;
 use Illuminate\View\ComponentSlot;
 use TALLKit\Attributes\Mount;
@@ -59,6 +60,7 @@ class Table extends BladeComponent
         return match (true) {
             $rows instanceof Model => $rows->paginate(),
             $rows instanceof Builder => $rows->paginate(),
+            $rows instanceof Relation => $rows->paginate(),
             $rows instanceof Paginator => $rows,
             $rows instanceof CursorPaginator => $rows,
             $rows === null => null,

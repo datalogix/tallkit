@@ -1,10 +1,10 @@
 <?php
 
-namespace TALLKit\Components\Layouts;
+namespace TALLKit\Components\Layout;
 
 use TALLKit\View\BladeComponent;
 
-class AppSidebar extends BladeComponent
+class Sidebar extends BladeComponent
 {
     public function __construct(
         public ?bool $appearance = null,

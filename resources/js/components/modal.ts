@@ -5,7 +5,7 @@ export function modal(name?: string, dismissible?: boolean, persist?: string | b
     init() {
       const dialog = this.$el
 
-      bind(dialog.querySelectorAll('[data-tallkit-modal-close]'), {
+      bind(dialog.querySelectorAll('[data-tallkit-modal-close],[data-tallkit-modal-auto-close]'), {
         ['@click']() {
           dialog.close()
         },
