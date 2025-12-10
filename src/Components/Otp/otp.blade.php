@@ -5,7 +5,7 @@
     :$label
 >
     <div
-        x-data="otp"
+        x-data="otp(@js($submit))"
         x-modelable="value"
         wire:ignore
         role="group"

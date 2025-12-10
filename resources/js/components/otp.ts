@@ -1,6 +1,6 @@
 import { bind } from '../utils'
 
-export function otp() {
+export function otp(submit?: string) {
   return {
     value: '',
 
@@ -46,8 +46,12 @@ export function otp() {
             } else {
               input.value = value
 
-              if (value && inputs[index + 1]) {
-                inputs[index + 1].focus()
+              if (value) {
+                if (inputs[index + 1]) {
+                  inputs[index + 1].focus()
+                } else {
+                  inputs.filter(input => !input.value).at(0)?.focus()
+                }
               }
             }
 
@@ -90,6 +94,10 @@ export function otp() {
 
       if (len === this.length) {
         this.$dispatch('otp-complete', { value: this.value })
+
+        if (submit === 'auto') {
+          this.$root.closest('form')?.dispatchEvent(new Event('submit'))
+        }
       }
 
       if (len !== this.length) {

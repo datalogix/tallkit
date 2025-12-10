@@ -13,5 +13,6 @@ class Otp extends BladeComponent
         public ?int $length = null,
         public ?bool $private = null,
         public ?string $mode = null,
+        public ?string $submit = null,
     ) {}
 }
