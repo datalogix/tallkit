@@ -199,7 +199,7 @@
       }
     };
   }
-  const __vite_glob_0_19 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_21 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     sticky
   }, Symbol.toStringTag, { value: "Module" }));
@@ -273,7 +273,7 @@
       }
     };
   }
-  const __vite_glob_0_23 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_26 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     toggleable
   }, Symbol.toStringTag, { value: "Module" }));
@@ -316,6 +316,41 @@
     __proto__: null,
     creditCard
   }, Symbol.toStringTag, { value: "Module" }));
+  function disclosureGroup(exclusive) {
+    return {
+      init() {
+        if (exclusive) {
+          this.initExclusive();
+        }
+      },
+      initExclusive() {
+        const items = this.$root.querySelectorAll("[data-tallkit-disclosure-item]");
+        const observe = () => {
+          items.forEach((item) => {
+            observer.observe(item, { attributeFilter: ["data-open"] });
+          });
+        };
+        const observer = new MutationObserver((records) => {
+          const current = records[0]?.target;
+          items.forEach((item) => {
+            if (item === current) return;
+            if (item._x_dataStack && item?._x_dataStack[0] && typeof item?._x_dataStack[0].close === "function") {
+              item?._x_dataStack[0].close();
+            } else {
+              item.removeAttribute("data-open");
+            }
+          });
+          observer.disconnect();
+          this.$nextTick(observe);
+        });
+        observe();
+      }
+    };
+  }
+  const __vite_glob_0_5 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    disclosureGroup
+  }, Symbol.toStringTag, { value: "Module" }));
   function disclosure() {
     const _toggleable = toggleable();
     return {
@@ -325,7 +360,7 @@
         new MutationObserver(() => {
           this.opened = this.$root.hasAttribute("data-open");
         }).observe(this.$root, { attributeFilter: ["data-open"] });
-        bind(this.$root.querySelector("button"), {
+        bind(this.$root.querySelectorAll(":scope > button"), {
           ["@click"]() {
             this.toggle();
           }
@@ -341,7 +376,7 @@
       }
     };
   }
-  const __vite_glob_0_5 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_6 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     disclosure
   }, Symbol.toStringTag, { value: "Module" }));
@@ -366,7 +401,7 @@
       }
     };
   }
-  const __vite_glob_0_6 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_7 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     fullCalendar
   }, Symbol.toStringTag, { value: "Module" }));
@@ -375,7 +410,7 @@
       ...sticky()
     };
   }
-  const __vite_glob_0_7 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_8 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     header
   }, Symbol.toStringTag, { value: "Module" }));
@@ -407,7 +442,7 @@
       }
     };
   }
-  const __vite_glob_0_8 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_9 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     inputClearable
   }, Symbol.toStringTag, { value: "Module" }));
@@ -440,7 +475,7 @@
       }
     };
   }
-  const __vite_glob_0_9 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_10 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     inputCopyable
   }, Symbol.toStringTag, { value: "Module" }));
@@ -475,7 +510,7 @@
       }
     };
   }
-  const __vite_glob_0_10 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_11 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     inputViewable
   }, Symbol.toStringTag, { value: "Module" }));
@@ -528,7 +563,7 @@
       }
     };
   }
-  const __vite_glob_0_11 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_12 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     label
   }, Symbol.toStringTag, { value: "Module" }));
@@ -560,7 +595,7 @@
       }
     };
   }
-  const __vite_glob_0_12 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_13 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     menuCheckbox
   }, Symbol.toStringTag, { value: "Module" }));
@@ -597,7 +632,7 @@
       }
     };
   }
-  const __vite_glob_0_13 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_14 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     menuRadio
   }, Symbol.toStringTag, { value: "Module" }));
@@ -621,7 +656,7 @@
       }
     };
   }
-  const __vite_glob_0_14 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_15 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     menu
   }, Symbol.toStringTag, { value: "Module" }));
@@ -645,7 +680,7 @@
       }
     };
   }
-  const __vite_glob_0_15 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_16 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     modalTrigger
   }, Symbol.toStringTag, { value: "Module" }));
@@ -695,9 +730,124 @@
       }
     };
   }
-  const __vite_glob_0_16 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_17 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     modal
+  }, Symbol.toStringTag, { value: "Module" }));
+  function otp(submit) {
+    return {
+      value: "",
+      get inputs() {
+        return Array.from(
+          this.$root.querySelectorAll("[data-tallkit-otp-input]")
+        );
+      },
+      get length() {
+        return this.inputs.length;
+      },
+      init() {
+        const inputs = this.inputs;
+        this.$nextTick(() => this.updateModel());
+        this.$watch("value", (newVal) => syncInputs(inputs, newVal));
+        inputs.forEach((input, index) => {
+          bind(input, {
+            ["@focus"]() {
+              input.select();
+              this.$dispatch("otp-focus", { input, index });
+            },
+            ["@blur"]() {
+              this.$dispatch("otp-blur", { input, index });
+            },
+            ["@paste"](e) {
+              const pasted = e.clipboardData.getData("text");
+              this.$dispatch("otp-paste", { input, index, pasted });
+            },
+            ["@input"]() {
+              const value = filterValue(input.value, input.dataset.mode);
+              if (value.length > 1) {
+                spreadValue(value, index, inputs);
+              } else {
+                input.value = value;
+                if (value) {
+                  if (inputs[index + 1]) {
+                    inputs[index + 1].focus();
+                  } else {
+                    inputs.filter((input2) => !input2.value).at(0)?.focus();
+                  }
+                }
+              }
+              this.updateModel();
+            },
+            ["@keydown"](e) {
+              if (e.key === "ArrowLeft") {
+                e.preventDefault();
+                inputs[index - 1]?.focus();
+                return;
+              }
+              if (e.key === "ArrowRight") {
+                e.preventDefault();
+                inputs[index + 1]?.focus();
+                return;
+              }
+              if (e.key === "Backspace" && !input.value && inputs[index - 1]) {
+                inputs[index - 1].focus();
+              }
+            }
+          });
+        });
+        syncInputs(inputs, this.value);
+      },
+      updateModel() {
+        const old = this.value;
+        this.value = this.inputs.map((i) => i.value || " ").join("");
+        const len = this.value.replace(/\s+/g, "").length;
+        if (old === this.value) {
+          return;
+        }
+        this.$dispatch("otp-change", { value: this.value });
+        if (len === this.length) {
+          this.$dispatch("otp-complete", { value: this.value });
+          if (submit === "auto") {
+            this.$root.closest("form")?.dispatchEvent(new Event("submit"));
+          }
+        }
+        if (len !== this.length) {
+          this.$dispatch("otp-incomplete", { value: this.value });
+        }
+        if (len === 0) {
+          this.$dispatch("otp-clear");
+        }
+      }
+    };
+  }
+  function syncInputs(inputs, modelValue) {
+    const chars = modelValue.padEnd(inputs.length).split("");
+    inputs.forEach((input, i) => {
+      input.value = filterValue(chars[i] ?? "", input.dataset.mode);
+    });
+  }
+  function filterValue(value, mode) {
+    return (value.toLocaleUpperCase().match(
+      mode === "alpha" ? /[A-Z]/g : mode === "alphanumeric" ? /[A-Z0-9]/g : /[0-9]/g
+    ) || []).join("");
+  }
+  function spreadValue(value, startIndex, inputs) {
+    const chars = value.split("");
+    chars.forEach((char, i) => {
+      const target = inputs[startIndex + i];
+      if (target) {
+        target.value = filterValue(char, target.dataset.mode);
+      }
+    });
+    const lastIndex = Math.min(
+      startIndex + chars.length,
+      inputs.length - 1
+    );
+    inputs[lastIndex]?.focus();
+  }
+  const __vite_glob_0_18 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    otp
   }, Symbol.toStringTag, { value: "Module" }));
   function popover({ mode, position, align }) {
     const _toggleable = toggleable();
@@ -903,7 +1053,7 @@
     component.boundSetPosition = component.boundSetPosition.bind(component);
     return component;
   }
-  const __vite_glob_0_17 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_19 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     popover
   }, Symbol.toStringTag, { value: "Module" }));
@@ -946,7 +1096,7 @@
       }
     };
   }
-  const __vite_glob_0_18 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_20 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     sidebar
   }, Symbol.toStringTag, { value: "Module" }));
@@ -993,9 +1143,32 @@
       }
     };
   }
-  const __vite_glob_0_20 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_22 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     submenu
+  }, Symbol.toStringTag, { value: "Module" }));
+  function tab() {
+    return {
+      selected: null,
+      init() {
+        const selected = this.$root.querySelector("[data-selected]")?.dataset.name;
+        if (selected) {
+          this.$nextTick(() => {
+            this.select(selected);
+          });
+        }
+      },
+      isSelected(name) {
+        return this.selected === name;
+      },
+      select(name) {
+        this.selected = name;
+      }
+    };
+  }
+  const __vite_glob_0_23 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    tab
   }, Symbol.toStringTag, { value: "Module" }));
   function table() {
     return {
@@ -1069,7 +1242,7 @@
       }
     };
   }
-  const __vite_glob_0_21 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_24 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     table
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1120,7 +1293,7 @@
       }
     };
   }
-  const __vite_glob_0_22 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_25 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     toast: toast$1
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1158,7 +1331,7 @@
       }
     };
   }
-  const __vite_glob_0_24 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_27 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     upload
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1190,7 +1363,7 @@
   }
   function registerAlpineComponents() {
     const components = Object.fromEntries(
-      Object.values([__vite_glob_0_0, __vite_glob_0_1, __vite_glob_0_2, __vite_glob_0_3, __vite_glob_0_4, __vite_glob_0_5, __vite_glob_0_6, __vite_glob_0_7, __vite_glob_0_8, __vite_glob_0_9, __vite_glob_0_10, __vite_glob_0_11, __vite_glob_0_12, __vite_glob_0_13, __vite_glob_0_14, __vite_glob_0_15, __vite_glob_0_16, __vite_glob_0_17, __vite_glob_0_18, __vite_glob_0_19, __vite_glob_0_20, __vite_glob_0_21, __vite_glob_0_22, __vite_glob_0_23, __vite_glob_0_24]).flatMap(
+      Object.values([__vite_glob_0_0, __vite_glob_0_1, __vite_glob_0_2, __vite_glob_0_3, __vite_glob_0_4, __vite_glob_0_5, __vite_glob_0_6, __vite_glob_0_7, __vite_glob_0_8, __vite_glob_0_9, __vite_glob_0_10, __vite_glob_0_11, __vite_glob_0_12, __vite_glob_0_13, __vite_glob_0_14, __vite_glob_0_15, __vite_glob_0_16, __vite_glob_0_17, __vite_glob_0_18, __vite_glob_0_19, __vite_glob_0_20, __vite_glob_0_21, __vite_glob_0_22, __vite_glob_0_23, __vite_glob_0_24, __vite_glob_0_25, __vite_glob_0_26, __vite_glob_0_27]).flatMap(
         (module) => Object.entries(module).filter(([, v]) => typeof v === "function")
       )
     );
