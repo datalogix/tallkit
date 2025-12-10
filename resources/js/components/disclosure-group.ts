@@ -21,11 +21,11 @@ export function disclosureGroup(exclusive = false) {
         items.forEach((item) => {
           if (item === current) return
 
-          if (item._x_dataStack && item?._x_dataStack[0]) {
+          if (item._x_dataStack && item?._x_dataStack[0] && typeof item?._x_dataStack[0].close === 'function') {
             item?._x_dataStack[0].close()
           } else {
             item.removeAttribute('data-open')
-            }
+          }
         })
 
         observer.disconnect()
