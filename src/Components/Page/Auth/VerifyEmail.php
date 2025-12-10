@@ -1,6 +1,6 @@
 <?php
 
-namespace TALLKit\Components\Pages\Auth;
+namespace TALLKit\Components\Page\Auth;
 
 use TALLKit\Attributes\Mount;
 use TALLKit\View\BladeComponent;

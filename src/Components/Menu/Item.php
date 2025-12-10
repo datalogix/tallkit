@@ -10,6 +10,7 @@ class Item extends BladeComponent
     use InteractsWithElement;
 
     public function __construct(
+        public ?string $as = null,
         public ?string $variant = null,
         public ?string $size = null,
         public ?bool $keepOpen = null,

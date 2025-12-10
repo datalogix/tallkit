@@ -15,7 +15,7 @@
         @if ($invalid) aria-invalid="true" data-invalid @endif
         @if ($placeholder) placeholder="{{ __($placeholder) }}" @endif
         {{ $attributes->whereDoesntStartWith([
-                'field:', 'label:', 'information:', 'badge:', 'description:', 'help:', 'error:',
+                'field:', 'label:', 'info:', 'badge:', 'description:', 'help:', 'error:',
                 'group:', 'prefix:', 'suffix:',
             ])
             ->classes(match ($size) {

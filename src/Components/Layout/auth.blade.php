@@ -26,14 +26,13 @@ $hasHero = $bg || isset($hero) || count($attributesAfter('hero:')->all()) > 1;
             @if ($hasHero)
                 {{ $slot }}
             @else
-                  <tk:card
+                <tk:card
                     :attributes="$attributesAfter('card:')->classes('
                         w-full lg:p-6
                         border-none lg:border-solid
                         bg-transparent dark:bg-transparent lg:bg-white dark:lg:bg-zinc-800
                         shadow-none lg:shadow
                     ')"
-                    container:class="p-4 lg:p-6"
                 >
                     {{ $slot }}
                 </tk:card>

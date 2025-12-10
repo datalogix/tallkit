@@ -1,4 +1,4 @@
-@if ($slot->isNotEmpty() || $label)
+@if ($slot->hasActualContent() || $label)
     <tk:element :$attributes :$label>
         {{ $slot }}
     </tk:element>

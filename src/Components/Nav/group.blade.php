@@ -9,25 +9,12 @@
     >
         <tk:button
             :attributes="$attributesAfter('heading:')->classes('w-full justify-start p-2.5')"
-            variant="subtle"
-            icon:class="me-1.5"
             :$size
             :label="$heading"
-        >
-            <x-slot:icon>
-                <tk:icon
-                    :size="$adjustSize($size)"
-                    icon="chevron-down"
-                    class="hidden group-data-[open]/disclosure:block"
-                />
-
-                <tk:icon
-                    :size="$adjustSize($size)"
-                    icon="chevron-right"
-                    class="block group-data-[open]/disclosure:hidden"
-                />
-            </x-slot:icon>
-        </tk:button>
+            variant="subtle"
+            icon="chevron-right"
+            icon:class="me-1.5 group-data-[open]/disclosure:rotate-90 {{ $collapse === true || is_string($collapse) ? 'transition': '  ' }}"
+        />
 
         <div
             {{

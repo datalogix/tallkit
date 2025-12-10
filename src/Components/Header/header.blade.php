@@ -5,7 +5,7 @@
         ->merge($sticky ? ['x-data' => 'header'] : [])
         ->classes('[grid-area:header] z-10 min-h-16')
         ->classes([
-            'flex items-center px-6 lg:px-8' => !$container,
+            'flex items-center px-4 lg:px-6' => !$container,
             'shadow border-b border-current/15' => $sticky,
         ])
         ->classes(match ($variant) {

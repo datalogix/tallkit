@@ -1,6 +1,6 @@
 <?php
 
-namespace TALLKit\Components\Layouts;
+namespace TALLKit\Components\Layout;
 
 use Illuminate\Support\Facades\File;
 use TALLKit\Attributes\Mount;

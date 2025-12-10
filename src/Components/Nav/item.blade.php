@@ -23,7 +23,7 @@ $square ??= $slot->isEmpty() && !$attributes->get('label');
             'lg' => 'text-base font-medium',
             'xl' => 'text-lg font-semibold',
             '2xl' => 'text-xl font-semibold',
-            '3xl' => 'text-xl font-bold',
+            '3xl' => 'text-2xl font-bold',
         }
     )"
     :attributes="$attributes
@@ -52,7 +52,7 @@ $square ??= $slot->isEmpty() && !$attributes->get('label');
             ],
             default => [
                 'data-current:text-zinc-800 dark:data-current:text-white',
-                $list ? 'data-current:bg-zinc-100 dark:data-current:bg-white/10' : 'data-current:after:bg-zinc-800 dark:data-current:after:bg-white',
+                $list ? 'data-current:bg-zinc-800/10 dark:data-current:bg-white/10' : 'data-current:after:bg-zinc-800 dark:data-current:after:bg-white',
             ],
         })
     "

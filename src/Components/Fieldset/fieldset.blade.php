@@ -12,12 +12,12 @@
         <tk:legend
             :attributes="$attributesAfter('label:')
                 ->merge($attributesAfter('legend:')->getAttributes())
-                ->merge($attributesAfter('information:', prepend: true)->getAttributes())
+                ->merge($attributesAfter('info:', prepend: true)->getAttributes())
                 ->merge($attributesAfter('badge:', prepend: true)->getAttributes())
             "
             :label="$label ?: $legend"
             :$size
-            :$information
+            :$info
             :$badge
         />
 

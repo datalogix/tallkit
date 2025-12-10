@@ -48,7 +48,7 @@ export function popover ({ mode, position, align }) {
             if ((
               this.popoverElement.hasAttribute('data-keep-open')
               || e.target?.hasAttribute('data-keep-open')
-              || e.target?.parentElement?.hasAttribute('data-keep-open')
+              || e.target?.closest('[data-keep-open]')
             ) && this.popoverElement.contains(e.target)) {
               return
             }

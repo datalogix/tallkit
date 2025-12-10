@@ -12,8 +12,7 @@
     wire:ignore.self
     x-data="modal(@js($name), @js($dismissible), @js($persist))"
     {{
-        $attributes->whereDoesntStartWith(['trigger:', 'content:', 'title:', 'message:', 'close:'])
-        ->classes(
+        $attributes->whereDoesntStartWith(['trigger:', 'close:', 'section:', 'icon', 'badge', 'title:', 'subtitle:', 'separator:', 'content:'])->classes(
             '
                 outline-none
                 focus-visible:outline-none
@@ -101,19 +100,21 @@
 >
     <span tabindex="0" class="sr-only"></span>
 
-    <div {{ $attributesAfter('content:')->classes($variant === 'bare' ? '' : 'p-6') }}>
-        <tk:heading
-            :attributes="$attributesAfter('title:')"
-            :$size
-            :label="$title"
-        />
-
-        <tk:text
-            :attributes="$attributesAfter('message:')"
-            :$size
-            :label="$subtitle"
-        />
-
+    <tk:section
+        :attributes="$attributesAfter('section:')
+            ->merge($attributesAfter('icon', prepend: true)->getAttributes())
+            ->merge($attributesAfter('badge', prepend: true)->getAttributes())
+            ->merge($attributesAfter('title:', prepend: true)->getAttributes())
+            ->merge($attributesAfter('subtitle:', prepend: true)->getAttributes())
+            ->merge($attributesAfter('separator:', prepend: true)->getAttributes())
+            ->merge($attributesAfter('content:', prepend: true)->getAttributes())
+            ->classes($variant === 'bare' ? '' : 'p-6')
+        "
+        :$title
+        :$subtitle
+        :separator="false"
+        :$size
+    >
         {{ $slot }}
 
         @if (isset($close))
@@ -127,5 +128,5 @@
                 aria-label="Close modal"
             />
         @endif
-    </div>
+    </tk:section>
 </dialog>

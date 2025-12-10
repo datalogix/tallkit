@@ -17,8 +17,6 @@ class ComponentAttributeBagMixin
 
     public function classes(...$classes)
     {
-        return function (...$classes) {
-            return $this->twMerge(new ClassBuilder($classes));
-        };
+        return fn (...$classes) => $this->twMerge(new ClassBuilder($classes));
     }
 }

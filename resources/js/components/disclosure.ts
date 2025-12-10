@@ -13,7 +13,7 @@ export function disclosure() {
       new MutationObserver(() => { this.opened = this.$root.hasAttribute('data-open') })
         .observe(this.$root, { attributeFilter: ['data-open'] })
 
-      bind(this.$root.querySelector('button'), {
+      bind(this.$root.querySelectorAll(':scope > button'), {
         ['@click']() {
           this.toggle()
         }

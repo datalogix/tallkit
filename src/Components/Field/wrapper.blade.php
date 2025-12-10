@@ -6,7 +6,7 @@
 
         <tk:label
             :attributes="$attributesAfter('label:')
-                ->merge($attributesAfter('information:', prepend: true)->getAttributes())
+                ->merge($attributesAfter('info:', prepend: true)->getAttributes())
                 ->merge($attributesAfter('badge:', prepend: true)->getAttributes())
             "
             :for="$id"
@@ -14,7 +14,7 @@
             :$labelAppend
             :$labelPrepend
             :$size
-            :$information
+            :$info
             :$badge
         />
 

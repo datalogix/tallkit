@@ -18,6 +18,6 @@
         :attributes="$attributesAfter('dark:')"
         x-on:click="$tallkit.appearance.apply('dark')"
         icon="ph:moon"
-        ::class="{ 'bg-current/10! dark:bg-current/20!: $tallkit.appearance.mode === 'dark' }"
+        ::class="{ 'bg-current/10! dark:bg-current/20!': $tallkit.appearance.mode === 'dark' }"
     />
 </tk:button.group>
