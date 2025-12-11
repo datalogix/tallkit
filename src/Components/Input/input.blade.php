@@ -97,7 +97,7 @@
                         },
                         match ($type) {
                             'color' => 'py-px pe-1 ' . ($icon ? '' : 'ps-1'),
-                            'range' => 'py-0 ' . match ($size) {
+                            'range' => 'p-0 ' . match ($size) {
                                 'xs' => 'h-1.5',
                                 'sm' => 'h-2.5',
                                 default => 'h-3',
@@ -114,8 +114,7 @@
             />
 
             @if ($loading || $clearable || $kbd || $copyable || $viewable || $iconTrailing)
-                <div class="absolute top-0 bottom-0 flex items-center gap-x-1.5 pe-3 end-0 text-xs text-zinc-400"
-                ">
+                <div class="absolute top-0 bottom-0 flex items-center gap-x-1.5 pe-3 end-0 text-xs text-zinc-400">
                     @if ($loading)
                         <tk:loading
                             :attributes="$attributesAfter('loading:')->when(in_livewire(), fn($attrs) => $attrs->merge([
