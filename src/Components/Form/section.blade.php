@@ -8,10 +8,10 @@
     :$separator
     :$size
 >
-    @isset ($header)
-        <x-slot:header>
-            {{ $header }}
-        </x-slot:header>
+    @isset ($description)
+        <x-slot:description>
+            {{ $description }}
+        </x-slot:description>
     @endisset
 
     @isset ($actions)

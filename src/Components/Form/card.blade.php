@@ -14,6 +14,12 @@
         </x-slot:header>
     @endisset
 
+    @isset ($description)
+        <x-slot:description>
+            {{ $description }}
+        </x-slot:description>
+    @endisset
+
     @isset ($actions)
         <x-slot:actions>
             {{ $actions }}

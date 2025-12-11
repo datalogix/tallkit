@@ -2,9 +2,9 @@
     'space-y-6',
     '[&:has([data-tallkit-section-content]>:is([data-tallkit-card],[data-tallkit-table-container]))>[data-tallkit-separator]]:hidden' => !$separator,
 ]) }}>
-    @if ($title || $subtitle || isset($header) || isset($actions))
+    @if ($title || $subtitle || isset($description) || isset($actions))
         <div {{ $attributesAfter('header:')->classes('flex justify-between items-start gap-4') }}>
-            @if ($title || $subtitle || isset($header))
+            @if ($title || $subtitle || isset($description))
                 <div class="flex-1">
                     <tk:heading
                         :attributes="$attributesAfter('title:')
@@ -20,7 +20,7 @@
                         :$size
                     />
 
-                    {{ $header ?? '' }}
+                    {{ $description ?? '' }}
                 </div>
             @endif
 
@@ -31,7 +31,7 @@
             @endisset
         </div>
 
-        @if ($separator || ($separator === null && ($title && ($subtitle || isset($header)) || isset($actions)) && ($slot->hasActualContent() || $content)))
+        @if ($separator || ($separator === null && ($title && ($subtitle || isset($description)) || isset($actions)) && ($slot->hasActualContent() || $content)))
             <tk:separator :attributes="$attributesAfter('separator:')" />
         @endif
     @endif
