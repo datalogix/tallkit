@@ -31,7 +31,6 @@
                     label="Forgot your password?"
                     tabindex="-1"
                 />
-
             </x-slot:label-append>
         @endif
     </tk:password>

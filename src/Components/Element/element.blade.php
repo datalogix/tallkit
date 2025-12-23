@@ -4,7 +4,7 @@ $external ??= $attributes->get('target') === '_blank';
 
 <tk:tooltip.wrapper :$attributes :$tooltip>
     <{{ $as }} {{ $attributes
-        ->whereDoesntStartWith(['tooltip:', 'icon-wrapper:', 'icon:', 'icon-dot:', 'content:', 'suffix:', 'icon-trailing:', 'badge:', 'info:'])
+        ->whereDoesntStartWith(['tooltip:', 'icon-wrapper:', 'icon:', 'icon-dot:', 'content:', 'prefix:', 'suffix:', 'icon-trailing:', 'info:', 'badge:', 'kbd:'])
         ->when($as !== 'p' || $icon, fn ($attrs) => $attrs->classes('inline-flex items-center gap-1.5'))
         ->when($as === 'a', fn ($attrs) => $attrs->merge([
             'target' => $external === true ? '_blank' : $external,
@@ -68,6 +68,13 @@ $external ??= $attributes->get('target') === '_blank';
             {{ $iconEmpty ?? '' }}
         @endif
 
+        @if (isset($prefix) && $prefix !== '')
+            <tk:element
+                :attributes="$attributesAfter('prefix:')->classes('me-auto font-medium text-xs text-zinc-500 dark:text-zinc-400')"
+                :label="$prefix"
+            />
+        @endif
+
         @if (count($attributesAfter('content:')->toArray()) > 1 && ($slot->hasActualContent() || $label))
             <tk:element
                 :attributes="$attributesAfter('content:')"
@@ -81,7 +88,7 @@ $external ??= $attributes->get('target') === '_blank';
 
         @if (isset($suffix) && $suffix !== '')
             <tk:element
-                :attributes="$attributesAfter('suffix:')->classes('ms-auto text-xs text-zinc-500 dark:text-zinc-400')"
+                :attributes="$attributesAfter('suffix:')->classes('ms-auto font-medium text-xs text-zinc-500 dark:text-zinc-400')"
                 :label="$suffix"
             />
         @endif
@@ -105,6 +112,13 @@ $external ??= $attributes->get('target') === '_blank';
             <tk:badge
                 :attributes="$attributesAfter('badge:')->classes('ms-auto')"
                 :label="$badge"
+            />
+        @endif
+
+         @if (isset($kbd) && $kbd !== '')
+            <tk:kbd
+                :attributes="$attributesAfter('kbd:')"
+                :label="$kbd"
             />
         @endif
 

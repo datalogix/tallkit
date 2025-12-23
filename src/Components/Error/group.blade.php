@@ -1,11 +1,7 @@
-@php
-$errorBag = $errors->getBag($bag ?? 'default');
-@endphp
-
-@if ($errorBag->isNotEmpty())
+@if ($getErrorBag()->isNotEmpty())
     <tk:alert
         :$attributes
-        :message="$errorBag->all()"
+        :message="$getErrorBag()->all()"
         :icon="false"
         type="danger"
     />

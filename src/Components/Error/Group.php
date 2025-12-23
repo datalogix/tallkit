@@ -2,11 +2,10 @@
 
 namespace TALLKit\Components\Error;
 
+use TALLKit\Concerns\InteractsWithErrorBag;
 use TALLKit\View\BladeComponent;
 
 class Group extends BladeComponent
 {
-    public function __construct(
-        public ?string $bag = null,
-    ) {}
+    use InteractsWithErrorBag;
 }

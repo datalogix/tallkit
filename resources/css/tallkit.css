@@ -3,7 +3,6 @@
 @import './alpine.css';
 @import './appearance.css';
 @import './layout.css';
-@import './input.css';
 @import './select.css';
 
-@source '../../src/Components/**/*.blade.php';
+@source '../../src/**/*.php';

@@ -1,24 +1,18 @@
 @php
 $hasPrependOrAppend = $labelPrepend || $labelAppend;
-$textClasses = $classes(
-    '[:where(&)]:text-zinc-800 dark:[:where(&)]:text-white',
-    match ($size) {
-        'xs' => 'text-[11px] font-normal',
-        'sm' => 'text-xs font-medium',
-        default => 'text-sm font-medium',
-        'lg' => 'text-base font-semibold',
-        'xl' => 'text-lg font-semibold',
-        '2xl' => 'text-xl font-bold',
-        '3xl' => 'text-2xl font-bold',
-    }
-)
 @endphp
 
 @if ($slot->hasActualContent() || $label)
     @if ($hasPrependOrAppend)
         <div
             {{ $dataKey() }}
-            {{ $attributesAfter('area:')->classes('flex items-center gap-4', $textClasses) }}
+            {{
+                $attributesAfter('area:')->classes(
+                    'flex items-center gap-4',
+                    '[:where(&)]:text-zinc-800 dark:[:where(&)]:text-white',
+                    $fontSize($size, true)
+                )
+            }}
         >
     @endif
 
@@ -43,7 +37,7 @@ $textClasses = $classes(
             :badge:size="$adjustSize()"
             :attributes="$attributes->whereDoesntStartWith(['area:', 'label-prepend:', 'label-append:', 'container:', 'info:', $dataKey()])
                 ->merge($attributesAfter('info:', prepend: 'icon-trailing:')->getAttributes())
-                ->classes($textClasses)
+                ->classes('[:where(&)]:text-zinc-800 dark:[:where(&)]:text-white', $fontSize($size, true))
             "
         >
             {{ $slot }}

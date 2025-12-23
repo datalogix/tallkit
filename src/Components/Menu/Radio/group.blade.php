@@ -1,14 +1,14 @@
-<div {{ $attributes->merge(['data-keep-open' => $keepOpen]) }} x-data x-init="
-    Object.defineProperty($el, 'value', {
-        /*
-        get: (e) => {
-            console.log(this.value)
-        },
-        */
-        set: i => {
-            console.log('entro', i)
-        }
-    })
-">
+<div
+    wire:ignore
+    x-data="{ value: null }"
+    x-modelable="value"
+    {{ $attributes->whereDoesntStartWith(['item:'])->merge(['data-keep-open' => $keepOpen]) }}
+>
+    @foreach (collect($items) as $item)
+        <tk:menu.radio
+            :attributes="$attributesAfter('item:')->merge($item, false)"
+        />
+    @endforeach
+
     {{ $slot }}
 </div>

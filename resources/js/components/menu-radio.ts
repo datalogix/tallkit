@@ -1,43 +1,33 @@
 import { bind } from '../utils'
 
-export function menuRadio() {
+export function menuRadio(checked?: boolean) {
   return {
-    get checked() {
-      return this.$el.hasAttribute('data-checked')
+    checked,
+
+    get isControlled() {
+      return this.value !== undefined
     },
 
-    set checked(value) {
-      if (value) {
-        this.$el.setAttribute('data-checked', '')
-      } else {
-        this.$el.removeAttribute('data-checked')
-      }
+    get isChecked() {
+      return this.isControlled
+        ? this.value == this.$root.value
+        : this.checked
     },
 
     init() {
-      this.$el.setAttribute('aria-checked', this.checked ? 'true' : 'false')
-
-      new MutationObserver(() => {
-        this.$el.setAttribute('aria-checked', this.checked ? 'true' : 'false')
-      }).observe(this.$el, { attributeFilter: ['data-checked'] })
-
       bind(this.$el, {
-        ['@click']() {
-          if (this.$el.disabled || this.checked) {
-            return
-          }
-
-          this.$el.closest('[data-tallkit-menu-radio-group]')
-            ?.querySelectorAll('[data-tallkit-menu-radio]')
-            ?.forEach(radio => {
-              if (radio !== this.$el) {
-                radio.removeAttribute('data-checked')
-              }
-            })
-
-          this.checked = true
-        },
+        ['@click']: () => this.toggle(),
+        [':data-checked']: () => this.isChecked,
+        [':aria-checked']: () => this.isChecked
       })
-    }
+    },
+
+    toggle() {
+      if (this.isControlled) {
+        this.value = this.$root.value
+      } else {
+        this.checked = !this.checked
+      }
+    },
   }
 }

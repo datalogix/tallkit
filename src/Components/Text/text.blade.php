@@ -2,15 +2,7 @@
     as="p"
     :name="$baseComponentKey()"
     :attributes="$attributes->classes(
-        match ($size) {
-            'xs' => 'text-[11px]',
-            'sm' => 'text-xs',
-            default => 'text-sm',
-            'lg' => 'text-base',
-            'xl' => 'text-lg',
-            '2xl' => 'text-xl',
-            '3xl' => 'text-2xl',
-        },
+        $fontSize($size, $weight),
         match ($variant) {
             'accent' => 'text-[var(--color-accent-content)]',
             'strong' => '[:where(&)]:text-zinc-800 dark:[:where(&)]:text-white',

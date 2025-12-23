@@ -41,6 +41,6 @@ export function registerAlpineComponents() {
   )
 
   for (const [name, fn] of Object.entries(components)) {
-    window.Alpine.data(name, fn);
+    window.Alpine.data(name, fn)
   }
 }

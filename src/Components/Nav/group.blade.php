@@ -55,8 +55,8 @@
     <div {{ $attributes->whereDoesntStartWith(['heading:', 'container:'])->classes('block space-y-[2px]') }}>
         <tk:heading
             :attributes="$attributesAfter('heading:')->classes('leading-none text-zinc-400 p-2.5')"
-            :size="$adjustSize($size)"
             :label="$heading"
+            :size="$adjustSize($size)"
         />
 
         <div {{ $attributesAfter('container:') }}>

@@ -8,18 +8,7 @@
     :icon-trailing:class="'ms-1.5 text-zinc-400 [[data-tallkit-menu-item-icon-trailing]:hover_&]:text-current'"
     :badge:size="$adjustSize()"
     :badge:class="'ms-2'"
-    :content:class="$classes(
-        'flex-1 leading-none whitespace-nowrap',
-        match($size) {
-            'xs' => 'text-[11px] font-normal',
-            'sm' => 'text-xs font-normal',
-            default => 'text-sm font-medium',
-            'lg' => 'text-base font-medium',
-            'xl' => 'text-lg font-semibold',
-            '2xl' => 'text-xl font-semibold',
-            '3xl' => 'text-2xl font-bold',
-        }
-    )"
+    :content:class="$classes('flex-1 leading-none whitespace-nowrap', $fontSize($size, true))"
     :attributes="$attributes->classes(
         '
         rounded-md
@@ -47,8 +36,4 @@
     </x-slot:icon-empty>
 
     {{ $slot }}
-
-    <x-slot:append>
-        {{ $append ?? $submenu ?? '' }}
-    </x-slot:append>
 </tk:element>

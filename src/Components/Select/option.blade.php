@@ -1,7 +1,7 @@
 <option
     {{ $attributes }}
     @selected($selected)
-    @isset($value) value="{{ $value }}" @endisset
+    @isset ($value) value="{{ $value }}" @endisset
 >
     @if ($slot->hasActualContent())
         {{ $slot }}

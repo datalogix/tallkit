@@ -12,14 +12,15 @@
                 [:where(&)]:text-zinc-800 dark:[:where(&)]:text-white
                 [:where(&)]:font-medium
             ',
+            $fontSize($size),
             match ($size) {
-                'xs' => '[:where(&)]:size-6 [:where(&)]:text-[11px]',
-                'sm' => '[:where(&)]:size-8 [:where(&)]:text-xs',
-                default => '[:where(&)]:size-10 [:where(&)]:text-sm',
-                'lg' => '[:where(&)]:size-12 [:where(&)]:text-base',
-                'xl' => '[:where(&)]:size-16 [:where(&)]:text-lg',
-                '2xl' => '[:where(&)]:size-20 [:where(&)]:text-xl',
-                '3xl' => '[:where(&)]:size-24 [:where(&)]:text-2xl',
+                'xs' => '[:where(&)]:size-6',
+                'sm' => '[:where(&)]:size-8',
+                default => '[:where(&)]:size-10',
+                'lg' => '[:where(&)]:size-12',
+                'xl' => '[:where(&)]:size-16',
+                '2xl' => '[:where(&)]:size-20',
+                '3xl' => '[:where(&)]:size-24',
             },
             match ($variant === 'auto' ? $generateColor() : $variant) {
                 'accent' => 'bg-[var(--color-accent)] text-[var(--color-accent-foreground)]',

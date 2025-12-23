@@ -26,6 +26,7 @@ trait AppendsCustomAttributes
             $this->mergeCustomAppendedAttributes(),
             fn ($value, $name) => is_numeric($name) ? $value : $name
         );
+
         $keys = [];
 
         foreach ($customAppendedAttributes as $name => $value) {
@@ -51,6 +52,5 @@ trait AppendsCustomAttributes
         });
 
         $this->attributes = $this->attributes->merge($attributes, false);
-
     }
 }

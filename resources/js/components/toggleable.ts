@@ -1,4 +1,4 @@
-import { timeout } from "../utils"
+import { timeout } from '../utils'
 
 export function toggleable() {
   return {

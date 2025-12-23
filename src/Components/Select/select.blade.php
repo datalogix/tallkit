@@ -1,5 +1,3 @@
-@php $invalid ??= $name && $errors->has($name); @endphp
-
 <tk:field.wrapper
     :$attributes
     :$name
@@ -16,6 +14,7 @@
         {{ $attributes->whereDoesntStartWith([
                 'field:', 'label:', 'info:', 'badge:', 'description:', 'help:', 'error:',
                 'group:', 'prefix:', 'suffix:',
+                'placeholder:', 'optgroup:', 'option:',
             ])
             ->when(
                 $multiple,
@@ -76,7 +75,6 @@
 
                     has-[option.placeholder:checked]:text-zinc-400 dark:has-[option.placeholder:checked]:text-zinc-400
                     dark:[&_option]:bg-zinc-700 dark:[&_*]:text-white
-                    dark:[&_*:checked]:bg-white/10 dark:[&_*:checked)]:text-white
 
                     bg-size-[1.5em_1.5em]
                     bg-no-repeat
@@ -90,10 +88,10 @@
     >
         @if ($placeholder ?? true && ! $multiple)
             <tk:select.option
+                :attributes="$attributesAfter('placeholder:')->classes('placeholder')"
                 :label="is_string($placeholder) ? $placeholder : '---'"
                 :selected="true"
                 :value="''"
-                class="placeholder"
             />
         @endif
 
@@ -102,9 +100,10 @@
         @else
             @foreach ($options as $optionItemValue => $optionItemLabel)
                 @if (is_array($optionItemLabel))
-                    <optgroup label="{{ __($optionItemValue ?: '---') }}">
+                    <optgroup :attributes="$attributesAfter('optgroup:')" label="{{ __($optionItemValue ?: '---') }}">
                         @foreach ($optionItemLabel as $optionItemGroupValue => $optionItemGroupLabel)
                             <tk:select.option
+                                :attributes="$attributesAfter('option:')"
                                 :label="$optionItemGroupLabel"
                                 :selected="in_array($optionItemGroupValue, $value)"
                                 :value="$optionItemGroupValue"
@@ -113,6 +112,7 @@
                     </optgroup>
                 @else
                     <tk:select.option
+                        :attributes="$attributesAfter('option:')"
                         :label="$optionItemLabel"
                         :selected="in_array($optionItemValue, $value)"
                         :value="$optionItemValue"

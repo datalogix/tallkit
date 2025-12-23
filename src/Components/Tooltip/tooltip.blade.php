@@ -14,18 +14,13 @@
 
     @if ($content)
         <tk:tooltip.content
-            :attributes="$attributes->whereDoesntStartWith(['container:', 'kbd:'])"
+            :attributes="$attributes->whereDoesntStartWith(['container:'])"
+            :$kbd
             :$variant
             :$size
             :$arrow
         >
             {!! nl2br(__($content)) !!}
-
-            @if ($kbd)
-                <x-slot:kbd :attributes="$attributesAfter('kbd:')">
-                    {{ $kbd }}
-                </x-slot:kbd>
-            @endif
         </tk:tooltip.content>
     @endif
 </div>

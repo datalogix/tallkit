@@ -15,9 +15,8 @@
             @if (is_array($optionItemLabel))
                 <tk:heading
                     :attributes="$attributesAfter('heading:')"
-                    :size="$adjustSize()"
                     :label="$optionItemValue"
-                    variant="subtle"
+                    :size="$adjustSize(move: -2)"
                 />
 
                 @foreach ($optionItemLabel as $optionItemGroupValue => $optionItemGroupLabel)

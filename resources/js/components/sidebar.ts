@@ -1,6 +1,6 @@
-import { bind } from "../utils"
-import { toggleable } from "./toggleable"
-import { sticky as stickyComponent } from "./sticky"
+import { bind } from '../utils'
+import { toggleable } from './toggleable'
+import { sticky as stickyComponent } from './sticky'
 
 export function sidebar(name?: string, sticky?: boolean, stashable?: boolean) {
   const _toggleable = toggleable()
@@ -17,7 +17,7 @@ export function sidebar(name?: string, sticky?: boolean, stashable?: boolean) {
       }
 
       if (stashable) {
-        this.$el.removeAttribute('data-mobile-cloak');
+        this.$el.removeAttribute('data-mobile-cloak')
         this.screenLg = window.innerWidth >= 1024
 
         bind(this.$el, {

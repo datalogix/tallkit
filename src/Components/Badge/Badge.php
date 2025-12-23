@@ -13,7 +13,7 @@ class Badge extends BladeComponent
         public ?string $size = null,
         public ?string $variant = null,
         public string|bool|null $border = null,
-        public ?bool $pill = null,
+        public ?bool $rounded = null,
         public ?bool $solid = null,
         public ?bool $close = null,
     ) {}

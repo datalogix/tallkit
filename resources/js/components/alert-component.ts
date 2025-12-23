@@ -1,4 +1,4 @@
-import { timeout as _timeout, type Milliseconds, bind } from "../utils"
+import { timeout as _timeout, type Milliseconds, bind } from '../utils'
 
 export function alertComponent(timeout?: Milliseconds) {
   return {

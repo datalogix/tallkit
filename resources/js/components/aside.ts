@@ -1,4 +1,4 @@
-import { sticky } from "./sticky";
+import { sticky } from './sticky'
 
 export function aside() {
   return {

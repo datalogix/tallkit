@@ -33,8 +33,8 @@ export default defineConfig({
     {
       name: 'manifest',
       closeBundle: () => {
-        const hash = createHash('md5').update(Date.now().toString()).digest('hex').substr(0, 8);
-        writeFileSync('./dist/manifest.json', JSON.stringify({ '/tallkit.js': hash }, null, 2));
+        const hash = createHash('md5').update(Date.now().toString()).digest('hex').substr(0, 8)
+        writeFileSync('./dist/manifest.json', JSON.stringify({ '/tallkit.js': hash }, null, 2))
       }
     },
   ]

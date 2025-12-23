@@ -87,8 +87,8 @@
                 'bare' => '',
             },
             match ($variant) { // Background color...
-                default => 'bg-white dark:bg-zinc-800',
-                'bare' => 'bg-transparent',
+                default => '[:where(&)]:bg-white dark:[:where(&)]:bg-zinc-800',
+                'bare' => '[:where(&)]:bg-transparent',
             },
             match ($variant) { // Shadows...
                 default => 'shadow-lg rounded-xl',

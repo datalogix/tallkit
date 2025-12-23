@@ -33,7 +33,7 @@
             ':aria-selected' => 'isSelected(\'' . $name . '\')',
             ':data-selected' => 'isSelected(\'' . $name . '\')',
             ':data-active' => 'isSelected(\'' . $name . '\')',
-            '@click' => 'select(\'' . $name . '\')',
+            'x-on:click' => 'select(\'' . $name . '\')',
         ] : [])
     "
     :$size

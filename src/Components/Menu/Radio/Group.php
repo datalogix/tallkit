@@ -8,5 +8,6 @@ class Group extends BladeComponent
 {
     public function __construct(
         public ?bool $keepOpen = null,
+        public mixed $items = null,
     ) {}
 }

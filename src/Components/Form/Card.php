@@ -12,5 +12,6 @@ class Card extends BladeComponent
         public string|ComponentSlot|null $subtitle = null,
         public ?bool $separator = null,
         public ?string $size = null,
+        public ?ComponentSlot $actions = null,
     ) {}
 }

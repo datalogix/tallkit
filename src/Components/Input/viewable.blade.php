@@ -1,8 +1,8 @@
 <tk:button
     x-data="inputViewable"
     :attributes="$attributes->classes('mx-2 -me-1')"
+    :variant="$attributes->pluck('variant', 'none')"
     tabindex="-1"
-    variant="none"
     tooltip="Toggle password visibility"
     icon="eye"
     icon:class="hidden"

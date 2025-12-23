@@ -1,4 +1,4 @@
-import { toggleable } from "./toggleable"
+import { toggleable } from './toggleable'
 
 const CREDIT_CARD_DEFAULT = {
   opened: true,

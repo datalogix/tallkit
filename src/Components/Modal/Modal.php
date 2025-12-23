@@ -3,6 +3,7 @@
 namespace TALLKit\Components\Modal;
 
 use Illuminate\Support\Str;
+use Illuminate\View\ComponentSlot;
 use TALLKit\Attributes\Mount;
 use TALLKit\View\BladeComponent;
 
@@ -20,6 +21,7 @@ class Modal extends BladeComponent
         public ?string $position = null,
         public ?string $variant = null,
         public string|bool|null $backdrop = null,
+        public ?ComponentSlot $trigger = null,
     ) {}
 
     #[Mount()]
