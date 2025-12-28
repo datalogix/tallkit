@@ -3,7 +3,7 @@ export function tab() {
     selected: null,
 
     init() {
-      const selected = this.$root.querySelector('[data-selected]')?.dataset.name;
+      const selected = this.$root.querySelector('[data-selected]')?.dataset.name
 
       if (selected) {
         this.$nextTick(() => {

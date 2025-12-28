@@ -8,15 +8,7 @@
     rounded-s-lg
     border-s
     ',
-    match ($size) {
-        'xs' => 'text-[11px]',
-        'sm' => 'text-xs',
-        default => 'text-sm',
-        'lg' => 'text-base',
-        'xl' => 'text-lg',
-        '2xl' => 'text-xl',
-        '3xl' => 'text-2xl',
-    },
+    $fontSize($size),
 )">
     {{ $slot }}
 </tk:element>

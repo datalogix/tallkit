@@ -12,16 +12,17 @@
             font-medium whitespace-nowrap
             [print-color-adjust:exact]
             ',
+            $fontSize($size),
             match ($size) {
-                'xs' => 'text-[11px] rounded-sm px-1 py-px gap-1',
-                'sm' => 'text-xs rounded-sm px-1.5 py-0.5 gap-1',
-                 default => 'text-sm rounded-md px-2 py-0.5 gap-1.5',
-                'lg' => 'text-base rounded-md px-2.5 py-1 gap-1.5',
-                'xl' => 'text-lg rounded-lg px-3 py-1 gap-2.5',
-                '2xl' => 'text-xl rounded-lg px-3.5 py-1.5 gap-2.5',
-                '3xl' => 'text-2xl rounded-xl px-4 py-1.5 gap-3',
+                'xs' => 'rounded-sm px-1 py-px gap-1',
+                'sm' => 'rounded-sm px-1.5 py-0.5 gap-1',
+                 default => 'rounded-md px-2 py-0.5 gap-1.5',
+                'lg' => 'rounded-md px-2.5 py-1 gap-1.5',
+                'xl' => 'rounded-lg px-3 py-1 gap-2.5',
+                '2xl' => 'rounded-lg px-3.5 py-1.5 gap-2.5',
+                '3xl' => 'rounded-xl px-4 py-1.5 gap-3',
             },
-            match ($pill) {
+            match ($rounded) {
                 true => 'rounded-full '. match ($size) {
                     'xs' => 'px-2',
                     'sm' => 'px-3',

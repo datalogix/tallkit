@@ -1,4 +1,6 @@
 export * from './bind'
 export * from './timer'
 export * from './scripts'
+export * from './search'
+export * from './string'
 export * from './styles'

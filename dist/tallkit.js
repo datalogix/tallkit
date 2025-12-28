@@ -1,11 +1,11 @@
 (function(factory) {
   typeof define === "function" && define.amd ? define(factory) : factory();
-})(function() {
+})((function() {
   "use strict";
   function bind(el, bindings) {
     const elements = el instanceof Element ? [el] : el;
-    elements?.forEach((element) => {
-      window.Alpine.bind(element, bindings);
+    elements?.forEach((element, index) => {
+      window.Alpine.bind(element, typeof bindings === "function" ? bindings(element, index) : bindings);
     });
   }
   function timeout(callback, milliseconds, defaultMilliseconds = 500) {
@@ -43,6 +43,81 @@
     });
     scripts.set(src, promise);
     return promise;
+  }
+  function levenshtein(a, b) {
+    const alen = a.length, blen = b.length;
+    if (!alen) return blen;
+    if (!blen) return alen;
+    const v0 = new Array(blen + 1).fill(0);
+    const v1 = new Array(blen + 1).fill(0);
+    for (let j = 0; j <= blen; j++) v0[j] = j;
+    for (let i = 0; i < alen; i++) {
+      v1[0] = i + 1;
+      for (let j = 0; j < blen; j++) {
+        const cost = a[i] === b[j] ? 0 : 1;
+        v1[j + 1] = Math.min(
+          v1[j] + 1,
+          // insertion
+          v0[j + 1] + 1,
+          // deletion
+          v0[j] + cost
+          // substitution
+        );
+      }
+      for (let j = 0; j <= blen; j++) v0[j] = v1[j];
+    }
+    return v1[blen];
+  }
+  function fuzzySubsequence(haystack, needle) {
+    if (!needle) return true;
+    let i = 0, j = 0;
+    while (i < haystack.length && j < needle.length) {
+      if (haystack[i] === needle[j]) j++;
+      i++;
+    }
+    return j === needle.length;
+  }
+  function fuzzyMatch(haystack, needle, threshold = 0.35) {
+    if (!needle) return true;
+    if (haystack.includes(needle)) return true;
+    if (fuzzySubsequence(haystack, needle)) return true;
+    const dist = levenshtein(haystack, needle);
+    const maxAllowed = Math.max(1, Math.floor(needle.length * threshold));
+    return dist <= maxAllowed;
+  }
+  function normalize(str, options) {
+    if (!options || !str) return str;
+    const opts = {
+      replaceAccents: false,
+      removeSpaces: false,
+      lowercase: false,
+      uppercase: false,
+      mode: void 0,
+      ...options
+    };
+    if (opts?.replaceAccents) {
+      str = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+    if (opts?.removeSpaces) {
+      str = str.replace(/\s+/g, " ").trim();
+    }
+    switch (opts.mode) {
+      case "alpha":
+        str = str.replace(/[^a-z]/gi, "");
+        break;
+      case "alphanumeric":
+        str = str.replace(/[^a-z0-9]/gi, "");
+        break;
+      case "numeric":
+        str = str.replace(/[^0-9]/g, "");
+        break;
+    }
+    if (opts.uppercase && !opts.lowercase) {
+      str = str.toUpperCase();
+    } else if (opts.lowercase && !opts.uppercase) {
+      str = str.toLowerCase();
+    }
+    return str;
   }
   const styles = /* @__PURE__ */ new Map();
   function loadStyle(href) {
@@ -199,7 +274,7 @@
       }
     };
   }
-  const __vite_glob_0_21 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_23 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     sticky
   }, Symbol.toStringTag, { value: "Module" }));
@@ -216,29 +291,172 @@
     return {
       init() {
         bind(this.$el.querySelector("[data-tallkit-badge-close]"), {
-          ["@click"]() {
-            const root = this.$el.closest("[data-tallkit-badge]");
-            if (!root) {
-              return;
-            }
-            root.classList.remove("opacity-100");
-            root.classList.add("opacity-0");
-            root.addEventListener(
-              "transitionend",
-              () => {
-                root?.remove();
-                this.$dispatch("close");
-              },
-              { once: true }
-            );
-          }
+          ["@click"]: () => this.close()
         });
+      },
+      close() {
+        const root = this.$el.closest("[data-tallkit-badge]");
+        if (!root) {
+          return;
+        }
+        root.classList.remove("opacity-100");
+        root.classList.add("opacity-0");
+        root.addEventListener(
+          "transitionend",
+          () => {
+            root?.remove();
+            this.$dispatch("close");
+          },
+          { once: true }
+        );
       }
     };
   }
   const __vite_glob_0_3 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     badge
+  }, Symbol.toStringTag, { value: "Module" }));
+  function command() {
+    return {
+      current: null,
+      get input() {
+        return this.$root.querySelector("[data-tallkit-command-input]");
+      },
+      get items() {
+        return Array.from(
+          this.$root.querySelectorAll("[data-tallkit-command-item-container]:has([data-tallkit-button-content])")
+        );
+      },
+      get filteredItems() {
+        return this.items.filter((item) => {
+          if (item.hasAttribute("data-hidden")) return false;
+          const button = item.querySelector("[data-tallkit-command-item]");
+          return !button?.hasAttribute("disabled");
+        });
+      },
+      get noRecords() {
+        return this.$root.querySelector("[data-tallkit-command-no-records]");
+      },
+      init() {
+        bind(this.$root, {
+          ["@mouseleave"]: () => this.clearActive()
+        });
+        bind(this.$root.querySelectorAll("[data-tallkit-command-item]"), (element) => ({
+          ["@mouseenter"]: () => this.filteredItems.forEach((item, index) => {
+            if (item.querySelector("[data-tallkit-command-item]") === element) {
+              this.setActive(index);
+              this.$dispatch("command-item-hover", { index, item });
+              return;
+            }
+          })
+        }));
+        bind(this.input, {
+          ["@input"]: () => {
+            this.$dispatch("command-search-updated", { query: this.input.value });
+            this.search();
+          },
+          ["@focus"]: (e) => {
+            this.setActive();
+          },
+          ["@blur"]: () => this.clearActive(),
+          ["@keydown.enter.prevent"]: () => this.selectActive(),
+          ["@keydown.arrow-down.prevent"]: () => this.next(),
+          ["@keydown.arrow-up.prevent"]: () => this.prev()
+        });
+        this.$nextTick(() => {
+          this.search();
+          this.clearActive();
+        });
+        this.$dispatch("command-initialized");
+      },
+      clearActive() {
+        this.items.forEach((item) => {
+          item.querySelector("[data-tallkit-command-item]")?.removeAttribute("data-active");
+        });
+        this.current = null;
+      },
+      prev() {
+        if (this.current == null) return;
+        this.setActive((this.current - 1 + this.filteredItems.length) % this.filteredItems.length);
+      },
+      next() {
+        if (this.current == null) return;
+        this.setActive((this.current + 1) % this.filteredItems.length);
+      },
+      search() {
+        const normalizeOptions = {
+          lowercase: true,
+          replaceAccents: true,
+          removeSpaces: true
+        };
+        const value = normalize(this.input.value, normalizeOptions);
+        this.clearItems();
+        if (value) {
+          this.items.forEach((item) => {
+            const span = item.querySelector("[data-tallkit-button-content]");
+            const content = normalize(span?.textContent, normalizeOptions) || "";
+            if (!fuzzyMatch(content, value)) {
+              item.setAttribute("data-hidden", "");
+            }
+          });
+        }
+        this.$dispatch("command-items-changed", {
+          items: this.filteredItems.length
+        });
+        this.toggleNoRecords();
+        this.setActive();
+      },
+      clearItems() {
+        this.items.forEach((item) => {
+          item.querySelector("[data-tallkit-command-item]")?.removeAttribute("data-active");
+          item.removeAttribute("data-hidden");
+        });
+      },
+      toggleNoRecords() {
+        if (!this.noRecords) return;
+        if (this.filteredItems.length === 0) {
+          this.noRecords.removeAttribute("hidden");
+        } else {
+          this.noRecords.setAttribute("hidden", "");
+        }
+      },
+      setActive(index = 0) {
+        const items = this.filteredItems;
+        if (index < 0 || index >= items.length) return;
+        if (this.current !== null) {
+          const last = items.at(this.current);
+          last?.querySelector("[data-tallkit-command-item]")?.removeAttribute("data-active");
+        }
+        const item = items.at(index);
+        if (!item) return;
+        const button = item.querySelector("[data-tallkit-command-item]");
+        if (button?.hasAttribute("disabled")) return;
+        button?.setAttribute("data-active", "");
+        this.current = index;
+        item.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest"
+        });
+        this.$dispatch("command-active-changed", { index, item, button });
+      },
+      selectActive() {
+        if (this.current === null) return;
+        const item = this.filteredItems.at(this.current);
+        if (!item) return;
+        const button = item.querySelector("[data-tallkit-command-item]");
+        if (!button || button.hasAttribute("disabled")) return;
+        button.dispatchEvent(new Event("click", { bubbles: true }));
+        this.$dispatch("command-item-selected", {
+          index: this.current,
+          item,
+          button
+        });
+      }
+    };
+  }
+  const __vite_glob_0_4 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    command
   }, Symbol.toStringTag, { value: "Module" }));
   function toggleable() {
     return {
@@ -273,7 +491,7 @@
       }
     };
   }
-  const __vite_glob_0_26 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_28 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     toggleable
   }, Symbol.toStringTag, { value: "Module" }));
@@ -312,7 +530,7 @@
       }
     };
   }
-  const __vite_glob_0_4 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_5 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     creditCard
   }, Symbol.toStringTag, { value: "Module" }));
@@ -347,7 +565,7 @@
       }
     };
   }
-  const __vite_glob_0_5 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_6 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     disclosureGroup
   }, Symbol.toStringTag, { value: "Module" }));
@@ -376,7 +594,7 @@
       }
     };
   }
-  const __vite_glob_0_6 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_7 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     disclosure
   }, Symbol.toStringTag, { value: "Module" }));
@@ -401,7 +619,7 @@
       }
     };
   }
-  const __vite_glob_0_7 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_8 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     fullCalendar
   }, Symbol.toStringTag, { value: "Module" }));
@@ -410,7 +628,7 @@
       ...sticky()
     };
   }
-  const __vite_glob_0_8 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_9 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     header
   }, Symbol.toStringTag, { value: "Module" }));
@@ -442,7 +660,7 @@
       }
     };
   }
-  const __vite_glob_0_9 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_10 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     inputClearable
   }, Symbol.toStringTag, { value: "Module" }));
@@ -475,7 +693,7 @@
       }
     };
   }
-  const __vite_glob_0_10 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_11 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     inputCopyable
   }, Symbol.toStringTag, { value: "Module" }));
@@ -510,7 +728,7 @@
       }
     };
   }
-  const __vite_glob_0_11 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_12 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     inputViewable
   }, Symbol.toStringTag, { value: "Module" }));
@@ -563,76 +781,78 @@
       }
     };
   }
-  const __vite_glob_0_12 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_13 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     label
   }, Symbol.toStringTag, { value: "Module" }));
-  function menuCheckbox() {
+  function menuCheckbox(checked) {
     return {
-      get checked() {
-        return this.$el.hasAttribute("data-checked");
+      checked,
+      get isControlled() {
+        return this.value !== void 0;
       },
-      set checked(value) {
-        if (value) {
-          this.$el.setAttribute("data-checked", "");
-        } else {
-          this.$el.removeAttribute("data-checked");
+      get isArray() {
+        return Array.isArray(this.value);
+      },
+      get isChecked() {
+        if (!this.isControlled) {
+          return this.checked;
         }
+        if (this.isArray) {
+          return this.value.includes(this.$root.value);
+        }
+        return this.value == this.$root.value;
       },
       init() {
-        this.$el.setAttribute("aria-checked", this.checked ? "true" : "false");
-        new MutationObserver(() => {
-          this.$el.setAttribute("aria-checked", this.checked ? "true" : "false");
-        }).observe(this.$el, { attributeFilter: ["data-checked"] });
         bind(this.$el, {
-          ["@click"]() {
-            if (this.$el.disabled) {
-              return;
-            }
-            this.checked = !this.checked;
-          }
+          ["@click"]: () => this.toggle(),
+          [":data-checked"]: () => this.isChecked,
+          [":aria-checked"]: () => this.isChecked
         });
-      }
-    };
-  }
-  const __vite_glob_0_13 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
-    __proto__: null,
-    menuCheckbox
-  }, Symbol.toStringTag, { value: "Module" }));
-  function menuRadio() {
-    return {
-      get checked() {
-        return this.$el.hasAttribute("data-checked");
       },
-      set checked(value) {
-        if (value) {
-          this.$el.setAttribute("data-checked", "");
-        } else {
-          this.$el.removeAttribute("data-checked");
+      toggle() {
+        if (!this.isControlled) {
+          this.checked = !this.checked;
+          return;
         }
-      },
-      init() {
-        this.$el.setAttribute("aria-checked", this.checked ? "true" : "false");
-        new MutationObserver(() => {
-          this.$el.setAttribute("aria-checked", this.checked ? "true" : "false");
-        }).observe(this.$el, { attributeFilter: ["data-checked"] });
-        bind(this.$el, {
-          ["@click"]() {
-            if (this.$el.disabled || this.checked) {
-              return;
-            }
-            this.$el.closest("[data-tallkit-menu-radio-group]")?.querySelectorAll("[data-tallkit-menu-radio]")?.forEach((radio) => {
-              if (radio !== this.$el) {
-                radio.removeAttribute("data-checked");
-              }
-            });
-            this.checked = true;
-          }
-        });
+        if (this.isArray) {
+          this.value = this.isChecked ? this.value.filter((v) => v !== this.$root.value) : [...this.value, this.$root.value];
+          return;
+        }
+        this.value = this.$root.value;
       }
     };
   }
   const __vite_glob_0_14 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    menuCheckbox
+  }, Symbol.toStringTag, { value: "Module" }));
+  function menuRadio(checked) {
+    return {
+      checked,
+      get isControlled() {
+        return this.value !== void 0;
+      },
+      get isChecked() {
+        return this.isControlled ? this.value == this.$root.value : this.checked;
+      },
+      init() {
+        bind(this.$el, {
+          ["@click"]: () => this.toggle(),
+          [":data-checked"]: () => this.isChecked,
+          [":aria-checked"]: () => this.isChecked
+        });
+      },
+      toggle() {
+        if (this.isControlled) {
+          this.value = this.$root.value;
+        } else {
+          this.checked = !this.checked;
+        }
+      }
+    };
+  }
+  const __vite_glob_0_15 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     menuRadio
   }, Symbol.toStringTag, { value: "Module" }));
@@ -656,7 +876,7 @@
       }
     };
   }
-  const __vite_glob_0_15 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_16 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     menu
   }, Symbol.toStringTag, { value: "Module" }));
@@ -680,7 +900,7 @@
       }
     };
   }
-  const __vite_glob_0_16 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_17 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     modalTrigger
   }, Symbol.toStringTag, { value: "Module" }));
@@ -718,6 +938,10 @@
           ["@toggle"](event) {
             if (event.newState === "open") {
               dialog.querySelector('[tabindex="0"]')?.focus();
+              this.$dispatch("opened", event);
+            }
+            if (event.newState === "closed") {
+              this.$dispatch("closed", event);
             }
           },
           ["@click"](event) {
@@ -730,7 +954,7 @@
       }
     };
   }
-  const __vite_glob_0_17 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_18 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     modal
   }, Symbol.toStringTag, { value: "Module" }));
@@ -778,18 +1002,10 @@
               }
               this.updateModel();
             },
-            ["@keydown"](e) {
-              if (e.key === "ArrowLeft") {
-                e.preventDefault();
-                inputs[index - 1]?.focus();
-                return;
-              }
-              if (e.key === "ArrowRight") {
-                e.preventDefault();
-                inputs[index + 1]?.focus();
-                return;
-              }
-              if (e.key === "Backspace" && !input.value && inputs[index - 1]) {
+            ["@keydown.arrow-left.prevent"]: () => inputs[index - 1]?.focus(),
+            ["@keydown.arrow-right.prevent"]: () => inputs[index + 1]?.focus(),
+            ["@keydown.backspace"]: () => {
+              if (!input.value && inputs[index - 1]) {
                 inputs[index - 1].focus();
               }
             }
@@ -845,7 +1061,7 @@
     );
     inputs[lastIndex]?.focus();
   }
-  const __vite_glob_0_18 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_19 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     otp
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1053,7 +1269,7 @@
     component.boundSetPosition = component.boundSetPosition.bind(component);
     return component;
   }
-  const __vite_glob_0_19 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_20 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     popover
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1096,9 +1312,58 @@
       }
     };
   }
-  const __vite_glob_0_20 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_21 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     sidebar
+  }, Symbol.toStringTag, { value: "Module" }));
+  function slider() {
+    return {
+      get input() {
+        return this.$root.querySelector("[data-tallkit-control]");
+      },
+      init() {
+        this.updateRange();
+        bind(this.input, {
+          ["@input"]: () => this.updateRange()
+        });
+        bind(this.$root.querySelector("[data-tallkit-slider-ticks]"), {
+          ["@click"]: (e) => {
+            const ticks = [...this.$root.querySelectorAll("[data-tallkit-slider-tick]")];
+            const clickX = e.clientX;
+            let closestTick = null;
+            let minDistance = Infinity;
+            ticks.forEach((tick) => {
+              const rect = tick.getBoundingClientRect();
+              const centerX = rect.left + rect.width / 2;
+              const distance = Math.abs(clickX - centerX);
+              if (distance < minDistance) {
+                minDistance = distance;
+                closestTick = tick;
+              }
+            });
+            if (closestTick) {
+              this.setValue(closestTick.getAttribute("value"));
+            }
+          }
+        });
+      },
+      setValue(value) {
+        if (this.input.disabled) return;
+        this.input.value = value;
+        this.input.dispatchEvent(new Event("input", { bubbles: true }));
+      },
+      updateRange() {
+        const min = Number(this.input.min || 0);
+        const max = Number(this.input.max || 100);
+        const val = Number(this.input.value);
+        const p = (val - min) * 100 / (max - min);
+        this.input.style.setProperty("--range-percent", `${p}%`);
+      }
+    };
+  }
+  const __vite_glob_0_22 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    slider
   }, Symbol.toStringTag, { value: "Module" }));
   function submenu() {
     const _popover = popover({ mode: "manual", position: "right", align: "start" });
@@ -1143,7 +1408,7 @@
       }
     };
   }
-  const __vite_glob_0_22 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_24 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     submenu
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1166,7 +1431,7 @@
       }
     };
   }
-  const __vite_glob_0_23 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_25 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     tab
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1242,7 +1507,7 @@
       }
     };
   }
-  const __vite_glob_0_24 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_26 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     table
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1293,7 +1558,7 @@
       }
     };
   }
-  const __vite_glob_0_25 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_27 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     toast: toast$1
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1331,7 +1596,7 @@
       }
     };
   }
-  const __vite_glob_0_27 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_29 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     upload
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1363,7 +1628,7 @@
   }
   function registerAlpineComponents() {
     const components = Object.fromEntries(
-      Object.values([__vite_glob_0_0, __vite_glob_0_1, __vite_glob_0_2, __vite_glob_0_3, __vite_glob_0_4, __vite_glob_0_5, __vite_glob_0_6, __vite_glob_0_7, __vite_glob_0_8, __vite_glob_0_9, __vite_glob_0_10, __vite_glob_0_11, __vite_glob_0_12, __vite_glob_0_13, __vite_glob_0_14, __vite_glob_0_15, __vite_glob_0_16, __vite_glob_0_17, __vite_glob_0_18, __vite_glob_0_19, __vite_glob_0_20, __vite_glob_0_21, __vite_glob_0_22, __vite_glob_0_23, __vite_glob_0_24, __vite_glob_0_25, __vite_glob_0_26, __vite_glob_0_27]).flatMap(
+      Object.values([__vite_glob_0_0, __vite_glob_0_1, __vite_glob_0_2, __vite_glob_0_3, __vite_glob_0_4, __vite_glob_0_5, __vite_glob_0_6, __vite_glob_0_7, __vite_glob_0_8, __vite_glob_0_9, __vite_glob_0_10, __vite_glob_0_11, __vite_glob_0_12, __vite_glob_0_13, __vite_glob_0_14, __vite_glob_0_15, __vite_glob_0_16, __vite_glob_0_17, __vite_glob_0_18, __vite_glob_0_19, __vite_glob_0_20, __vite_glob_0_21, __vite_glob_0_22, __vite_glob_0_23, __vite_glob_0_24, __vite_glob_0_25, __vite_glob_0_26, __vite_glob_0_27, __vite_glob_0_28, __vite_glob_0_29]).flatMap(
         (module) => Object.entries(module).filter(([, v]) => typeof v === "function")
       )
     );
@@ -1478,4 +1743,4 @@
   document.dispatchEvent(new CustomEvent("tallkit:init"));
   initAlpine();
   document.addEventListener("alpine:init", setupAlpine);
-});
+}));

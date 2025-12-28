@@ -1,35 +1,51 @@
 import { bind } from '../utils'
 
-export function menuCheckbox() {
+export function menuCheckbox(checked?: boolean) {
   return {
-    get checked() {
-      return this.$el.hasAttribute('data-checked')
+    checked,
+
+    get isControlled() {
+      return this.value !== undefined
     },
 
-    set checked(value) {
-      if (value) {
-        this.$el.setAttribute('data-checked', '')
-      } else {
-        this.$el.removeAttribute('data-checked')
+    get isArray() {
+      return Array.isArray(this.value)
+    },
+
+    get isChecked() {
+      if (!this.isControlled) {
+        return this.checked
       }
+
+      if (this.isArray) {
+        return this.value.includes(this.$root.value)
+      }
+
+      return this.value == this.$root.value
     },
 
     init() {
-      this.$el.setAttribute('aria-checked', this.checked ? 'true' : 'false')
-
-      new MutationObserver(() => {
-        this.$el.setAttribute('aria-checked', this.checked ? 'true' : 'false')
-      }).observe(this.$el, { attributeFilter: ['data-checked'] })
-
       bind(this.$el, {
-        ['@click']() {
-          if (this.$el.disabled) {
-            return
-          }
-
-          this.checked = !this.checked
-        },
+        ['@click']: () => this.toggle(),
+        [':data-checked']: () => this.isChecked,
+        [':aria-checked']: () => this.isChecked
       })
-    }
+    },
+
+    toggle() {
+      if (!this.isControlled) {
+        this.checked = !this.checked
+        return
+      }
+
+      if (this.isArray) {
+        this.value = this.isChecked
+          ? this.value.filter(v => v !== this.$root.value)
+          : [...this.value, this.$root.value]
+        return
+      }
+
+      this.value = this.$root.value
+    },
   }
 }

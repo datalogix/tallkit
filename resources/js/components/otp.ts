@@ -58,23 +58,13 @@ export function otp(submit?: string) {
             this.updateModel()
           },
 
-          ['@keydown'](e: KeyboardEvent) {
-            if (e.key === 'ArrowLeft') {
-              e.preventDefault()
-              inputs[index - 1]?.focus()
-              return
-            }
-
-            if (e.key === 'ArrowRight') {
-              e.preventDefault()
-              inputs[index + 1]?.focus()
-              return
-            }
-
-            if (e.key === 'Backspace' && !input.value && inputs[index - 1]) {
+          ['@keydown.arrow-left.prevent']: () => inputs[index - 1]?.focus(),
+          ['@keydown.arrow-right.prevent']: () => inputs[index + 1]?.focus(),
+          ['@keydown.backspace']: () => {
+            if (!input.value && inputs[index - 1]) {
               inputs[index - 1].focus()
             }
-          }
+          },
         })
       })
 

@@ -1,5 +1,5 @@
 <section {{ $attributes->whereDoesntStartWith(['header:', 'title:', 'icon', 'badge', 'subtitle:', 'actions:', 'separator:', 'content:'])->classes([
-    'space-y-6',
+    '[:where(&)]:space-y-6',
     '[&:has([data-tallkit-section-content]>:is([data-tallkit-card],[data-tallkit-table-container]))>[data-tallkit-separator]]:hidden' => !$separator,
 ]) }}>
     @if ($title || $subtitle || isset($description) || isset($actions))
@@ -37,7 +37,7 @@
     @endif
 
     @if ($slot->hasActualContent() || $content)
-        <div {{ $attributesAfter('content:') }}>
+        <div {{ $attributesAfter('content:')->classes('[:where(&)]:space-y-6') }}>
             {{ $slot->isEmpty() ? __($content) : $slot }}
         </div>
     @endif

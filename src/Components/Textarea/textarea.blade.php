@@ -1,5 +1,3 @@
-@php $invalid ??= $name && $errors->has($name); @endphp
-
 <tk:field.wrapper
     :$attributes
     :$name

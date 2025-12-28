@@ -41,6 +41,11 @@ export function modal(name?: string, dismissible?: boolean, persist?: string | b
         ['@toggle'](event) {
           if (event.newState === 'open') {
             dialog.querySelector('[tabindex="0"]')?.focus()
+            this.$dispatch('opened', event)
+          }
+
+          if (event.newState === 'closed') {
+            this.$dispatch('closed', event)
           }
         },
 

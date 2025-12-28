@@ -14,7 +14,7 @@
             'accent' => 'text-[var(--color-accent-content)]',
             'strong' => '[:where(&)]:text-zinc-900 dark:[:where(&)]:text-white',
             'subtle' => '[:where(&)]:text-zinc-500 dark:[:where(&)]:text-white/70',
-            default => '[:where(&)]:text-zinc-700 dark:[:where(&)]:text-white/90',
+            default => '[:where(&)]:text-zinc-800 dark:[:where(&)]:text-white/90',
             'red' => 'text-red-600 dark:text-red-400',
             'orange' => 'text-orange-600 dark:text-orange-400',
             'amber' => 'text-amber-600 dark:text-amber-500',

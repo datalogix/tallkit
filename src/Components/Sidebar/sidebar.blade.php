@@ -15,7 +15,7 @@
                 [grid-area:sidebar]
                 z-1 flex flex-col gap-4
                 [:where(&)]:w-64 p-4
-                bg-zinc-50 dark:bg-zinc-800
+                [:where(&)]:bg-zinc-50 dark:[:where(&)]:bg-zinc-800
                 border-r rtl:border-r-0 rtl:border-l border-zinc-300 dark:border-zinc-700
             ')
             ->when($sticky, fn ($attrs) => $attrs->classes('max-h-dvh overflow-y-auto overscroll-contain'))

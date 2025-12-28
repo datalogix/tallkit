@@ -35,59 +35,290 @@ if ($loading && $type !== 'submit' && !$isJsMethod) {
                 disabled:cursor-default disabled:pointer-events-none
                 transition overflow-hidden
             ',
+            $fontSize($size),
             match ($size) { // Size...
-                'xs' => 'h-8 gap-1 text-[11px]' . ' ' . ($square ? 'w-8' : 'px-2'),
-                'sm' => 'h-9 gap-1 text-xs' . ' ' . ($square ? 'w-9' : 'px-3'),
-                default => 'h-10 gap-1.5 text-sm' . ' ' . ($square ? 'w-10' : 'px-4'),
-                'lg' => 'h-12 gap-1.5 text-base' . ' ' . ($square ? 'w-12' : 'px-5'),
-                'xl' => 'h-14 gap-2 text-lg' . ' ' . ($square ? 'w-14' : 'px-6'),
-                '2xl' => 'h-16 gap-2 text-xl' . ' ' . ($square ? 'w-16' : 'px-7'),
-                '3xl' => 'h-18 gap-2.5 text-2xl' . ' ' . ($square ? 'w-18' : 'px-8'),
+                'xs' => 'h-8 gap-1 ' . ($square ? 'w-8' : 'px-2'),
+                'sm' => 'h-9 gap-1 ' . ($square ? 'w-9' : 'px-3'),
+                default => 'h-10 gap-1.5 ' . ($square ? 'w-10' : 'px-4'),
+                'lg' => 'h-12 gap-1.5 ' . ($square ? 'w-12' : 'px-5'),
+                'xl' => 'h-14 gap-2 ' . ($square ? 'w-14' : 'px-6'),
+                '2xl' => 'h-16 gap-2 ' . ($square ? 'w-16' : 'px-7'),
+                '3xl' => 'h-18 gap-2.5 ' . ($square ? 'w-18' : 'px-8'),
             },
             match ($variant) { // Text color...
                 'accent' => 'text-[var(--color-accent-foreground)]',
                 'filled', 'outline', 'ghost' => 'text-zinc-800 dark:text-white',
                 'inverse' => 'text-white dark:text-zinc-800',
-                'subtle', 'none' => 'text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-white [&[data-active]]:text-zinc-800 dark:[&[data-active]]:text-white',
+                'subtle', 'none' => '
+                    text-zinc-500
+                    hover:text-zinc-800
+                    [&[data-active]]:text-zinc-800
+
+                    dark:text-zinc-400
+                    dark:hover:text-white
+                    dark:[&[data-active]]:text-white
+                ',
                 'amber', 'yellow', 'warning' => 'text-white dark:text-zinc-950',
                 default => 'text-white',
             },
             match ($variant) { // Border color...
-                'outline' => 'border border-zinc-200 hover:border-zinc-200 border-b-zinc-300/80 dark:border-white/10 dark:hover:border-white/10',
+                'outline' => '
+                    border
+                    border-b-zinc-300/80
+
+                    border-zinc-200
+                    hover:border-zinc-200
+                    [&[data-active]]:border-zinc-200
+
+                    dark:border-white/10
+                    dark:hover:border-white/10
+                    dark:[&[data-active]]:border-white/10
+                ',
                 'inverse', 'filled', 'subtle', 'ghost', 'none' => '',
                 default => 'border border-black/10',
             },
             match ($variant) { // Background color...
-                'accent' => 'bg-[var(--color-accent)] hover:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_15%)]',
-                'inverse' => 'bg-zinc-700 hover:bg-zinc-600/75 dark:bg-zinc-200 dark:hover:bg-zinc-300/75',
-                'info' => 'bg-blue-600 dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-600',
-                'success' => 'bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-600',
-                'danger' => 'bg-red-600 dark:bg-red-700 hover:bg-red-700 dark:hover:bg-red-600',
-                'outline' => 'bg-white hover:bg-zinc-800/5 dark:bg-zinc-700 dark:hover:bg-zinc-600/75',
-                'filled' => 'bg-zinc-800/5 dark:bg-white/10 hover:bg-zinc-800/15 dark:hover:bg-white/20',
-                'subtle', 'ghost' => 'bg-transparent hover:bg-zinc-800/10 dark:hover:bg-white/10',
+                'accent' => '
+                    bg-[var(--color-accent)]
+                    hover:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_30%)]
+                    [&[data-active]]:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_30%)]
+                ',
+                'inverse' => '
+                    bg-zinc-700
+                    hover:bg-zinc-600/75
+                    [&[data-active]]:bg-zinc-600/75
+
+                    dark:bg-zinc-200
+                    dark:hover:bg-zinc-300/75
+                    dark:[&[data-active]]:bg-zinc-300/75
+                ',
+                'info' => '
+                    bg-blue-600
+                    hover:bg-blue-700
+                    [&[data-active]]:bg-blue-700
+
+                    dark:bg-blue-700
+                    dark:hover:bg-blue-600
+                    dark:[&[data-active]]:bg-blue-600
+                ',
+                'success' => '
+                    bg-green-600
+                    hover:bg-green-700
+                    [&[data-active]]:bg-green-700
+
+                    dark:bg-green-700
+                    dark:hover:bg-green-600
+                    dark:[&[data-active]]:bg-green-600
+                ',
+                'danger' => '
+                    bg-red-600
+                    hover:bg-red-700
+                    [&[data-active]]:bg-red-700
+
+                    dark:bg-red-700
+                    dark:hover:bg-red-600
+                    dark:[&[data-active]]:bg-red-600
+                ',
+                'outline' => '
+                    bg-white
+                    hover:bg-zinc-800/5
+                    [&[data-active]]:bg-zinc-800/5
+
+                    dark:bg-zinc-700
+                    dark:hover:bg-zinc-600/85
+                    dark:[&[data-active]]:bg-zinc-600/85
+                ',
+                'filled' => '
+                    bg-zinc-800/5
+                    hover:bg-zinc-800/15
+                    [&[data-active]]:bg-zinc-800/15
+
+                    dark:bg-white/10
+                    dark:hover:bg-white/20
+                    dark:[&[data-active]]:bg-white/20
+                ',
+                'subtle', 'ghost' => '
+                    bg-transparent
+                    hover:bg-zinc-800/10
+                    [&[data-active]]:bg-zinc-800/10
+
+                    dark:bg-transparent
+                    dark:hover:bg-white/10
+                    dark:[&[data-active]]:bg-white/10
+                ',
                 'none' => 'bg-transparent',
-                'red' => 'bg-red-500 dark:bg-red-600 hover:bg-red-600 dark:hover:bg-red-500',
-                'orange' => 'bg-orange-500 dark:bg-orange-600 hover:bg-orange-600 dark:hover:bg-orange-500',
-                'amber' => 'bg-amber-500 dark:bg-amber-500 hover:bg-amber-600 dark:hover:bg-amber-400',
-                'yellow', 'warning' => 'bg-yellow-500 dark:bg-yellow-400 hover:bg-yellow-600 dark:hover:bg-yellow-300',
-                'lime' => 'bg-lime-500 dark:bg-lime-600 hover:bg-lime-600 dark:hover:bg-lime-500',
-                'green' => 'bg-green-500 dark:bg-green-600 hover:bg-green-600 dark:hover:bg-green-500',
-                'emerald' => 'bg-emerald-500 dark:bg-emerald-600 hover:bg-emerald-600 dark:hover:bg-emerald-500',
-                'teal' => 'bg-teal-500 dark:bg-teal-600 hover:bg-teal-600 dark:hover:bg-teal-500',
-                'cyan' => 'bg-cyan-500 dark:bg-cyan-600 hover:bg-cyan-600 dark:hover:bg-cyan-500',
-                'sky' => 'bg-sky-500 dark:bg-sky-600 hover:bg-sky-600 dark:hover:bg-sky-500',
-                'blue' => 'bg-blue-500 dark:bg-blue-600 hover:bg-blue-600 dark:hover:bg-blue-500',
-                'indigo' => 'bg-indigo-500 dark:bg-indigo-600 hover:bg-indigo-600 dark:hover:bg-indigo-500',
-                'violet' => 'bg-violet-500 dark:bg-violet-600 hover:bg-violet-600 dark:hover:bg-violet-500',
-                'purple' => 'bg-purple-500 dark:bg-purple-600 hover:bg-purple-600 dark:hover:bg-purple-500',
-                'fuchsia' => 'bg-fuchsia-500 dark:bg-fuchsia-600 hover:bg-fuchsia-600 dark:hover:bg-fuchsia-500',
-                'pink' => 'bg-pink-500 dark:bg-pink-600 hover:bg-pink-600 dark:hover:bg-pink-500',
-                'rose' => 'bg-rose-500 dark:bg-rose-600 hover:bg-rose-600 dark:hover:bg-rose-500',
+                'red' => '
+                    bg-red-500
+                    hover:bg-red-600
+                    [&[data-active]]:bg-red-600
+
+                    dark:bg-red-600
+                    dark:hover:bg-red-500
+                    dark:[&[data-active]]:bg-red-500
+                ',
+                'orange' => '
+                    bg-orange-500
+                    hover:bg-orange-600
+                    [&[data-active]]:bg-orange-600
+
+                    dark:bg-orange-600
+                    dark:hover:bg-orange-500
+                    dark:[&[data-active]]:bg-orange-500
+                ',
+                'amber' => '
+                    bg-amber-500
+                    hover:bg-amber-600
+                    [&[data-active]]:bg-amber-600
+
+                    dark:bg-amber-500
+                    dark:hover:bg-amber-400
+                    dark:[&[data-active]]:bg-amber-400
+                ',
+                'yellow', 'warning' => '
+                    bg-yellow-500
+                    hover:bg-yellow-600
+                    [&[data-active]]:bg-yellow-600
+
+                    dark:bg-yellow-400
+                    dark:hover:bg-yellow-300
+                    dark:[&[data-active]]:bg-yellow-300
+                ',
+                'lime' => '
+                    bg-lime-500
+                    hover:bg-lime-600
+                    [&[data-active]]:bg-lime-600
+
+                    dark:bg-lime-600
+                    dark:hover:bg-lime-500
+                    dark:[&[data-active]]:bg-lime-500
+                ',
+                'green' => '
+                    bg-green-500
+                    hover:bg-green-600
+                    [&[data-active]]:bg-green-600
+
+                    dark:bg-green-600
+                    dark:hover:bg-green-500
+                    dark:[&[data-active]]:bg-green-500
+                ',
+                'emerald' => '
+                    bg-emerald-500
+                    hover:bg-emerald-600
+                    [&[data-active]]:bg-emerald-600
+
+                    dark:bg-emerald-600
+                    dark:hover:bg-emerald-500
+                    dark:[&[data-active]]:bg-emerald-500
+                ',
+                'teal' => '
+                    bg-teal-500
+                    hover:bg-teal-600
+                    [&[data-active]]:bg-teal-600
+
+                    dark:bg-teal-600
+                    dark:hover:bg-teal-500
+                    dark:[&[data-active]]:bg-teal-500
+                ',
+                'cyan' => '
+                    bg-cyan-500
+                    hover:bg-cyan-600
+                    [&[data-active]]:bg-cyan-600
+
+                    dark:bg-cyan-600
+                    dark:hover:bg-cyan-500
+                    dark:[&[data-active]]:bg-cyan-500
+                ',
+                'sky' => '
+                    bg-sky-500
+                    hover:bg-sky-600
+                    [&[data-active]]:bg-sky-600
+
+                    dark:bg-sky-600
+                    dark:hover:bg-sky-500
+                    dark:[&[data-active]]:bg-sky-500
+                ',
+                'blue' => '
+                    bg-blue-500
+                    hover:bg-blue-600
+                    [&[data-active]]:bg-blue-600
+
+                    dark:bg-blue-600
+                    dark:hover:bg-blue-500
+                    dark:[&[data-active]]:bg-blue-500
+                ',
+                'indigo' => '
+                    bg-indigo-500
+                    hover:bg-indigo-600
+                    [&[data-active]]:bg-indigo-600
+
+                    dark:bg-indigo-600
+                    dark:hover:bg-indigo-500
+                    dark:[&[data-active]]:bg-indigo-500
+                ',
+                'violet' => '
+                    bg-violet-500
+                    hover:bg-violet-600
+                    [&[data-active]]:bg-violet-600
+
+                    dark:bg-violet-600
+                    dark:hover:bg-violet-500
+                    dark:[&[data-active]]:bg-violet-500
+                ',
+                'purple' => '
+                    bg-purple-500
+                    hover:bg-purple-600
+                    [&[data-active]]:bg-purple-600
+
+                    dark:bg-purple-600
+                    dark:hover:bg-purple-500
+                    dark:[&[data-active]]:bg-purple-500
+                ',
+                'fuchsia' => '
+                    bg-fuchsia-500
+                    hover:bg-fuchsia-600
+                    [&[data-active]]:bg-fuchsia-600
+
+                    dark:bg-fuchsia-600
+                    dark:hover:bg-fuchsia-500
+                    dark:[&[data-active]]:bg-fuchsia-500
+                ',
+                'pink' => '
+                    bg-pink-500
+                    hover:bg-pink-600
+                    [&[data-active]]:bg-pink-600
+
+                    dark:bg-pink-600
+                    dark:hover:bg-pink-500
+                    dark:[&[data-active]]:bg-pink-500
+                ',
+                'rose' => '
+                    bg-rose-500
+                    hover:bg-rose-600
+                    [&[data-active]]:bg-rose-600
+
+                    dark:bg-rose-600
+                    dark:hover:bg-rose-500
+                    dark:[&[data-active]]:bg-rose-500
+                ',
                 default => '
-                    text-zinc-800 dark:text-white
-                    bg-white hover:bg-zinc-800/5 dark:bg-zinc-700 dark:hover:bg-zinc-600/75
-                    border border-zinc-200 hover:border-zinc-200 border-b-zinc-300/80 dark:border-white/10 dark:hover:border-white/10
+                    border
+                    border-b-zinc-300/80
+
+                    text-zinc-800
+                    bg-white
+                    border-zinc-200
+                    hover:bg-zinc-800/5
+                    hover:border-zinc-200
+                    [&[data-active]]:bg-zinc-800/5
+                    [&[data-active]]:border-zinc-200
+
+                    dark:text-white
+                    dark:bg-zinc-700
+                    dark:border-white/10
+                    dark:hover:bg-zinc-600/85
+                    dark:hover:border-white/10
+                    dark:[&[data-active]]:bg-zinc-600/85
+                    dark:[&[data-active]]:border-white/10
                 ',
             },
             match ($variant) { // Shadows...

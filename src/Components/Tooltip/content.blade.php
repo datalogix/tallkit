@@ -43,10 +43,12 @@
             {{ $slot }}
         </div>
 
-        @if ($kbd)
-            <span {{ $attributesAfter('kbd:')->classes('ps-1 text-zinc-300') }}>
-                {{ $kbd }}
-            </span>
+        @if (isset($kbd) && $kbd !== '')
+            <tk:kbd
+                :attributes="$attributesAfter('kbd:')->classes('ps-1')"
+                :label="$kbd"
+                variant="text"
+            />
         @endif
     </div>
 

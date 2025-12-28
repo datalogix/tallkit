@@ -1,10 +1,12 @@
 <form {{
     $attributes->whereDoesntStartWith(['error-group:', 'submit:'])
-        ->classes('space-y-6')
-        ->classes(match ($errorGroup) {
-            'only' => '[&_[data-tallkit-error]]:hidden',
-            default => ''
-        })
+        ->classes(
+            '[:where(&)]:space-y-6',
+            match ($errorGroup) {
+                'only' => '[&_[data-tallkit-error]]:hidden',
+                default => ''
+            }
+        )
         ->when(
             in_livewire(),
             fn ($attrs) => $attrs->merge(['wire:submit' => $action]),

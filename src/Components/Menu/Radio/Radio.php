@@ -11,5 +11,6 @@ class Radio extends BladeComponent
 
     public function __construct(
         public ?bool $checked = null,
+        public ?bool $keepOpen = null,
     ) {}
 }

@@ -1,4 +1,4 @@
-import { bind } from "../utils"
+import { bind } from '../utils'
 
 export function inputClearable() {
   return {
@@ -13,11 +13,11 @@ export function inputClearable() {
         return
       }
 
-      button.style.display = this.input.value ? 'inline-flex ' : 'none';
+      button.style.display = this.input.value ? 'inline-flex ' : 'none'
 
       bind(this.input, {
         ['@input']() {
-          button.style.display = this.$el.value ? 'inline-flex ' : 'none';
+          button.style.display = this.$el.value ? 'inline-flex ' : 'none'
         }
       })
 

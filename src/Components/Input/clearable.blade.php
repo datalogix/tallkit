@@ -6,8 +6,8 @@
         [[data-tallkit-input]:has(input[disabled])_&]:hidden
         [[data-tallkit-input]:has(input:invalid)_&]:hidden
     ')"
+    :variant="$attributes->pluck('variant', 'none')"
     tabindex="-1"
-    variant="none"
     tooltip="Clear input"
     icon="times"
     wire:replace.self

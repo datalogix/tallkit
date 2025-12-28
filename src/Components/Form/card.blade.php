@@ -21,7 +21,7 @@
     @endisset
 
     @isset ($actions)
-        <x-slot:actions>
+        <x-slot:actions :attributes="$actions->attributes">
             {{ $actions }}
         </x-slot:actions>
     @endisset

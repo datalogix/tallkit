@@ -1,5 +1,4 @@
 @php
-$invalid ??= $name && $errors->has($name);
 $files = $getFiles($value ?? (in_livewire() ? $this->$name : null));
 @endphp
 

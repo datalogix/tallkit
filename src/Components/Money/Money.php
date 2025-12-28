@@ -4,10 +4,13 @@ namespace TALLKit\Components\Money;
 
 use Illuminate\Support\Str;
 use TALLKit\Attributes\Mount;
+use TALLKit\Concerns\InteractsWithField;
 use TALLKit\View\BladeComponent;
 
 class Money extends BladeComponent
 {
+    use InteractsWithField;
+
     public function __construct(
         public ?string $currency = null,
         public ?string $symbol = null,

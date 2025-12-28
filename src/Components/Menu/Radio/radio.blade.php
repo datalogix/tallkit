@@ -4,11 +4,11 @@ $iconUnchecked ??= $attributes->pluck('icon-unchecked');
 @endphp
 
 <tk:menu.item
-    x-data="menuRadio"
-    :attributes="$attributes->classes('group/menu-radio')->merge([
-        'role' => 'menuitemradio',
-        'data-checked' => $checked,
-    ])"
+    wire:ignore
+    x-data="menuRadio({{ $checked }})"
+    x-modelable="checked"
+    :attributes="$attributes->classes('group/menu-radio')->merge(['data-keep-open' => $keepOpen])"
+    role="menuitemradio"
     icon:class="w-7"
 >
     <x-slot:icon>

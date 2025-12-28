@@ -1,5 +1,5 @@
-import { bind } from "../utils"
-import { toggleable } from "./toggleable"
+import { bind } from '../utils'
+import { toggleable } from './toggleable'
 
 export function popover ({ mode, position, align }) {
   const _toggleable = toggleable()
@@ -153,7 +153,7 @@ export function popover ({ mode, position, align }) {
     },
 
     setPosition() {
-      let triggerRect;
+      let triggerRect
 
       if (mode === 'context') {
         triggerRect = {

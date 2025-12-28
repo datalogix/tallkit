@@ -3,32 +3,11 @@
     {{ $attributesAfter('container:') }}
 >
     <tk:menu.item
-        :attributes="$attributes->whereDoesntStartWith(['container:', 'suffix:', 'icon:', 'icon-trailing:', 'menu:'])"
-        :$icon
+        :attributes="$attributes->whereDoesntStartWith(['container:', 'menu:'])"
         keep-open
-    >
-        {{ $heading }}
-
-        <x-slot:suffix {{ $attributesAfter('suffix:') }}>
-            @if (is_string($iconTrailing) && $iconTrailing !== '')
-                <tk:icon
-                    :icon="$iconTrailing"
-                    :attributes="$attributesAfter('icon-trailing:')->classes('text-zinc-400 [[data-tallkit-menu-item]:hover_&]:text-current')"
-                />
-            @elseif ($iconTrailing)
-                {{ $iconTrailing }}
-            @else
-                <tk:icon
-                    icon="chevron-right"
-                    :attributes="$attributesAfter('icon:')->classes('text-zinc-400 [[data-tallkit-menu-item]:hover_&]:text-current rtl:hidden')"
-                />
-                <tk:icon
-                    icon="chevron-left"
-                    :attributes="$attributesAfter('icon:')->classes('text-zinc-400 [[data-tallkit-menu-item]:hover_&]:text-current hidden rtl:inline')"
-                />
-            @endif
-        </x-slot:suffix>
-    </tk:menu.item>
+        icon-trailing="chevron-right"
+        icon-trailing:class="rtl:rotate-180"
+    />
 
     <tk:menu :attributes="$attributesAfter('menu:')->classes('-ml-2')">
         {{ $slot }}

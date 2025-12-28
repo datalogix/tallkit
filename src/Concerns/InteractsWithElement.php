@@ -8,6 +8,6 @@ trait InteractsWithElement
 
     protected function customAppendedAttributes()
     {
-        return ['icon', 'suffix', 'iconTrailing', 'info', 'badge', 'prepend', 'append'];
+        return ['icon', 'prefix', 'suffix', 'iconTrailing', 'info', 'badge', 'prepend', 'append', 'kbd'];
     }
 }

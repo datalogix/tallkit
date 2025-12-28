@@ -14,6 +14,7 @@ class Input extends BladeComponent
 
     public function __construct(
         public ?string $type = null,
+        public ?string $variant = null,
         public bool|string|null $mask = null,
         public string|ComponentSlot|null $icon = null,
         public string|ComponentSlot|null $iconTrailing = null,

@@ -1,4 +1,4 @@
-import { bind } from "../utils"
+import { bind } from '../utils'
 
 export function upload({ droppable = false } = {}) {
   return {

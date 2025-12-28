@@ -1,1 +1,1 @@
-<tk:table.column class="p-1! w-8" />
+<tk:table.column :attributes="$attributes->classes('p-1! w-8')"

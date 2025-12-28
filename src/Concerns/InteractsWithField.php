@@ -8,6 +8,7 @@ use TALLKit\Attributes\Mount;
 trait InteractsWithField
 {
     use AppendsCustomAttributes;
+    use InteractsWithErrorBag;
     use InteractsWithFieldValue;
 
     protected function customAppendedAttributes()
@@ -30,6 +31,7 @@ trait InteractsWithField
         $this->id ??= uniqid($fieldName);
         $this->label = $this->label === true || $this->label === null ? Str::headline(Str::before($fieldName, '_id')) : $this->label;
         $this->placeholder = $this->placeholder === true ? $this->label : $this->placeholder;
+        $this->invalid ??= $this->name && $this->hasError($this->name);
 
         if (! $wireModel && in_livewire() && $fieldName && ! $xModel) {
             $this->attributes = $this->attributes->merge(['wire:model' => $fieldName]);

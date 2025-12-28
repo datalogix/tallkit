@@ -16,5 +16,6 @@ class Alert extends BladeComponent
         public string|bool|ComponentSlot|null $dismissible = null,
         public int|bool|null $timeout = null,
         public ?string $size = null,
+        public ?ComponentSlot $actions = null,
     ) {}
 }

@@ -9,5 +9,6 @@ class Text extends BladeComponent
     public function __construct(
         public ?string $variant = null,
         public ?string $size = null,
+        public ?bool $weight = null,
     ) {}
 }

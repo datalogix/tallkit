@@ -17,6 +17,7 @@ abstract class BladeComponent extends Component
         Concerns\HandlesDataKey,
         Concerns\HandlesLifecycle,
         Concerns\HandlesProps,
+        Concerns\HandlesSize,
         Concerns\HandlesView;
 
     public function classes(...$classes)
@@ -71,25 +72,5 @@ abstract class BladeComponent extends Component
         }
 
         return $attrs;
-    }
-
-    public function adjustSize(
-        ?string $size = null,
-        array $sizes = ['xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl'],
-        int $move = -1
-    ) {
-        $default = 'md';
-        $size ??= $this->size ?? $default;
-        $index = array_search($size, $sizes);
-
-        if ($index === false && $size !== $default) {
-            $index = array_search($default, $sizes);
-        }
-
-        if ($index === false) {
-            return null;
-        }
-
-        return $sizes[max(0, min(count($sizes) - 1, $index + $move))];
     }
 }

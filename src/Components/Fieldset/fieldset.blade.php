@@ -22,10 +22,9 @@
         />
 
         <tk:text
-            :attributes="$attributesAfter('description:')"
+            :attributes="$attributesAfter('description:')->classes('mb-4')"
             :label="$description"
             :$size
-            class="mb-4"
         />
    @endif
 

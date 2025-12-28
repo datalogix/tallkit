@@ -166,7 +166,9 @@ class Table extends BladeComponent
             }
 
             if ($value instanceof \BackedEnum) {
-                $value = $value->value;
+                $value = method_exists($value, 'label')
+                    ? $value->label()
+                    : $value->value;
             }
 
             if ($value instanceof \UnitEnum) {

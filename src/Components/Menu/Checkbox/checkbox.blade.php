@@ -4,11 +4,11 @@ $iconUnchecked ??= $attributes->pluck('icon-unchecked');
 @endphp
 
 <tk:menu.item
-    x-data="menuCheckbox"
-    :attributes="$attributes->classes('group/menu-checkbox')->merge([
-        'role' => 'menuitemcheckbox',
-        'data-checked' => $checked,
-    ])"
+    wire:ignore
+    x-data="menuCheckbox({{ $checked }})"
+    x-modelable="checked"
+    :attributes="$attributes->classes('group/menu-checkbox')->merge(['data-keep-open' => $keepOpen])"
+    role="menuitemcheckbox"
     icon:class="w-7"
 >
     <x-slot:icon>
