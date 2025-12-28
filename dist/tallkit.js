@@ -1,6 +1,6 @@
 (function(factory) {
   typeof define === "function" && define.amd ? define(factory) : factory();
-})((function() {
+})(function() {
   "use strict";
   function bind(el, bindings) {
     const elements = el instanceof Element ? [el] : el;
@@ -264,6 +264,99 @@
     __proto__: null,
     alertComponent
   }, Symbol.toStringTag, { value: "Module" }));
+  function loadable() {
+    return {
+      empty: null,
+      loaded: null,
+      error: null,
+      async load(cb) {
+        if (!this.$el.hasAttribute("data-silent")) {
+          this.start();
+        }
+        try {
+          const result = await cb();
+          this.complete();
+          if (result) {
+            this.$nextTick(result);
+          }
+        } catch (e) {
+          this.fail(e);
+        }
+      },
+      reset() {
+        this.empty = null;
+        this.loaded = null;
+        this.error = null;
+      },
+      clear() {
+        this.reset();
+        this.empty = true;
+      },
+      start() {
+        this.reset();
+        this.loaded = false;
+        this.$dispatch("started");
+      },
+      complete(milliseconds = 0) {
+        timeout(() => {
+          this.reset();
+          this.loaded = true;
+          this.$dispatch("completed");
+        }, milliseconds);
+      },
+      fail(error, milliseconds = 0) {
+        timeout(() => {
+          this.reset();
+          this.error = error;
+          this.$dispatch("failed");
+        }, milliseconds);
+      },
+      startAndComplete(completeOnNextTick = false) {
+        this.start();
+        if (completeOnNextTick) {
+          this.$nextTick(() => this.complete());
+        }
+      },
+      isEmpty() {
+        return this.empty === true;
+      },
+      isLoading() {
+        return this.loaded === false;
+      },
+      isCompleted() {
+        return this.loaded === true;
+      },
+      isError() {
+        return this.error !== null;
+      }
+    };
+  }
+  const __vite_glob_0_20 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    loadable
+  }, Symbol.toStringTag, { value: "Module" }));
+  function apexcharts() {
+    return {
+      ...loadable(),
+      chart: null,
+      async init() {
+        this.load(async () => {
+          if (!window.ApexCharts) {
+            await this.$tallkit.loadScript("https://cdn.jsdelivr.net/npm/apexcharts@5");
+          }
+        });
+      },
+      render(options = {}) {
+        this.chart ??= new window.ApexCharts(this.$el, options);
+        this.chart.render();
+        this.$dispatch("rendered", { chart: this.chart });
+      }
+    };
+  }
+  const __vite_glob_0_2 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    apexcharts
+  }, Symbol.toStringTag, { value: "Module" }));
   function sticky() {
     return {
       init() {
@@ -274,7 +367,7 @@
       }
     };
   }
-  const __vite_glob_0_23 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_31 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     sticky
   }, Symbol.toStringTag, { value: "Module" }));
@@ -283,7 +376,7 @@
       ...sticky()
     };
   }
-  const __vite_glob_0_2 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_3 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     aside
   }, Symbol.toStringTag, { value: "Module" }));
@@ -312,9 +405,30 @@
       }
     };
   }
-  const __vite_glob_0_3 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_4 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     badge
+  }, Symbol.toStringTag, { value: "Module" }));
+  function chartjs() {
+    return {
+      ...loadable(),
+      chart: null,
+      async init() {
+        this.load(async () => {
+          if (!window.Chart) {
+            await this.$tallkit.loadScript("https://cdn.jsdelivr.net/npm/chart.js@4");
+          }
+        });
+      },
+      render(options = {}) {
+        this.chart ??= new window.Chart(this.$el, options);
+        this.$dispatch("rendered", { chart: this.chart });
+      }
+    };
+  }
+  const __vite_glob_0_5 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    chartjs
   }, Symbol.toStringTag, { value: "Module" }));
   function command() {
     return {
@@ -454,7 +568,7 @@
       }
     };
   }
-  const __vite_glob_0_4 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_6 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     command
   }, Symbol.toStringTag, { value: "Module" }));
@@ -491,7 +605,7 @@
       }
     };
   }
-  const __vite_glob_0_28 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_36 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     toggleable
   }, Symbol.toStringTag, { value: "Module" }));
@@ -530,7 +644,7 @@
       }
     };
   }
-  const __vite_glob_0_5 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_7 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     creditCard
   }, Symbol.toStringTag, { value: "Module" }));
@@ -565,7 +679,7 @@
       }
     };
   }
-  const __vite_glob_0_6 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_8 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     disclosureGroup
   }, Symbol.toStringTag, { value: "Module" }));
@@ -594,9 +708,104 @@
       }
     };
   }
-  const __vite_glob_0_7 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_9 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     disclosure
+  }, Symbol.toStringTag, { value: "Module" }));
+  function echarts() {
+    return {
+      ...loadable(),
+      chart: null,
+      async init() {
+        this.load(async () => {
+          if (!window.echarts) {
+            await this.$tallkit.loadScript("https://cdn.jsdelivr.net/npm/echarts@6");
+          }
+        });
+      },
+      render(options = {}) {
+        this.chart ??= window.echarts.init(this.$el);
+        this.chart.setOption(options);
+        this.$dispatch("rendered", { chart: this.chart });
+      }
+    };
+  }
+  const __vite_glob_0_10 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    echarts
+  }, Symbol.toStringTag, { value: "Module" }));
+  function fetchable(url, data, autofetch, options) {
+    return {
+      ...loadable(),
+      url: null,
+      response: null,
+      data: null,
+      options: null,
+      init() {
+        this.clear();
+        this.url = url;
+        this.data = data;
+        this.options = {
+          method: "get",
+          headers: { Accept: "application/json" },
+          responseType: "json",
+          ...options
+        };
+        if (this.url && autofetch !== false) {
+          this.fetch();
+        }
+        if (!this.url && this.data) {
+          this.complete();
+        }
+      },
+      async fetch(url2 = null, options2 = {}, silent = false) {
+        const _url = url2 || this.url;
+        const _options = { ...this.options ?? {}, ...options2 };
+        this.url = _url;
+        this.options = _options;
+        if (!_url) {
+          return;
+        }
+        this.load(async () => {
+          this.response = await window.fetch(_url, _options);
+          if (!this.response.ok) {
+            throw new Error(this.response.statusText);
+          }
+          this.data = _options.responseType ? await this.response[_options.responseType]() : this.response;
+        }, silent);
+      },
+      reload() {
+        return this.fetch();
+      },
+      update(url2 = null, options2 = {}) {
+        return this.fetch(url2, options2, true);
+      }
+    };
+  }
+  const __vite_glob_0_11 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    fetchable
+  }, Symbol.toStringTag, { value: "Module" }));
+  function frappeCharts() {
+    return {
+      ...loadable(),
+      chart: null,
+      async init() {
+        this.load(async () => {
+          if (!window.frappe?.Chart) {
+            await this.$tallkit.loadScript("https://cdn.jsdelivr.net/npm/frappe-charts@1");
+          }
+        });
+      },
+      render(options = {}) {
+        this.chart ??= new window.frappe.Chart(this.$el, options);
+        this.$dispatch("rendered", { chart: this.chart });
+      }
+    };
+  }
+  const __vite_glob_0_12 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    frappeCharts
   }, Symbol.toStringTag, { value: "Module" }));
   function fullCalendar(options) {
     return {
@@ -619,7 +828,7 @@
       }
     };
   }
-  const __vite_glob_0_8 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_13 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     fullCalendar
   }, Symbol.toStringTag, { value: "Module" }));
@@ -628,9 +837,33 @@
       ...sticky()
     };
   }
-  const __vite_glob_0_9 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_14 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     header
+  }, Symbol.toStringTag, { value: "Module" }));
+  function highlightjs() {
+    return {
+      ...loadable(),
+      init() {
+        this.load(async () => {
+          if (!window.hljs) {
+            await this.$tallkit.loadScript("https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/highlight.min.js");
+            await this.$tallkit.loadStyle("https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/styles/default.min.css");
+          }
+        });
+      },
+      render(code, language = null) {
+        try {
+          return language ? window.hljs.highlight(code, { language }).value : window.hljs.highlightAuto(code).value;
+        } catch (e) {
+          this.fail(e);
+        }
+      }
+    };
+  }
+  const __vite_glob_0_15 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    highlightjs
   }, Symbol.toStringTag, { value: "Module" }));
   function inputClearable() {
     return {
@@ -660,7 +893,7 @@
       }
     };
   }
-  const __vite_glob_0_10 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_16 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     inputClearable
   }, Symbol.toStringTag, { value: "Module" }));
@@ -693,7 +926,7 @@
       }
     };
   }
-  const __vite_glob_0_11 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_17 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     inputCopyable
   }, Symbol.toStringTag, { value: "Module" }));
@@ -728,7 +961,7 @@
       }
     };
   }
-  const __vite_glob_0_12 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_18 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     inputViewable
   }, Symbol.toStringTag, { value: "Module" }));
@@ -781,7 +1014,7 @@
       }
     };
   }
-  const __vite_glob_0_13 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_19 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     label
   }, Symbol.toStringTag, { value: "Module" }));
@@ -823,7 +1056,7 @@
       }
     };
   }
-  const __vite_glob_0_14 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_21 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     menuCheckbox
   }, Symbol.toStringTag, { value: "Module" }));
@@ -852,7 +1085,7 @@
       }
     };
   }
-  const __vite_glob_0_15 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_22 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     menuRadio
   }, Symbol.toStringTag, { value: "Module" }));
@@ -876,7 +1109,7 @@
       }
     };
   }
-  const __vite_glob_0_16 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_23 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     menu
   }, Symbol.toStringTag, { value: "Module" }));
@@ -900,7 +1133,7 @@
       }
     };
   }
-  const __vite_glob_0_17 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_24 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     modalTrigger
   }, Symbol.toStringTag, { value: "Module" }));
@@ -954,7 +1187,7 @@
       }
     };
   }
-  const __vite_glob_0_18 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_25 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     modal
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1061,7 +1294,7 @@
     );
     inputs[lastIndex]?.focus();
   }
-  const __vite_glob_0_19 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_26 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     otp
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1269,9 +1502,33 @@
     component.boundSetPosition = component.boundSetPosition.bind(component);
     return component;
   }
-  const __vite_glob_0_20 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_27 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     popover
+  }, Symbol.toStringTag, { value: "Module" }));
+  function prettyPrintJson() {
+    return {
+      ...loadable(),
+      init() {
+        this.load(async () => {
+          if (!window.prettyPrintJson) {
+            await this.$tallkit.loadScript("https://cdn.jsdelivr.net/npm/pretty-print-json@3/dist/pretty-print-json.min.js");
+            await this.$tallkit.loadStyle("https://cdn.jsdelivr.net/npm/pretty-print-json@3/dist/css/pretty-print-json.min.css");
+          }
+        });
+      },
+      render(data = null, options = {}) {
+        try {
+          return window.prettyPrintJson.toHtml(data, options);
+        } catch (e) {
+          this.fail(e);
+        }
+      }
+    };
+  }
+  const __vite_glob_0_28 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    prettyPrintJson
   }, Symbol.toStringTag, { value: "Module" }));
   function sidebar(name, sticky$1, stashable) {
     const _toggleable = toggleable();
@@ -1312,7 +1569,7 @@
       }
     };
   }
-  const __vite_glob_0_21 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_29 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     sidebar
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1361,7 +1618,7 @@
       }
     };
   }
-  const __vite_glob_0_22 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_30 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     slider
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1408,7 +1665,7 @@
       }
     };
   }
-  const __vite_glob_0_24 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_32 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     submenu
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1431,7 +1688,7 @@
       }
     };
   }
-  const __vite_glob_0_25 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_33 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     tab
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1507,7 +1764,7 @@
       }
     };
   }
-  const __vite_glob_0_26 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_34 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     table
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1558,7 +1815,7 @@
       }
     };
   }
-  const __vite_glob_0_27 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_35 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     toast: toast$1
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1596,7 +1853,7 @@
       }
     };
   }
-  const __vite_glob_0_29 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_37 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     upload
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1628,7 +1885,7 @@
   }
   function registerAlpineComponents() {
     const components = Object.fromEntries(
-      Object.values([__vite_glob_0_0, __vite_glob_0_1, __vite_glob_0_2, __vite_glob_0_3, __vite_glob_0_4, __vite_glob_0_5, __vite_glob_0_6, __vite_glob_0_7, __vite_glob_0_8, __vite_glob_0_9, __vite_glob_0_10, __vite_glob_0_11, __vite_glob_0_12, __vite_glob_0_13, __vite_glob_0_14, __vite_glob_0_15, __vite_glob_0_16, __vite_glob_0_17, __vite_glob_0_18, __vite_glob_0_19, __vite_glob_0_20, __vite_glob_0_21, __vite_glob_0_22, __vite_glob_0_23, __vite_glob_0_24, __vite_glob_0_25, __vite_glob_0_26, __vite_glob_0_27, __vite_glob_0_28, __vite_glob_0_29]).flatMap(
+      Object.values([__vite_glob_0_0, __vite_glob_0_1, __vite_glob_0_2, __vite_glob_0_3, __vite_glob_0_4, __vite_glob_0_5, __vite_glob_0_6, __vite_glob_0_7, __vite_glob_0_8, __vite_glob_0_9, __vite_glob_0_10, __vite_glob_0_11, __vite_glob_0_12, __vite_glob_0_13, __vite_glob_0_14, __vite_glob_0_15, __vite_glob_0_16, __vite_glob_0_17, __vite_glob_0_18, __vite_glob_0_19, __vite_glob_0_20, __vite_glob_0_21, __vite_glob_0_22, __vite_glob_0_23, __vite_glob_0_24, __vite_glob_0_25, __vite_glob_0_26, __vite_glob_0_27, __vite_glob_0_28, __vite_glob_0_29, __vite_glob_0_30, __vite_glob_0_31, __vite_glob_0_32, __vite_glob_0_33, __vite_glob_0_34, __vite_glob_0_35, __vite_glob_0_36, __vite_glob_0_37]).flatMap(
         (module) => Object.entries(module).filter(([, v]) => typeof v === "function")
       )
     );
@@ -1743,4 +2000,4 @@
   document.dispatchEvent(new CustomEvent("tallkit:init"));
   initAlpine();
   document.addEventListener("alpine:init", setupAlpine);
-}));
+});
