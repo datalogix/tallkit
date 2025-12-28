@@ -1,4 +1,4 @@
 export * from './bind'
-export * from './timeout'
+export * from './timer'
 export * from './scripts'
 export * from './styles'

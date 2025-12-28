@@ -11,3 +11,15 @@ export function timeout(callback: TimerHandler, milliseconds?: Milliseconds, def
   timeoutId = setTimeout(callback, ms)
   return timeoutId
 }
+
+export function interval(callback: TimerHandler, milliseconds?: Milliseconds, defaultMilliseconds: number = 500) {
+  let intervalId: number | undefined = undefined
+  clearInterval(intervalId)
+
+  const ms = !milliseconds || isNaN(parseInt(milliseconds.toString()))
+    ? defaultMilliseconds
+    : parseInt(milliseconds.toString())
+
+  intervalId = setInterval(callback, ms)
+  return intervalId
+}
