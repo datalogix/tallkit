@@ -1,6 +1,8 @@
 <tk:input
     :$attributes
     :$viewable
+    :$id
+    :$invalid
     type="password"
     name="password"
     placeholder

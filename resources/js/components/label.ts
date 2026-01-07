@@ -2,7 +2,6 @@ import { bind } from '../utils'
 
 export function label() {
   return {
-
     get control () {
       let control = this.$el.parentElement?.querySelector('[data-tallkit-control]')
       const validSelectors = 'input, select, textarea, [contenteditable=""], [contenteditable="true"], [role="textbox"]'

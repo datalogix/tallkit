@@ -53,7 +53,7 @@ export function modal(name?: string, dismissible?: boolean, persist?: string | b
           handleCloseAttempt(event)
         },
 
-        ['@keydown.escape.window.prevent'](event) {
+        ['@keyup.escape.window'](event) {
           handleCloseAttempt(event)
         },
       })

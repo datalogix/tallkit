@@ -17,5 +17,6 @@ class Label extends BladeComponent
         public null|bool|string|ComponentSlot $labelPrepend = null,
         public ?string $for = null,
         public ?string $size = null,
+        public ?bool $srOnly = null,
     ) {}
 }

@@ -25,7 +25,11 @@ $hasPrependOrAppend = $labelPrepend || $labelAppend;
     <{{ $as ?? ($for ? 'label' : 'span') }}
         x-data="label"
         {{ $attributesAfter('container:')
-            ->classes(['inline-flex', 'flex-1' => $hasPrependOrAppend])
+            ->classes([
+                'inline-flex',
+                'flex-1' => $hasPrependOrAppend,
+                'sr-only' => $srOnly
+            ])
             ->merge([$dataKey() => $hasPrependOrAppend ? false : ''])
         }}
         @if ($for && $as !== 'label') for="{{ $for }}" @endif

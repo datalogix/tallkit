@@ -1,28 +1,21 @@
 <?php
 
-namespace TALLKit\Components\Select;
+namespace TALLKit\Components\Composer;
 
-use Illuminate\Support\Arr;
 use TALLKit\Attributes\Mount;
 use TALLKit\Concerns\InteractsWithField;
-use TALLKit\Concerns\InteractsWithOptions;
 use TALLKit\View\BladeComponent;
 
-class Select extends BladeComponent
+class Composer extends BladeComponent
 {
     use InteractsWithField;
-    use InteractsWithOptions;
 
     public function __construct(
-        public ?bool $multiple = null,
         public ?int $rows = null,
+        public ?int $maxRows = null,
+        public ?bool $inline = null,
+        public ?string $submit = null,
     ) {}
-
-    #[Mount()]
-    protected function mount()
-    {
-        $this->value = Arr::wrap($this->value);
-    }
 
     #[Mount()]
     protected function mountLoading(array $data)

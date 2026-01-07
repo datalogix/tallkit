@@ -1,5 +1,7 @@
 <tk:input
     :$attributes
+    :$id
+    :$invalid
     :$placeholder
     :prefix="$position === 'prefix' ? $symbol : null"
     :suffix="$position === 'suffix' ? $symbol : null"

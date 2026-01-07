@@ -34,6 +34,14 @@ export function command() {
       })
 
       bind(this.$root.querySelectorAll('[data-tallkit-command-item]'), (element) => ({
+        ['@click']: () => this.filteredItems.forEach((item, index) => {
+          if (item.querySelector('[data-tallkit-command-item]') === element) {
+            this.current = index
+            this.selectActive()
+            return
+          }
+        }),
+
         ['@mouseenter']: () => this.filteredItems.forEach((item, index) => {
           if (item.querySelector('[data-tallkit-command-item]') === element) {
             this.setActive(index)
@@ -166,13 +174,21 @@ export function command() {
       const button = item.querySelector('[data-tallkit-command-item]')
       if (!button || button.hasAttribute('disabled')) return
 
-      button.dispatchEvent(new Event('click', { bubbles: true }))
+      //button.dispatchEvent(new Event('click', { bubbles: true }))
+
+      const lastCurrent = this.current
+
+      this.input.value = ''
+      this.input.dispatchEvent(new Event('input', { bubbles: true }))
+      this.input.dispatchEvent(new Event('change', { bubbles: true }))
 
       this.$dispatch('command-item-selected', {
         index: this.current,
         item,
         button,
       })
+
+      this.setActive(lastCurrent)
     }
   }
 }

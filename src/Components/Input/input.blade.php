@@ -19,7 +19,12 @@
     >
         <div
             {{ $buildDataAttribute('input') }}
-            {{ $attributes->only('class')->classes('w-full relative block group/input') }}
+            {{ $attributes->only('class')->classes('w-full relative block group/input')
+                ->when(in_livewire() && $loading, fn($attrs) => $attrs->merge([
+                    'wire:loading.class' => 'field-loading',
+                    'wire:target' => $wireTarget
+                ]))
+            }}
         >
             @if (is_string($icon) && $icon !== '')
                 <div class="pointer-events-none absolute top-0 bottom-0 ps-3 start-0 flex items-center justify-center text-xs text-zinc-400/75 dark:text-white/60">
@@ -46,8 +51,6 @@
                 @if ($invalid) aria-invalid="true" data-invalid @endif
                 @if ($placeholder) placeholder="{{ __((string) $placeholder) }}" @endif
                 @unless (in_livewire()) value="{{ $value }}" @endif
-                @if ($loading && in_livewire()) wire:loading.style="$paddingEnd(true)" @endif
-                @if ($loading && $wireTarget && in_livewire()) wire:target="{{ $wireTarget }}" @endif
                 @if ($mask) x-data x-mask="{{ $mask }}" @endif
                 {{ $attributes->whereDoesntStartWith([
                         'input:', 'icon:', 'loading:', 'clearable:', 'copyable:', 'viewable:', 'icon-trailing:', 'kbd:',
@@ -88,7 +91,7 @@
                                 disabled:[&[data-invalid]]:border-red-500 disabled:dark:[&[data-invalid]]:border-red-400
                                 [&[data-invalid]]:border-red-500 dark:[&[data-invalid]]:border-red-400
 
-                                 shadow-xs
+                                shadow-xs
                                 disabled:shadow-none
                                 [&[data-invalid]]:disabled:shadow-none
                             '
@@ -112,13 +115,16 @@
             />
 
             @if ($loading || $clearable || $kbd || $copyable || $viewable || $iconTrailing)
-                <div class="absolute top-0 bottom-0 flex items-center gap-x-1.5 pe-3 end-0 text-zinc-400">
+                <div
+                    {{
+                        $attributesAfter('append:')->classes(
+                            'absolute top-0 bottom-0 flex items-center gap-x-1.5 pe-3 end-0 text-zinc-400
+                        ')
+                    }}
+                >
                     @if ($loading)
                         <tk:loading
-                            :attributes="$attributesAfter('loading:')->when(in_livewire(), fn($attrs) => $attrs->merge([
-                                'wire:loading' => true,
-                                'wire:target' => $wireTarget
-                            ]))"
+                            :attributes="$attributesAfter('loading:')->classes('hidden [.field-loading_&]:block')"
                             :size="$adjustSize()"
                         />
                     @endif

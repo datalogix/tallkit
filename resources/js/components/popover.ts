@@ -83,7 +83,7 @@ export function popover ({ mode, position, align }) {
             this.open()
           },
 
-          ['@keyup.escape.window.prevent']() {
+          ['@keydown.escape.prevent']() {
             this.close()
           },
         })
