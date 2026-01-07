@@ -23,7 +23,8 @@
                 has-[input:disabled]:opacity-50
                 has-[input:checked:not([data-invalid])]:border-0
 
-                has-[input[data-invalid]]:border-red-400 dark:has-[input[data-invalid]]:border-red-500
+                has-[input[data-invalid]]:border-red-400
+                dark:has-[input[data-invalid]]:border-red-500
             ',
              match ($size) {
                 'xs' => 'w-8 h-5 [&_span]:size-3 [&_[data-tallkit-icon]]:size-2.5',

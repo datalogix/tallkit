@@ -1,6 +1,6 @@
 @if ($slot->hasActualContent() || collect($items)->isNotEmpty())
     @php
-    $content = Str::of($slot->toHtml())->trim();
+    $content = Str::of($slot)->trim();
     @endphp
     <div
         x-data="command"

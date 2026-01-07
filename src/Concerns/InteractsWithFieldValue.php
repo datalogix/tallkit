@@ -51,12 +51,12 @@ trait InteractsWithFieldValue
 
     public function getValue($default = null)
     {
-        if (in_livewire()) {
-            return;
-        }
-
         if (empty($this->name)) {
             return $default;
+        }
+
+        if (in_livewire()) {
+            return;
         }
 
         if (! $this->language) {

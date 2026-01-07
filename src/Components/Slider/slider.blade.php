@@ -54,7 +54,8 @@
 
                         border
                         border-transparent
-                        [&[data-invalid]]:border-red-500 dark:[&[data-invalid]]:border-red-400
+                        [&[data-invalid]]:border-red-500
+                        dark:[&[data-invalid]]:border-red-400
 
                         [&::-webkit-slider-thumb]:relative
                         [&::-webkit-slider-thumb]:z-10

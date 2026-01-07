@@ -1,5 +1,5 @@
 @if ($slot->hasActualContent() || collect($items)->isNotEmpty())
-    @if (Str::of($slot->toHtml())->trim()->startsWith('<nav'))
+    @if (Str::of($slot)->trim()->startsWith('<nav'))
         {{ $slot }}
     @else
         <nav {{ $attributes->whereDoesntStartWith(['item:'])->classes('flex', $fontSize($size, true)) }}>
