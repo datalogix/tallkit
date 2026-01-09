@@ -108,12 +108,13 @@
             ->merge($attributesAfter('subtitle:', prepend: true)->getAttributes())
             ->merge($attributesAfter('separator:', prepend: true)->getAttributes())
             ->merge($attributesAfter('content:', prepend: true)->getAttributes())
-            ->classes($variant === 'bare' ? '' : 'p-6')
+            ->classes($variant === 'bare' ? '' : 'p-6', '[:where(&)]:text-start')
         "
         :$title
         :$subtitle
         :separator="false"
         :$size
+        content:class="space-y-0"
     >
         {{ $slot }}
 

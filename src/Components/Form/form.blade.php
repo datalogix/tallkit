@@ -1,5 +1,5 @@
 <form {{
-    $attributes->whereDoesntStartWith(['error-group:', 'submit:'])
+    $attributes->whereDoesntStartWith(['alert:', 'error-group:', 'submit:'])
         ->classes(
             '[:where(&)]:space-y-6',
             match ($errorGroup) {
@@ -25,6 +25,12 @@
             @method($method)
         @endif
     @endunless
+
+    @if ($alert !== false)
+        <tk:alert.session :attributes="$attributesAfter('alert:')">
+            {{ $alert ?? '' }}
+        </tk:alert.session>
+    @endif
 
     @if ($errorGroup)
         <tk:error.group :attributes="$attributesAfter('error-group:')" />

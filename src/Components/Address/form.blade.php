@@ -25,8 +25,7 @@
             :$required
             :$size
             loading
-            loading:class="hidden"
-            :loading:wire:loading="false"
+            loading:class="hidden [.field-loading_&]:hidden"
         />
         <tk:input
             name="number"

@@ -126,13 +126,13 @@ class TALLKit
     }
 
     public function toast(
-        ?string $text = null,
-        ?string $heading = null,
+        ?string $message = null,
+        ?string $title = null,
         ?string $type = null,
         ?int $duration = null,
         ?string $position = null,
     ) {
-        return app('livewire')->current()?->js('$tallkit.toast', $text, $heading, $type, $duration, $position);
+        return app('livewire')->current()?->js('$tallkit.toast', $message, $title, $type, $duration, $position);
     }
 
     public function toasts()

@@ -28,5 +28,5 @@
         }
     )"
 >
-    {{ $slot }}
+    {{ $slot->isEmpty() ? $value : $slot }}
 </tk:element.wrapper>

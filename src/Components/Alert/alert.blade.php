@@ -3,7 +3,7 @@
     role="alert"
     {{
         $attributes
-            ->whereDoesntStartWith(['icon:', 'content:', 'title:', 'text:', 'list:', 'list-item:', 'actions:', 'dismissible-content:', 'dismissible:'])
+            ->whereDoesntStartWith(['icon:', 'content:', 'title:', 'message:', 'list:', 'list-item:', 'actions:', 'dismissible-content:', 'dismissible:'])
             ->classes(
                 'transition-opacity duration-300 opacity-100',
                 'flex p-4 mb-4 text-base',
@@ -57,7 +57,7 @@
 
         @if ($slot->hasActualContent() || ($message && is_string($message)))
             <tk:text
-                :attributes="$attributesAfter('text:')->classes('text-current')"
+                :attributes="$attributesAfter('message:')->classes('text-current')"
                 :label="$message"
                 :$size
             >

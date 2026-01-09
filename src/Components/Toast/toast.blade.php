@@ -2,7 +2,7 @@
     x-data="toast"
     tabindex="-1"
     {{ $attributes
-        ->whereDoesntStartWith(['position:', 'container:', 'area:', 'content:', 'icon-', 'heading:', 'text:', 'actions:', 'close:'])
+        ->whereDoesntStartWith(['position:', 'container:', 'area:', 'content:', 'icon-', 'title:', 'message:', 'actions:', 'close:'])
         ->classes('fixed inset-0 overflow-hidden pointer-events-none z-9999999')
     }}
 >
@@ -82,13 +82,13 @@
                             />
                             <div class="flex flex-col gap-2">
                                 <div
-                                    {{ $attributesAfter('heading:')->classes('text-sm font-medium text-zinc-800 dark:text-white') }}
-                                    x-html="toast.heading || toast.text"
+                                    {{ $attributesAfter('title:')->classes('text-sm font-medium text-zinc-800 dark:text-white') }}
+                                    x-html="toast.title || toast.message"
                                 ></div>
                                 <div
-                                    {{ $attributesAfter('text:')->classes('text-sm font-normal text-zinc-500 dark:text-zinc-300') }}
-                                    x-show="toast.heading && toast.text"
-                                    x-html="toast.text"
+                                    {{ $attributesAfter('message:')->classes('text-sm font-normal text-zinc-500 dark:text-zinc-300') }}
+                                    x-show="toast.title && toast.message"
+                                    x-html="toast.message"
                                 ></div>
                             </div>
                         </div>

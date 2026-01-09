@@ -35,7 +35,10 @@
 
     {{ $prepend ?? ''}}
 
-    <tk:form :attributes="$attributes->whereDoesntStartWith(['card:', 'icon', 'badge', 'alert:'])">
+    <tk:form
+        :attributes="$attributes->whereDoesntStartWith(['card:', 'icon', 'badge', 'alert:'])"
+        :alert="false"
+    >
         {{ $slot }}
     </tk:form>
 

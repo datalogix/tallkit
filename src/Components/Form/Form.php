@@ -2,6 +2,7 @@
 
 namespace TALLKit\Components\Form;
 
+use Illuminate\View\ComponentSlot;
 use TALLKit\Attributes\Finish;
 use TALLKit\Attributes\Mount;
 use TALLKit\Binders\FormDataBinder;
@@ -18,6 +19,7 @@ class Form extends BladeComponent
         public mixed $bind = null,
         public ?string $route = null,
         public ?string $action = null,
+        public ComponentSlot|string|bool|null $alert = null,
         public string|bool|null $errorGroup = null,
     ) {
         app(FormDataBinder::class)->bind($bind);

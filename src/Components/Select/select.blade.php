@@ -98,7 +98,6 @@
                 <tk:select.option
                     :attributes="$attributesAfter('placeholder:')->classes('placeholder')"
                     :label="is_string($placeholder) ? $placeholder : '---'"
-                    :disabled="$attributes->has('required')"
                     :selected="true"
                     :value="''"
                 />

@@ -37,7 +37,7 @@
     @endif
 
     @if ($slot->hasActualContent() || $content)
-        <div {{ $attributesAfter('content:')->classes('[:where(&)]:space-y-6') }}>
+        <div {{ $attributesAfter('content:')->classes('space-y-6') }}>
             {{ $slot->isEmpty() ? __($content) : $slot }}
         </div>
     @endif
