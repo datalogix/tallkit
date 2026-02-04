@@ -57,18 +57,18 @@ $files = $getFiles($value ?? (in_livewire() ? $this->$name : null));
                 <div class="{{ $multiple ? 'h-48 w-54' : 'size-full' }} relative flex flex-col rounded-lg overflow-hidden border border-zinc-300 dark:border-white/10 transition-all duration-200">
                     @if ($file->type === 'image')
                         <img
-                            src="{{ $file->url }}"
+                            src="{{ $file->url() }}"
                             class="size-full object-cover"
                         />
                     @elseif ($file->type === 'video')
                         <video
-                            src="{{ $file->url }}"
+                            src="{{ $file->url() }}"
                             controls
                             class="size-full"
                         ></video>
                     @elseif ($file->type === 'audio')
                         <audio
-                            src="{{ $file->url }}"
+                            src="{{ $file->url() }}"
                             controls
                             class="h-32 w-full"
                         ></audio>
