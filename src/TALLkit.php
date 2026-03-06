@@ -98,7 +98,11 @@ class TALLKit
                     return;
                 }
 
-                $component->dispatch('modal-show', name: $this->name, scope: $this->scope ? $component->getId() : null);
+                $component->dispatch(
+                    'modal-show',
+                    name: $this->name,
+                    scope: $this->scope ? $component->getId() : null
+                );
             }
 
             public function close()
@@ -109,7 +113,11 @@ class TALLKit
                     return;
                 }
 
-                $component->dispatch('modal-close', name: $this->name, scope: $this->scope ? $component->getId() : null);
+                $component->dispatch(
+                    'modal-close',
+                    name: $this->name,
+                    scope: $this->scope ? $component->getId() : null
+                );
             }
         };
     }
@@ -131,8 +139,20 @@ class TALLKit
         ?string $type = null,
         ?int $duration = null,
         ?string $position = null,
+        ?bool $progress = null,
+        ?string $size = null,
+
     ) {
-        return app('livewire')->current()?->js('$tallkit.toast', $message, $title, $type, $duration, $position);
+        return app('livewire')->current()?->js(
+            '$tallkit.toast',
+            $message,
+            $title,
+            $type,
+            $duration,
+            $position,
+            $progress,
+            $size,
+        );
     }
 
     public function toasts()

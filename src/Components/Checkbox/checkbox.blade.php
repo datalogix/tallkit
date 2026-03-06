@@ -10,7 +10,7 @@
         {{ $attributes->only('disabled') }}
         {{ $attributesAfter('control:')->classes(
             'flex mt-px outline-offset-2 relative',
-            match($size) {
+            match ($size) {
                 'xs' => 'size-3.5',
                 'sm' => 'size-4',
                 default => 'size-5',
@@ -24,7 +24,7 @@
         <input {{
             $attributes->whereDoesntStartWith([
                     'field:', 'label:', 'info:', 'badge:', 'description:', 'help:', 'error:',
-                    'group:', 'prefix:', 'suffix:',
+                    'group:', 'prefix:', 'suffix:', 'append:', 'loading:',
                     'control:', 'icon-area:', 'icon-on:', 'icon-off:',
                 ])
                 ->classes(
@@ -52,7 +52,7 @@
                     checked:shadow-none
                     checked:not-[data-invalid]:border-none
                     ',
-                    match($variant) {
+                    match ($variant) {
                         'accent' => 'checked:bg-[var(--color-accent)]',
                         default => 'checked:bg-zinc-800 dark:checked:bg-white',
                         'red' => 'checked:bg-red-600 dark:checked:bg-red-500',
@@ -96,7 +96,7 @@
                 :name="$iconOn ?? 'check'"
                 :attributes="$attributesAfter('icon-on:')->classes(
                     'size-full m-px checked',
-                    match($variant) {
+                    match ($variant) {
                         'accent' => 'text-[var(--color-accent-foreground)]',
                         default => 'text-white dark:text-zinc-700',
                         'red' => 'text-white',

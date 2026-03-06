@@ -37,6 +37,7 @@ class Icon extends BladeComponent
         public ?string $name = null,
         public ?string $icon = null,
         public ?string $size = null,
+        public ?string $image = null,
         public ?string $svg = null,
     ) {}
 
@@ -46,6 +47,12 @@ class Icon extends BladeComponent
         $iconName = $this->name ?? $this->icon;
 
         if (! $iconName) {
+            return;
+        }
+
+        if (Str::isUrl($iconName)) {
+            $this->image = $iconName;
+
             return;
         }
 

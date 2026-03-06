@@ -10,9 +10,12 @@
 
 <dialog
     wire:ignore.self
-    x-data="modal(@js($name), @js($dismissible), @js($persist))"
+    x-data="modal(@js($name), @js($dismissible), @js($persist), @js($shortcut))"
     {{
-        $attributes->whereDoesntStartWith(['trigger:', 'close:', 'section:', 'icon', 'badge', 'title:', 'subtitle:', 'separator:', 'content:'])->classes(
+        $attributes->whereDoesntStartWith([
+            'trigger:', 'close:', 'section:',
+            'container:', 'title:', 'icon', 'badge', 'subtitle:', 'list:', 'actions:', 'separator:', 'content:',
+        ])->classes(
             '
                 outline-none
                 focus-visible:outline-none
@@ -42,21 +45,27 @@
             },
             match ($variant) { // Min-Max width...
                 default => 'fixed m-auto overflow-auto [:where(&)]:max-w-xl [:where(&)]:min-w-xs',
-                'flyout' => match($position) {
+                'flyout' => match ($position) {
+                    'top' => 'fixed m-0 min-w-[100vw] border-b',
                     'bottom' => 'fixed m-0 min-w-[100vw] border-t',
                     'left' => 'fixed m-0 max-h-dvh min-h-dvh border-e',
                     default => 'fixed m-0 max-h-dvh min-h-dvh border-s',
                 },
-                'floating' => match($position) {
+                'floating' => match ($position) {
+                    'top' => 'fixed m-2 min-w-[calc(100vw-1rem)]',
                     'bottom' => 'fixed m-2 min-w-[calc(100vw-1rem)]',
-                    'left' => 'fixed m-2 max-h-[calc(100dvh-1rem)] min-h-[calc(100dvh-1rem)]',
                     default => 'fixed m-2 max-h-[calc(100dvh-1rem)] min-h-[calc(100dvh-1rem)]',
                 },
                 'bare' => '',
             },
             match ($variant) { // Positions...
                  default => 'starting:transform-[scale(0.95)]',
-                'flyout', 'floating' => match($position) {
+                'flyout', 'floating' => match ($position) {
+                    'top' => '
+                        overflow-y-auto
+                        mb-auto
+                        [&:open]:starting:-translate-y-[50px]
+                    ',
                     'bottom' => '
                         overflow-y-auto
                         mt-auto
@@ -101,33 +110,37 @@
     <span tabindex="0" class="sr-only"></span>
 
     <tk:section
-        :attributes="$attributesAfter('section:')
-            ->merge($attributesAfter('icon', prepend: true)->getAttributes())
-            ->merge($attributesAfter('badge', prepend: true)->getAttributes())
-            ->merge($attributesAfter('title:', prepend: true)->getAttributes())
-            ->merge($attributesAfter('subtitle:', prepend: true)->getAttributes())
-            ->merge($attributesAfter('separator:', prepend: true)->getAttributes())
-            ->merge($attributesAfter('content:', prepend: true)->getAttributes())
+        :attributes="$attributesAfter('section:', prepend: [
+                'icon', 'badge',
+                'container:', 'title:', 'subtitle:', 'list:', 'actions:', 'separator:', 'content:',
+            ])
             ->classes($variant === 'bare' ? '' : 'p-6', '[:where(&)]:text-start')
         "
+        :$size
+        :$prepend
         :$title
         :$subtitle
-        :separator="false"
-        :$size
-        content:class="space-y-0"
+        :$description
+        :$append
+        :$content
+        :separator="$separator ?? false"
     >
         {{ $slot }}
 
-        @if (isset($close))
-            {{ $close }}
-        @elseif ($closable !== false)
-            <tk:modal.close
-                :attributes="$attributesAfter('close:')->classes('absolute top-0 end-0 mt-4 me-4')"
-                :size="$adjustSize($size)"
-                variant="ghost"
-                icon="close"
-                aria-label="Close modal"
-            />
-        @endif
+        <x-slot:actions>
+            {{ $actions }}
+
+            @if (isset($close))
+                {{ $close }}
+            @elseif ($closable !== false)
+                <tk:modal.close
+                    :attributes="$attributesAfter('close:')->classes('absolute top-0 end-0 mt-4 me-4')"
+                    :size="$adjustSize($size)"
+                    variant="ghost"
+                    icon="close"
+                    aria-label="Close modal"
+                />
+            @endif
+        </x-slot:actions>
     </tk:section>
 </dialog>

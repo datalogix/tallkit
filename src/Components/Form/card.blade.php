@@ -1,46 +1,33 @@
-<tk:card
-    :attributes="$attributesAfter('card:')
-        ->merge($attributesAfter('icon', prepend: true)->getAttributes())
-        ->merge($attributesAfter('badge', prepend: true)->getAttributes())
-    "
-    :$title
-    :$subtitle
-    :$separator
-    :$size
+<tk:form
+    :attributes="$attributes->whereDoesntStartWith([
+        'card:', 'alert:',
+        'image', 'alt', 'icon', 'badge', 'separator', 'content',
+        'title:', 'subtitle:', 'container:', 'list:', 'actions:',
+    ])"
+    :alert="false"
 >
-    @isset ($header)
-        <x-slot:header>
-            {{ $header }}
-        </x-slot:header>
-    @endisset
-
-    @isset ($description)
-        <x-slot:description>
-            {{ $description }}
-        </x-slot:description>
-    @endisset
-
-    @isset ($actions)
-        <x-slot:actions :attributes="$actions->attributes">
-            {{ $actions }}
-        </x-slot:actions>
-    @endisset
-
-    <tk:alert.session
-        :attributes="$attributesAfter('alert:')"
+    <tk:card
+        :attributes="$attributesAfter('card:', prepend: [
+            'image', 'alt', 'icon', 'badge', 'separator', 'content',
+            'title:', 'subtitle:', 'container:', 'list:', 'actions:',
+        ])"
         :$size
+        :$header
+        :$prepend
+        :$title
+        :$subtitle
+        :$description
+        :$append
+        :$actions
+        :$footer
     >
-        {{ $alert ?? '' }}
-    </tk:alert.session>
+        <tk:alert.session
+            :attributes="$attributesAfter('alert:')"
+            :$size
+        >
+            {{ $alert ?? '' }}
+        </tk:alert.session>
 
-    {{ $prepend ?? ''}}
-
-    <tk:form
-        :attributes="$attributes->whereDoesntStartWith(['card:', 'icon', 'badge', 'alert:'])"
-        :alert="false"
-    >
         {{ $slot }}
-    </tk:form>
-
-    {{ $append ?? ''}}
-</tk:card>
+    </tk:card>
+</tk:form>

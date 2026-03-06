@@ -4,12 +4,10 @@
     :$id
     :$label
 >
-    <div {{ $attributes->only('class')->classes('w-full relative block group/select')
-        ->when(in_livewire() && $loading, fn($attrs) => $attrs->merge([
-            'wire:loading.class' => 'field-loading',
-            'wire:target' => $wireTarget
-        ]))
-    }}>
+    <tk:field.control
+        :$attributes
+        :$size
+    >
         <select
             {{ $buildDataAttribute('control') }}
             {{ $buildDataAttribute('group-target') }}
@@ -18,8 +16,10 @@
             @if ($invalid) aria-invalid="true" data-invalid @endif
             @if ($multiple) multiple size="{{ $rows ?? 5 }}" @endif
             {{ $attributes->whereDoesntStartWith([
-                    'field:', 'label:', 'info:', 'badge:', 'description:', 'help:', 'error:',
-                    'group:', 'prefix:', 'suffix:', 'append:', 'loading:',
+                    'field:', 'label:', 'info:', 'badge:', 'description:',
+                    'group:', 'prefix:', 'suffix:',
+                    'help:', 'error:',
+                    'control:', 'prepend:', 'icon:', 'append:', 'loading:', 'icon-trailing:', 'kbd:',
                     'placeholder:', 'optgroup:', 'option:',
                 ])
                 ->when(
@@ -40,13 +40,13 @@
                 )
                 ->classes(
                     match ($size) {
-                        'xs' => 'min-h-8 text-xs rounded-md [.field-loading_&]:pe-[32px]',
-                        'sm' => 'min-h-9 text-sm rounded-md [.field-loading_&]:pe-[36px]',
-                        default => 'min-h-10 text-base rounded-lg [.field-loading_&]:pe-[40px]',
-                        'lg' => 'min-h-12 text-lg rounded-lg [.field-loading_&]:pe-[48px]',
-                        'xl' => 'min-h-14 text-xl rounded-lg [.field-loading_&]:pe-[56px]',
-                        '2xl' => 'min-h-16 text-2xl rounded-xl [.field-loading_&]:pe-[64px]',
-                        '3xl' => 'min-h-18 text-3xl rounded-xl [.field-loading_&]:pe-[72px]',
+                        'xs' => 'min-h-8 text-xs rounded-md',
+                        'sm' => 'min-h-9 text-sm rounded-md',
+                        default => 'min-h-10 text-base rounded-lg',
+                        'lg' => 'min-h-12 text-lg rounded-lg',
+                        'xl' => 'min-h-14 text-xl rounded-lg',
+                        '2xl' => 'min-h-16 text-2xl rounded-xl',
+                        '3xl' => 'min-h-18 text-3xl rounded-xl',
                     },
                     '
                         peer
@@ -88,8 +88,6 @@
 
                         bg-position-[right_.5rem_center]
                         rtl:bg-position-[left_.5rem_center]
-
-                        [.field-loading_&]:bg-none!
                     ',
                 )
             }}
@@ -129,21 +127,5 @@
                 @endforeach
             @endif
         </select>
-
-        @if ($loading)
-            <div
-                {{
-                    $attributesAfter('append:')->classes(
-                        'absolute top-0 bottom-0 flex gap-x-1.5 pe-3 end-0 text-zinc-400',
-                        $multiple ? 'items-start pt-3' : 'items-center',
-                    )
-                }}
-            >
-                <tk:loading
-                    :attributes="$attributesAfter('loading:')->classes('hidden [.field-loading_&]:block')"
-                    :size="$adjustSize()"
-                />
-            </div>
-        @endif
-    </div>
-</tk:field>
+    </tk:field.control>
+</tk:field.wrapper>

@@ -11,11 +11,11 @@ export function table() {
     init() {
       this.update()
       const observer = new MutationObserver(() => this.update())
-      observer.observe(this.$el.querySelector('tbody'), { childList: true, subtree: true })
+      observer.observe(this.$el.querySelector('table > tbody'), { childList: true, subtree: true })
     },
 
     update() {
-      this.rows = Array.from(this.$el.querySelectorAll('tbody>tr[role="row"]')).map(tr => {
+      this.rows = Array.from(this.$el.querySelector('table > tbody').querySelectorAll(':scope > tr[role="row"]')).map(tr => {
         const selection = tr.querySelector('[role=row-selection]')
         const expanded = tr.querySelectorAll('[role=row-expanded]')
 

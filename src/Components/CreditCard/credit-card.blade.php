@@ -1,13 +1,14 @@
-<div {{ $attributes->merge([
-    'x-cloak' => '',
-    //'x-data' => 'credit-card(' . $this->jsonOptions() . ')',
-    'x-data' => 'creditCard({types:'.json_encode($getCardTypes()).'})',
-    'class' => 'relative mx-auto max-w-[400px] h-[260px] w-full cursor-pointer transition duration-700 text-gray-700 transform-3d',
-    '@click' => 'toggle',
-]) }} :class="{
-    'rotate-y-180': !isOpened()
-}">
-    <div class="absolute w-full" style="backface-visibility: hidden;">
+<div
+    x-cloak
+    x-data="creditCard({{ $jsonOptions() }})"
+    {{ $attributes->classes(
+        '
+            relative mx-auto max-w-[400px] h-[260px]
+            w-full cursor-pointer transition duration-700 text-gray-700 transform-3d
+        '
+    ) }}
+>
+    <div class="absolute w-full backface-hidden">
         <div class="absolute right-4 top-5 w-20 h-14 flex" x-html="typeOptions.icon"></div>
 
         @isset ($frontSvg)
@@ -103,7 +104,7 @@
         @endisset
     </div>
 
-    <div class="absolute w-full" style="backface-visibility: hidden; transform: rotateY(180deg);">
+    <div class="absolute w-full backface-hidden transform rotate-y-180">
         @isset ($backSvg)
             {{ $backSvg }}
         @else

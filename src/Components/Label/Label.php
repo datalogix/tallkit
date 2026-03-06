@@ -13,10 +13,12 @@ class Label extends BladeComponent
     public function __construct(
         public ?string $as = null,
         public null|bool|string|ComponentSlot $label = null,
-        public null|bool|string|ComponentSlot $labelAppend = null,
         public null|bool|string|ComponentSlot $labelPrepend = null,
+        public null|bool|string|ComponentSlot $labelAppend = null,
         public ?string $for = null,
         public ?string $size = null,
+        public ?string $variant = null,
+        public ?string $contrast = null,
         public ?bool $srOnly = null,
     ) {}
 }

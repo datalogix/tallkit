@@ -3,7 +3,6 @@
     :$name
     :$id
     :$label
-    field:wire:ignore
 >
     <div
         wire:ignore
@@ -13,26 +12,26 @@
         @if ($inline) data-inline @endif
         {{
             $attributes->whereDoesntStartWith([
-                'field:', 'label:', 'info:', 'badge:', 'description:', 'help:', 'error:',
-                'group:', 'prefix:', 'suffix:', 'append:', 'loading:',
-                'header:', 'input:', 'textarea:', 'footer:', 'actionsLeading:', 'actionsTrailing:',
+                'field:', 'label:', 'info:', 'badge:', 'description:',
+                'group:', 'prefix:', 'suffix:',
+                'help:', 'error:',
+                'control:', 'prepend:', 'icon:', 'append:', 'loading:', 'icon-trailing:', 'kbd:',
+                'header:', 'input:', 'textarea:', 'footer:', 'actions-leading:', 'actions-trailing:',
             ])
             ->classes(
-                match ($size) {
-                    'xs' => 'p-1.5 text-xs rounded-md',
-                    'sm' => 'p-1.5 text-sm rounded-md',
-                    default => 'p-2 text-base rounded-lg',
-                    'lg' => 'p-2 text-lg rounded-lg',
-                    'xl' => 'p-2.5 text-xl rounded-lg',
-                    '2xl' => 'p-2.5 text-2xl rounded-xl',
-                    '3xl' => 'p-3 text-3xl rounded-xl',
-                },
+                $fontSize(size: $size),
+                $roundedSize(size: $size, mode: 'large'),
+                $padding(size: $size, mode: 'smallest'),
                 '
                     grid grid-cols-[auto_1fr_1fr_auto]
 
                     peer
                     w-full
                     appearance-none
+
+                    outline-none
+                    focus-within:ring-2
+                    focus-within:ring-[Highlight]
 
                     shadow-xs
                     [&[disabled]]:shadow-none
@@ -61,7 +60,13 @@
         }}
     >
         @isset ($header)
-            <div {{ $attributesAfter('header:')->classes('col-span-3 flex items-center gap-1 mb-2') }}>
+            <div {{ $attributesAfter('header:')->classes(
+                '
+                    flex items-center gap-1
+                    mb-2
+                    col-span-3
+                '
+            ) }}>
                 {{ $header }}
             </div>
         @endisset
@@ -77,39 +82,62 @@
             [&_[data-tallkit-control]]:border-none
             [&_[data-tallkit-control]]:focus:outline-none
             [&_[data-tallkit-control]]:resize-none
-
-            [&_[data-tallkit-input-append]]:pe-0
-            [&_[data-tallkit-textarea-append]]:top-0
-            [&_[data-tallkit-textarea-append]]:right-0
         ') }}>
-            @isset ($input)
-                {{ $input }}
-            @else
-                <tk:textarea
-                    :$id
-                    :$size
-                    :$loading
-                    :$wireTarget
-                    :attributes="$attributesAfter('textarea:')"
-                    :label="false"
-                    :max-rows="$maxRows ?? 10"
-                    :rows="$inline ? 1 : ($rows ?? 2)"
-                >{{ $slot }}</tk:textarea>
-            @endisset
+            <tk:field.control
+                :$attributes
+                :$size
+            >
+                @isset ($input)
+                    {{ $input }}
+                @else
+                    <tk:textarea
+                        :$id
+                        :$size
+                        :attributes="$attributesAfter('textarea:')"
+                        :label="false"
+                        :max-rows="$maxRows ?? 10"
+                        :rows="$inline ? 1 : ($rows ?? 2)"
+                    >{{ $slot }}</tk:textarea>
+                @endisset
+            </tk:field.control>
         </div>
 
         @isset ($footer)
-            <div {{ $attributesAfter('footer:')->classes('col-span-3 flex items-center gap-1 mt-2') }}>
+            <div {{ $attributesAfter('footer:')->classes(
+                '
+                    flex items-center gap-1
+                    mt-2
+                    col-span-3
+                '
+            ) }}>
                 {{ $footer }}
             </div>
         @endisset
 
-        <div {{ $attributesAfter('actionsLeading:')->classes('col-span-2 [[data-inline]_&]:col-span-1 [[data-inline]_&]:col-start-1 [[data-inline]_&]:row-start-1 flex items-start gap-1') }}>
-            {{ $actionsLeading ?? '' }}
-        </div>
+        @isset ($actionsLeading)
+            <div {{ $attributesAfter('actions-leading:')->classes(
+                '
+                    flex items-start gap-1
+                    col-span-2
+                    [[data-inline]_&]:col-span-1
+                    [[data-inline]_&]:col-start-1
+                    [[data-inline]_&]:row-start-1
+                '
+            ) }}>
+                {{ $actionsLeading ?? '' }}
+            </div>
+        @endisset
 
-        <div {{ $attributesAfter('actionsTrailing:')->classes('col-span-2 [[data-inline]_&]:col-span-1 flex items-start justify-end gap-1') }}>
-            {{ $actionsTrailing ?? '' }}
-        </div>
+        @isset ($actionsTrailing)
+            <div {{ $attributesAfter('actions-trailing:')->classes(
+                '
+                    flex items-start justify-end gap-1
+                    col-span-2
+                    [[data-inline]_&]:col-span-1
+                '
+            ) }}>
+                {{ $actionsTrailing ?? '' }}
+            </div>
+        @endisset
     </div>
 </tk:field.wrapper>

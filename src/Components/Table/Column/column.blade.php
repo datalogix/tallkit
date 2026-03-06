@@ -50,7 +50,7 @@ if ($sortable === true) {
         :label="$label ?? Str::headline($name)"
         :$href
         :$action
-        :icon-trailing="match($sortable) {
+        :icon-trailing="match ($sortable) {
             true => 'chevron-up-down',
             'desc' => 'chevron-down',
             'asc' => 'chevron-up',

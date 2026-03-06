@@ -1,9 +1,10 @@
 <tk:modal
     :attributes="$attributesAfter('modal:')
         ->classes('fixed mt-20 mx-auto')
-        ->merge($focusOnOpen !== false ? ['@opened' => '$el.querySelector(\'[data-tallkit-command-input]\')?.focus()'] : [])
+        ->merge($focusOnOpen !== false ? ['x-on:opened' => '$el.querySelector(\'[data-tallkit-command-input]\')?.focus()'] : [])
     "
     variant="bare"
+    :$shortcut
 >
     <x-slot:trigger>
         @if ($slot->isEmpty())
@@ -18,11 +19,16 @@
         @endif
     </x-slot:trigger>
 
-    <tk:command :attributes="$attributes->whereDoesntStartWith(['trigger:', 'modal:'])">
+    <tk:command
+        :attributes="$attributes->whereDoesntStartWith(['trigger:', 'modal:'])
+            ->merge($closeOnSelect !== false ? ['x-on:command-item-selected' => 'close'] : [])
+        "
+    >
         {{ $content ?? '' }}
 
         @isset ($input)
             <x-slot:input>
+                {{ $input }}
             </x-slot:input>
         @endisset
 

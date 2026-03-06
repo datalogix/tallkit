@@ -1,4 +1,5 @@
 <tk:button
+    wire:replace.self
     x-data="inputCopyable"
     :attributes="$attributes->classes('mx-2 -me-1')"
     :variant="$attributes->pluck('variant', 'none')"

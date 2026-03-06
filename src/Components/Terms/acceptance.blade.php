@@ -2,7 +2,7 @@
     :$attributes
     :component="$checkbox ? 'tallkit-checkbox' : 'tallkit-toggle'"
 >
-    {!! match(true) {
+    {!! match (true) {
         $termsOfService && !$privacyPolicy => __('I agree to the :terms-of-service', [
             'terms-of-service' => '<a class="underline" href="'.$termsOfService.'" target="_blank">'.__('Terms of Service').'</a>'
         ]),

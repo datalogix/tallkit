@@ -13,7 +13,14 @@ trait InteractsWithField
 
     protected function customAppendedAttributes()
     {
-        return ['name', 'label', 'labelAppend', 'labelPrepend', 'id', 'description', 'help', 'badge', 'info', 'size', 'showError', 'prefix', 'suffix'];
+        return [
+            'name', 'id', 'size',
+            'label', 'labelAppend', 'labelPrepend',
+            'description', 'help', 'badge', 'info',
+            'showError',
+            'prefix', 'suffix',
+            'prepend', 'append', 'icon', 'iconTrailing', 'kbd', 'loading',
+        ];
     }
 
     #[Mount(20)]
@@ -28,7 +35,7 @@ trait InteractsWithField
 
         $this->name ??= $wireModel ?? $xModel;
         $fieldName = $this->getFieldName();
-        $this->id ??= uniqid($fieldName);
+        // $this->id ??= $fieldName ?? uniqid();
         $this->label = $this->label === true || $this->label === null ? Str::headline(Str::before($fieldName, '_id')) : $this->label;
         $this->placeholder = $this->placeholder === true ? $this->label : $this->placeholder;
         $this->invalid ??= $this->name && $this->hasError($this->name);

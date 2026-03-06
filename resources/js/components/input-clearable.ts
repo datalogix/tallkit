@@ -3,16 +3,15 @@ import { bind } from '../utils'
 export function inputClearable() {
   return {
     get input () {
-      return this.$el.closest('[data-tallkit-input]').querySelector('input')
+      return this.$el.closest('[data-tallkit-field-control]')?.querySelector('input')
     },
 
     init() {
-      const button = this.$el
-
       if (!this.input) {
         return
       }
 
+      const button = this.$el
       button.style.display = this.input.value ? 'inline-flex ' : 'none'
 
       bind(this.input, {

@@ -1,5 +1,5 @@
 <option
-    {{ $attributes }}
+    {{ $attributes->classes('truncate') }}
     @selected($selected)
     @isset ($value) value="{{ $value }}" @endisset
 >

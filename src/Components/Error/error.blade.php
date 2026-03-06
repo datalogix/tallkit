@@ -6,10 +6,14 @@ $message ??= $getError($name, $slot);
     <div {{
         $attributes
             ->whereDoesntStartWith(['icon:'])
-            ->classes([
-                'font-medium text-red-500 dark:text-red-400 flex items-center gap-2',
-                $fontSize($size),
-            ])
+            ->classes(
+                '
+                    text-red-500 dark:text-red-400
+                    flex items-center gap-2
+                ',
+                $fontSize(size: $size),
+                $iconSize(size: $size),
+            )
         }}
         role="alert"
         aria-live="polite"
@@ -19,7 +23,6 @@ $message ??= $getError($name, $slot);
             <tk:icon
                 :attributes="$attributesAfter('icon:')"
                 :name="is_string($icon) ? $icon : 'alert-outline'"
-                :size="$adjustSize(move: -2)"
             />
         @endif
 

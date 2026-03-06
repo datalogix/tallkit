@@ -1,14 +1,5 @@
+import { bind } from '../utils'
 import { toggleable } from './toggleable'
-
-const CREDIT_CARD_DEFAULT = {
-  opened: true,
-  types: [],
-  holderName: null,
-  number: null,
-  type: null,
-  expirationDate: null,
-  cvv: null
-}
 
 export function creditCard(options = {}) {
   const _toggleable = toggleable()
@@ -16,13 +7,31 @@ export function creditCard(options = {}) {
   return {
     ..._toggleable,
 
-    options: CREDIT_CARD_DEFAULT,
-
     init() {
       _toggleable.init.call(this)
       this.card = this.$data
-      this.options = { ...CREDIT_CARD_DEFAULT, ...options }
+      this.options = {
+        opened: true,
+        types: [],
+        holderName: null,
+        number: null,
+        type: null,
+        expirationDate: null,
+        cvv: null,
+        ...options
+      }
       this.opened = this.options.opened
+
+      bind(this.$el, {
+        ['@click']() {
+          this.toggle()
+        },
+        [':class']() {
+          return {
+            'rotate-y-180': !this.isOpened()
+          }
+        }
+      })
     },
 
     get typeOptions() {

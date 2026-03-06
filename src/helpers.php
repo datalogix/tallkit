@@ -85,9 +85,11 @@ if (! function_exists('is_current_href')) {
             return false;
         }
 
+        $pattern = $exact ? $hrefForCurrentDetection : [$hrefForCurrentDetection, "$hrefForCurrentDetection/*"];
+
         return app('livewire')?->isLivewireRequest()
-            ? Str::is($hrefForCurrentDetection, app('livewire')->originalPath())
-            : request()->is($exact ? $hrefForCurrentDetection : [$hrefForCurrentDetection, "$hrefForCurrentDetection/*"]);
+            ? Str::is($pattern, app('livewire')->originalPath())
+            : request()->is($pattern);
     }
 }
 

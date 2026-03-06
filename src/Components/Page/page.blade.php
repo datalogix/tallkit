@@ -1,6 +1,6 @@
 <tk:section :attributes="$attributes->whereDoesntStartWith(['container:', 'menu:', 'nav:', 'select:', 'area:'])">
     @isset ($header)
-        <x-slot:header>
+        <x-slot:header :attributes="$header->attributes">
             {{ $header }}
         </x-slot:header>
     @endisset
@@ -19,6 +19,7 @@
             'lg' => 'max-lg:flex-col',
             'xl' => 'max-xl:flex-col',
             '2xl' => 'max-2xl:flex-col',
+            '3xl' => 'max-3xl:flex-col',
         },
     ) }}>
         @if (collect($menu)->isNotEmpty())
@@ -30,6 +31,7 @@
                     'lg' => 'lg:w-[220px]',
                     'xl' => 'xl:w-[220px]',
                     '2xl' => '2xl:w-[220px]',
+                    '3xl' => '3xl:w-[220px]',
                 },
             ) }}>
                 <tk:nav
@@ -41,6 +43,7 @@
                             'lg' => 'max-lg:hidden',
                             'xl' => 'max-xl:hidden',
                             '2xl' => 'max-2xl:hidden',
+                            '3xl' => 'max-3xl:hidden',
                         },
                     )"
                     :items="$menu"
@@ -62,6 +65,7 @@
                             'lg' => 'lg:hidden',
                             'xl' => 'xl:hidden',
                             '2xl' => '2xl:hidden',
+                            '3xl' => '3xl:hidden',
                         },
                     )"
                     :options="$options"

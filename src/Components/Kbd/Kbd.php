@@ -13,5 +13,6 @@ class Kbd extends BladeComponent
     public function __construct(
         public bool|string|ComponentSlot|null $label = null,
         public ?string $variant = null,
+        public ?string $size = null,
     ) {}
 }

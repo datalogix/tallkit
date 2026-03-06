@@ -1,9 +1,12 @@
 <div {{ $attributes
-    ->whereDoesntStartWith(['header:', 'area:', 'brand:', 'menu:', 'spacer:', 'appearance:', 'appearance-', 'user-menu:', 'sidebar:', 'sidebar-', 'main:'])
+    ->whereDoesntStartWith([
+        'header:', 'area:', 'brand:', 'menu:', 'spacer:',
+        'appearance', 'user-menu:', 'sidebar', 'main:',
+    ])
     ->classes('min-h-screen')
 }}>
     <tk:header
-        :attributes="$attributesAfter('header:')->classes(['flex-col items-start lg:-space-y-2' => isset($header)])"
+        :attributes="$attributesAfter('header:')->classes(['flex-col items-start' => isset($header)])"
     >
         <div {{ $attributesAfter('area:')->classes('flex-1 w-full flex items-center gap-2') }}>
             <tk:sidebar.toggle
@@ -70,8 +73,8 @@
             @endif
         </div>
 
-        @isset ($header)
-            <div class="hidden lg:block">
+        @if (isset($header) && ((isset($nav) && filled($nav)) || ($menu && filled($menu))))
+            <div class="hidden lg:block -mt-2">
                 <tk:nav
                     :attributes="$attributesAfter('menu:')"
                     :items="$menu"
@@ -79,7 +82,7 @@
                     {{ $nav ?? '' }}
                 </tk:nav>
             </div>
-        @endisset
+        @endif
     </tk:header>
 
     <tk:sidebar

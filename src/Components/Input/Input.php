@@ -3,7 +3,6 @@
 namespace TALLKit\Components\Input;
 
 use Illuminate\Support\Str;
-use Illuminate\View\ComponentSlot;
 use TALLKit\Attributes\Mount;
 use TALLKit\Concerns\InteractsWithField;
 use TALLKit\View\BladeComponent;
@@ -16,10 +15,6 @@ class Input extends BladeComponent
         public ?string $type = null,
         public ?string $variant = null,
         public bool|string|null $mask = null,
-        public string|ComponentSlot|null $icon = null,
-        public string|ComponentSlot|null $iconTrailing = null,
-        public string|ComponentSlot|null $kbd = null,
-        public bool|string|null $loading = null,
         public ?bool $clearable = null,
         public ?bool $copyable = null,
         public ?bool $viewable = null,
@@ -31,29 +26,6 @@ class Input extends BladeComponent
         $this->type ??= $this->detectType();
         $this->mask = $this->detectMask();
         $this->viewable ??= $this->type === 'password';
-    }
-
-    #[Mount()]
-    protected function mountLoading()
-    {
-        $this->setVariables('wireTarget');
-        $this->wireTarget = null;
-
-        if (! (is_string($this->loading) || $this->loading === null)) {
-            return;
-        }
-
-        $wireModel = $this->attributes->wire('model');
-
-        if ($wireModel?->directive) {
-            $this->loading = $wireModel->hasModifier('live');
-            $this->wireTarget = $this->loading ? $wireModel->value() : null;
-
-            return;
-        }
-
-        $this->wireTarget = $this->loading;
-        $this->loading = (bool) $this->loading;
     }
 
     protected function detectType()
@@ -120,28 +92,5 @@ class Input extends BladeComponent
         }
 
         return null;
-    }
-
-    public function paddingEnd(bool $appendLoadingToCount = false)
-    {
-        $countOfTrailingIcons = collect([
-            $appendLoadingToCount,
-            (bool) $this->iconTrailing,
-            (bool) $this->kbd,
-            (bool) $this->clearable,
-            (bool) $this->copyable,
-            (bool) $this->viewable,
-        ])->filter()->count();
-
-        return $countOfTrailingIcons > 0
-            ? 'padding-inline-end: '.match ($this->size) {
-                'xs' => 32 * $countOfTrailingIcons.'px;',
-                'sm' => 36 * $countOfTrailingIcons.'px;',
-                default => 40 * $countOfTrailingIcons.'px;',
-                'lg' => 48 * $countOfTrailingIcons.'px;',
-                'xl' => 56 * $countOfTrailingIcons.'px;',
-                '2xl' => 64 * $countOfTrailingIcons.'px;',
-                '3xl' => 72 * $countOfTrailingIcons.'px;',
-            } : '';
     }
 }

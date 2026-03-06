@@ -2,25 +2,34 @@
     as="div"
     :name="$baseComponentKey()"
     :$href
-    :attributes="$attributes->whereDoesntStartWith(['logo:', 'image:', 'image-dark:', 'name:'])->classes('py-2 justify-center gap-2')"
+    :attributes="$attributes->whereDoesntStartWith(['logo:', 'image:', 'image-dark:', 'name:'])
+        ->classes('py-2 justify-center gap-4')
+    "
 >
     @if ($isSlot($logo))
-        <div {{ $logo->attributes->classes('flex items-center justify-center [:where(&)]:min-w-6 [:where(&)]:rounded-sm overflow-hidden shrink-0') }}>
+        <div {{
+            $logo->attributes->classes(
+                '
+                    flex items-center justify-center
+                    overflow-hidden shrink-0
+                    [:where(&)]:min-w-6
+                ',
+                $roundedSize(size: $size, mode: 'small'),
+            )
+        }}>
             {{ $logo }}
         </div>
-    @else
+    @elseif ($logo || $logoDark || $slot->isNotEmpty())
         <div {{
             $attributesAfter('logo:')
-                ->classes('flex items-center justify-center rounded-sm overflow-hidden shrink-0')
-                ->classes(match ($size) {
-                    'xs' => 'h-6',
-                    'sm' => 'h-8',
-                    default => 'h-12',
-                    'lg' => 'h-18',
-                    'xl' => 'h-26',
-                    '2xl' => 'h-36',
-                    '3xl' => 'h-48',
-                })
+                ->classes(
+                    '
+                        flex items-center justify-center
+                        overflow-hidden shrink-0
+                    ',
+                    $height(size: $size, mode: 'large'),
+                    $roundedSize(size: $size, mode: 'small'),
+                )
         }}>
             @if ($isSlot($logoDark))
                 {{ $logoDark }}
@@ -50,23 +59,9 @@
         </div>
     @endif
 
-    @if ($name)
-        <div
-            {{
-                $attributesAfter('name:')
-                    ->classes('font-medium truncate [:where(&)]:text-zinc-800 dark:[:where(&)]:text-zinc-100')
-                    ->classes(match ($size) {
-                        'xs' => 'text-sm',
-                        'sm' => 'text-base',
-                        default => 'text-lg',
-                        'lg' => 'text-xl',
-                        'xl' => 'text-2xl',
-                        '2xl' => 'text-3xl',
-                        '3xl' => 'text-4xl',
-                    })
-            }}
-        >
-            {{ $name }}
-        </div>
-    @endif
+    <tk:heading
+        :attributes="$attributesAfter('name:')->classes('truncate')"
+        :label="$name"
+        :$size
+    />
 </tk:element>

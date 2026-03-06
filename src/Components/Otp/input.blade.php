@@ -1,9 +1,10 @@
-@aware(['mode', 'private'])
-@props(['mode', 'private'])
+@aware(['mode', 'private', 'size'])
+@props(['mode', 'private', 'size'])
 
 <tk:input
-    :attributes="$attributes->classes('w-8! grow-0 has-focus-within:z-10')"
-    input:class="px-0! py-3 text-center disabled:opacity-75 disabled:shadow-xs! dark:disabled:shadow-none! uppercase"
+    :attributes="$attributes->classes($width(size: $size))"
+    :$size
+    input:class="px-0! text-center uppercase"
     :type="$private ? 'password' : 'text'"
     :icon="false"
     :icon-trailing="false"

@@ -10,6 +10,7 @@ class Otp extends BladeComponent
     use InteractsWithField;
 
     public function __construct(
+        public ?string $size = null,
         public ?int $length = null,
         public ?bool $private = null,
         public ?string $mode = null,

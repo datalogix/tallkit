@@ -1,4 +1,5 @@
 <div
+    wire:replace.self
     x-data="popover({
         mode: @js($mode ?? 'hover'),
         position: @js($position ?? 'top'),

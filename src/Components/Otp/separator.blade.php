@@ -1,5 +1,9 @@
+@aware(['size'])
+@props(['size'])
+
 <tk:text
-    :attributes="$attributes->classes('px-2')"
+    :attributes="$attributes->classes($paddingInline(size: $size, mode: 'smallest'))"
+    :$size
     label="&mdash;"
     as="span"
 >

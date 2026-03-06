@@ -2,6 +2,7 @@
 
 namespace TALLKit\Components\Table;
 
+use BackedEnum;
 use Carbon\CarbonInterface;
 use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Contracts\Pagination\Paginator;
@@ -11,10 +12,12 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\View\ComponentSlot;
 use TALLKit\Attributes\Mount;
 use TALLKit\View\BladeComponent;
+use UnitEnum;
 
 class Table extends BladeComponent
 {
@@ -81,40 +84,9 @@ class Table extends BladeComponent
             $displayIdColumn = true;
         }
 
-        $cols = $cols->mapWithKeys(function ($value, $key) {
-            $name = data_get($value, 'name', is_array($value) ? $key : $value);
-            $newKey = Str::snake(is_numeric($key) ? $name : $key);
-
-            return [
-                $newKey => [
-                    '_key' => $key,
-                    'sortable' => data_get($value, 'sortable', $this->sortable),
-                    'name' => Str::before($name, '.'),
-                ] + (is_array($value) ? $value : []),
-            ];
-        });
-
-        if (! $displayIdColumn) {
-            $cols = $cols->filter(fn ($col, $key) => mb_strtolower($key) !== 'id');
-        }
-
-        if ($this->mapRelationsColumn ?? true) {
-            $mappedRelations = [];
-
-            $cols = $cols->mapWithKeys(function ($col, $key) use (&$mappedRelations) {
-                if (in_array($key, $mappedRelations)) {
-                    return null;
-                }
-
-                if (Str::endsWith($key, '_id')) {
-                    array_push($mappedRelations, $col);
-
-                    return [Str::replaceLast('_id', '', $key) => $col];
-                }
-
-                return [$key => $col];
-            })->filter();
-        }
+        $cols = $this->normalizeColumns($cols);
+        $cols = $this->filterIdColumn($cols, $displayIdColumn);
+        $cols = $this->mapRelationsToColumns($cols);
 
         return [
             $cols,
@@ -122,64 +94,189 @@ class Table extends BladeComponent
         ];
     }
 
+    protected function normalizeColumns(Collection $cols)
+    {
+        return $cols->filter()->mapWithKeys(function ($value, $key) {
+            $name = data_get($value, 'name', is_array($value) ? $key : $value);
+            $newKey = Str::snake(is_numeric($key) ? $name : $key);
+
+            return [
+                $newKey => [
+                    '_key' => $key,
+                    'sortable' => data_get($value, 'sortable', $name !== 'actions' && $this->sortable),
+                    'name' => Str::before($name, '.'),
+                ] + (is_array($value) ? $value : []),
+            ];
+        });
+    }
+
+    protected function filterIdColumn(Collection $cols, ?bool $displayIdColumn = null): Collection
+    {
+        if ($displayIdColumn) {
+            return $cols;
+        }
+
+        return $cols->filter(fn ($col, $key) => mb_strtolower($key) !== 'id');
+    }
+
+    protected function mapRelationsToColumns(Collection $cols): Collection
+    {
+        if (! ($this->mapRelationsColumn ?? true)) {
+            return $cols;
+        }
+
+        $mappedRelations = [];
+
+        return $cols->mapWithKeys(function ($col, $key) use (&$mappedRelations) {
+            if (in_array($key, $mappedRelations)) {
+                return null;
+            }
+
+            if (Str::endsWith($key, '_id')) {
+                $mappedRelations[] = $col;
+
+                return [Str::replaceLast('_id', '', $key) => $col];
+            }
+
+            return [$key => $col];
+        });
+    }
+
     public function getRowValue($row, $key, $col)
     {
         return function () use ($row, $key, $col) {
-            $value = data_get($row, "{$key}_formatted", data_get($row, $key));
-
-            if ($value instanceof Model) {
-                $value = data_get($value, $key, data_get($value, 'name', data_get($value, 'title', data_get($value, 'text', $value))));
-            }
-
-            if ($value instanceof EloquentCollection) {
-                $value = $value->map(fn ($item) => data_get($value, $key, data_get($item, 'name', data_get($item, 'title', data_get($item, 'text', $item)))));
-            }
-
-            if ($value instanceof CarbonInterface) {
-                if ($value->toDateString() === '1970-01-01') {
-                    $value = $value->isoFormat('LT');
-                } elseif ($value->toTimeString() === '00:00:00') {
-                    $value = $value->isoFormat('L');
-                } else {
-                    $value = $value->isoFormat('L LT');
-                }
-            }
-
-            if (is_object($value) && method_exists($value, 'format')) {
-                $value = $value->format();
-            }
-
-            if ($value instanceof Arrayable) {
-                $value = $value->toArray();
-            }
-
-            if ($value instanceof Jsonable) {
-                $value = $value->toJson();
-            }
-
-            if (is_array($value)) {
-                $value = implode('<br />', $value);
-            }
-
-            if (is_string($value)) {
-                $value = nl2br($value);
-            }
-
-            if ($value instanceof \BackedEnum) {
-                $value = method_exists($value, 'label')
-                    ? $value->label()
-                    : $value->value;
-            }
-
-            if ($value instanceof \UnitEnum) {
-                $value = $value->name;
-            }
-
-            if ($col['translate'] ?? false) {
-                $value = __($value);
-            }
+            $value = $this->extractValue($row, $key, $col);
+            $value = $this->resolveRelationValue($value, $key);
+            $value = $this->formatDateTimeValue($value);
+            $value = $this->formatEnumValue($value);
+            $value = $this->formatSerializableValue($value);
+            $value = $this->formatArrayValue($value);
+            $value = $this->formatStringValue($value);
+            $value = $this->applyTranslation($value, $col);
 
             return $value;
         };
+    }
+
+    private function extractValue($row, $key, $col): mixed
+    {
+        return data_get(
+            $row,
+            "{$key}_formatted",
+            fn () => data_get(
+                $row,
+                $col['_key'],
+                fn () => data_get($row, $key)
+            )
+        );
+    }
+
+    private function resolveRelationValue(mixed $value, $key): mixed
+    {
+        if ($value instanceof Model) {
+            return $this->extractPropertyFromModel($value, $key);
+        }
+
+        if ($value instanceof EloquentCollection) {
+            return $value->map(fn ($item) => $this->extractPropertyFromModel($item, $key));
+        }
+
+        return $value;
+    }
+
+    private function extractPropertyFromModel(Model $model, $key): mixed
+    {
+        return data_get(
+            $model,
+            $key,
+            fn () => $this->findPropertyValue($model, ['name', 'title', 'text'])
+        );
+    }
+
+    private function findPropertyValue($object, array $properties): mixed
+    {
+        foreach ($properties as $property) {
+            $value = data_get($object, $property);
+
+            if ($value !== null) {
+                return $value;
+            }
+        }
+
+        return $object;
+    }
+
+    private function formatDateTimeValue(mixed $value): mixed
+    {
+        if (! ($value instanceof CarbonInterface)) {
+            return $value;
+        }
+
+        if ($value->toDateString() === '1970-01-01') {
+            return $value->isoFormat('LT');
+        }
+
+        if ($value->toTimeString() === '00:00:00') {
+            return $value->isoFormat('L');
+        }
+
+        return $value->isoFormat('L LT');
+    }
+
+    private function formatEnumValue(mixed $value): mixed
+    {
+        if ($value instanceof BackedEnum) {
+            return method_exists($value, 'label') ? $value->label() : $value->value;
+        }
+
+        if ($value instanceof UnitEnum) {
+            return $value->name;
+        }
+
+        return $value;
+    }
+
+    private function formatSerializableValue(mixed $value): mixed
+    {
+        if (is_object($value) && method_exists($value, 'format')) {
+            return $value->format();
+        }
+
+        if ($value instanceof Arrayable) {
+            return $value->toArray();
+        }
+
+        if ($value instanceof Jsonable) {
+            return $value->toJson();
+        }
+
+        return $value;
+    }
+
+    private function formatArrayValue(mixed $value): mixed
+    {
+        if (is_array($value)) {
+            return implode('<br />', $value);
+        }
+
+        return $value;
+    }
+
+    private function formatStringValue(mixed $value): mixed
+    {
+        if (is_string($value)) {
+            return nl2br($value);
+        }
+
+        return $value;
+    }
+
+    private function applyTranslation(mixed $value, $col): mixed
+    {
+        if (($col['translate'] ?? false) && is_string($value)) {
+            return __($value);
+        }
+
+        return $value;
     }
 }

@@ -4,10 +4,13 @@ namespace TALLKit\Components\Brand;
 
 use Illuminate\View\ComponentSlot;
 use TALLKit\Attributes\Mount;
+use TALLKit\Concerns\InteractsWithElement;
 use TALLKit\View\BladeComponent;
 
 class Brand extends BladeComponent
 {
+    use InteractsWithElement;
+
     public function __construct(
         public ?string $size = null,
         public string|bool|null $name = null,

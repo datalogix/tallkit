@@ -22,12 +22,14 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                     'no-records:', 'footer:', 'tfoot:',
                     'pagination:',
                 ])
-                ->classes('
-                    relative
-                    [:where(&)]:min-w-full
-                    text-zinc-800
-                    divide-y divide-zinc-800/10 dark:divide-white/20
-                    whitespace-nowrap',
+                ->classes(
+                    '
+                        relative
+                        [:where(&)]:min-w-full
+                        text-zinc-800
+                        divide-y divide-zinc-800/10 dark:divide-white/20
+                        whitespace-nowrap
+                    ',
                 )
         }}>
             @if (Str::doesntContain($slot, '<thead', true) && $cols->isNotEmpty())
@@ -95,8 +97,10 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                                     ->merge(['align' => data_get($col, 'align', $key === 'actions' ? 'center' : null)])
                                     ->merge(['sticky' => data_get($col, 'sticky')])
                                 ">
-                                    @isset (${'row_' . $key})
-                                        {{ ${'row_' . $key}($row, $key, $getRowValue($row, $key, $col), $col, $cols, $rows) }}
+                                    @if (isset(${'row_' . $key}))
+                                        {{ ${'row_' . $key}($row, $key, $getRowValue($row, $key, $col, $index), $col, $cols, $rows, $index) }}
+                                    @elseif ($key == 'row_index')
+                                        {{ $index + 1 }}
                                     @else
                                         @php
                                         $rowValue = $getRowValue($row, $key, $col)();
@@ -113,7 +117,9 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                         </tk:table.row>
 
                         @if ($hasRowExpanded)
-                            <tk:table.row.expanded :attributes="$attributesAfter('row-expanded:')->merge(['colspan' => $colspan])">
+                            <tk:table.row.expanded :attributes="$attributesAfter('row-expanded:')
+                                ->merge(['colspan' => $colspan])
+                            ">
                                 @if (isset($expanded))
                                     {{ $expanded($row, $cols, $rows) }}
                                 @elseif (isset($rowExpanded))
@@ -123,7 +129,9 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                         @endif
                     @empty
                         @if ($pagination === false)
-                            <tk:table.row.no-records :attributes="$attributesAfter('no-records:')->merge(['colspan' => $colspan])">
+                            <tk:table.row.no-records :attributes="$attributesAfter('no-records:')
+                                ->merge(['colspan' => $colspan])
+                            ">
                                 {{ $noRecords }}
                             </tk:table.row.no-records>
                         @endif

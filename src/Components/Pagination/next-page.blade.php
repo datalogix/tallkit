@@ -22,4 +22,6 @@ $action = method_exists($paginator, 'getCursorName')
     :wire:loading.attr="in_livewire() ? 'disabled' : false"
     icon="chevron-right"
     tooltip="pagination.next"
-/>
+>
+    {{ $slot }}
+</tk:button>

@@ -1,9 +1,5 @@
 @if ($label || $description || $help || $prefix || $suffix)
     <tk:field :$variant :$align :attributes="$attributesAfter('field:')">
-        @if ($variant === 'inline' && (!$align || Str::contains($align, 'left', true)))
-            {{ $slot }}
-        @endif
-
         <tk:label
             :attributes="$attributesAfter('label:')
                 ->merge($attributesAfter('info:', prepend: true)->getAttributes())
@@ -11,16 +7,12 @@
             "
             :for="$id"
             :$label
-            :$labelAppend
             :$labelPrepend
+            :$labelAppend
             :$size
             :$info
             :$badge
         />
-
-        @if ($variant === 'inline' && Str::contains($align, 'right', true))
-            {{ $slot }}
-        @endif
 
         <tk:text
             :attributes="$attributesAfter('description:')"
@@ -28,22 +20,20 @@
             :$size
         />
 
-        @if ($variant !== 'inline')
-            @if ($prefix || $suffix)
-                <tk:field.group
-                    :attributes="$attributesAfter('group:')
-                        ->merge($attributesAfter('prefix:', prepend: true)->getAttributes())
-                        ->merge($attributesAfter('suffix:', prepend: true)->getAttributes())
-                    "
-                    :$prefix
-                    :$suffix
-                    :$size
-                >
-                    {{ $slot }}
-                </tk:field.group>
-            @else
+        @if ($variant !== 'inline' && ($prefix || $suffix))
+            <tk:field.group
+                :attributes="$attributesAfter('group:')
+                    ->merge($attributesAfter('prefix:', prepend: true)->getAttributes())
+                    ->merge($attributesAfter('suffix:', prepend: true)->getAttributes())
+                "
+                :$prefix
+                :$suffix
+                :$size
+            >
                 {{ $slot }}
-            @endif
+            </tk:field.group>
+        @else
+            {{ $slot }}
         @endif
 
         <tk:text

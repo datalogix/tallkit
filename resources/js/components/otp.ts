@@ -18,7 +18,7 @@ export function otp(submit?: string) {
       const inputs = this.inputs
 
       this.$nextTick(() => this.updateModel())
-      this.$watch('value', (newVal: string) => syncInputs(inputs, newVal))
+      //this.$watch('value', (newVal: string) => syncInputs(inputs, newVal))
 
       inputs.forEach((input, index) => {
         bind(input, {
@@ -73,7 +73,7 @@ export function otp(submit?: string) {
 
     updateModel() {
       const old = this.value
-      this.value = this.inputs.map(i => i.value || ' ').join('')
+      this.value = this.inputs.map(i => i.value ?? ' ').join('')
       const len = this.value.replace(/\s+/g, '').length
 
       if (old === this.value) {
@@ -102,7 +102,7 @@ export function otp(submit?: string) {
 }
 
 function syncInputs(inputs: HTMLInputElement[], modelValue: string) {
-  const chars = modelValue.padEnd(inputs.length).split('')
+  const chars = String(modelValue).padEnd(inputs.length).split('')
 
   inputs.forEach((input, i) => {
     input.value = filterValue(chars[i] ?? '', input.dataset.mode)
@@ -110,13 +110,13 @@ function syncInputs(inputs: HTMLInputElement[], modelValue: string) {
 }
 
 function filterValue(value: string, mode?: string) {
-  return (value.toLocaleUpperCase().match(
+  return (String(value).toLocaleUpperCase().match(
     mode === 'alpha' ? /[A-Z]/g : mode === 'alphanumeric' ? /[A-Z0-9]/g : /[0-9]/g
   ) || []).join('')
 }
 
 function spreadValue(value: string, startIndex: number, inputs: HTMLInputElement[]) {
-  const chars = value.split('')
+  const chars = String(value).split('')
 
   chars.forEach((char, i) => {
     const target = inputs[startIndex + i]

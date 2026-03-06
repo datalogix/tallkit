@@ -10,10 +10,8 @@ use TALLKit\View\BladeComponent;
 class Modal extends BladeComponent
 {
     public function __construct(
-        public ?string $name = null,
-        public ?string $title = null,
-        public ?string $subtitle = null,
         public ?string $size = null,
+        public ?string $name = null,
         public ?string $shortcut = null,
         public ?bool $dismissible = null,
         public null|string|bool $persist = null,
@@ -22,6 +20,16 @@ class Modal extends BladeComponent
         public ?string $variant = null,
         public string|bool|null $backdrop = null,
         public ?ComponentSlot $trigger = null,
+
+        // section
+        public ?ComponentSlot $prepend = null,
+        public string|ComponentSlot|null $title = null,
+        public string|ComponentSlot|null $subtitle = null,
+        public string|ComponentSlot|null $description = null,
+        public ?ComponentSlot $append = null,
+        public ?ComponentSlot $actions = null,
+        public ?bool $separator = null,
+        public string|ComponentSlot|null $content = null,
     ) {}
 
     #[Mount()]

@@ -4,6 +4,7 @@ namespace TALLKit\Concerns;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 use TALLKit\Attributes\Mount;
 
 trait InteractsWithOptions
@@ -25,6 +26,12 @@ trait InteractsWithOptions
     protected function parseOptions()
     {
         $options = $this->options;
+
+        if (is_subclass_of($options, \BackedEnum::class) || is_subclass_of($options, \UnitEnum::class)) {
+            return Arr::mapWithKeys($options::cases(), fn ($enum) => [
+                $enum->value => method_exists($enum, 'label') ? $enum->label() : $enum->name,
+            ]);
+        }
 
         if (is_string($options) && class_exists($options)) {
             $options = app($options);

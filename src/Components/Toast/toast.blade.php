@@ -2,7 +2,11 @@
     x-data="toast"
     tabindex="-1"
     {{ $attributes
-        ->whereDoesntStartWith(['position:', 'container:', 'area:', 'content:', 'icon-', 'title:', 'message:', 'actions:', 'close:'])
+        ->whereDoesntStartWith([
+            'position:', 'container:', 'area:', 'content:',
+            'icon', 'title:', 'message:', 'actions:', 'close:',
+            'progress:',
+        ])
         ->classes('fixed inset-0 overflow-hidden pointer-events-none z-9999999')
     }}
 >
@@ -24,12 +28,24 @@
                 :key="toast.id"
             >
                 <div
-                    {{ $attributesAfter('container:')->classes('
-                        max-w-sm m-1 p-2
-                        rounded-xl shadow-lg
-                        bg-white dark:bg-zinc-700
-                        border border-zinc-200 dark:border-white/10
-                    ') }}
+                    {{ $attributesAfter('container:')->classes(
+                        '
+                            m-1 shadow-lg rounded-xl
+                            bg-white dark:bg-zinc-700
+                            border border-zinc-200 dark:border-white/10
+                            relative overflow-hidden
+                            flex items-start
+                        '
+                    ) }}
+                    :class="{
+                        'gap-3 max-w-xs p-3 text-[11px] [&_[data-tallkit-icon]]:mt-0.5 [&_[data-tallkit-icon]]:size-3': toast.size === 'xs',
+                        'gap-3 max-w-xs p-3 text-xs [&_[data-tallkit-icon]]:mt-px [&_[data-tallkit-icon]]:size-3.5': toast.size === 'sm',
+                        'gap-4 max-w-sm p-4 text-sm [&_[data-tallkit-icon]]:mt-0.5 [&_[data-tallkit-icon]]:size-4': !toast.size || toast.size === 'md',
+                        'gap-4 max-w-sm p-4 text-base [&_[data-tallkit-icon]]:mt-1 [&_[data-tallkit-icon]]:size-4.5': toast.size === 'lg',
+                        'gap-5 max-w-md p-5 text-lg [&_[data-tallkit-icon]]:mt-1 [&_[data-tallkit-icon]]:size-5': toast.size === 'xl',
+                        'gap-5 max-w-md p-5 text-xl [&_[data-tallkit-icon]]:mt-1 [&_[data-tallkit-icon]]:size-5.5': toast.size === '2xl',
+                        'gap-6 max-w-lg p-6 text-2xl [&_[data-tallkit-icon]]:mt-1 [&_[data-tallkit-icon]]:size-6': toast.size === '3xl',
+                    }"
                     x-show="toast.visible"
                     x-bind="{
                         'x-transition:enter': 'transition ease-out duration-350',
@@ -54,54 +70,51 @@
                         }[position],
                     }"
                 >
-                    <div {{ $attributesAfter('area:')->classes('flex items-start gap-4') }}>
-                        <div {{ $attributesAfter('content:')->classes('flex-1 py-1.5 ps-2.5 flex gap-2') }}>
-                            <tk:icon
-                                :attributes="$attributesAfter('icon-success:')->classes('mt-0.5 shrink-0 text-green-500 dark:text-green-400')"
-                                x-show="toast.type === 'success'"
-                                name="check-circle"
-                                size="xs"
-                            />
-                            <tk:icon
-                                :attributes="$attributesAfter('icon-info:')->classes('mt-0.5 shrink-0 text-blue-500 dark:text-blue-400')"
-                                x-show="toast.type === 'info'"
-                                name="info"
-                                size="xs"
-                            />
-                            <tk:icon
-                                :attributes="$attributesAfter('icon-danger:')->classes('mt-0.5 shrink-0 text-red-500 dark:text-red-400')"
-                                x-show="toast.type === 'danger'"
-                                name="cancel"
-                                size="xs"
-                            />
-                            <tk:icon
-                                :attributes="$attributesAfter('icon-warning:')->classes('mt-0.5 shrink-0 text-amber-500 dark:text-amber-400')"
-                                x-show="toast.type === 'warn'"
-                                name="warning"
-                                size="xs"
-                            />
-                            <div class="flex flex-col gap-2">
-                                <div
-                                    {{ $attributesAfter('title:')->classes('text-sm font-medium text-zinc-800 dark:text-white') }}
-                                    x-html="toast.title || toast.message"
-                                ></div>
-                                <div
-                                    {{ $attributesAfter('message:')->classes('text-sm font-normal text-zinc-500 dark:text-zinc-300') }}
-                                    x-show="toast.title && toast.message"
-                                    x-html="toast.message"
-                                ></div>
-                            </div>
-                        </div>
-                        <div {{ $attributesAfter('actions:')->classes('flex items-center gap-2') }}>
-                            <tk:button
-                                :attributes="$attributesAfter('close:')"
-                                x-on:click="removeToast(toast.id)"
-                                icon="times"
-                                variant="subtle"
-                                size="xs"
-                            />
-                        </div>
+                    <tk:icon
+                        :attributes="$attributesAfter('icon:')->merge($attributesAfter('icon-success:')->getAttributes())->classes('shrink-0 text-green-500 dark:text-green-400')"
+                        x-show="toast.type === 'success'"
+                        name="check-circle"
+                    />
+                    <tk:icon
+                        :attributes="$attributesAfter('icon:')->merge($attributesAfter('icon-info:')->getAttributes())->classes('shrink-0 text-blue-500 dark:text-blue-400')"
+                        x-show="toast.type === 'info'"
+                        name="info"
+                    />
+                    <tk:icon
+                        :attributes="$attributesAfter('icon:')->merge($attributesAfter('icon-danger:')->getAttributes())->classes('shrink-0 text-red-500 dark:text-red-400')"
+                        x-show="toast.type === 'danger'"
+                        name="cancel"
+                    />
+                    <tk:icon
+                        :attributes="$attributesAfter('icon:')->merge($attributesAfter('icon-warning:')->getAttributes())->classes('shrink-0 text-amber-500 dark:text-amber-400')"
+                        x-show="toast.type === 'warn'"
+                        name="warning"
+                    />
+                    <div class="flex-1 flex flex-col gap-2">
+                        <div
+                            {{ $attributesAfter('title:')->classes('font-medium text-zinc-800 dark:text-white') }}
+                            x-html="toast.title || toast.message"
+                        ></div>
+                        <div
+                            {{ $attributesAfter('message:')->classes('font-normal text-zinc-500 dark:text-zinc-300') }}
+                            x-show="toast.title && toast.message"
+                            x-html="toast.message"
+                        ></div>
                     </div>
+                    <tk:button
+                        :attributes="$attributesAfter('close:')"
+                        x-on:click="removeToast(toast.id)"
+                        icon="times"
+                        variant="none"
+                    />
+                    <div
+                        x-show="toast.progress"
+                        {{ $attributesAfter('progress:')->classes('
+                            bg-black/5 dark:bg-black/10 h-full absolute inset-0 pointer-events-none
+                            w-full origin-left animate-[grow-scale_linear_forwards]
+                        ') }}
+                        :style="{ animationDuration: toast.duration + 'ms' }"
+                    ></div>
                 </div>
             </template>
         </div>

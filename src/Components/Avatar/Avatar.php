@@ -19,8 +19,6 @@ class Avatar extends BladeComponent
         public ?string $initials = null,
         public string|bool|null $icon = null,
         public string|bool|null $tooltip = null,
-        public ?string $size = null,
-        public ?bool $square = null,
         public ?string $variant = null,
     ) {}
 

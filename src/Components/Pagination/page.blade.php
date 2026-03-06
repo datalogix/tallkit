@@ -9,4 +9,6 @@
     :wire:loading.attr="in_livewire() ? 'disabled' : false"
     :label="$page"
     action="setPage({{ $page }}, '{{ $paginator->getPageName() }}')"
-/>
+>
+    {{ $slot }}
+</tk:button>

@@ -1,6 +1,11 @@
 import { bind } from '../utils'
 
-export function modal(name?: string, dismissible?: boolean, persist?: string | boolean) {
+export function modal(
+  name?: string,
+  dismissible?: boolean,
+  persist?: string | boolean,
+  shortcut?: string
+) {
   return {
     init() {
       const dialog = this.$el
@@ -56,7 +61,22 @@ export function modal(name?: string, dismissible?: boolean, persist?: string | b
         ['@keyup.escape.window'](event) {
           handleCloseAttempt(event)
         },
+
+        ...(shortcut ? {
+          [`@keydown.${shortcut}.document`](event) {
+            event.preventDefault()
+            this.$dispatch('modal-show', { name })
+          }
+        } : {})
       })
+    },
+
+    show() {
+      this.$dispatch('modal-show', { name })
+    },
+
+    close() {
+      this.$dispatch('modal-close', { name })
     }
   }
 }

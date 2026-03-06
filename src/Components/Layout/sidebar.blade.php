@@ -1,5 +1,8 @@
 <div {{ $attributes
-    ->whereDoesntStartWith(['header:', 'area:', 'brand:', 'menu:', 'spacer:', 'appearance:', 'appearance-', 'user-menu:', 'sidebar:', 'sidebar-', 'main:'])
+    ->whereDoesntStartWith([
+        'header:', 'area:', 'brand:', 'menu:', 'spacer:',
+        'appearance', 'user-menu:', 'sidebar', 'main:',
+    ])
     ->classes('min-h-screen')
 }}>
     <tk:sidebar
@@ -48,7 +51,10 @@
         {{ $append ?? '' }}
         {{ $search ?? '' }}
 
-        @if ($appearance === 'toggle' || (($appearance === null || $appearance === true) && !($userMenu || isset($avatarMenu))))
+        @if (
+            $appearance === 'toggle' ||
+            (($appearance === null || $appearance === true) && !($userMenu || isset($avatarMenu)))
+        )
             <tk:appearance.toggle
                 :attributes="$attributesAfter('appearance:')"
             />

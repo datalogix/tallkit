@@ -27,14 +27,15 @@
                 dark:has-[input[data-invalid]]:border-red-500
             ',
              match ($size) {
-                'xs' => 'w-8 h-5 [&_span]:size-3 [&_[data-tallkit-icon]]:size-2.5',
-                'sm' => 'w-10 h-6 [&_span]:size-4 [&_[data-tallkit-icon]]:size-3',
-                default => 'w-12 h-7 [&_span]:size-5 [&_[data-tallkit-icon]]:size-4',
-                'lg' => 'w-13 h-7.5 [&_span]:size-5.5 [&_[data-tallkit-icon]]:size-4.5',
-                'xl' => 'w-15 h-8.5 [&_span]:size-6.5 [&_[data-tallkit-icon]]:size-5',
-                '2xl' => 'w-16 h-9 [&_span]:size-7 [&_[data-tallkit-icon]]:size-5.5',
-                '3xl' => 'w-18 h-10 [&_span]:size-8 [&_[data-tallkit-icon]]:size-6.5',
+                'xs' => 'w-8 h-5 [&_span]:size-4',
+                'sm' => 'w-10 h-6 [&_span]:size-4.5',
+                default => 'w-12 h-7 [&_span]:size-5',
+                'lg' => 'w-13 h-7.5 [&_span]:size-5.5',
+                'xl' => 'w-15 h-8.5 [&_span]:size-6',
+                '2xl' => 'w-16 h-9 [&_span]:size-6.5',
+                '3xl' => 'w-18 h-10 [&_span]:size-7',
             },
+            $iconSize($size),
             match ($variant) {
                 'accent' => '
                     has-[input:checked]:bg-[var(--color-accent)]
@@ -81,24 +82,25 @@
         <span
             aria-hidden="true"
             {{
-                $attributesAfter('icon:')->classes('
-                    bg-white
-                    absolute top-1 start-1
-                    rounded-full transition-all
+                $attributesAfter('icon:')->classes(
+                    '
+                        bg-white
+                        absolute top-1 start-1
+                        rounded-full transition-all
 
-                    flex
-                    items-center
-                    justify-center
+                        flex
+                        items-center
+                        justify-center
 
-                    peer-checked:translate-x-full
-                    rtl:peer-checked:-translate-x-full
+                        peer-checked:translate-x-full
+                        rtl:peer-checked:-translate-x-full
 
-                    [&_.checked]:hidden
-                    [&_.unchecked]:inline
-                    peer-checked:[&_.checked]:inline
-                    peer-checked:[&_.unchecked]:hidden
+                        [&_.checked]:hidden
+                        [&_.unchecked]:inline
+                        peer-checked:[&_.checked]:inline
+                        peer-checked:[&_.unchecked]:hidden
 
-                    [:where(&)]:text-zinc-800
+                        [:where(&)]:text-zinc-800
                     ',
                 )
             }}

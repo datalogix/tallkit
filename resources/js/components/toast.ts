@@ -19,6 +19,7 @@ export function toast() {
         ...props,
         duration: props.duration ?? 5000,
         position: props.position ?? 'bottom-right',
+        progress: props.progress ?? true,
         visible: false,
       })
 

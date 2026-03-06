@@ -10,15 +10,9 @@
 ') }}>
     @if ($label || $legend || $description)
         <tk:legend
-            :attributes="$attributesAfter('label:')
-                ->merge($attributesAfter('legend:')->getAttributes())
-                ->merge($attributesAfter('info:', prepend: true)->getAttributes())
-                ->merge($attributesAfter('badge:', prepend: true)->getAttributes())
-            "
+            :attributes="$attributesAfter('label:', prepend: ['legend:', 'badge', 'info'])"
             :label="$label ?: $legend"
             :$size
-            :$info
-            :$badge
         />
 
         <tk:text

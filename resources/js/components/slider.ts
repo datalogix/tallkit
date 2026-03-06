@@ -1,4 +1,4 @@
-import { bind } from '../utils'
+import { bind, getWireModelInfo } from '../utils'
 
 export function slider() {
   return {
@@ -7,7 +7,15 @@ export function slider() {
     },
 
     init() {
-      this.updateRange()
+      this.$nextTick(() => this.updateRange())
+
+      if (this.$wire) {
+        const prop = getWireModelInfo(this.input)
+
+        if (prop) {
+          this.$wire.$watch(prop.name, () => this.updateRange())
+        }
+      }
 
       bind(this.input, {
         ['@input']: () => this.updateRange()
@@ -51,6 +59,7 @@ export function slider() {
       const max = Number(this.input.max || 100)
       const val = Number(this.input.value)
       const p = ((val - min) * 100) / (max - min)
+
       this.input.style.setProperty('--range-percent', `${p}%`)
     }
   }

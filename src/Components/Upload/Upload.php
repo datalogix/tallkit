@@ -28,7 +28,7 @@ class Upload extends BladeComponent
                 return (object) [
                     'name' => $file->getClientOriginalName(),
                     'path' => $file->getRealPath(),
-                    'url' => fn () => $file->temporaryUrl(),
+                    'url' => $file->temporaryUrl,
                     'extension' => $extension,
                     'type' => $this->getTypeFromExtension($extension),
                 ];
@@ -42,7 +42,7 @@ class Upload extends BladeComponent
                 return (object) [
                     'name' => File::basename($file),
                     'path' => Storage::path($file),
-                    'url' => fn () => Storage::url($file),
+                    'url' => Storage::url($file),
                     'extension' => File::extension($file),
                     'type' => $this->getTypeFromExtension(File::extension($file)),
                 ];

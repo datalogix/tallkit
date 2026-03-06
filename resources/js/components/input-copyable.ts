@@ -6,7 +6,7 @@ export function inputCopyable() {
     timeout: null,
 
     get input () {
-      return this.$el.closest('[data-tallkit-input]').querySelector('input')
+      return this.$el.closest('[data-tallkit-field-control]')?.querySelector('input')
     },
 
     init() {

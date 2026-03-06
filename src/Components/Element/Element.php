@@ -41,6 +41,7 @@ class Element extends BladeComponent
         $this->as ??= 'span';
         $this->href ??= route_detect($this->route, $this->parameters, $this->href);
         $this->ariaLabel = $this->ariaLabel === true || $this->ariaLabel === null ? $this->tooltip : $this->ariaLabel;
+        $this->current ??= is_current_href($this->href, $this->exact);
 
         if ($this->href) {
             $this->as = 'a';

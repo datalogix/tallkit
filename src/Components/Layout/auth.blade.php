@@ -9,10 +9,14 @@ $hasHero = $bg || isset($hero) || count($attributesAfter('hero:')->all()) > 1;
 }}>
     <div {{ $attributesAfter('area:')->classes('p-6 relative', $right ? 'order-last' : 'order-first') }}>
         @if ($appearance !== false)
-            <tk:appearance.toggle :attributes="$attributesAfter('appearance:')->classes('absolute right-4 top-4 hidden lg:flex')" />
+            <tk:appearance.toggle :attributes="$attributesAfter('appearance:')
+                ->classes('absolute right-4 top-4')"
+            />
         @endif
 
-        <tk:container :attributes="$attributesAfter('container:')->classes('max-w-xl px-0 flex flex-col justify-center space-y-8 h-full')">
+        <tk:container :attributes="$attributesAfter('container:')
+            ->classes('max-w-xl px-0 flex flex-col justify-center space-y-8 h-full')"
+        >
             @isset ($brand)
                 {{ $brand }}
             @else

@@ -9,5 +9,7 @@ class Group extends BladeComponent
     public function __construct(
         public mixed $avatars = null,
         public ?int $max = null,
+        public ?string $size = null,
+        public ?bool $square = null,
     ) {}
 }

@@ -24,8 +24,7 @@
             :attributes="$attributesAfter('address:')"
             :$required
             :$size
-            loading
-            loading:class="hidden [.field-loading_&]:hidden"
+            loading="address"
         />
         <tk:input
             name="number"
@@ -74,4 +73,3 @@
         @endif
     </div>
 </x-dynamic-component>
-

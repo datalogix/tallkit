@@ -36,8 +36,7 @@ export function command() {
       bind(this.$root.querySelectorAll('[data-tallkit-command-item]'), (element) => ({
         ['@click']: () => this.filteredItems.forEach((item, index) => {
           if (item.querySelector('[data-tallkit-command-item]') === element) {
-            this.current = index
-            this.selectActive()
+            this.select(index)
             return
           }
         }),
@@ -56,9 +55,7 @@ export function command() {
           this.$dispatch('command-search-updated', { query: this.input.value })
           this.search()
         },
-        ['@focus']: (e) => {
-          this.setActive()
-        },
+        ['@focus']: () => this.setActive(),
         ['@blur']: () => this.clearActive(),
         ['@keydown.enter.prevent']: () => this.selectActive(),
         ['@keydown.arrow-down.prevent']: () => this.next(),
@@ -174,21 +171,22 @@ export function command() {
       const button = item.querySelector('[data-tallkit-command-item]')
       if (!button || button.hasAttribute('disabled')) return
 
-      //button.dispatchEvent(new Event('click', { bubbles: true }))
+      button.dispatchEvent(new Event('click', { bubbles: true }))
+    },
 
-      const lastCurrent = this.current
+    select(index: number) {
+      const item = this.filteredItems.at(index)
+      if (!item) return
+
+      const button = item.querySelector('[data-tallkit-command-item]')
+      if (!button || button.hasAttribute('disabled')) return
 
       this.input.value = ''
       this.input.dispatchEvent(new Event('input', { bubbles: true }))
       this.input.dispatchEvent(new Event('change', { bubbles: true }))
 
-      this.$dispatch('command-item-selected', {
-        index: this.current,
-        item,
-        button,
-      })
-
-      this.setActive(lastCurrent)
+      this.$dispatch('command-item-selected', { index, item, button, })
+      this.setActive(index)
     }
   }
 }

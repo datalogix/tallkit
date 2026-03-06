@@ -9,7 +9,7 @@
                 'accent' => 'bg-[var(--color-accent)] text-[var(--color-accent-foreground)]',
                 default => 'bg-zinc-800 dark:bg-zinc-700',
                 'red' => 'bg-red-600 dark:bg-red-700',
-                'orange' => 'bg-orange-600 dark:bg-orange-700',
+                'orange' => 'bg-orange-600 dark:bg-orange-500',
                 'amber' => 'bg-amber-600 dark:bg-amber-700',
                 'yellow' => 'bg-yellow-600 dark:bg-yellow-700',
                 'lime' => 'bg-lime-600 dark:bg-lime-700',
@@ -26,15 +26,9 @@
                 'pink' => 'bg-pink-600 dark:bg-pink-700',
                 'rose' => 'bg-rose-600 dark:bg-rose-700',
             },
-            match ($size) {
-                'xs' => 'py-1 px-1.5 text-[10px] font-light rounded',
-                'sm' => 'py-1.5 px-2 text-[11px] font-normal rounded',
-                default => 'py-2 px-2.5 text-xs font-medium rounded-md',
-                'lg' => 'py-2 px-2.5 text-sm font-semibold rounded-md',
-                'xl' => 'py-2.5 px-3 text-base font-bold rounded-lg',
-                '2xl' => 'py-2.5 px-3 text-lg font-extrabold rounded-lg',
-                '3xl' => 'py-3 px-3.5 text-xl font-black rounded-xl',
-            },
+            $fontSize(size: $size, weight: true, mode: 'small'),
+            $padding(size: $size, mode: 'smallest'),
+            $roundedSize($size),
         )
     }}
 >
@@ -46,6 +40,7 @@
         @if (isset($kbd) && $kbd !== '')
             <tk:kbd
                 :attributes="$attributesAfter('kbd:')->classes('ps-1')"
+                :$size
                 :label="$kbd"
                 variant="text"
             />
@@ -85,23 +80,23 @@
                 ',
                 match ($variant) {
                     'accent' => 'text-[var(--color-accent)]',
-                    'red' => 'text-red-600 dark:text-red-500',
+                    'red' => 'text-red-600 dark:text-red-700',
                     'orange' => 'text-orange-600 dark:text-orange-500',
-                    'amber' => 'text-amber-600 dark:text-amber-500',
-                    'yellow' => 'text-yellow-600 dark:text-yellow-500',
-                    'lime' => 'text-lime-600 dark:text-lime-500',
-                    'green' => 'text-green-600 dark:text-green-500',
-                    'emerald' => 'text-emerald-600 dark:text-emerald-500',
-                    'teal' => 'text-teal-600 dark:text-teal-500',
-                    'cyan' => 'text-cyan-600 dark:text-cyan-500',
-                    'sky' => 'text-sky-600 dark:text-sky-500',
-                    'blue' => 'text-blue-600 dark:text-blue-500',
-                    'indigo' => 'text-indigo-600 dark:text-indigo-500',
-                    'violet' => 'text-violet-600 dark:text-violet-500',
-                    'purple' => 'text-purple-600 dark:text-purple-500',
-                    'fuchsia' => 'text-fuchsia-600 dark:text-fuchsia-500',
-                    'pink' => 'text-pink-600 dark:text-pink-500',
-                    'rose' => 'text-rose-600 dark:text-rose-500',
+                    'amber' => 'text-amber-600 dark:text-amber-700',
+                    'yellow' => 'text-yellow-600 dark:text-yellow-700',
+                    'lime' => 'text-lime-600 dark:text-lime-700',
+                    'green' => 'text-green-600 dark:text-green-700',
+                    'emerald' => 'text-emerald-600 dark:text-emerald-700',
+                    'teal' => 'text-teal-600 dark:text-teal-700',
+                    'cyan' => 'text-cyan-600 dark:text-cyan-700',
+                    'sky' => 'text-sky-600 dark:text-sky-700',
+                    'blue' => 'text-blue-600 dark:text-blue-700',
+                    'indigo' => 'text-indigo-600 dark:text-indigo-700',
+                    'violet' => 'text-violet-600 dark:text-violet-700',
+                    'purple' => 'text-purple-600 dark:text-purple-700',
+                    'fuchsia' => 'text-fuchsia-600 dark:text-fuchsia-700',
+                    'pink' => 'text-pink-600 dark:text-pink-700',
+                    'rose' => 'text-rose-600 dark:text-rose-700',
                     default => 'text-zinc-800 dark:text-zinc-700',
                 },
             )"

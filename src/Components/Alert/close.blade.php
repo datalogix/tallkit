@@ -3,7 +3,9 @@
     tooltip="Close"
     :icon="$slot->isEmpty() ? $icon ?? 'close' : null"
     :attributes="$attributes->classes(
-        'rounded-md p-2 focus:ring-2',
+        $roundedSize(size: $size),
+        $iconSize(size: $size),
+        'p-2 focus:ring-2',
         match ($type) {
             'danger' => 'text-red-800 dark:text-red-300 focus:ring-red-300 hover:text-red-800 hover:bg-red-200 dark:hover:text-red-800 dark:hover:bg-red-200',
             'success' => 'text-green-800 dark:text-green-300 focus:ring-green-300 hover:text-green-800 hover:bg-green-200 dark:hover:text-green-800 dark:hover:bg-green-200',
@@ -11,17 +13,7 @@
             'info' => 'text-blue-800 dark:text-blue-300 focus:ring-blue-300 hover:text-blue-800 hover:bg-blue-200 dark:hover:text-blue-800 dark:hover:bg-blue-200',
             default => 'text-zinc-800 dark:text-zinc-300 focus:ring-zinc-300 hover:text-zinc-800 hover:bg-zinc-200 dark:hover:text-zinc-800 dark:hover:bg-zinc-200',
         },
-        match ($size) {
-            'xs' => '[&_[data-tallkit-icon]]:size-3',
-            'sm' => '[&_[data-tallkit-icon]]:size-3.5',
-            default => '[&_[data-tallkit-icon]]:size-4',
-            'lg' => '[&_[data-tallkit-icon]]:size-4.5',
-            'xl' => '[&_[data-tallkit-icon]]:size-5',
-            '2xl' => '[&_[data-tallkit-icon]]:size-5.5',
-            '3xl' => '[&_[data-tallkit-icon]]:size-6',
-        }
     )"
 >
     {{ $slot }}
 </tk:button>
-

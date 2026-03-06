@@ -15,6 +15,18 @@
     timeoutId = setTimeout(callback, ms);
     return timeoutId;
   }
+  function getWireModelInfo(element) {
+    for (let attr of element.attributes) {
+      if (attr.name.startsWith("wire:model")) {
+        let modifier = attr.name.includes(".") ? attr.name.split(".").slice(1).join(".") : "";
+        return {
+          name: attr.value,
+          modifier
+        };
+      }
+    }
+    return null;
+  }
   const scripts = /* @__PURE__ */ new Map();
   async function loadScript(src) {
     if (Array.isArray(src)) {
@@ -192,7 +204,7 @@
           this.abortController.abort();
         }
         this.abortController = new AbortController();
-        this.loading.style.display = "block";
+        this.loading.classList.remove("opacity-0");
         this.address.disabled = true;
         this.neighborhood.disabled = true;
         this.city.disabled = true;
@@ -218,7 +230,7 @@
           if (e.name === "AbortError") return;
           this.zipcode.focus();
         } finally {
-          this.loading.style.display = "none";
+          this.loading.classList.add("opacity-0");
           this.address.disabled = false;
           this.neighborhood.disabled = false;
           this.city.disabled = false;
@@ -331,7 +343,7 @@
       }
     };
   }
-  const __vite_glob_0_22 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_23 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     loadable
   }, Symbol.toStringTag, { value: "Module" }));
@@ -367,7 +379,7 @@
       }
     };
   }
-  const __vite_glob_0_33 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_34 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     sticky
   }, Symbol.toStringTag, { value: "Module" }));
@@ -413,7 +425,7 @@
       }
     };
   }
-  const __vite_glob_0_39 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_40 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     toggleable
   }, Symbol.toStringTag, { value: "Module" }));
@@ -621,11 +633,11 @@
     component.boundSetPosition = component.boundSetPosition.bind(component);
     return component;
   }
-  const __vite_glob_0_29 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_30 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     popover
   }, Symbol.toStringTag, { value: "Module" }));
-  function autocomplete() {
+  function autocomplete(options = {}) {
     const _popover = popover({ mode: "manual", position: "bottom", align: "start" });
     return {
       ..._popover,
@@ -639,6 +651,9 @@
         );
       },
       get filteredItems() {
+        if (options.minLength && this.input.value.length < options.minLength) {
+          return [];
+        }
         return this.items.filter((item) => {
           if (item.hasAttribute("data-hidden")) return false;
           const button = item.querySelector("[data-tallkit-autocomplete-item]");
@@ -670,7 +685,7 @@
           })
         }));
         bind(this.input, {
-          ["@input"]: () => {
+          ["@input.debounce"]: () => {
             this.$dispatch("autocomplete-search-updated", { query: this.input.value });
             this.search();
             if (this.filteredItems.length === 0) {
@@ -732,6 +747,9 @@
         };
         const value = normalize(this.input.value, normalizeOptions);
         this.clearItems();
+        if (options.minLength && value?.length && value?.length < options.minLength) {
+          return;
+        }
         if (value) {
           this.items.forEach((item) => {
             const span = item.querySelector("[data-tallkit-button-content]");
@@ -871,8 +889,7 @@
         bind(this.$root.querySelectorAll("[data-tallkit-command-item]"), (element) => ({
           ["@click"]: () => this.filteredItems.forEach((item, index) => {
             if (item.querySelector("[data-tallkit-command-item]") === element) {
-              this.current = index;
-              this.selectActive();
+              this.select(index);
               return;
             }
           }),
@@ -889,9 +906,7 @@
             this.$dispatch("command-search-updated", { query: this.input.value });
             this.search();
           },
-          ["@focus"]: (e) => {
-            this.setActive();
-          },
+          ["@focus"]: () => this.setActive(),
           ["@blur"]: () => this.clearActive(),
           ["@keydown.enter.prevent"]: () => this.selectActive(),
           ["@keydown.arrow-down.prevent"]: () => this.next(),
@@ -979,16 +994,18 @@
         if (!item) return;
         const button = item.querySelector("[data-tallkit-command-item]");
         if (!button || button.hasAttribute("disabled")) return;
-        const lastCurrent = this.current;
+        button.dispatchEvent(new Event("click", { bubbles: true }));
+      },
+      select(index) {
+        const item = this.filteredItems.at(index);
+        if (!item) return;
+        const button = item.querySelector("[data-tallkit-command-item]");
+        if (!button || button.hasAttribute("disabled")) return;
         this.input.value = "";
         this.input.dispatchEvent(new Event("input", { bubbles: true }));
         this.input.dispatchEvent(new Event("change", { bubbles: true }));
-        this.$dispatch("command-item-selected", {
-          index: this.current,
-          item,
-          button
-        });
-        this.setActive(lastCurrent);
+        this.$dispatch("command-item-selected", { index, item, button });
+        this.setActive(index);
       }
     };
   }
@@ -1023,25 +1040,34 @@
     __proto__: null,
     composer
   }, Symbol.toStringTag, { value: "Module" }));
-  const CREDIT_CARD_DEFAULT = {
-    opened: true,
-    types: [],
-    holderName: null,
-    number: null,
-    type: null,
-    expirationDate: null,
-    cvv: null
-  };
   function creditCard(options = {}) {
     const _toggleable = toggleable();
     return {
       ..._toggleable,
-      options: CREDIT_CARD_DEFAULT,
       init() {
         _toggleable.init.call(this);
         this.card = this.$data;
-        this.options = { ...CREDIT_CARD_DEFAULT, ...options };
+        this.options = {
+          opened: true,
+          types: [],
+          holderName: null,
+          number: null,
+          type: null,
+          expirationDate: null,
+          cvv: null,
+          ...options
+        };
         this.opened = this.options.opened;
+        bind(this.$el, {
+          ["@click"]() {
+            this.toggle();
+          },
+          [":class"]() {
+            return {
+              "rotate-y-180": !this.isOpened()
+            };
+          }
+        });
       },
       get typeOptions() {
         return this.options.types[this.options.type] ? this.options.types[this.options.type] : this.options.types.unknown;
@@ -1200,6 +1226,48 @@
     __proto__: null,
     fetchable
   }, Symbol.toStringTag, { value: "Module" }));
+  function fieldControl() {
+    return {
+      control: null,
+      mutationObserver: null,
+      init() {
+        this.control = this.$el.querySelector("[data-tallkit-control]");
+        if (!this.control) return;
+        this.calculate();
+        this.mutationObserver = new MutationObserver(() => {
+          this.calculate();
+        });
+        this.mutationObserver.observe(this.$el, {
+          childList: true,
+          subtree: true
+        });
+      },
+      calculate() {
+        const styles2 = getComputedStyle(this.control);
+        const paddingTop = parseFloat(styles2.paddingTop) || 0;
+        const paddingStart = parseFloat(styles2.paddingInlineStart) || 0;
+        const paddingEnd = parseFloat(styles2.paddingInlineEnd) || 0;
+        this.control.style.paddingInlineStart = "";
+        this.control.style.paddingInlineEnd = "";
+        const prependEl = this.$el.querySelector("[data-tallkit-field-control-prepend]");
+        const appendEl = this.$el.querySelector("[data-tallkit-field-control-append]");
+        if (prependEl) {
+          prependEl.style.paddingTop = `${paddingTop}px`;
+          prependEl.style.paddingInlineStart = `${paddingStart}px`;
+          this.control.style.paddingInlineStart = `${parseFloat(getComputedStyle(prependEl).width)}px`;
+        }
+        if (appendEl) {
+          appendEl.style.paddingTop = `${paddingTop}px`;
+          appendEl.style.paddingInlineEnd = `${paddingEnd}px`;
+          this.control.style.paddingInlineEnd = `${parseFloat(getComputedStyle(appendEl).width)}px`;
+        }
+      }
+    };
+  }
+  const __vite_glob_0_14 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    fieldControl
+  }, Symbol.toStringTag, { value: "Module" }));
   function frappeCharts() {
     return {
       ...loadable(),
@@ -1217,7 +1285,7 @@
       }
     };
   }
-  const __vite_glob_0_14 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_15 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     frappeCharts
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1242,7 +1310,7 @@
       }
     };
   }
-  const __vite_glob_0_15 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_16 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     fullCalendar
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1251,7 +1319,7 @@
       ...sticky()
     };
   }
-  const __vite_glob_0_16 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_17 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     header
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1275,20 +1343,20 @@
       }
     };
   }
-  const __vite_glob_0_17 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_18 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     highlightjs
   }, Symbol.toStringTag, { value: "Module" }));
   function inputClearable() {
     return {
       get input() {
-        return this.$el.closest("[data-tallkit-input]").querySelector("input");
+        return this.$el.closest("[data-tallkit-field-control]")?.querySelector("input");
       },
       init() {
-        const button = this.$el;
         if (!this.input) {
           return;
         }
+        const button = this.$el;
         button.style.display = this.input.value ? "inline-flex " : "none";
         bind(this.input, {
           ["@input"]() {
@@ -1307,7 +1375,7 @@
       }
     };
   }
-  const __vite_glob_0_18 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_19 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     inputClearable
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1316,7 +1384,7 @@
       copied: false,
       timeout: null,
       get input() {
-        return this.$el.closest("[data-tallkit-input]").querySelector("input");
+        return this.$el.closest("[data-tallkit-field-control]")?.querySelector("input");
       },
       init() {
         if (!this.input) {
@@ -1340,18 +1408,15 @@
       }
     };
   }
-  const __vite_glob_0_19 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_20 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     inputCopyable
   }, Symbol.toStringTag, { value: "Module" }));
   function inputViewable() {
     return {
       viewed: false,
-      get container() {
-        return this.$el.closest("[data-tallkit-input]");
-      },
       get input() {
-        return this.container.querySelector("input");
+        return this.$el.closest("[data-tallkit-field-control]")?.querySelector("input");
       },
       init() {
         if (!this.input) {
@@ -1366,7 +1431,7 @@
           }
         });
         const inputObserver = new MutationObserver(() => {
-          this.viewed = this.input.getAttribute("type") !== "password";
+          this.viewed = this.input?.getAttribute("type") !== "password";
         });
         inputObserver.observe(this.input, {
           attributes: true,
@@ -1375,7 +1440,7 @@
       }
     };
   }
-  const __vite_glob_0_20 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_21 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     inputViewable
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1428,7 +1493,7 @@
       }
     };
   }
-  const __vite_glob_0_21 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_22 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     label
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1470,7 +1535,7 @@
       }
     };
   }
-  const __vite_glob_0_23 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_24 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     menuCheckbox
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1499,7 +1564,7 @@
       }
     };
   }
-  const __vite_glob_0_24 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_25 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     menuRadio
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1523,7 +1588,7 @@
       }
     };
   }
-  const __vite_glob_0_25 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_26 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     menu
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1547,11 +1612,11 @@
       }
     };
   }
-  const __vite_glob_0_26 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_27 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     modalTrigger
   }, Symbol.toStringTag, { value: "Module" }));
-  function modal(name, dismissible, persist) {
+  function modal(name, dismissible, persist, shortcut) {
     return {
       init() {
         const dialog = this.$el;
@@ -1596,12 +1661,24 @@
           },
           ["@keyup.escape.window"](event) {
             handleCloseAttempt(event);
-          }
+          },
+          ...shortcut ? {
+            [`@keydown.${shortcut}.document`](event) {
+              event.preventDefault();
+              this.$dispatch("modal-show", { name });
+            }
+          } : {}
         });
+      },
+      show() {
+        this.$dispatch("modal-show", { name });
+      },
+      close() {
+        this.$dispatch("modal-close", { name });
       }
     };
   }
-  const __vite_glob_0_27 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_28 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     modal
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1619,7 +1696,6 @@
       init() {
         const inputs = this.inputs;
         this.$nextTick(() => this.updateModel());
-        this.$watch("value", (newVal) => syncInputs(inputs, newVal));
         inputs.forEach((input, index) => {
           bind(input, {
             ["@focus"]() {
@@ -1662,7 +1738,7 @@
       },
       updateModel() {
         const old = this.value;
-        this.value = this.inputs.map((i) => i.value || " ").join("");
+        this.value = this.inputs.map((i) => i.value ?? " ").join("");
         const len = this.value.replace(/\s+/g, "").length;
         if (old === this.value) {
           return;
@@ -1684,18 +1760,18 @@
     };
   }
   function syncInputs(inputs, modelValue) {
-    const chars = modelValue.padEnd(inputs.length).split("");
+    const chars = String(modelValue).padEnd(inputs.length).split("");
     inputs.forEach((input, i) => {
       input.value = filterValue(chars[i] ?? "", input.dataset.mode);
     });
   }
   function filterValue(value, mode) {
-    return (value.toLocaleUpperCase().match(
+    return (String(value).toLocaleUpperCase().match(
       mode === "alpha" ? /[A-Z]/g : mode === "alphanumeric" ? /[A-Z0-9]/g : /[0-9]/g
     ) || []).join("");
   }
   function spreadValue(value, startIndex, inputs) {
-    const chars = value.split("");
+    const chars = String(value).split("");
     chars.forEach((char, i) => {
       const target = inputs[startIndex + i];
       if (target) {
@@ -1708,7 +1784,7 @@
     );
     inputs[lastIndex]?.focus();
   }
-  const __vite_glob_0_28 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_29 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     otp
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1732,7 +1808,7 @@
       }
     };
   }
-  const __vite_glob_0_30 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_31 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     prettyPrintJson
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1775,7 +1851,7 @@
       }
     };
   }
-  const __vite_glob_0_31 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_32 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     sidebar
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1785,7 +1861,13 @@
         return this.$root.querySelector("[data-tallkit-control]");
       },
       init() {
-        this.updateRange();
+        this.$nextTick(() => this.updateRange());
+        if (this.$wire) {
+          const prop = getWireModelInfo(this.input);
+          if (prop) {
+            this.$wire.$watch(prop.name, () => this.updateRange());
+          }
+        }
         bind(this.input, {
           ["@input"]: () => this.updateRange()
         });
@@ -1824,7 +1906,7 @@
       }
     };
   }
-  const __vite_glob_0_32 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_33 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     slider
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1871,7 +1953,7 @@
       }
     };
   }
-  const __vite_glob_0_34 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_35 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     submenu
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1894,7 +1976,7 @@
       }
     };
   }
-  const __vite_glob_0_35 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_36 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     tab
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1970,7 +2052,7 @@
       }
     };
   }
-  const __vite_glob_0_36 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_37 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     table
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1996,7 +2078,7 @@
       }
     };
   }
-  const __vite_glob_0_37 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_38 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     textarea
   }, Symbol.toStringTag, { value: "Module" }));
@@ -2017,6 +2099,7 @@
           ...props,
           duration: props.duration ?? 5e3,
           position: props.position ?? "bottom-right",
+          progress: props.progress ?? true,
           visible: false
         });
         if (toast2.position === "top") {
@@ -2047,7 +2130,7 @@
       }
     };
   }
-  const __vite_glob_0_38 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_39 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     toast: toast$1
   }, Symbol.toStringTag, { value: "Module" }));
@@ -2085,7 +2168,7 @@
       }
     };
   }
-  const __vite_glob_0_40 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_41 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     upload
   }, Symbol.toStringTag, { value: "Module" }));
@@ -2117,7 +2200,7 @@
   }
   function registerAlpineComponents() {
     const components = Object.fromEntries(
-      Object.values([__vite_glob_0_0, __vite_glob_0_1, __vite_glob_0_2, __vite_glob_0_3, __vite_glob_0_4, __vite_glob_0_5, __vite_glob_0_6, __vite_glob_0_7, __vite_glob_0_8, __vite_glob_0_9, __vite_glob_0_10, __vite_glob_0_11, __vite_glob_0_12, __vite_glob_0_13, __vite_glob_0_14, __vite_glob_0_15, __vite_glob_0_16, __vite_glob_0_17, __vite_glob_0_18, __vite_glob_0_19, __vite_glob_0_20, __vite_glob_0_21, __vite_glob_0_22, __vite_glob_0_23, __vite_glob_0_24, __vite_glob_0_25, __vite_glob_0_26, __vite_glob_0_27, __vite_glob_0_28, __vite_glob_0_29, __vite_glob_0_30, __vite_glob_0_31, __vite_glob_0_32, __vite_glob_0_33, __vite_glob_0_34, __vite_glob_0_35, __vite_glob_0_36, __vite_glob_0_37, __vite_glob_0_38, __vite_glob_0_39, __vite_glob_0_40]).flatMap(
+      Object.values([__vite_glob_0_0, __vite_glob_0_1, __vite_glob_0_2, __vite_glob_0_3, __vite_glob_0_4, __vite_glob_0_5, __vite_glob_0_6, __vite_glob_0_7, __vite_glob_0_8, __vite_glob_0_9, __vite_glob_0_10, __vite_glob_0_11, __vite_glob_0_12, __vite_glob_0_13, __vite_glob_0_14, __vite_glob_0_15, __vite_glob_0_16, __vite_glob_0_17, __vite_glob_0_18, __vite_glob_0_19, __vite_glob_0_20, __vite_glob_0_21, __vite_glob_0_22, __vite_glob_0_23, __vite_glob_0_24, __vite_glob_0_25, __vite_glob_0_26, __vite_glob_0_27, __vite_glob_0_28, __vite_glob_0_29, __vite_glob_0_30, __vite_glob_0_31, __vite_glob_0_32, __vite_glob_0_33, __vite_glob_0_34, __vite_glob_0_35, __vite_glob_0_36, __vite_glob_0_37, __vite_glob_0_38, __vite_glob_0_39, __vite_glob_0_40, __vite_glob_0_41]).flatMap(
         (module) => Object.entries(module).filter(([, v]) => typeof v === "function")
       )
     );
@@ -2198,8 +2281,8 @@
     if (typeof args[0] === "object" && args[0] !== null && !Array.isArray(args[0])) {
       detail = args[0];
     } else {
-      const [message, title, type, duration, position] = args;
-      detail = { message, title, type, duration, position };
+      const [message, title, type, duration, position, progress, size] = args;
+      detail = { message, title, type, duration, position, progress, size };
     }
     document.dispatchEvent(new CustomEvent("toast", { detail }));
   }

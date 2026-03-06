@@ -1,71 +1,20 @@
 <tk:element
     x-data="badge"
     :name="$baseComponentKey()"
-    :icon:size="$adjustSize()"
-    :icon-trailing:size="$adjustSize()"
     content:class="flex items-center"
     :attributes="$attributes
         ->whereDoesntStartWith(['close:'])
         ->classes(
-            '
-            transition
-            font-medium whitespace-nowrap
-            [print-color-adjust:exact]
-            ',
-            $fontSize($size),
-            match ($size) {
-                'xs' => 'rounded-sm px-1 py-px gap-1',
-                'sm' => 'rounded-sm px-1.5 py-0.5 gap-1',
-                 default => 'rounded-md px-2 py-0.5 gap-1.5',
-                'lg' => 'rounded-md px-2.5 py-1 gap-1.5',
-                'xl' => 'rounded-lg px-3 py-1 gap-2.5',
-                '2xl' => 'rounded-lg px-3.5 py-1.5 gap-2.5',
-                '3xl' => 'rounded-xl px-4 py-1.5 gap-3',
-            },
-            match ($rounded) {
-                true => 'rounded-full '. match ($size) {
-                    'xs' => 'px-2',
-                    'sm' => 'px-3',
-                    default => 'px-4',
-                    'lg' => 'px-5',
-                    'xl' => 'px-6',
-                    '2xl' => 'px-7',
-                    '3xl' => 'px-8',
-                },
-                default => '',
-            },
-            match ($border) {
-                true => 'border',
-                'solid' => 'border border-solid',
-                'dashed' => 'border border-dashed',
-                'dotted' => 'border border-dotted',
-                default => '',
-            }
+            'transition font-medium whitespace-nowrap [print-color-adjust:exact]',
+            $fontSize(size: $size),
+            $roundedSize(size: $rounded ? 'full' : $size),
+            $iconSize(size: $size),
+            $gap(size: $size),
+            $paddingInline(size: $size, mode: $rounded ? 'small' : 'smallest'),
+            $paddingBlock(size: $size, mode: 'smallest'),
+            $borderStyle(style: $border),
         )
-        ->when(
-            $border,
-            fn ($c) => $c->classes(match ($variant) {
-                'accent' => 'border-[var(--color-accent)]',
-                default => 'border-zinc-400',
-                'red' => 'border-red-400',
-                'orange' => 'border-orange-400',
-                'amber' => 'border-amber-400',
-                'yellow' => 'border-yellow-400',
-                'lime' => 'border-lime-400',
-                'green' => 'border-green-400',
-                'emerald' => 'border-emerald-400',
-                'teal' => 'border-teal-400',
-                'cyan' => 'border-cyan-400',
-                'sky' => 'border-sky-400',
-                'blue' => 'border-blue-400',
-                'indigo' => 'border-indigo-400',
-                'violet' => 'border-violet-400',
-                'purple' => 'border-purple-400',
-                'fuchsia' => 'border-fuchsia-400',
-                'pink' => 'border-pink-400',
-                'rose' => 'border-rose-400',
-            })
-        )
+        ->when($border, fn ($c) => $c->classes($borderColor(variant: $variant)))
         ->when(
             $solid,
             fn ($c) => $c->classes(match ($variant) {

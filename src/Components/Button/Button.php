@@ -13,7 +13,6 @@ class Button extends BladeComponent
         public ?string $type = null,
         public ?string $href = null,
         public string|bool|null $loading = null,
-        public ?string $size = null,
         public ?bool $circle = null,
         public ?bool $square = null,
         public ?string $variant = null,

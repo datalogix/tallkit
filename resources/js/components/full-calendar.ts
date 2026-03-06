@@ -1,4 +1,3 @@
-
 export function fullCalendar(options: {
   locale?: string
   [key: string]: any

@@ -12,7 +12,11 @@ class Profile extends BladeComponent
 
     public function __construct(
         public ?string $size = null,
-        public ?string $description = null,
+        public ?ComponentSlot $prepend = null,
+        public string|ComponentSlot|null $name = null,
+        public null|string|array $description = null,
+        public ?ComponentSlot $append = null,
+        public ?ComponentSlot $actions = null,
         public ?string $image = null,
         public bool $displayEmail = true,
     ) {}

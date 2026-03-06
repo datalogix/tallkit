@@ -5,16 +5,15 @@ $external ??= $attributes->get('target') === '_blank';
 <tk:tooltip.wrapper :$attributes :$tooltip>
     <{{ $as }} {{ $attributes
         ->whereDoesntStartWith(['tooltip:', 'icon-wrapper:', 'icon:', 'icon-dot:', 'content:', 'prefix:', 'suffix:', 'icon-trailing:', 'info:', 'badge:', 'kbd:'])
+        ->when($current, fn ($attrs, $value) => $attrs->merge(['data-current' => $value]))
         ->when($as !== 'p' || $icon, fn ($attrs) => $attrs->classes('inline-flex items-center gap-1.5'))
         ->when($as === 'a', fn ($attrs) => $attrs->merge([
             'target' => $external === true ? '_blank' : $external,
             'wire:navigate' => !$external && $navigate !== false,
             'href' => $href,
-            'data-current' => $current ?? is_current_href($href, $exact),
         ]))
         ->when($as === 'button', fn ($attrs) => $attrs->merge([
             'type' => $type ?? 'button',
-            'data-current' => $current,
             'wire:click' => $action,
         ], false))
         ->when($ariaLabel, fn ($attrs, $value) => $attrs->merge(['aria-label' => __($value)]))
@@ -44,7 +43,7 @@ $external ??= $attributes->get('target') === '_blank';
                                 '
                                     flex items-center justify-center
                                     text-white tracking-tighter font-bold
-                                    text-[11px] size-4.5
+                                    text-[11px] size-4
                                 ' => is_string($iconDot) && strlen($iconDot) <= 2,
                             ])"
                             :label="is_string($iconDot) && strlen($iconDot) <= 2 ? $iconDot : null"
@@ -70,7 +69,13 @@ $external ??= $attributes->get('target') === '_blank';
 
         @if (isset($prefix) && $prefix !== '')
             <tk:element
-                :attributes="$attributesAfter('prefix:')->classes('me-auto font-medium text-xs text-zinc-500 dark:text-zinc-400')"
+                :attributes="$attributesAfter('prefix:')->classes(
+                    '
+                        me-auto
+                        font-medium text-xs
+                        text-zinc-500 dark:text-zinc-400
+                    '
+                )"
                 :label="$prefix"
             />
         @endif
@@ -82,13 +87,23 @@ $external ??= $attributes->get('target') === '_blank';
             >
                 {{ $slot }}
             </tk:element>
+        @elseif ($slot->hasActualContent() || $label === true)
+            {{ $slot }}
+        @elseif ($isSlot($label))
+            {{ $label }}
         @else
-            {!! $slot->hasActualContent() || $label === true ? $slot : ($isSlot($label) ? $label : __($label)) !!}
+            {!! __($label) !!}
         @endif
 
         @if (isset($suffix) && $suffix !== '')
             <tk:element
-                :attributes="$attributesAfter('suffix:')->classes('ms-auto font-medium text-xs text-zinc-500 dark:text-zinc-400')"
+                :attributes="$attributesAfter('suffix:')->classes(
+                    '
+                        ms-auto
+                        font-medium text-xs
+                        text-zinc-500 dark:text-zinc-400
+                    '
+                )"
                 :label="$suffix"
             />
         @endif
@@ -115,7 +130,7 @@ $external ??= $attributes->get('target') === '_blank';
             />
         @endif
 
-         @if (isset($kbd) && $kbd !== '')
+        @if (isset($kbd) && $kbd !== '')
             <tk:kbd
                 :attributes="$attributesAfter('kbd:')"
                 :label="$kbd"

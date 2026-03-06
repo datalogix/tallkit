@@ -13,14 +13,17 @@
             :label="$heading"
             variant="subtle"
             icon="chevron-right"
-            icon:class="me-1.5 group-data-[open]/disclosure:rotate-90 {{ $collapse === true || is_string($collapse) ? 'transition': '  ' }}"
+            icon:class="
+                me-1.5 group-data-[open]/disclosure:rotate-90
+                {{ $collapse === true || is_string($collapse) ? 'transition': '' }}
+            "
         />
 
         <div
             {{
                 $attributesAfter('container:')
                 ->classes('relative hidden group-data-[open]/disclosure:block space-y-[2px]')
-                ->when($line !== false, fn($attrs) => $attrs->classes(match($size) {
+                ->when($line !== false, fn($attrs) => $attrs->classes(match ($size) {
                     'xs' => 'ps-9',
                     'sm' => 'ps-9',
                     default => 'ps-10',
@@ -36,7 +39,7 @@
             @if ($line !== false)
                 <div {{ $attributesAfter('line:')->classes(
                     'absolute inset-y-[3px] w-px bg-zinc-200 dark:bg-white/20 start-0',
-                    match($size) {
+                    match ($size) {
                         'xs' => 'ms-4.5',
                         'sm' => 'ms-4.5',
                         default => 'ms-5',

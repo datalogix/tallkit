@@ -1,4 +1,3 @@
-
 <header {{
     $attributes
         ->whereDoesntStartWith(['container:'])

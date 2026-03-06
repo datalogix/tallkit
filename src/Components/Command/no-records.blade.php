@@ -1,7 +1,7 @@
 <tk:text
     :$attributes
     hidden
-    class="p-3.5 text-center"
+    class="p-4 text-center"
     aria-live="polite"
     label="No records found"
     variant="subtle"

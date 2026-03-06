@@ -1,44 +1,48 @@
-<section {{ $attributes->whereDoesntStartWith(['header:', 'title:', 'icon', 'badge', 'subtitle:', 'actions:', 'separator:', 'content:'])->classes([
-    '[:where(&)]:space-y-6',
-    '[&:has([data-tallkit-section-content]>:is([data-tallkit-card],[data-tallkit-table-container]))>[data-tallkit-separator]]:hidden' => !$separator,
-]) }}>
-    @if ($title || $subtitle || isset($description) || isset($actions))
-        <div {{ $attributesAfter('header:')->classes('flex justify-between items-start gap-4') }}>
-            @if ($title || $subtitle || isset($description))
-                <div class="flex-1">
-                    <tk:heading
-                        :attributes="$attributesAfter('title:')
-                            ->merge($attributesAfter('icon', prepend: true)->getAttributes())
-                            ->merge($attributesAfter('badge', prepend: true)->getAttributes())"
-                        :label="$title"
-                        :$size
-                    />
+<section {{ $attributes->whereDoesntStartWith([
+        'header:', 'container:', 'title:', 'icon', 'badge', 'subtitle:', 'list:', 'actions:',
+        'separator:', 'content:',
+    ])
+    ->classes([
+        '[:where(&)]:space-y-6',
+        '[&:has([data-tallkit-section-content]>:is([data-tallkit-card],[data-tallkit-table-container]))>[data-tallkit-separator]]:hidden' => !$separator,
+        $fontSize(size: $size),
+    ])
+}}>
+    @if ($title || $subtitle || $description || $append || $actions)
+        <tk:content
+            :attributes="$attributesAfter('header:', prepend: ['container:', 'title:', 'description:' => 'subtitle:', 'list:', 'actions:'])
+                ->merge($attributesAfter('icon', prepend: 'title:icon')->getAttributes())
+                ->merge($attributesAfter('badge', prepend: 'title:badge')->getAttributes())
+            "
+            :$size
+            :icon="false"
+            :$prepend
+            :$title
+            :description="$subtitle"
+            :$actions
+        >
+            <x-slot:append>
+                {{ $description }}
+                {{ $append }}
+            </x-slot:append>
+        </tk:content>
 
-                    <tk:text
-                        :attributes="$attributesAfter('subtitle:')"
-                        :label="$subtitle"
-                        :$size
-                    />
-
-                    {{ $description ?? '' }}
-                </div>
-            @endif
-
-            @isset ($actions)
-                <div {{ $attributesAfter('actions:')->classes('ms-auto shrink-0 flex items-center gap-2') }}>
-                    {{ $actions }}
-                </div>
-            @endisset
-        </div>
-
-        @if ($separator || ($separator === null && ($title && ($subtitle || isset($description)) || isset($actions)) && ($slot->hasActualContent() || $content)))
+        @if (
+            $separator ||
+            (
+                $separator === null &&
+                ($title && ($subtitle || $description || $append) || $actions) &&
+                ($slot->hasActualContent() || $content)
+            )
+        )
             <tk:separator :attributes="$attributesAfter('separator:')" />
         @endif
     @endif
 
     @if ($slot->hasActualContent() || $content)
         <div {{ $attributesAfter('content:')->classes('space-y-6') }}>
-            {{ $slot->isEmpty() ? __($content) : $slot }}
+            {{ __($content) }}
+            {{ $slot }}
         </div>
     @endif
 </section>

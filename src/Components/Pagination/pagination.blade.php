@@ -1,4 +1,5 @@
 @aware(['dense'])
+@props(['dense'])
 
 @php
 $scrollIntoViewJsSnippet = ($scrollTo !== false) ? "(\$el.closest('{$scrollTo}') || document.querySelector('{$scrollTo}')).scrollIntoView()" : false;
@@ -9,7 +10,10 @@ $textColors = $classes('text-zinc-700 dark:text-zinc-300');
 
 @if ($total !== false || ($isPaginator && $paginator->hasPages()) || $isArrayable)
     <div {{ $attributes
-        ->whereDoesntStartWith(['separator:', 'container:', 'nav:', 'results:', 'total:', 'pages:', 'page:', 'first-page:', 'prev-page:', 'next:', 'last-page:', 'dots:'])
+        ->whereDoesntStartWith([
+            'separator:', 'container:', 'nav:', 'results:', 'total:',
+            'pages:', 'page:', 'first-page:', 'prev-page:', 'next:', 'last-page:', 'dots:',
+        ])
         ->classes($textColors)
     }}>
         @if ($separator !== false)
@@ -32,7 +36,10 @@ $textColors = $classes('text-zinc-700 dark:text-zinc-300');
                         {{ $results($paginator) }}
                     @elseif ($total !== false)
                         <tk:text
-                            :attributes="$attributesAfter('results:')->classes('hidden sm:block', $textColors)"
+                            :attributes="$attributesAfter('results:')->classes(
+                                'hidden sm:block',
+                                $textColors
+                            )"
                             :$size
                         >
                             <span>{!! __('Showing') !!}</span>
@@ -45,7 +52,10 @@ $textColors = $classes('text-zinc-700 dark:text-zinc-300');
                         </tk:text>
 
                         <tk:text
-                            :attributes="$attributesAfter('total:')->classes('sm:hidden', $textColors)"
+                            :attributes="$attributesAfter('total:')->classes(
+                                'sm:hidden',
+                                $textColors
+                            )"
                             :$size
                         >
                             <span>{!! __('Total:') !!}</span>
@@ -54,19 +64,22 @@ $textColors = $classes('text-zinc-700 dark:text-zinc-300');
                         </tk:text>
                     @endif
 
-                    <div {{ $attributesAfter('pages:')->classes('flex-1 flex items-center flex-wrap justify-end gap-1 rtl:flex-row-reverse') }}>
+                    <div {{ $attributesAfter('pages:')->classes('
+                            flex-1 flex flex-wrap rtl:flex-row-reverse
+                            items-center justify-end gap-1
+                    ') }}>
                         @if ($firstPage !== false)
                             <tk:pagination.first-page
                                 :attributes="$attributesAfter('first-page:')->classes('hidden sm:inline-flex')"
                                 :x-on:click="$scrollIntoViewJsSnippet"
-                                :size="$adjustSize()"
+                                :$size
                             />
                         @endif
 
                         <tk:pagination.prev-page
                             :attributes="$attributesAfter('prev-page:')"
                             :x-on:click="$scrollIntoViewJsSnippet"
-                            :size="$adjustSize()"
+                            :$size
                         />
 
                         @isset ($links)
@@ -77,7 +90,7 @@ $textColors = $classes('text-zinc-700 dark:text-zinc-300');
                                     <tk:text
                                         :attributes="$attributesAfter('dots:')->classes('px-px hidden lg:inline-flex')"
                                         :label="$element"
-                                        :size="$adjustSize()"
+                                        :$size
                                         aria-disabled="true"
                                     />
                                 @endif
@@ -88,7 +101,7 @@ $textColors = $classes('text-zinc-700 dark:text-zinc-300');
                                             :attributes="$attributesAfter('page:')->classes('px-3.5 hidden lg:inline-flex')"
                                             :$page
                                             :$url
-                                            :size="$adjustSize()"
+                                            :$size
                                         />
                                     @endforeach
                                 @endif
@@ -98,14 +111,14 @@ $textColors = $classes('text-zinc-700 dark:text-zinc-300');
                         <tk:pagination.next-page
                             :attributes="$attributesAfter('next-page:')"
                             :x-on:click="$scrollIntoViewJsSnippet"
-                            :size="$adjustSize()"
+                            :$size
                         />
 
                         @if ($lastPage !== false)
                             <tk:pagination.last-page
                                 :attributes="$attributesAfter('last-page:')->classes('hidden sm:inline-flex')"
                                 :x-on:click="$scrollIntoViewJsSnippet"
-                                :size="$adjustSize()"
+                                :$size
                             />
                         @endif
                     </div>
@@ -119,13 +132,13 @@ $textColors = $classes('text-zinc-700 dark:text-zinc-300');
                     <tk:pagination.prev-page
                         :attributes="$attributesAfter('prev-page:')"
                         :x-on:click="$scrollIntoViewJsSnippet"
-                        :size="$adjustSize()"
+                        :$size
                     />
 
                     <tk:pagination.next-page
                         :attributes="$attributesAfter('next-page:')"
                         :x-on:click="$scrollIntoViewJsSnippet"
-                        :size="$adjustSize()"
+                        :$size
                     />
                 </nav>
             @elseif ($isPaginator)

@@ -11,7 +11,7 @@ class Fetchable extends BladeComponent
 
     public function __construct(
         public ?string $url = null,
-        public $data = null,
+        public mixed $data = null,
         public ?bool $autofetch = null,
         public ?string $chart = null,
     ) {}

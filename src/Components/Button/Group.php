@@ -4,4 +4,9 @@ namespace TALLKit\Components\Button;
 
 use TALLKit\View\BladeComponent;
 
-class Group extends BladeComponent {}
+class Group extends BladeComponent
+{
+    public function __construct(
+        public ?string $size = null,
+    ) {}
+}

@@ -4,28 +4,37 @@
     :$id
     :$label
 >
-    <div
-        x-data="otp(@js($submit))"
-        x-modelable="value"
-        wire:ignore
-        role="group"
-        {{ $buildDataAttribute('control') }}
-        {{
-            $attributes
-            ->whereDoesntStartWith(['input:'])
-            ->classes('
-                flex items-center gap-2
-                isolate w-fit
-                [&_[data-tallkit-input-group]]:w-auto
-            ')
-        }}
+    <tk:field.control
+        :$attributes
+        :$size
+        control:class="w-fit"
     >
-        @if ($slot->isEmpty() && $length)
-            @for ($i = 0; $i < $length; $i++)
-                <tk:otp.input :attributes="$attributesAfter('input:')" />
-            @endfor
-        @else
-            {{ $slot }}
-        @endif
-    </div>
+        <div
+            wire:ignore
+            x-data="otp(@js($submit))"
+            x-modelable="value"
+            role="group"
+            {{ $buildDataAttribute('control') }}
+            {{
+                $attributes
+                    ->whereDoesntStartWith(['input:'])
+                    ->classes(
+                        '
+                            flex items-center
+                            isolate w-fit
+                            [&_[data-tallkit-input-group]]:w-auto
+                        ',
+                        $gap(size: $size)
+                    )
+            }}
+        >
+            @if ($slot->isEmpty() && ($length ?? 6))
+                @for ($i = 0; $i < ($length ?? 6); $i++)
+                    <tk:otp.input :attributes="$attributesAfter('input:')" />
+                @endfor
+            @else
+                {{ $slot }}
+            @endif
+        </div>
+    </tk:field.control>
 </tk:field.wrapper>

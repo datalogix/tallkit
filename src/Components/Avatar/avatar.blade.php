@@ -1,3 +1,6 @@
+@aware(['size', 'square'])
+@props(['size', 'square'])
+
 <tk:element
     :name="$baseComponentKey()"
     :$tooltip
@@ -8,20 +11,12 @@
                 justify-center
                 relative flex-none isolate
                 after:absolute after:inset-0 after:inset-ring-[1px] after:inset-ring-black/7 dark:after:inset-ring-white/10
-                [:where(&)]:bg-zinc-200 dark:[:where(&)]:bg-white/10
+                [:where(&)]:bg-zinc-200 dark:[:where(&)]:bg-zinc-800
                 [:where(&)]:text-zinc-800 dark:[:where(&)]:text-white
-                [:where(&)]:font-medium
             ',
-            $fontSize($size),
-            match ($size) {
-                'xs' => '[:where(&)]:size-6',
-                'sm' => '[:where(&)]:size-8',
-                default => '[:where(&)]:size-10',
-                'lg' => '[:where(&)]:size-12',
-                'xl' => '[:where(&)]:size-16',
-                '2xl' => '[:where(&)]:size-20',
-                '3xl' => '[:where(&)]:size-24',
-            },
+            $fontSize(size: $size, weight: true),
+            $roundedSize(size: !$square ? 'full' : $size, after: true),
+            $widthHeight(size: $size, mode: 'large'),
             match ($variant === 'auto' ? $generateColor() : $variant) {
                 'accent' => 'bg-[var(--color-accent)] text-[var(--color-accent-foreground)]',
                 'inverse' => 'text-white bg-zinc-800 dark:text-zinc-800 dark:bg-white',
@@ -49,26 +44,13 @@
                 'rose' => 'bg-rose-200 text-rose-800',
             },
         )
-        ->when(
-            $square,
-            fn ($c) => $c->classes(match ($size) {
-                'xs' => 'after:rounded-sm rounded-sm',
-                'sm' => 'after:rounded-sm rounded-sm',
-                default => 'after:rounded-md rounded-md',
-                'lg' => 'after:rounded-md rounded-md',
-                'xl' => 'after:rounded-lg rounded-lg',
-                '2xl' => 'after:rounded-lg rounded-lg',
-                '3xl' => 'after:rounded-xl rounded-xl',
-            }),
-            fn ($c) => $c->classes('after:rounded-full rounded-full'),
-        )
     "
 >
     @if ($src)
         <img
             {{
                 $attributesAfter('image:')
-                    ->classes($square ? 'rounded-sm' : 'rounded-full')
+                    ->classes($roundedSize(size: !$square ? 'full' : $size))
                     ->merge(['src' => $src, 'alt' => $alt ?? $name])
             }}
         />

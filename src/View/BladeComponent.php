@@ -14,10 +14,11 @@ abstract class BladeComponent extends Component
 {
     use Concerns\HandlesAssetInjection,
         Concerns\HandlesAttributes,
+        Concerns\HandlesColors,
         Concerns\HandlesDataKey,
         Concerns\HandlesLifecycle,
         Concerns\HandlesProps,
-        Concerns\HandlesSize,
+        Concerns\HandlesSizes,
         Concerns\HandlesView;
 
     public function classes(...$classes)
@@ -39,7 +40,7 @@ abstract class BladeComponent extends Component
         $prefix,
         array|ComponentAttributeBag $default = [],
         string|bool $slot = true,
-        string|bool $prepend = false,
+        string|bool|array $prepend = false,
     ) {
         $attrs = new ComponentAttributeBag(
             $default instanceof ComponentAttributeBag
@@ -64,7 +65,16 @@ abstract class BladeComponent extends Component
             $attrs = $attrs->merge($this->{$prop}->attributes->getAttributes());
         }
 
-        if ($prepend) {
+        if (is_array($prepend)) {
+            foreach ($prepend as $prependKey => $prependName) {
+                $attrs = $attrs->merge(
+                    $this->attributesAfter(
+                        $prependName,
+                        prepend: is_string($prependKey) ? $prependKey : true
+                    )->getAttributes()
+                );
+            }
+        } elseif ($prepend) {
             $attrs = new ComponentAttributeBag(Arr::mapWithKeys(
                 $attrs->whereDoesntStartWith($this->buildDataAttribute(''))->getAttributes(),
                 fn ($value, $key) => [(is_string($prepend) ? $prepend : $prefix).$key => $value]

@@ -9,6 +9,11 @@
   100% { transform: translateX(200%); }
 }
 
+@keyframes grow-scale {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
 .tilt-shaking {
   animation: tilt-shaking 0.2s;
 }

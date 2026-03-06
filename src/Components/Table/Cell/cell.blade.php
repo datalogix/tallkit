@@ -14,8 +14,10 @@
             last:after:w-8 last:after:absolute last:after:inset-y-0 last:after:left-0 last:after:-translate-x-full last:after:pointer-events-none
             last:after:inset-shadow-[-8px_0px_8px_-8px_rgba(0,0,0,0.05)]
         ' => $sticky,
-        '[:where(&)]:font-normal [:where(&)]:text-sm',
-        '[:where(&)]:text-zinc-700 dark:[:where(&)]:text-white/70',
+        '
+            [:where(&)]:font-normal [:where(&)]:text-sm
+            [:where(&)]:text-zinc-700 dark:[:where(&)]:text-white/70
+        ',
     ])
 }}>
     <div {{ $attributesAfter('container:')->classes(

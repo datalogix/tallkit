@@ -10,7 +10,7 @@
         {{ $attributes->only('disabled') }}
         {{ $attributesAfter('control:')->classes(
             'flex mt-px outline-offset-2 relative',
-            match($size) {
+            match ($size) {
                 'xs' => 'size-3.5',
                 'sm' => 'size-4',
                 default => 'size-5',
@@ -29,30 +29,30 @@
                 ])
                 ->classes(
                     '
-                    size-full
-                    rounded-full
+                        size-full
+                        rounded-full
 
-                    peer
-                    appearance-none
-                    shrink-0
-                    transition-all
+                        peer
+                        appearance-none
+                        shrink-0
+                        transition-all
 
-                    bg-white dark:bg-white/10
-                    [print-color-adjust:exact]
+                        bg-white dark:bg-white/10
+                        [print-color-adjust:exact]
 
-                    border
-                    border-zinc-300 dark:border-white/10
-                    disabled:border-zinc-200 dark:disabled:border-white/5
-                    [&[data-invalid]]:border-red-500 dark:[&[data-invalid]]:border-red-400
+                        border
+                        border-zinc-300 dark:border-white/10
+                        disabled:border-zinc-200 dark:disabled:border-white/5
+                        [&[data-invalid]]:border-red-500 dark:[&[data-invalid]]:border-red-400
 
-                    shadow-xs
-                    disabled:opacity-75
-                    disabled:checked:opacity-50
-                    disabled:shadow-none
-                    checked:shadow-none
-                    checked:not-[data-invalid]:border-none
+                        shadow-xs
+                        disabled:opacity-75
+                        disabled:checked:opacity-50
+                        disabled:shadow-none
+                        checked:shadow-none
+                        checked:not-[data-invalid]:border-none
                     ',
-                    match($variant) {
+                    match ($variant) {
                         'accent' => 'checked:bg-[var(--color-accent)]',
                         default => 'checked:bg-zinc-800 dark:checked:bg-white',
                         'red' => 'checked:bg-red-600 dark:checked:bg-red-500',
@@ -88,7 +88,7 @@
         }}>
             <div {{ $attributesAfter('icon:')->classes(
                     'rounded-full',
-                    match($size) {
+                    match ($size) {
                         'xs' => 'size-1.5',
                         'sm' => 'size-2',
                         default => 'size-2.5',
@@ -97,7 +97,7 @@
                         '2xl' => 'size-5',
                         '3xl' => 'size-6',
                     },
-                    match($variant) {
+                    match ($variant) {
                         'accent' => 'bg-[var(--color-accent-foreground)]',
                         default => 'bg-white dark:bg-zinc-700',
                         'red' => 'bg-white',

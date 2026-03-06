@@ -8,5 +8,6 @@ class Items extends BladeComponent
 {
     public function __construct(
         public mixed $items = null,
+        public ?string $size = null,
     ) {}
 }

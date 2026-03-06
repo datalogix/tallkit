@@ -1,4 +1,5 @@
 <tk:button
+    wire:replace.self
     x-data="inputClearable"
     :attributes="$attributes->classes('
         mx-2 -me-1
@@ -10,7 +11,6 @@
     tabindex="-1"
     tooltip="Clear input"
     icon="times"
-    wire:replace.self
 >
     {{ $slot }}
 </tk:button>

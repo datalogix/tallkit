@@ -1,3 +1,6 @@
+@aware(['size'])
+@props(['size'])
+
 @php
 $variant = $variant ?: 'outline';
 $label = $attributes->get('label');
@@ -35,16 +38,10 @@ if ($loading && $type !== 'submit' && !$isJsMethod) {
                 disabled:cursor-default disabled:pointer-events-none
                 transition overflow-hidden
             ',
-            $fontSize($size),
-            match ($size) { // Size...
-                'xs' => 'h-8 gap-1 ' . ($square ? 'w-8' : 'px-2'),
-                'sm' => 'h-9 gap-1 ' . ($square ? 'w-9' : 'px-3'),
-                default => 'h-10 gap-1.5 ' . ($square ? 'w-10' : 'px-4'),
-                'lg' => 'h-12 gap-1.5 ' . ($square ? 'w-12' : 'px-5'),
-                'xl' => 'h-14 gap-2 ' . ($square ? 'w-14' : 'px-6'),
-                '2xl' => 'h-16 gap-2 ' . ($square ? 'w-16' : 'px-7'),
-                '3xl' => 'h-18 gap-2.5 ' . ($square ? 'w-18' : 'px-8'),
-            },
+            $fontSize(size: $size),
+            $gap(size: $size),
+            $height(size: $size),
+            $square ? $width(size: $size) : $paddingInline(size: $size, mode: 'small'),
             match ($variant) { // Text color...
                 'accent' => 'text-[var(--color-accent-foreground)]',
                 'filled', 'outline', 'ghost' => 'text-zinc-800 dark:text-white',
@@ -337,18 +334,9 @@ if ($loading && $type !== 'submit' && !$isJsMethod) {
                 'danger' => '[[data-tallkit-button-group]_&]:border-e [:is([data-tallkit-button-group]>&:last-child,_[data-tallkit-button-group]_:last-child>&)]:border-e-0 [[data-tallkit-button-group]_&]:border-red-200/80 dark:[[data-tallkit-button-group]_&]:border-red-800',
                 default => '',
             },
-            $circle ? 'rounded-full' : match ($size) { // Rounded...
-                'xs' => 'rounded-md',
-                'sm' => 'rounded-md',
-                default => 'rounded-lg',
-                'lg' => 'rounded-lg',
-                'xl' => 'rounded-lg',
-                '2xl' => 'rounded-xl',
-                '3xl' => 'rounded-xl',
-            },
             match ($variant) {
-                'none' => 'h-auto w-auto p-0 rounded-none',
-                default => '',
+                'none' => 'h-auto w-auto p-0',
+                default => $roundedSize($circle ? 'full': $size, mode: 'large'),
             },
         )
         ->when($loading, fn ($attrs) => $attrs->classes( // Loading states...
@@ -360,7 +348,7 @@ if ($loading && $type !== 'submit' && !$isJsMethod) {
         ->merge([$buildDataAttribute('group-target') => !in_array($variant, ['subtle', 'ghost'])])
     "
 >
-    <?php if ($loading): ?>
+    @if ($loading)
         <x-slot:prepend>
             <div {{ $attributesAfter('loading-indicator:')->classes('absolute inset-0 flex items-center justify-center opacity-0') }}>
                 <tk:loading
@@ -369,7 +357,7 @@ if ($loading && $type !== 'submit' && !$isJsMethod) {
                 />
             </div>
         </x-slot:prepend>
-    <?php endif; ?>
+    @endif
 
     {{ $slot }}
 </tk:element>

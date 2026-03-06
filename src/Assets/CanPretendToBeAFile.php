@@ -17,7 +17,7 @@ trait CanPretendToBeAFile
         }
 
         $expires = strtotime('+1 year');
-        $lastModified = filemtime($file);
+        $lastModified = @filemtime($file);
         $cacheControl = 'public, max-age=31536000';
 
         if ($this->matchesCache($lastModified)) {

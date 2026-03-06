@@ -10,5 +10,6 @@ class Accordion extends BladeComponent
         public ?bool $exclusive = null,
         public null|bool|string $collapse = null,
         public ?string $variant = null,
+        public ?string $size = null,
     ) {}
 }

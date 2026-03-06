@@ -38,6 +38,7 @@ class BladeComponentRegistrar
             $componentName = Str::of($file->getRelativePathname())
                 ->replaceLast('.php', '')
                 ->replaceEnd('Index', '')
+                ->replaceEnd('Component', '')
                 ->explode('/')
                 ->map(fn ($part) => Str::kebab($part))
                 ->unique()

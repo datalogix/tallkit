@@ -17,45 +17,26 @@
         :$id
         :$label
     >
-        <div
-            {{ $buildDataAttribute('input') }}
-            {{ $attributes->only('class')->classes('w-full relative block group/input')
-                ->when(in_livewire() && $loading, fn($attrs) => $attrs->merge([
-                    'wire:loading.class' => 'field-loading',
-                    'wire:target' => $wireTarget
-                ]))
-            }}
+        <tk:field.control
+            :$attributes
+            :$size
         >
-            @if (is_string($icon) && $icon !== '')
-                <div class="pointer-events-none absolute top-0 bottom-0 ps-3 start-0 flex items-center justify-center text-xs text-zinc-400/75 dark:text-white/60">
-                    <tk:icon
-                        :attributes="$attributesAfter('icon:')"
-                        :size="$adjustSize()"
-                        :$icon
-                    />
-                </div>
-            @elseif ($icon)
-                <tk:element
-                    :attributes="$attributesAfter('icon:')->classes('absolute top-0 bottom-0 ps-3 start-0 flex items-center justify-center text-xs text-zinc-400/75 dark:text-white/60')"
-                    :label="$icon"
-                />
-            @endif
-
             <input
                 type="{{ $type }}"
-                style="{{ $paddingEnd() }}"
                 {{ $buildDataAttribute('control') }}
                 {{ $buildDataAttribute('group-target') }}
-                @isset ($name) name="{{ $name }}" @endisset
-                @isset ($id) id="{{ $id }}" @endisset
+                @if ($name) name="{{ $name }}" @endif
+                @if ($id) id="{{ $id }}" @endif
                 @if ($invalid) aria-invalid="true" data-invalid @endif
                 @if ($placeholder) placeholder="{{ __((string) $placeholder) }}" @endif
                 @unless (in_livewire()) value="{{ $value }}" @endif
                 @if ($mask) x-data x-mask="{{ $mask }}" @endif
                 {{ $attributes->whereDoesntStartWith([
-                        'input:', 'icon:', 'loading:', 'clearable:', 'copyable:', 'viewable:', 'icon-trailing:', 'kbd:',
-                        'field:', 'label:', 'info:', 'badge:', 'description:', 'help:', 'error:',
+                        'field:', 'label:', 'info:', 'badge:', 'description:',
                         'group:', 'prefix:', 'suffix:',
+                        'help:', 'error:',
+                        'control:', 'prepend:', 'icon:', 'append:', 'loading:', 'icon-trailing:', 'kbd:',
+                        'input:', 'clearable:', 'copyable:', 'viewable:',
                     ])
                     ->except('class')
                     ->classes(
@@ -79,7 +60,7 @@
                             disabled:opacity-75
                             dark:disabled:opacity-50
                         ',
-                        match($variant) {
+                        match ($variant) {
                             'ghost' => 'focus:outline-none',
                             default => '
                                 bg-white
@@ -97,16 +78,16 @@
                             '
                         },
                         match ($size) {
-                            'xs' => 'h-8 py-1.5 text-xs rounded-md ' . ($icon ? 'ps-8' : 'ps-2') . ' pe-2',
-                            'sm' => 'h-9 py-1.5 text-sm rounded-md ' . ($icon ? 'ps-9' : 'ps-2.5') . ' pe-2.5',
-                            default => ' h-10 py-2 text-base rounded-lg ' . ($icon ? 'ps-10' : 'ps-3') . ' pe-3',
-                            'lg' => 'h-12 py-2 text-lg rounded-lg ' . ($icon ? 'ps-11' : 'ps-3.5') . ' pe-3.5',
-                            'xl' => 'h-14 py-2.5 text-xl rounded-lg ' . ($icon ? 'ps-12' : 'ps-4') . ' pe-4',
-                            '2xl' => 'h-16 py-2.5 text-2xl rounded-xl ' . ($icon ? 'ps-13' : 'ps-4.5') . ' pe-4.5',
-                            '3xl' => 'h-18 py-3 text-3xl rounded-xl ' . ($icon ? 'ps-14' : 'ps-5') . ' pe-5',
+                            'xs' => 'h-8 text-xs rounded-md ps-2 pe-2',
+                            'sm' => 'h-9 text-sm rounded-md ps-2.5 pe-2.5',
+                            default => ' h-10 text-base rounded-lg ps-3 pe-3',
+                            'lg' => 'h-12 text-lg rounded-lg ps-3.5 pe-3.5',
+                            'xl' => 'h-14 text-xl rounded-lg ps-4 pe-4',
+                            '2xl' => 'h-16 text-2xl rounded-xl ps-4.5 pe-4.5',
+                            '3xl' => 'h-18 text-3xl rounded-xl ps-5 pe-5',
                         },
                         match ($type) {
-                            'color' => 'py-px pe-1 ' . ($icon ? '' : 'ps-1'),
+                            'color' => $prepend || $icon ? '' : 'ps-1 pe-1',
                             default => '',
                         },
                         $attributes->pluck('input:class')
@@ -114,64 +95,32 @@
                 }}
             />
 
-            @if ($loading || $clearable || $kbd || $copyable || $viewable || $iconTrailing)
-                <div
-                    {{
-                        $attributesAfter('append:')->classes(
-                            'absolute top-0 bottom-0 flex items-center gap-x-1.5 pe-3 end-0 text-zinc-400
-                        ')
-                    }}
-                >
-                    @if ($loading)
-                        <tk:loading
-                            :attributes="$attributesAfter('loading:')->classes('hidden [.field-loading_&]:block')"
-                            :size="$adjustSize()"
-                        />
-                    @endif
+            @if ($clearable || $copyable || $viewable)
+                <x-slot:append>
+                    {{ $append ?? '' }}
 
                     @if ($clearable)
                         <tk:input.clearable
                             :attributes="$attributesAfter('clearable:')"
-                            :size="$adjustSize()"
+                            :$size
                         />
                     @endif
 
                     @if ($copyable)
                         <tk:input.copyable
                             :attributes="$attributesAfter('copyable:')"
-                            :size="$adjustSize()"
+                            :$size
                         />
                     @endif
 
                     @if ($viewable)
                         <tk:input.viewable
                             :attributes="$attributesAfter('viewable:')"
-                            :size="$adjustSize()"
+                            :$size
                         />
                     @endif
-
-                    @if (is_string($iconTrailing) && $iconTrailing !== '')
-                        <tk:icon
-                            :attributes="$attributesAfter('icon-trailing:')->classes('text-zinc-400/75 dark:text-white/60 pointer-events-none')"
-                            :size="$adjustSize()"
-                            :icon="$iconTrailing"
-                        />
-                    @elseif ($iconTrailing)
-                        <tk:element
-                            :attributes="$attributesAfter('icon-trailing:')"
-                            :label="$iconTrailing"
-                        />
-                    @endif
-
-                     @if (isset($kbd) && $kbd !== '')
-                        <tk:kbd
-                            :attributes="$attributesAfter('kbd:')"
-                            :label="$kbd"
-                            variant="text"
-                        />
-                    @endif
-                </div>
+                </x-slot:append>
             @endif
-        </div>
-    </tk:field>
+        </tk:field.control>
+    </tk:field.wrapper>
 @endif

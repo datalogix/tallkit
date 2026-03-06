@@ -1,7 +1,9 @@
 import { bind, normalize, timeout } from '../utils'
 import { popover } from './popover'
 
-export function autocomplete() {
+export function autocomplete(options: {
+  minLength?: null
+} = {}) {
   const _popover = popover({ mode: 'manual', position: 'bottom', align: 'start' })
 
   return {
@@ -19,6 +21,10 @@ export function autocomplete() {
     },
 
     get filteredItems() {
+      if (options.minLength && this.input.value.length < options.minLength) {
+        return []
+      }
+
       return this.items.filter(item => {
         if (item.hasAttribute('data-hidden')) return false
 
@@ -57,7 +63,7 @@ export function autocomplete() {
       }))
 
       bind(this.input, {
-        ['@input']: () => {
+        ['@input.debounce']: () => {
           this.$dispatch('autocomplete-search-updated', { query: this.input.value })
           this.search()
 
@@ -132,6 +138,10 @@ export function autocomplete() {
       const value = normalize(this.input.value, normalizeOptions)
 
       this.clearItems()
+
+      if (options.minLength && value?.length && value?.length < options.minLength) {
+        return
+      }
 
       if (value) {
         this.items.forEach(item => {

@@ -11,5 +11,6 @@ class Slider extends BladeComponent
 
     public function __construct(
         public mixed $ticks = null,
+        public ?bool $displayValue = null,
     ) {}
 }

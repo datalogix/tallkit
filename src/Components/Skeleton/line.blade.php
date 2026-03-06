@@ -1,3 +1,3 @@
-<tk:skeleton :attributes="$attributes->classes('[:where(&)]:h-4')">
+<tk:skeleton :attributes="$attributes->classes($height($size, mode: 'large'))">
     {{ $slot }}
 </tk:skeleton>

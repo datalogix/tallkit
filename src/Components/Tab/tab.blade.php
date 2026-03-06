@@ -3,7 +3,7 @@
 
 <tk:button
     :attributes="$attributes
-        ->classes(match($variant) {
+        ->classes(match ($variant) {
             'pills' => '
                 px-4 shrink-0 rounded-full
                 bg-zinc-800/10 dark:bg-white/5

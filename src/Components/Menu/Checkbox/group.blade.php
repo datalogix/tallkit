@@ -6,7 +6,7 @@
 >
     @foreach (collect($items) as $item)
         <tk:menu.checkbox
-            :attributes="$attributesAfter('item:')->merge($item, false)"
+            :attributes="$attributesAfter('item:')->merge(is_array($item) ? $item : ['label' => $item], false)"
         />
     @endforeach
 

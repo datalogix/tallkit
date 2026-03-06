@@ -11,4 +11,6 @@
     action="setPage(1, '{{ $paginator->getPageName() }}')"
     icon="chevron-double-left"
     tooltip="pagination.first"
-/>
+>
+    {{ $slot }}
+</tk:button>
