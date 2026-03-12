@@ -1,9 +1,5 @@
 <tk:content
-    :attributes="$attributesAfter(
-           'content:',  prepend: ['container:', 'title:' => 'name:', 'description:', 'list:', 'actions:',]
-        )
-        ->classes('items-center')
-    "
+    :attributes="$attributesAfter('content:', prepend: ['container:', 'title:' => 'name:', 'description:', 'list:', 'actions:'])->classes('items-center')"
     container:class="-space-y-px!"
     :$size
     :$prepend

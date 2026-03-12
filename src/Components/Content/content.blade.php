@@ -2,7 +2,8 @@
     <div {{ $attributes
         ->whereDoesntStartWith(['container:', 'icon:', 'title:', 'description:', 'list:', 'actions:'])
         ->classes(
-            'flex-1 flex gap-2 items-start',
+            'flex-1 flex gap-2',
+            $prepend || $title || $append ? 'items-start' : 'items-center',
             $fontSize(size: $size),
         )
     }}>

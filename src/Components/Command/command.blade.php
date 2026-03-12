@@ -27,6 +27,7 @@
         <tk:command.items
             :attributes="$attributesAfter('items:')"
             :$items
+            :$size
         >
             {{ $slot }}
         </tk:command.items>

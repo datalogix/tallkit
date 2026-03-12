@@ -1,13 +1,11 @@
 @if ($prepend || $icon || $append || $loading || $iconTrailing || $kbd || $attributes->has('class'))
     <div
         wire:ignore
-        x-data="fieldControl"
         {{ $dataKey() }}
         {{
             $attributesAfter('control:')->classes(
                 '
-                    [:where(&)]:w-full relative block
-
+                    [:where(&)]:w-full flex
                     [&:has(:is(textarea,select[multiple]))_[data-tallkit-field-control-prepend]]:items-start
                     [&:has(:is(textarea,select[multiple]))_[data-tallkit-field-control-append]]:items-start
                 ',
@@ -19,9 +17,7 @@
             <div
                 wire:cloak
                 {{
-                    $attributesAfter('prepend:')->classes(
-                        'absolute top-0 bottom-0 flex items-center justify-center gap-x-1.5 pe-3 ps-3 start-0 text-zinc-400',
-                    )
+                    $attributesAfter('prepend:')->classes('flex items-center justify-center gap-x-1.5 ps-3 text-zinc-400')
                 }}
             >
                 {{ $prepend ?? '' }}
@@ -47,9 +43,7 @@
             <div
                 wire:cloak
                 {{
-                    $attributesAfter('append:')->classes('
-                        absolute top-0 bottom-0 flex items-center justify-center gap-x-1.5 pe-3 ps-3 end-0 text-zinc-400
-                    ')
+                    $attributesAfter('append:')->classes('flex items-center justify-center gap-x-1.5 pe-3 text-zinc-400')
                 }}
             >
                 @if ($loading)

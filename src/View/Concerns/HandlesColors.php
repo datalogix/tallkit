@@ -112,9 +112,9 @@ trait HandlesColors
         if ($contrast === 'light') {
             return match ($variant) {
                 'inverse' => '[:where(&)]:bg-black/10 dark:[:where(&)]:bg-zinc-700/5',
-                'strong' => '[:where(&)]:bg-zinc-700/15 dark:[:where(&)]:bg-black/20',
-                'subtle' => '[:where(&)]:bg-zinc-700/10 dark:[:where(&)]:bg-black/15',
-                default => '[:where(&)]:bg-zinc-700/5 dark:[:where(&)]:bg-black/10',
+                'strong' => '[:where(&)]:bg-zinc-700/15 dark:[:where(&)]:bg-white/20',
+                'subtle' => '[:where(&)]:bg-zinc-700/10 dark:[:where(&)]:bg-white/15',
+                default => '[:where(&)]:bg-zinc-700/5 dark:[:where(&)]:bg-white/10',
                 'red' => 'bg-red-500 dark:bg-red-300',
                 'orange' => 'bg-orange-500 dark:bg-orange-300',
                 'amber' => 'bg-amber-500 dark:bg-amber-300',
@@ -138,12 +138,12 @@ trait HandlesColors
         if ($contrast === 'strong') {
             return match ($variant) {
                 'inverse' => '[:where(&)]:bg-black/70 dark:[:where(&)]:bg-zinc-700/50',
-                'strong' => '[:where(&)]:bg-zinc-700/90 dark:[:where(&)]:bg-black',
-                'subtle' => '[:where(&)]:bg-zinc-700/70 dark:[:where(&)]:bg-black/90',
-                default => '[:where(&)]:bg-zinc-700/50 dark:[:where(&)]:bg-black/70',
+                'strong' => '[:where(&)]:bg-zinc-700/90 dark:[:where(&)]:bg-white',
+                'subtle' => '[:where(&)]:bg-zinc-700/70 dark:[:where(&)]:bg-white/90',
+                default => '[:where(&)]:bg-zinc-700/50 dark:[:where(&)]:bg-white/70',
                 'red' => 'bg-red-700 dark:bg-red-500',
                 'orange' => 'bg-orange-700 dark:bg-orange-500',
-                'amber' => 'bg-amber-700 dark:text-amber-500',
+                'amber' => 'bg-amber-700 dark:bg-amber-500',
                 'yellow' => 'bg-yellow-700 dark:bg-yellow-500',
                 'lime' => 'bg-lime-700 dark:bg-lime-500',
                 'green' => 'bg-green-700 dark:bg-green-500',
@@ -163,9 +163,9 @@ trait HandlesColors
 
         return match ($variant) {
             'inverse' => '[:where(&)]:bg-black/30 dark:[:where(&)]:bg-zinc-700/20',
-            'strong' => '[:where(&)]:bg-zinc-700/40 dark:[:where(&)]:bg-black/50',
-            'subtle' => '[:where(&)]:bg-zinc-700/30 dark:[:where(&)]:bg-black/40',
-            default => '[:where(&)]:bg-zinc-700/20 dark:[:where(&)]:bg-black/30',
+            'strong' => '[:where(&)]:bg-zinc-700/40 dark:[:where(&)]:bg-white/50',
+            'subtle' => '[:where(&)]:bg-zinc-700/30 dark:[:where(&)]:bg-white/40',
+            default => '[:where(&)]:bg-zinc-700/20 dark:[:where(&)]:bg-white/20',
             'red' => 'bg-red-600 dark:bg-red-400',
             'orange' => 'bg-orange-600 dark:bg-orange-400',
             'amber' => 'bg-amber-600 dark:bg-amber-400',

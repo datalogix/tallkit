@@ -36,10 +36,7 @@ $textColors = $classes('text-zinc-700 dark:text-zinc-300');
                         {{ $results($paginator) }}
                     @elseif ($total !== false)
                         <tk:text
-                            :attributes="$attributesAfter('results:')->classes(
-                                'hidden sm:block',
-                                $textColors
-                            )"
+                            :attributes="$attributesAfter('results:')->classes('hidden sm:block', $textColors)"
                             :$size
                         >
                             <span>{!! __('Showing') !!}</span>
@@ -52,10 +49,7 @@ $textColors = $classes('text-zinc-700 dark:text-zinc-300');
                         </tk:text>
 
                         <tk:text
-                            :attributes="$attributesAfter('total:')->classes(
-                                'sm:hidden',
-                                $textColors
-                            )"
+                            :attributes="$attributesAfter('total:')->classes('sm:hidden', $textColors)"
                             :$size
                         >
                             <span>{!! __('Total:') !!}</span>

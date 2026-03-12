@@ -4,12 +4,14 @@
         ->merge($focusOnOpen !== false ? ['x-on:opened' => '$el.querySelector(\'[data-tallkit-command-input]\')?.focus()'] : [])
     "
     variant="bare"
+    :$size
     :$shortcut
 >
     <x-slot:trigger>
         @if ($slot->isEmpty())
             <tk:button
                 :attributes="$attributesAfter('trigger:')"
+                :$size
                 label="Search"
                 icon="search"
                 variant="filled"
@@ -23,6 +25,7 @@
         :attributes="$attributes->whereDoesntStartWith(['trigger:', 'modal:'])
             ->merge($closeOnSelect !== false ? ['x-on:command-item-selected' => 'close'] : [])
         "
+        :$size
     >
         {{ $content ?? '' }}
 

@@ -24,7 +24,7 @@
                 $attributesAfter('container:')
                 ->classes('relative hidden group-data-[open]/disclosure:block space-y-[2px]')
                 ->when($line !== false, fn($attrs) => $attrs->classes(match ($size) {
-                    'xs' => 'ps-9',
+                    'xs' => 'ps-8',
                     'sm' => 'ps-9',
                     default => 'ps-10',
                     'lg' => 'ps-11',
@@ -40,7 +40,7 @@
                 <div {{ $attributesAfter('line:')->classes(
                     'absolute inset-y-[3px] w-px bg-zinc-200 dark:bg-white/20 start-0',
                     match ($size) {
-                        'xs' => 'ms-4.5',
+                        'xs' => 'ms-4',
                         'sm' => 'ms-4.5',
                         default => 'ms-5',
                         'lg' => 'ms-5.5',

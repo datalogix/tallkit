@@ -7,10 +7,7 @@ $message ??= $getError($name, $slot);
         $attributes
             ->whereDoesntStartWith(['icon:'])
             ->classes(
-                '
-                    text-red-500 dark:text-red-400
-                    flex items-center gap-2
-                ',
+                'flex items-center gap-2 text-red-500 dark:text-red-400',
                 $fontSize(size: $size),
                 $iconSize(size: $size),
             )

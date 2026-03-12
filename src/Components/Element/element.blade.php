@@ -69,13 +69,7 @@ $external ??= $attributes->get('target') === '_blank';
 
         @if (isset($prefix) && $prefix !== '')
             <tk:element
-                :attributes="$attributesAfter('prefix:')->classes(
-                    '
-                        me-auto
-                        font-medium text-xs
-                        text-zinc-500 dark:text-zinc-400
-                    '
-                )"
+                :attributes="$attributesAfter('prefix:')->classes('me-auto font-medium text-xs text-zinc-500 dark:text-zinc-400')"
                 :label="$prefix"
             />
         @endif
@@ -97,13 +91,7 @@ $external ??= $attributes->get('target') === '_blank';
 
         @if (isset($suffix) && $suffix !== '')
             <tk:element
-                :attributes="$attributesAfter('suffix:')->classes(
-                    '
-                        ms-auto
-                        font-medium text-xs
-                        text-zinc-500 dark:text-zinc-400
-                    '
-                )"
+                :attributes="$attributesAfter('suffix:')->classes('ms-auto font-medium text-xs text-zinc-500 dark:text-zinc-400')"
                 :label="$suffix"
             />
         @endif

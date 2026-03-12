@@ -18,13 +18,27 @@ export function modal(
 
       bind(dialog, {
         ['@modal-show.document'](event) {
-          if (event.detail.name === name && event.detail.scope === this.$wire?.id) dialog.showModal()
-          if (event.detail.name === name && !event.detail.scope) dialog.showModal()
+          if (event.detail.name === name && !event.detail.scope) {
+            dialog.showModal()
+            return
+          }
+
+          if (event.detail.name === name && event.detail.scope === this.$wire?.id) {
+            dialog.showModal()
+            return
+          }
         },
 
         ['@modal-close.document'](event) {
-          if (event.detail.name === name && event.detail.scope === this.$wire?.id) dialog.close()
-          if (!event.detail.name || (event.detail.name === name && !event.detail.scope)) dialog.close()
+          if (!event.detail.name || (event.detail.name === name && !event.detail.scope)) {
+            dialog.close()
+            return
+          }
+
+          if (event.detail.name === name && event.detail.scope === this.$wire?.id) {
+            dialog.close()
+            return
+          }
         },
       })
 

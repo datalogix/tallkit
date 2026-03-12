@@ -108,7 +108,7 @@
         @isset ($backSvg)
             {{ $backSvg }}
         @else
-                <svg class="w-full rounded-3xl shadow-lg shadow-black" viewBox="0 0 750 471">
+            <svg class="w-full rounded-3xl shadow-lg shadow-black" viewBox="0 0 750 471">
                 <g>
                     <g>
                         <g>

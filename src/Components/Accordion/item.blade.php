@@ -1,14 +1,20 @@
-@aware(['size', 'collapse', 'variant'])
-@props(['size', 'collapse', 'variant'])
+@aware(['size', 'collapse', 'variant', 'bordered'])
+@props(['size', 'collapse', 'variant', 'bordered'])
 
 <div
     x-data="disclosure"
     {{ $buildDataAttribute('disclosure-item') }}
-    {{ $attributes->whereDoesntStartWith(['heading:', 'content:'])->classes('py-4 group/disclosure') }}
+    {{ $attributes->whereDoesntStartWith(['heading:', 'content:'])->classes('group/disclosure') }}
     @if ($expanded) data-open @endif
 >
     <tk:button
-        :attributes="$attributesAfter('heading:')->classes('w-full dark:text-white!')"
+        :attributes="$attributesAfter('heading:')->classes(
+            'w-full dark:text-white! py-4',
+            match ($bordered) {
+                true => 'px-3',
+                default => '',
+            }
+        )"
         :$size
         :$disabled
         :label="$heading"
@@ -23,8 +29,12 @@
     <div {{
         $attributesAfter('content:')
             ->classes(
-                'pt-2 text-zinc-500 dark:text-zinc-400',
-                $fontSize(size: $size)
+                'text-zinc-500 dark:text-zinc-400 -mt-4 py-4',
+                $fontSize(size: $size),
+                match ($bordered) {
+                    true => 'px-3',
+                    default => '',
+                },
             )
             ->merge(['x-show' => 'opened'])
             ->merge($collapse === false ? [] : ['x-collapse' => ''])

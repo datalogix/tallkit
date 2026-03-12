@@ -8,13 +8,11 @@
         'list-inside',
     ) }}>
         @foreach (collect($items) as $item)
-            <li>
-                <tk:text
-                    :attributes="$attributesAfter('item:')"
-                    :label="$item"
-                    as="span"
-                />
-            </li>
+            <tk:text
+                :attributes="$attributesAfter('item:')"
+                :label="$item"
+                as="li"
+            />
         @endforeach
     </ul>
 @endif

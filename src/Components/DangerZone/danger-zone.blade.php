@@ -1,7 +1,7 @@
 <tk:alert
     :attributes="$attributes->whereDoesntStartWith(['modal:', 'trigger:'])"
-    title="Danger Zone"
-    message="By deleting this record, all associated data will be permanently lost and cannot be recovered."
+    :title="$title ?? 'Danger Zone'"
+    :message="$message ?? 'By deleting this record, all associated data will be permanently lost and cannot be recovered.'"
     type="danger"
 >
     <x-slot:append>

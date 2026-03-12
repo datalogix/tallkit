@@ -1,31 +1,30 @@
-- accordion
+- Verificar HandleSize, Colors, etc.... (font, rounded)
+
 - autocomplete, command (dynamic load items)
-- alert, bagde, button, header (revisar cores)
+- nav (adicionar linha que se movimenta ao item selecionado)
+- paginator (add select per page)
+- menu
+- page/auth
+- stepper
+- tab
+- table
+- notifications
+
+## fields
 - checkbox
 - composer
 - field
+- opt
 - input
+- password
 - radio
 - select
-- menu
-- page
 - slider
-- tab
-- table
 - textarea
 - toggle
 - upload
-- nav (adicionar linha que se movimenta ao item selecionado)
 
-- Verificar HandleSize (font, rounded)
-- Revisar inputs
-- Revisar Notificarions
-- Pagination (select per page)
 
-- Revisar components (js) com livewire
-
-- (In progress) Upload
-- (In progress) Notifications
 - (In progress) Editor
 - (In progress) CreditCard
 

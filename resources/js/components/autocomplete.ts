@@ -63,7 +63,9 @@ export function autocomplete(options: {
       }))
 
       bind(this.input, {
-        ['@input.debounce']: () => {
+        ['@input.debounce']: (e) => {
+          if (!e.isTrusted) return
+
           this.$dispatch('autocomplete-search-updated', { query: this.input.value })
           this.search()
 

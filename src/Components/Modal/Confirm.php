@@ -13,8 +13,6 @@ class Confirm extends BladeComponent
         public ?string $cancel = null,
         public ?string $variant = null,
         public ?bool $autoClose = null,
-
-        // section
         public ?ComponentSlot $prepend = null,
         public string|ComponentSlot|null $title = null,
         public string|ComponentSlot|null $subtitle = null,
