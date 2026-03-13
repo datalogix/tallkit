@@ -2,6 +2,7 @@
 
 namespace TALLKit\Components\Html;
 
+use Livewire\Livewire;
 use TALLKit\Attributes\Mount;
 use TALLKit\View\BladeComponent;
 
@@ -44,7 +45,7 @@ class Html extends BladeComponent
         $this->title ??= config('app.name');
         $this->vite = collect($this->vite)->unique()->filter(fn ($path) => file_exists(base_path($path)))->toArray();
         $this->googleFonts = is_string($this->googleFonts) ? ['families' => $this->googleFonts] : $this->googleFonts;
-        $this->livewire ??= class_exists(\Livewire\Livewire::class);
+        $this->livewire ??= class_exists(Livewire::class);
     }
 
     public function baseComponentKey()

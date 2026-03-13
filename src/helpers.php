@@ -4,6 +4,8 @@ use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
+use Livewire\Livewire;
+use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 use TALLKit\Facades\TALLKit;
 
 if (! function_exists('route_detect')) {
@@ -61,8 +63,8 @@ if (! function_exists('find_image')) {
 if (! function_exists('in_livewire')) {
     function in_livewire()
     {
-        return class_exists(\Livewire\Livewire::class)
-            && \Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent();
+        return class_exists(Livewire::class)
+            && ExtendBlade::isRenderingLivewireComponent();
     }
 }
 

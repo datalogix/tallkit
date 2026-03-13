@@ -2,8 +2,11 @@
 
 namespace TALLKit;
 
+use Illuminate\Foundation\AliasLoader;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\View\ComponentAttributeBag;
+use Livewire\Component;
+use Livewire\Livewire;
 use TALLKit\Assets\AssetManager;
 use TALLKit\Binders\FormDataBinder;
 use TALLKit\Livewire\ComponentMixin;
@@ -20,14 +23,14 @@ class TALLKitServiceProvider extends ServiceProvider
         $this->app->singleton(TALLKit::class);
         $this->app->alias(TALLKit::class, 'tallkit');
 
-        $loader = \Illuminate\Foundation\AliasLoader::getInstance();
-        $loader->alias('TALLKit', \TALLKit\Facades\TALLKit::class);
+        $loader = AliasLoader::getInstance();
+        $loader->alias('TALLKit', Facades\TALLKit::class);
     }
 
     public function boot()
     {
-        if (class_exists(\Livewire\Livewire::class)) {
-            \Livewire\Component::mixin(new ComponentMixin);
+        if (class_exists(Livewire::class)) {
+            Component::mixin(new ComponentMixin);
         }
 
         ComponentAttributeBag::mixin(new ComponentAttributeBagMixin);
