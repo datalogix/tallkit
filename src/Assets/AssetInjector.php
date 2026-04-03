@@ -7,13 +7,6 @@ use Illuminate\Support\Str;
 
 class AssetInjector
 {
-    protected static bool $hasRenderedAComponentThisRequest = false;
-
-    public static function markComponentAsRendered()
-    {
-        static::$hasRenderedAComponentThisRequest = true;
-    }
-
     public static function boot()
     {
         app('events')->listen(RequestHandled::class, function ($handled) {
@@ -51,7 +44,6 @@ class AssetInjector
     {
         if (
             config('tallkit.inject_assets', true) === false
-            || ! static::$hasRenderedAComponentThisRequest
             || app(AssetManager::class)->hasRenderedScripts
         ) {
             return false;

@@ -2,14 +2,35 @@
 
 namespace TALLKit;
 
-use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
+use Illuminate\View\ComponentAttributeBag;
+use Illuminate\View\ComponentSlot;
 use TALLKit\Assets\AssetManager;
-use TALLKit\Binders\FormDataBinder;
-use TALLKit\Components\Icon\Icon;
+use TALLKit\Concerns\InteractsWithAvatar;
+use TALLKit\Concerns\InteractsWithComponents;
+use TALLKit\Concerns\InteractsWithErrorBags;
+use TALLKit\Concerns\InteractsWithIcon;
+use TALLKit\Concerns\InteractsWithSize;
+use TALLKit\Concerns\InteractsWithTable;
+use TALLKit\Concerns\InteractsWithUser;
 use TALLKit\View\ClassBuilder;
 
 class TALLKit
 {
+    use InteractsWithAvatar;
+    use InteractsWithComponents;
+    use InteractsWithErrorBags;
+    use InteractsWithIcon;
+    use InteractsWithSize;
+    use InteractsWithTable;
+    use InteractsWithUser;
+
+    public function dataKey(string $name)
+    {
+        return 'data-tallkit-'.$name;
+    }
+
     public function scripts(?array $options = null)
     {
         return AssetManager::scripts($options);
@@ -20,155 +41,54 @@ class TALLKit
         return new ClassBuilder($classes);
     }
 
-    public function bind($target)
+    public function isSlot($slot)
     {
-        return app(FormDataBinder::class)->bind($target);
+        return $slot instanceof ComponentSlot;
     }
 
-    public function endBind()
-    {
-        return app(FormDataBinder::class)->endBind();
-    }
-
-    public function setIconCollections(array $collections)
-    {
-        return Icon::setCollections($collections);
-    }
-
-    public function alert(
-        null|string|array $message = null,
-        ?string $type = null,
-        string|bool|null $icon = null,
-        string|bool|null $border = null,
-        ?string $title = null,
-        ?array $list = null,
-        string|bool|null $dismissible = null,
-        int|bool|null $timeout = null,
-        ?string $size = null,
-        ?string $name = null,
+    public function attributesAfter(
+        ComponentAttributeBag $attributes,
+        $prefix,
+        array|ComponentAttributeBag $default = [],
+        string|bool $slot = true,
+        string|bool|array $prepend = false,
     ) {
-        if (blank($message) && blank($title) && blank($list)) {
-            return;
+        $attrs = new ComponentAttributeBag(
+            $default instanceof ComponentAttributeBag
+                ? $default->toArray()
+                : $default
+        );
+
+        $prop = Str::of(is_string($slot) ? $slot : $prefix)
+            ->replaceLast(':', '')
+            ->camel()
+            ->toString();
+
+        foreach ($attributes->whereStartsWith($prefix)->getAttributes() as $key => $value) {
+            $attrs[substr($key, strlen($prefix))] = $value;
         }
 
-        Session::flash($name ?? 'status', [
-            'message' => $message,
-            'type' => $type,
-            'icon' => $icon,
-            'border' => $border,
-            'title' => $title,
-            'list' => $list,
-            'dismissible' => $dismissible,
-            'timeout' => $timeout,
-            'size' => $size,
-        ]);
-    }
+        if ($slot && property_exists($this, $prop) && $this->isSlot($this->{$prop})) {
+            $attrs = $attrs->merge($this->{$prop}->attributes->getAttributes());
+        }
 
-    public function alerts()
-    {
-        return new class($this)
-        {
-            public function __construct(
-                protected TALLKit $tallkit,
-            ) {}
-
-            public function __call(string $method, array $arguments)
-            {
-                $arguments['type'] = $method;
-
-                return $this->tallkit->alert(...$arguments);
-            }
-        };
-    }
-
-    public function modal(string $name, bool $scope = false)
-    {
-        return new class($name, $scope)
-        {
-            public function __construct(
-                protected string $name,
-                protected ?bool $scope
-            ) {}
-
-            public function show()
-            {
-                $component = app('livewire')->current();
-
-                if (! $component) {
-                    return;
-                }
-
-                $component->dispatch(
-                    'modal-show',
-                    name: $this->name,
-                    scope: $this->scope ? $component->getId() : null
+        if (is_array($prepend)) {
+            foreach ($prepend as $prependKey => $prependName) {
+                $attrs = $attrs->merge(
+                    $this->attributesAfter(
+                        $attributes,
+                        $prependName,
+                        prepend: is_string($prependKey) ? $prependKey : true
+                    )->getAttributes()
                 );
             }
+        } elseif ($prepend) {
+            $attrs = new ComponentAttributeBag(Arr::mapWithKeys(
+                $attrs->getAttributes(),
+                fn ($value, $key) => [(is_string($prepend) ? $prepend : $prefix).$key => $value]
+            ));
+        }
 
-            public function close()
-            {
-                $component = app('livewire')->current();
-
-                if (! $component) {
-                    return;
-                }
-
-                $component->dispatch(
-                    'modal-close',
-                    name: $this->name,
-                    scope: $this->scope ? $component->getId() : null
-                );
-            }
-        };
-    }
-
-    public function modals()
-    {
-        return new class
-        {
-            public function close()
-            {
-                app('livewire')->current()?->dispatch('modal-close');
-            }
-        };
-    }
-
-    public function toast(
-        ?string $message = null,
-        ?string $title = null,
-        ?string $type = null,
-        ?int $duration = null,
-        ?string $position = null,
-        ?bool $progress = null,
-        ?string $size = null,
-
-    ) {
-        return app('livewire')->current()?->js(
-            '$tallkit.toast',
-            $message,
-            $title,
-            $type,
-            $duration,
-            $position,
-            $progress,
-            $size,
-        );
-    }
-
-    public function toasts()
-    {
-        return new class($this)
-        {
-            public function __construct(
-                protected TALLKit $tallkit,
-            ) {}
-
-            public function __call(string $method, array $arguments)
-            {
-                $arguments['type'] = $method;
-
-                return $this->tallkit->toast(...$arguments);
-            }
-        };
+        return $attrs;
     }
 }

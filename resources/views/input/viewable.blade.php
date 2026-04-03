@@ -1,0 +1,16 @@
+<tk:button
+    wire:replace.self
+    x-data="inputViewable"
+    :$attributes
+    :variant="$attributes->pluck('variant', 'none')"
+    tabindex="-1"
+    tooltip="Toggle password visibility"
+    icon="eye"
+    icon:class="hidden"
+    icon::class="{ 'hidden': !viewed }"
+    icon-trailing="eye-off"
+    icon-trailing:class="hidden"
+    icon-trailing::class="{ 'hidden': viewed }"
+>
+    {{ $slot }}
+</tk:button>

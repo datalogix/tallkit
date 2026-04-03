@@ -20,8 +20,8 @@ export function popover ({ mode, position, align }) {
     init() {
       _toggleable.init.call(this)
 
-      this.trigger = this.$root.firstElementChild !== this.popoverElement ? this.$root.firstElementChild : this.$root
       this.popoverElement = this.$root.lastElementChild?.matches('[popover]') && this.$root.lastElementChild
+      this.trigger = this.$root.firstElementChild !== this.popoverElement ? this.$root.firstElementChild : this.$root
 
       if (!this.popoverElement) return
 
@@ -37,6 +37,17 @@ export function popover ({ mode, position, align }) {
           }
         })
       })
+
+      const offCommit = Livewire?.hook('commit', ({ succeed }) => {
+        succeed(() => {
+          if (!this.popoverElement?.matches(':popover-open')) return
+          if (!this.$root?.isConnected) return
+
+          this.boundSetPosition()
+        })
+      })
+
+      this.livewireCommitCleanup = typeof offCommit === 'function' ? offCommit : () => {}
 
       if (this.isTouch || mode === 'dropdown') {
         bind(this.trigger, {
@@ -97,10 +108,16 @@ export function popover ({ mode, position, align }) {
     },
 
     open() {
+      if (!this.popoverElement?.isConnected) return
+      if (this.popoverElement.matches(':popover-open')) return
+
       this.popoverElement.showPopover()
     },
 
     close() {
+      if (!this.popoverElement?.isConnected) return
+      if (!this.popoverElement.matches(':popover-open')) return
+
       this.popoverElement.hidePopover()
     },
 
@@ -117,13 +134,11 @@ export function popover ({ mode, position, align }) {
 
       this.mutationObserver = new MutationObserver(this.boundSetPosition)
       this.mutationObserver.observe(this.trigger, {
-        childList: true,
-        subtree: true
+        childList: true
       })
 
       this.mutationObserver.observe(this.popoverElement, {
-        childList: true,
-        subtree: true
+        childList: true
       })
 
       this.setPosition()
@@ -141,6 +156,11 @@ export function popover ({ mode, position, align }) {
 
       this.mutationObserver?.disconnect()
       this.mutationObserver = null
+
+      if (_rAF) {
+        cancelAnimationFrame(_rAF)
+        _rAF = null
+      }
     },
 
     boundSetPosition() {
@@ -153,6 +173,10 @@ export function popover ({ mode, position, align }) {
     },
 
     setPosition() {
+      if (!this.popoverElement?.isConnected) return
+      if (!this.trigger?.isConnected && mode !== 'context') return
+      if (!this.popoverElement.matches(':popover-open')) return
+
       let triggerRect
 
       if (mode === 'context') {

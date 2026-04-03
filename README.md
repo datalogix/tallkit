@@ -1,22 +1,34 @@
-- Verificar HandleSize, Colors, etc.... (font, rounded)
+# component
+- autocomplete
+- checkbox
+- command
+- composer
+- field
 
-- autocomplete, command (dynamic load items)
-- nav (adicionar linha que se movimenta ao item selecionado)
-- paginator (add select per page)
+# cores
+- alert
+- avatar
+- badge
+- button
+- header
+
+
+- autocomplete, command, heading (revisar component / dynamic load items)
 - menu
-- page/auth
+- alert,avatar,badge,button,header (revisar cores / variant)
+- nav (adicionar linha / bg que se movimenta ao item selecionado)
+- paginator (add select per page)
 - stepper
 - tab
 - table
-- notifications
 
 ## fields
 - checkbox
 - composer
 - field
-- opt
 - input
 - password
+- opt
 - radio
 - select
 - slider
@@ -25,16 +37,11 @@
 - upload
 
 
-- (In progress) Editor
-- (In progress) CreditCard
-
+# Added
+- notifications
+- editor
 - Kanban
 - Pillbox
-
 - Color Picker
 - Date Picker
 - Time Picker
-
-- DataTable (with a filter e etc...)
-- FormBuilder
-- DataTableBuilder

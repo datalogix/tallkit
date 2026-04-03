@@ -9,20 +9,8 @@ class BladeDirectives
 {
     public static function register()
     {
-        Blade::directive('bind', [static::class, 'bind']);
-        Blade::directive('endbind', [static::class, 'endbind']);
         Blade::directive('scope', [static::class, 'scope']);
         Blade::directive('endscope', [static::class, 'endscope']);
-    }
-
-    public static function bind($expression)
-    {
-        return '<?php app(\'tallkit\')->bind('.$expression.'); ?>';
-    }
-
-    public static function endbind()
-    {
-        return '<?php app(\'tallkit\')->endBind(); ?>';
     }
 
     public static function scope($expression)

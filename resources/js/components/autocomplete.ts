@@ -1,222 +1,623 @@
-import { bind, normalize, timeout } from '../utils'
+import Fuse from 'fuse.js'
+import { bind } from '../utils'
 import { popover } from './popover'
 
-export function autocomplete(options: {
-  minLength?: null
-} = {}) {
+export function autocomplete(options = {}) {
   const _popover = popover({ mode: 'manual', position: 'bottom', align: 'start' })
 
   return {
     ..._popover,
+    uid: crypto?.randomUUID?.() || Math.random().toString(36).slice(2,8),
+
+    abortController: null,
+    prefetchController: null,
+    scrollBehavior: options.scrollBehavior ?? 'auto',
+
+    useCache: options.cache ?? true,
+    usePagination: options.pagination ?? true,
+    useVirtualization: options.virtualization ?? true,
+    fuseOptions: options.fuseOptions || {},
+    highlightMatches: options.highlightMatches ?? true,
+
+    state: 'idle',
+    query: '',
+    selected: null,
     current: null,
+    _renderStatesRAF: null,
 
-    get input() {
-      return this.$root.querySelector('[data-tallkit-autocomplete]')
+    _items: [],
+    _filtered: [],
+    _itemsVersion: 0,
+    fuse: null,
+    lastQuery: '',
+
+    minLength: options.minLength || 2,
+    delay: options.delay || 300,
+    debounceTimer: null,
+
+    page: 1,
+    perPage: options.perPage || 20,
+    hasMore: true,
+    loadingMore: false,
+
+    itemHeight: options.itemHeight || 40,
+    overscan: options.overscan || 5,
+    start: 0,
+    end: 0,
+
+    get totalHeight() {
+      return this._filtered.length * this.itemHeight
     },
 
-    get items() {
-      return Array.from(
-        this.$root.querySelectorAll('[data-tallkit-autocomplete-item-container]:has([data-tallkit-button-content])')
-      ) as HTMLLIElement[]
+    get visibleItems() {
+      return this._filtered.slice(this.start, this.end)
     },
 
-    get filteredItems() {
-      if (options.minLength && this.input.value.length < options.minLength) {
-        return []
-      }
+    cache: new Map(),
+    requestId: 0,
+    lastRequestId: 0,
 
-      return this.items.filter(item => {
-        if (item.hasAttribute('data-hidden')) return false
+    getCacheKey(page = this.page) {
+      return `${this.query}::${page}`
+    },
 
-        const button = item.querySelector('[data-tallkit-autocomplete-item]')
+    escapeHtml(str = '') {
+      return str.replace(/[&<>"']/g, tag => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[tag]))
+    },
 
-        return !button?.hasAttribute('disabled')
+    dedupe(items) {
+      const seen = new Set()
+      return items.filter(i => {
+        const key = i.value ?? i.label
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
       })
     },
 
-    setPosition() {
-      _popover.setPosition.call(this);
-      this.popoverElement.style.minWidth = `${this.input.offsetWidth}px`;
+    abortAllRequests() {
+      if (this.abortController) this.abortController.abort()
+      if (this.prefetchController) this.prefetchController.abort()
+      this.abortController = null
+      this.prefetchController = null
     },
 
     init() {
-      _popover.init.call(this);
-      _popover.trigger = this.input;
-      _popover.popoverElement = this.$root.lastElementChild?.matches('[popover]') && this.$root.lastElementChild;
+      _popover.init.call(this)
+      this.$items = this.$root.querySelector('[data-tallkit-autocomplete-items]')
 
-      bind(this.$root.querySelectorAll('[data-tallkit-autocomplete-item]'), (element) => ({
-        ['@click']: () => this.filteredItems.forEach((item, index) => {
-          if (item.querySelector('[data-tallkit-autocomplete-item]') === element) {
-            this.current = index
-            this.selectActive()
-            return
-          }
-        }),
+      this.setupARIA()
+      this.bind()
 
-        ['@mouseenter']: () => this.filteredItems.forEach((item, index) => {
-          if (item.querySelector('[data-tallkit-autocomplete-item]') === element) {
-            this.setActive(index)
-            this.$dispatch('autocomplete-item-hover', { index, item })
-            return
-          }
-        }),
+      this.refreshItems()
+      this.setupFuse()
+
+      this.updateWindow()
+      this.render()
+      this.renderStates()
+
+      this.$root.addEventListener('autocomplete-search', (e) => {
+        this.onItemsUpdated(e.detail)
+      })
+    },
+
+    refreshItems() {
+      const nodes = Array.from(
+        this.$root.querySelectorAll('[data-tallkit-autocomplete-item-container]')
+      )
+
+      this._items = nodes.map((el, index) => {
+        const button = el.querySelector('[data-tallkit-autocomplete-item]')
+        const content = el.querySelector('[data-tallkit-button-content]')
+
+        return {
+          el,
+          button,
+          content,
+          value: button?.value ?? content?.textContent?.trim(),
+          label: content?.textContent?.trim(),
+          index,
+        }
+      })
+
+      this._itemsVersion++
+    },
+
+    setupFuse() {
+      if (this.fuse) {
+        this.fuse.setCollection(this._items)
+      } else {
+        this.fuse = new Fuse(this._items, {
+          keys: ['label'],
+          threshold: 0.4,
+          ignoreLocation: true,
+          ...this.fuseOptions,
+        })
+      }
+    },
+
+    triggerSearch() {
+      clearTimeout(this.debounceTimer)
+
+      this.debounceTimer = setTimeout(() => {
+        this.resetSearchState()
+        this.state = ((this.query ?? '').trim().length < this.minLength) ? 'idle' : 'loading'
+        this.renderStates()
+        this.updateARIA()
+
+        if (this.state === 'idle') {
+          return
+        }
+
+        this.fetch()
+      }, this.delay)
+    },
+
+    fetch() {
+      const key = this.getCacheKey()
+
+      if (this.useCache && this.cache.has(key)) {
+        this.onItemsUpdated(this.cache.get(key), true)
+        return
+      }
+
+      this.abortAllRequests()
+      this.abortController = new AbortController()
+
+      const id = ++this.requestId
+      this.lastRequestId = id
+
+      this.$dispatch('autocomplete-search', {
+        query: this.query,
+        page: this.usePagination ? this.page : 1,
+        perPage: this.perPage,
+        requestId: id,
+        signal: this.abortController.signal,
+      })
+    },
+
+    prefetch() {
+      if (!this.usePagination || !this.hasMore) return
+      if (this.useCache && this.cache.has(this.getCacheKey(this.page + 1))) return
+
+      if (this.prefetchController) this.prefetchController.abort()
+      this.prefetchController = new AbortController()
+
+      this.$dispatch('autocomplete-search', {
+        query: this.query,
+        page: this.page + 1,
+        perPage: this.perPage,
+        prefetch: true,
+        signal: this.prefetchController.signal
+      })
+    },
+
+    onItemsUpdated(payload, fromCache = false, backend = false) {
+      if (!payload || !payload.items) {
+        this.search(backend)
+        return
+      }
+
+      const { items, hasMore = false, requestId } = payload
+      if (!fromCache && requestId && requestId !== this.lastRequestId) return
+
+      this.state = 'open'
+      this.loadingMore = false
+
+      const mapped = items.map((item, index) => ({
+        ...item,
+        index: this._items.length + index
       }))
 
-      bind(this.input, {
-        ['@input.debounce']: (e) => {
-          if (!e.isTrusted) return
+      const merged = this.usePagination
+        ? [...this._items, ...mapped]
+        : mapped
 
-          this.$dispatch('autocomplete-search-updated', { query: this.input.value })
-          this.search()
+      this._items = this.dedupe(merged)
+      this._itemsVersion++
+      this.hasMore = this.usePagination ? hasMore : false
 
-          if (this.filteredItems.length === 0) {
-            this.close()
-          } else {
-            this.open()
-          }
-        },
-        ['@focus']: (e) => {
-          if (this.filteredItems.length === 0) {
-            this.close()
-          } else {
-            this.open()
-            this.setActive()
-          }
-        },
-        ['@blur']: () => {
-          this.clearActive()
-          timeout(() => this.close(), 100)
-        },
-        ['@keydown.enter.prevent']: () => this.selectActive(),
-        ['@keydown.arrow-down.prevent']: () => this.next(),
-        ['@keydown.arrow-up.prevent']: () => this.prev(),
-        ['@keyup.escape.window']: () =>  this.close(),
-      })
+      if (this.useCache) {
+        this.cache.set(this.getCacheKey(), payload)
+      }
 
-      this.$nextTick(() => {
-        this.search()
-        this.clearActive()
-      })
+      if (!backend) {
+        this.setupFuse()
+      }
 
-      this.$dispatch('autocomplete-initialized')
+      this.search(backend)
+
+      if (this.usePagination) {
+        this.prefetch()
+      }
     },
 
-    clearActive() {
-      this.items.forEach(item => {
-        item.querySelector('[data-tallkit-autocomplete-item]')?.removeAttribute('data-active')
-      })
-      this.current = null
+    search(backend = false) {
+      if (backend) {
+        this._filtered = [...this._items]
+      } else if (this.query !== this.lastQuery && this.fuse) {
+        this._filtered = this.fuse.search(this.query).map(r => r.item)
+      } else if (!this.query) {
+        this._filtered = [...this._items]
+      }
+
+      this.lastQuery = this.query
+      this.state = this._filtered.length ? 'open' : 'empty'
+      this.open()
+
+      this.updateWindow()
+      this.render()
+      this.renderStates()
+      this.updateARIA()
+
+      if (this._filtered.length && this.current == null) {
+        this.setActive(0)
+      }
     },
 
-    prev() {
-      if (!this.popoverElement?.matches(':popover-open')) {
-        this.open()
+    highlight(item) {
+      if (!item.content) return
+
+      if (!this.highlightMatches || !this.query) {
+        item.content.textContent = item.label
         return
       }
 
-      if (this.current == null) return
+      let text = this.escapeHtml(item.label)
 
-      this.setActive((this.current - 1 + this.filteredItems.length) % this.filteredItems.length)
+      const words = this.query.split(/\s+/).filter(Boolean)
+
+      words.forEach(word => {
+        const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        const regex = new RegExp(`(${escaped})`, 'gi')
+        text = text.replace(regex, '<mark>$1</mark>')
+      })
+
+      item.content.innerHTML = text
     },
 
-    next() {
-      if (!this.popoverElement?.matches(':popover-open')) {
-        this.open()
+    renderStates() {
+      if (this._renderStatesRAF) cancelAnimationFrame(this._renderStatesRAF)
+
+      this._renderStatesRAF = requestAnimationFrame(() => {
+        const toggle = (selector, show) => {
+          this.$root.querySelectorAll(selector).forEach(el => {
+            el.style.display = show ? '' : 'none'
+          })
+        }
+
+        toggle('[data-tallkit-autocomplete-loading]', this.state === 'loading')
+        toggle('[data-tallkit-autocomplete-empty]', this.state === 'empty')
+        toggle('[data-tallkit-autocomplete-error]', this.state === 'error')
+        toggle('[data-tallkit-autocomplete-loading-more]', this.loadingMore)
+
+        this._renderStatesRAF = null
+      })
+    },
+
+    calculateItemHeight() {
+      if (!this._items.length) return
+
+      const firstItem = this._items.find(i => i.el)
+      if (!firstItem) return
+
+      const rect = firstItem.el.getBoundingClientRect()
+      this.itemHeight = rect.height || this.itemHeight
+    },
+
+    updateWindow() {
+      if (!this.useVirtualization || !this.itemHeight) return
+
+      const list = this.$items
+      if (!list) return
+
+      const scrollTop = list.scrollTop
+      const height = list.clientHeight
+
+      const start = Math.floor(scrollTop / this.itemHeight)
+      const visible = Math.ceil(height / this.itemHeight)
+
+      this.start = Math.max(0, start - this.overscan)
+      this.end = start + visible + this.overscan
+    },
+
+    render() {
+      if (!this.itemHeight) this.calculateItemHeight()
+
+      const list = this.$items
+      if (!list) return
+
+      if (!this.useVirtualization) {
+        this._filtered.forEach(item => {
+          if (!item.el) return
+          item.el.style.display = ''
+          item.el.style.position = ''
+          item.el.style.transform = ''
+          this.highlight(item)
+        })
         return
       }
 
-      if (this.current == null) return
+      list.style.position = 'relative'
+      list.style.height = `${this.totalHeight}px`
 
-      this.setActive((this.current + 1) % this.filteredItems.length)
+      this._items.forEach(item => {
+        if (item.el) item.el.style.display = 'none'
+      })
+
+      this.visibleItems.forEach((item, i) => {
+        if (!item.el) return
+
+        const index = this.start + i
+
+        item.el.style.display = ''
+        item.el.style.position = 'absolute'
+        item.el.style.left = '0'
+        item.el.style.right = '0'
+        item.el.style.transform = `translateY(${index * this.itemHeight}px)`
+
+        this.highlight(item)
+      })
     },
 
-    search() {
-      const normalizeOptions = {
-        lowercase: true,
-        replaceAccents: true,
-        removeSpaces: true,
-      }
+    bind() {
+      const input = this.$root.querySelector('[data-tallkit-autocomplete]')
+      const list = this.$items
+      let ticking = false
 
-      const value = normalize(this.input.value, normalizeOptions)
+      bind(input, {
+        ['@input']: (e) => {
+          this.query = e.target.value
+          this.triggerSearch()
+        },
 
-      this.clearItems()
+        ['@keydown.arrow-down.prevent']: () => {
+          this.scrollBehavior = 'auto'
+          this.next()
+        },
 
-      if (options.minLength && value?.length && value?.length < options.minLength) {
-        return
-      }
+        ['@keydown.arrow-up.prevent']: () => {
+          this.scrollBehavior = 'auto'
+          this.prev()
+        },
 
-      if (value) {
-        this.items.forEach(item => {
-          const span = item.querySelector('[data-tallkit-button-content]')
-          const content = normalize(span?.textContent, normalizeOptions) || ''
+        ['@keydown.home.prevent']: () => {
+          this.scrollBehavior = 'auto'
+          this.setActive(0)
+        },
 
-          if (!content.includes(value)) {
-            item.setAttribute('data-hidden', '')
+        ['@keydown.end.prevent']: () => {
+          this.scrollBehavior = 'auto'
+          this.setActive(this._filtered.length - 1)
+        },
+
+        ['@keydown.page-down.prevent']: () => {
+          this.scrollBehavior = 'auto'
+          this.pageDown()
+        },
+
+        ['@keydown.page-up.prevent']: () => {
+          this.scrollBehavior = 'auto'
+          this.pageUp()
+        },
+
+        ['@keydown.enter.prevent']: () => this.select(this.current),
+      })
+
+      if (list) {
+        bind(list, {
+          ['@click']: (e) => {
+            const itemEl = e.target.closest('[data-tallkit-autocomplete-item-container]')
+            if (!itemEl) return
+
+            const index = this._items.findIndex(i => i.el === itemEl)
+            if (index !== -1) this.select(index)
+          },
+
+          ['@mouseover']: (e) => {
+            const itemEl = e.target.closest('[data-tallkit-autocomplete-item-container]')
+            if (!itemEl) return
+
+            const index = this._items.findIndex(i => i.el === itemEl)
+            if (index !== -1) this.setActive(index)
+          },
+
+          ['@scroll']: () => {
+            if (!ticking) {
+              requestAnimationFrame(() => {
+                this.updateWindow()
+                this.render()
+
+                if (this.usePagination) {
+                  const nearBottom = list.scrollTop + list.clientHeight >= list.scrollHeight - 100
+                  if (nearBottom) this.loadMore()
+                }
+
+                ticking = false
+              })
+
+              ticking = true
+            }
           }
         })
       }
-
-      this.$dispatch('autocomplete-items-changed', {
-        items: this.filteredItems.length,
-      })
-
-      this.setActive()
     },
 
-    clearItems() {
-      this.items.forEach(item => {
-        item.querySelector('[data-tallkit-autocomplete-item]')?.removeAttribute('data-active')
-        item.removeAttribute('data-hidden')
-      })
+    loadMore() {
+      if (!this.usePagination) return
+      if (!this.hasMore || this.loadingMore) return
+
+      this.loadingMore = true
+      this.renderStates()
+
+      this.page++
+      this.fetch()
     },
 
-    setActive(index = 0) {
-      const items = this.filteredItems
-      if (index < 0 || index >= items.length) return
+    next() {
+      if (!this._filtered.length) return
+      this.current = this.current == null ? 0 : (this.current + 1) % this._filtered.length
+      this.ensureVisible()
+      this.updateActive()
+    },
 
-      if (this.current !== null) {
-        const last = items.at(this.current)
-        last?.querySelector('[data-tallkit-autocomplete-item]')?.removeAttribute('data-active')
-      }
+    prev() {
+      if (!this._filtered.length) return
+      this.current = this.current == null ? 0 : (this.current - 1 + this._filtered.length) % this._filtered.length
+      this.ensureVisible()
+      this.updateActive()
+    },
 
-      const item = items.at(index)
-      if (!item) return
+    pageDown() {
+      if (!this._filtered.length) return
 
-      const button = item.querySelector('[data-tallkit-autocomplete-item]')
-      if (button?.hasAttribute('disabled')) return
+      const list = this.$items
+      if (!list) return
 
-      button?.setAttribute('data-active', '')
+      const visibleCount = Math.floor(list.clientHeight / this.itemHeight)
+      let nextIndex = (this.current ?? 0) + visibleCount
+      if (nextIndex >= this._filtered.length) nextIndex = this._filtered.length - 1
+
+      this.setActive(nextIndex)
+    },
+
+    pageUp() {
+      if (!this._filtered.length) return
+
+      const list = this.$items
+      if (!list) return
+
+      const visibleCount = Math.floor(list.clientHeight / this.itemHeight)
+      let prevIndex = (this.current ?? 0) - visibleCount
+      if (prevIndex < 0) prevIndex = 0
+
+      this.setActive(prevIndex)
+    },
+
+    setActive(index) {
+      if (index < 0 || index >= this._filtered.length) return
       this.current = index
-
-      item.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest'
-      })
-
-      this.$dispatch('autocomplete-active-changed', { index, item, button })
+      this.ensureVisible()
+      this.updateActive()
     },
 
-    selectActive() {
-      if (this.current === null) return
+    updateActive() {
+      this._items.forEach(i => {
+        i.button?.removeAttribute('data-active')
+        i.el?.removeAttribute('id')
+      })
 
-      const item = this.filteredItems.at(this.current)
+      const item = this._filtered[this.current]
       if (!item) return
 
-      const button = item.querySelector('[data-tallkit-autocomplete-item]')
-      if (!button || button.hasAttribute('disabled')) return
+      const id = `ac-${this.uid}-item-${item.index}`
+      item.el?.setAttribute('id', id)
+      item.button?.setAttribute('data-active', '')
 
-     // button.dispatchEvent(new Event('click', { bubbles: true }))
+      const input = this.$root.querySelector('[data-tallkit-autocomplete]')
+      input?.setAttribute('aria-activedescendant', id)
+    },
 
-      this.input.value = button.querySelector('[data-tallkit-button-content]')?.textContent.trim() || ''
-      this.input.dispatchEvent(new Event('input', { bubbles: true }))
-      this.input.dispatchEvent(new Event('change', { bubbles: true }))
-      this.close()
+    ensureVisible() {
+      const list = this.$items
+      if (!list) return
 
-      this.$dispatch('autocomplete-item-selected', {
-        index: this.current,
-        item,
-        button,
+      const top = this.current * this.itemHeight
+      const bottom = top + this.itemHeight
+
+      const isAbove = top < list.scrollTop
+      const isBelow = bottom > list.scrollTop + list.clientHeight
+
+      if (!isAbove && !isBelow) return
+
+      list.scrollTo({
+        top: isAbove ? top : bottom - list.clientHeight,
+        behavior: this.scrollBehavior
       })
+    },
+
+    select(index) {
+      if (index == null) return
+
+      const item = this._filtered[index]
+      if (!item) return
+
+      const input = this.$root.querySelector('[data-tallkit-autocomplete]')
+
+      this.scrollBehavior = 'smooth'
+
+      this.selected = item.value
+      this.query = item.label
+
+      input.value = item.label
+
+      this.$dispatch('input', item.value)
+      this.$dispatch('autocomplete-selected', item)
+
+      this.close()
+    },
+
+    resetSearchState() {
+      this.abortAllRequests()
+      this.current = null
+      this.loadingMore = false
+      this.state = 'idle'
+      this._filtered = []
+      this.page = 1
+      this.hasMore = true
+    },
+
+    reset() {
+      this.resetSearchState()
+      this._items = []
+
+      this.updateWindow()
+      this.render()
+      this.renderStates()
+      this.updateARIA()
+    },
+
+    close() {
+      this.abortAllRequests()
+
+      this.state = 'idle'
+      this.current = null
+
+      this.updateActive()
+      this.updateARIA()
+
+      _popover.close.call(this)
+    },
+
+    setupARIA() {
+      const input = this.$root.querySelector('[data-tallkit-autocomplete]')
+      const list = this.$items
+
+      if (!input || !list) return
+
+      list.setAttribute('id', `ac-${this.uid}-list`)
+
+      input.setAttribute('role', 'combobox')
+      input.setAttribute('aria-autocomplete', 'list')
+      input.setAttribute('aria-expanded', 'false')
+      input.setAttribute('aria-controls', `ac-${this.uid}-list`)
+      input.setAttribute('aria-haspopup', 'listbox')
+      input.setAttribute('aria-live', 'polite')
+
+      list.setAttribute('role', 'listbox')
+    },
+
+    updateARIA() {
+      const input = this.$root.querySelector('[data-tallkit-autocomplete]')
+      if (!input) return
+
+      input.setAttribute('aria-expanded', this.state === 'open' ? 'true' : 'false')
     }
   }
 }

@@ -4,5 +4,6 @@
 @import './appearance.css';
 @import './layout.css';
 @import './select.css';
+@import './safelist.css';
 
-@source '../../src/**/*.php';
+@source '../views';

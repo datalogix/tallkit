@@ -58,7 +58,7 @@ class ComponentTagCompiler extends BaseComponentTagCompiler
 
             $attributes = $this->getAttributesFromAttributeString($matches['attributes']);
 
-            return $this->componentString('tallkit-'.$matches[1], $attributes);
+            return $this->componentString('tallkit::'.$matches[1], $attributes);
         }, $value);
     }
 
@@ -123,7 +123,7 @@ class ComponentTagCompiler extends BaseComponentTagCompiler
                 return '@slot('.$slot.') '.$this->componentString('tallkit-'.$matches[1], $attributes)."\n@endComponentClass##END-COMPONENT-CLASS##".' @endslot';
             }
 
-            return $this->componentString('tallkit-'.$matches[1], $attributes)."\n@endComponentClass##END-COMPONENT-CLASS##";
+            return $this->componentString('tallkit::'.$matches[1], $attributes)."\n@endComponentClass##END-COMPONENT-CLASS##";
         }, $value);
     }
 

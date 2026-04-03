@@ -1,0 +1,6 @@
+@source inline('[:where(&)]:{w,h,size,p,px,py,gap}-{0,px,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,7,8,9,10,12,14,16,18,20,22,24,26,30,34,36,40,full}');
+@source inline('[&_[data-tallkit-icon]]:size-{0,2,2.5,3,3.5,4,4.5,5,5.5,6,7,8,9,10,12,14,16,20,24,28,full}');
+@source inline('[:where(&)]:rounded-{none,xs,sm,md,lg,xl,2xl,3xl,full}');
+@source inline('after:rounded-{none,xs,sm,md,lg,xl,2xl,3xl,full}');
+@source inline('[:where(&)]:text-{[0.5rem],[0.625rem],[0.6875rem],xs,sm,base,lg,xl,2xl,3xl,4xl}');
+@source inline('[:where(&)]:font-{extralight,light,normal,medium,semibold,bold,extrabold}');

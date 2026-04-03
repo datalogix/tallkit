@@ -1,0 +1,35 @@
+@props([
+    'checkbox' => null,
+    'terms-of-service' => null,
+    'terms-of-use' => null,
+    'privacy-policy' => null,
+])
+@php
+
+$termsOfService = ${'terms-of-service'} ?? $attributes->pluck('termsOfService') ?? route_detect(['terms-of-service', 'terms.terms-of-service'], default: null);
+$termsOfUse = ${'terms-of-use'} ?? $attributes->pluck('termsOfUse') ?? route_detect(['terms-of-use', 'terms.terms-of-use'], default: null);
+$privacyPolicy = ${'privacy-policy'} ?? $attributes->pluck('privacyPolicy') ?? route_detect(['privacy-policy', 'terms.privacy-policy'], default: null);
+
+@endphp
+<x-dynamic-component
+    :$attributes
+    :component="$checkbox ? 'tallkit::checkbox' : 'tallkit::toggle'"
+>
+    {!! match (true) {
+        $termsOfService && !$privacyPolicy => __('I agree to the :terms-of-service', [
+            'terms-of-service' => '<a class="underline" href="'.$termsOfService.'" target="_blank">'.__('Terms of Service').'</a>'
+        ]),
+        $termsOfService && $privacyPolicy => __('I agree to the :terms-of-service and :privacy-policy', [
+            'terms-of-service' => '<a class="underline" href="'.$termsOfService.'" target="_blank">'.__('Terms of Service').'</a>',
+            'privacy-policy' => '<a class="underline" href="'.$privacyPolicy.'" target="_blank">'.__('Privacy Policy').'</a>'
+        ]),
+        $termsOfUse && !$privacyPolicy => __('I agree to the :terms-of-use', [
+            'terms-of-use' => '<a class="underline" href="'.$termsOfUse.'" target="_blank">'.__('Terms of Use').'</a>'
+        ]),
+        $termsOfUse && $privacyPolicy => __('I agree to the :terms-of-use and :privacy-policy', [
+            'terms-of-use' => '<a class="underline" href="'.$termsOfUse.'" target="_blank">'.__('Terms of Use').'</a>',
+            'privacy-policy' => '<a class="underline" href="'.$privacyPolicy.'" target="_blank">'.__('Privacy Policy').'</a>'
+        ]),
+        default => __('I accept the terms and conditions'),
+    } !!}
+</x-dynamic-component>

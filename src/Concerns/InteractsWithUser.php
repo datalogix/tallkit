@@ -2,18 +2,18 @@
 
 namespace TALLKit\Concerns;
 
+use Illuminate\View\ComponentAttributeBag;
+
 trait InteractsWithUser
 {
-    use AppendsCustomAttributes;
-
-    protected function customAppendedAttributes()
+    public function userAttributes(ComponentAttributeBag $attributes)
     {
-        return [
-            'guard',
-            'user' => fn () => auth($this->guard)->user(),
-            'name' => fn () => data_get($this->user, 'name'),
-            'email' => fn () => data_get($this->user, 'email'),
-            'username' => fn () => data_get($this->user, 'username'),
-        ];
+        $guard = $attributes->pluck('guard');
+        $user = $attributes->pluck('user', auth($guard)->user());
+        $name = $attributes->pluck('name', data_get($user, 'name'));
+        $email = $attributes->pluck('email', data_get($user, 'email'));
+        $username = $attributes->pluck('username', data_get($user, 'username'));
+
+        return [$user, $name, $email, $username];
     }
 }
