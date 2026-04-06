@@ -41,7 +41,7 @@ $hasPrependOrAppend = $labelPrepend || $labelAppend;
             TALLKit::attributesAfter($attributes, 'container:')
                 ->dataKey($hasPrependOrAppend ? null : 'label')
                 ->classes([
-                    'inline-flex',
+                    'cursor-default inline-flex',
                     'flex-1' => $hasPrependOrAppend,
                     'sr-only' => $srOnly
                 ])

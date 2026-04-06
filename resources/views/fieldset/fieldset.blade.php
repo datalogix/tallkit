@@ -7,7 +7,7 @@
 <fieldset {{ $attributes->classes('
     [&[disabled]_[data-tallkit-label]]:opacity-50
     [&[disabled]_[data-tallkit-legend]]:opacity-50
-    [&_[data-tallkit-field]]:mb-3
+    [&_[data-tallkit-field]]:mb-2
     [&>[data-tallkit-field]:has(>[data-tallkit-text])]:mb-4
     [&>[data-tallkit-field]:last-child]:mb-0
     [&>[data-tallkit-legend]]:mb-4

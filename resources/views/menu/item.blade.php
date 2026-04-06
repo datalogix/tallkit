@@ -4,7 +4,7 @@
     'size' => null,
     'keepOpen' => null,
 
-    // element props
+    // element
     'label' => null,
     'icon' => null,
     'prefix' => null,

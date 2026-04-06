@@ -1,6 +1,7 @@
 @props([
     'prefix' => null,
     'suffix' => null,
+    'size' => null,
 ])
 <tk:field.wrapper
     :$attributes

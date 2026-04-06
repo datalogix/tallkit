@@ -10,7 +10,7 @@
 $message ??= TALLKit::getError(name: $name, slot: $slot, bag: $bag);
 
 @endphp
-@if ($message)
+@if (filled($message))
     <div
         role="alert"
         aria-live="polite"

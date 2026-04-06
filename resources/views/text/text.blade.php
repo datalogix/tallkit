@@ -4,7 +4,7 @@
     'weight' => null,
     'variant' => null,
 
-    // element props
+    // element
     'label' => null,
     'icon' => null,
     'prefix' => null,

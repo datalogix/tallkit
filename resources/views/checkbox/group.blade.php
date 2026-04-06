@@ -1,17 +1,20 @@
 @props([
+    'size' => null,
     'variant' => null,
+    'align' => null,
     'iconOn' => null,
     'iconOff' => null,
 ])
+@php
 
+[$name, $fieldName, $label] = TALLKit::fieldAttributes($attributes);
+$options = TALLKit::parseOptions($attributes);
+
+@endphp
 @if ($slot->isNotEmpty() || filled($options))
     <tk:fieldset
-        :attributes="$attributes
-            ->whereDoesntStartWith([
-                'name', 'id', 'help', 'showError', 'prefix', 'suffix',
-                'heading:', 'checkbox:', 'error:',
-                'wire:model', // ignore wire:model on fieldset
-            ])
+        :$label
+        :attributes="$attributes->whereDoesntStartWith(['heading:', 'checkbox:', 'error:'])
             ->classes('[&_[data-tallkit-heading]]:mb-2 [&>[data-tallkit-heading]:not(:first-of-type)]:pt-2')
         "
     >
@@ -34,6 +37,7 @@
                         :$name
                         :$size
                         :$variant
+                        :$align
                         :$iconOn
                         :$iconOff
                     />
@@ -47,6 +51,7 @@
                     :$name
                     :$size
                     :$variant
+                    :$align
                     :$iconOn
                     :$iconOff
                 />
@@ -55,7 +60,7 @@
 
         <tk:error
             :attributes="TALLKit::attributesAfter($attributes, 'error:')"
-            :name="$getFieldName()"
+            :name="$fieldName"
             :$size
         />
     </tk:fieldset>

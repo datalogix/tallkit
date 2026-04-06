@@ -1,7 +1,7 @@
 @props([
     'size' => null,
 
-    // element props
+    // element
     'label' => null,
     'icon' => null,
     'prefix' => null,

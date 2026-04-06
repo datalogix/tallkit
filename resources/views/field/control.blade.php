@@ -26,7 +26,6 @@ if (is_string($loading) || $loading === true) {
 @endphp
 @if ($prepend || $icon || $append || $loading || $iconTrailing || $kbd || $attributes->has('class'))
     <div
-        wire:ignore
         {{
             TALLKit::attributesAfter($attributes, 'control:')
                 ->dataKey('field-control')
@@ -42,11 +41,10 @@ if (is_string($loading) || $loading === true) {
     >
         @if ($prepend || $icon)
             <div
-                wire:cloak
                 {{
                     TALLKit::attributesAfter($attributes, 'prepend:')
                         ->dataKey('field-control-prepend')
-                        ->classes('flex items-center justify-center gap-x-1.5 pe-3 text-zinc-400')
+                        ->classes('flex items-center justify-center gap-x-1.5 ps-3 text-zinc-400')
                 }}
             >
                 {{ $prepend ?? '' }}
@@ -70,11 +68,10 @@ if (is_string($loading) || $loading === true) {
 
         @if ($append || $loading || $iconTrailing || $kbd)
             <div
-                wire:cloak
                 {{
                     TALLKit::attributesAfter($attributes, 'append:')
                         ->dataKey('field-control-append')
-                        ->classes('flex items-center justify-center gap-x-1.5 ps-3 text-zinc-400')
+                        ->classes('flex items-center justify-center gap-x-1.5 pe-3 text-zinc-400')
                 }}
             >
                 @if ($loading)
