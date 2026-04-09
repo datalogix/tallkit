@@ -3,7 +3,7 @@
     as="div"
     label="Theme"
     icon="palette-outline"
-    keep-open
+    keepOpen
 >
     <x-slot:append>
         <tk:appearance.selector

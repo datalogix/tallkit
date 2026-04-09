@@ -1,46 +1,21 @@
 @props([
-    // field
-    'id' => null,
-    'size' => null,
+    ...TALLKit::fieldProps(),
     'align' => null,
-    'labelAppend' => null,
-    'labelPrepend' => null,
-    'description' => null,
-    'help' => null,
-    'badge' => null,
-    'info' => null,
-    'prefix' => null,
-    'suffix' => null,
-    'showError' => null,
-
-    // radio
-    'value' => null,
     'checked' => null,
     'variant' => null,
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel] = TALLKit::fieldAttributes($attributes);
-$checked = in_array($value, Arr::wrap($checked));
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel] = TALLKit::resolveFieldContext($attributes, $label);
+$checked ??= in_array($value, Arr::wrap($checked));
 
 @endphp
 <tk:field.wrapper
-    :$attributes
-    variant="inline"
+    inline
     :$align
     :$name
-    :$id
+    :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
     :label="$slot->isEmpty() ? $label : $slot"
-    :$labelAppend
-    :$labelPrepend
-    :$description
-    :$help
-    :$badge
-    :$info
-    :$prefix
-    :$suffix
-    :$size
-    :$showError
 >
     <div
         {{ $attributes->only('disabled')->dataKey('control') }}
@@ -53,14 +28,15 @@ $checked = in_array($value, Arr::wrap($checked));
         }}
     >
         <input
-            @isset ($name) name="{{ $name }}" @endisset
-            @isset ($id) id="{{ $id }}" @endisset
+            @if ($name) name="{{ $name }}" @endif
+            @if ($id) id="{{ $id }}" @endif
             @if ($invalid) aria-invalid="true" data-invalid @endif
             @checked($checked)
             value="{{ $value }}"
             type="radio"
             {{
                 $attributes
+                    ->dataKey('radio')
                     ->merge(['wire:model' => $wireModel])
                     ->whereDoesntStartWith([
                         'field:', 'label:', 'info:', 'badge:', 'description:',
@@ -71,28 +47,61 @@ $checked = in_array($value, Arr::wrap($checked));
                     ])
                     ->classes(
                         '
-                            size-full
+                            transition-colors
+                            transition-shadow
+                            transition-transform
+                            duration-200
+                            ease-out
+                            motion-reduce:transition-none
+
                             rounded-full
-
                             peer
-                            appearance-none
                             shrink-0
-                            transition-all
-
-                            bg-white dark:bg-white/10
+                            size-full
+                            appearance-none
                             [print-color-adjust:exact]
 
+                            bg-white
+                            dark:bg-white/10
+
                             border
-                            border-zinc-300 dark:border-white/10
-                            disabled:border-zinc-200 dark:disabled:border-white/5
-                            [&[data-invalid]]:border-red-500 dark:[&[data-invalid]]:border-red-400
+                            border-zinc-300
+                            dark:border-white/10
+
+                            disabled:border-zinc-200
+                            dark:disabled:border-white/5
+
+                            [&[data-invalid]:not(:focus-visible)]:border-red-500
+                            dark:[&[data-invalid]:not(:focus-visible)]:border-red-400
+
+                            disabled:[&[data-invalid]:not(:focus-visible)]:border-red-500
+                            dark:disabled:[&[data-invalid]:not(:focus-visible)]:border-red-400
 
                             shadow-xs
-                            disabled:opacity-75
-                            disabled:checked:opacity-50
                             disabled:shadow-none
+                            [&[data-invalid]]:disabled:shadow-none
+
+                            disabled:opacity-75
+                            dark:disabled:opacity-50
+
+                            focus-visible:outline-2
+                            focus-visible:outline-blue-700
+                            dark:focus-visible:outline-blue-300
+                            focus-visible:outline-offset-0
+
+                            focus-visible:ring-2
+                            focus-visible:ring-blue-700/20
+                            dark:focus-visible:ring-blue-300/20
+
+                            disabled:cursor-not-allowed
+                            disabled:resize-none
+
                             checked:shadow-none
                             checked:not-[data-invalid]:border-none
+                            checked:disabled:opacity-30
+
+                            enabled:hover:border-zinc-300
+                            dark:enabled:hover:border-white/20
                         ',
                         match ($variant) {
                             'accent' => 'checked:bg-[var(--color-accent)]',
@@ -124,9 +133,21 @@ $checked = in_array($value, Arr::wrap($checked));
                 TALLKit::attributesAfter($attributes, 'icon-area:')
                     ->classes(
                         '
-                            absolute transition pointer-events-none size-full
-                            flex justify-center items-center
-                            opacity-0 peer-checked:opacity-100
+                            absolute
+                            pointer-events-none
+                            size-full
+
+                            transition-opacity
+                            duration-200
+                            ease-out
+                            motion-reduce:transition-none
+
+                            flex
+                            justify-center
+                            items-center
+
+                            opacity-0
+                            peer-checked:opacity-100
                         '
                     )
             }}
@@ -134,7 +155,16 @@ $checked = in_array($value, Arr::wrap($checked));
             <div
                 {{
                     TALLKit::attributesAfter($attributes, 'icon:')->classes(
-                        'rounded-full size-1/2',
+                        'rounded-full',
+                        match ($size) {
+                            'xs' => 'size-1.5',
+                            'sm' => 'size-2',
+                            default => 'size-2.5',
+                            'lg' => 'size-3',
+                            'xl' => 'size-3.5',
+                            '2xl' => 'size-4',
+                            '3xl' => 'size-4.5',
+                        },
                         match ($variant) {
                             'accent' => 'bg-[var(--color-accent-foreground)]',
                             default => 'bg-white dark:bg-zinc-700',

@@ -1,15 +1,10 @@
 @props([
     'url' => null,
     'data' => null,
-    'auto-fetch' => null,
+    'autoFetch' => null,
     'chart' => null,
     'options' => null,
 ])
-@php
-
-$autoFetch = ${'auto-fetch'} ?? $attributes->pluck('autoFetch');
-
-@endphp
 <tk:loadable
     x-data="fetchable({{ Js::from($url) }}, {{ Js::from($data) }}, {{ Js::from($autoFetch) }}, {{ Js::from($options) }})"
     :attributes="$attributes->whereDoesntStartWith(['chart:', 'json:'])"

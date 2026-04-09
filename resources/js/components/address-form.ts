@@ -59,7 +59,7 @@ export function addressForm() {
 
       this.abortController = new AbortController()
 
-      this.loading?.classList.remove('opacity-0')
+      this.loading?.classList.remove('hidden')
       this.address.disabled = true
       this.neighborhood.disabled = true
       this.city.disabled = true
@@ -93,7 +93,7 @@ export function addressForm() {
 
         this.zipcode.focus()
       } finally {
-        this.loading?.classList.add('opacity-0')
+        this.loading?.classList.add('hidden')
         this.address.disabled = false
         this.neighborhood.disabled = false
         this.city.disabled = false

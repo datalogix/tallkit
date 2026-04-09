@@ -13,7 +13,12 @@
     :attributes="$attributes
         ->whereDoesntStartWith(['close:'])
         ->classes(
-            'transition font-medium whitespace-nowrap [print-color-adjust:exact]',
+            '
+                transition
+                font-medium
+                whitespace-nowrap
+                [print-color-adjust:exact]
+            ',
             TALLKit::fontSize(size: $size),
             TALLKit::roundedSize(size: $rounded ? 'full' : $size),
             TALLKit::iconSize(size: $size),

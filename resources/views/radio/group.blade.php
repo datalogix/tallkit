@@ -2,10 +2,11 @@
     'size' => null,
     'variant' => null,
     'align' => null,
+    'label' => null,
 ])
 @php
 
-[$name, $fieldName, $label] = TALLKit::fieldAttributes($attributes);
+[$name, $fieldName, $label] = TALLKit::resolveFieldContext($attributes, $label);
 $options = TALLKit::parseOptions($attributes);
 
 @endphp

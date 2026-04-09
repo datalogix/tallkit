@@ -70,8 +70,8 @@ $files = getFiles($value ?? (in_livewire() ? $$name : null));
         x-data="upload({ droppable: @js($droppable ?? true) })"
     >
         <input
-            @isset ($name) name="{{ $name }}" @endisset
-            @isset ($id) id="{{ $id }}" @endisset
+            @if ($name) name="{{ $name }}" @endif
+            @if ($id) id="{{ $id }}" @endif
             @if ($invalid) aria-invalid="true" data-invalid @endif
             @if ($multiple) multiple @endif
             {{ $attributes->whereDoesntStartWith([

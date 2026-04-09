@@ -1,14 +1,14 @@
 @props([
     'checkbox' => null,
-    'terms-of-service' => null,
-    'terms-of-use' => null,
-    'privacy-policy' => null,
+    'termsOfService' => null,
+    'termsOfUse' => null,
+    'privacyPolicy' => null,
 ])
 @php
 
-$termsOfService = ${'terms-of-service'} ?? $attributes->pluck('termsOfService') ?? route_detect(['terms-of-service', 'terms.terms-of-service'], default: null);
-$termsOfUse = ${'terms-of-use'} ?? $attributes->pluck('termsOfUse') ?? route_detect(['terms-of-use', 'terms.terms-of-use'], default: null);
-$privacyPolicy = ${'privacy-policy'} ?? $attributes->pluck('privacyPolicy') ?? route_detect(['privacy-policy', 'terms.privacy-policy'], default: null);
+$termsOfService ??= route_detect(['terms-of-service', 'terms.terms-of-service'], default: null);
+$termsOfUse ??= route_detect(['terms-of-use', 'terms.terms-of-use'], default: null);
+$privacyPolicy ??= route_detect(['privacy-policy', 'terms.privacy-policy'], default: null);
 
 @endphp
 <x-dynamic-component

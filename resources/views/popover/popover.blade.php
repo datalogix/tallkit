@@ -1,12 +1,7 @@
 @props([
     'size' => null,
-    'keep-open' => null,
+    'keepOpen' => null,
 ])
-@php
-
-$keepOpen = ${'keep-open'} ?? $attributes->pluck('keepOpen');
-
-@endphp
 <div
     popover="manual"
     {{

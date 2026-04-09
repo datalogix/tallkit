@@ -71,13 +71,17 @@ if (is_string($loading) || $loading === true) {
                 {{
                     TALLKit::attributesAfter($attributes, 'append:')
                         ->dataKey('field-control-append')
-                        ->classes('flex items-center justify-center gap-x-1.5 pe-3 text-zinc-400')
+                        ->classes('
+                            flex items-center justify-center gap-x-1.5 pe-3 text-zinc-400
+                            [&:has([data-tallkit-loading].hidden)]:pe-0
+                        ')
+                        ->classes(['[&:has([data-tallkit-loading].hidden)]:pe-0' => !$append && $loading && !$iconTrailing && !$kbd])
                 }}
             >
                 @if ($loading)
                     <tk:loading
-                        :attributes="TALLKit::attributesAfter($attributes, 'loading:')->classes('opacity-0')->merge([
-                            'wire:loading.class.remove' => 'opacity-0',
+                        :attributes="TALLKit::attributesAfter($attributes, 'loading:')->classes('hidden')->merge([
+                            'wire:loading.class.remove' => 'hidden',
                             'wire:target' => $wireTarget
                         ])"
                         :$size

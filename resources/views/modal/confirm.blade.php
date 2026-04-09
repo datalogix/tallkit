@@ -3,16 +3,11 @@
     'confirm' => null,
     'cancel' => null,
     'variant' => null,
-    'auto-close' => null,
+    'autoClose' => null,
     'title' => null,
     'subtitle' => null,
     'actions' => null,
 ])
-@php
-
-$autoClose = ${'auto-close'} ?? $attributes->pluck('autoClose');
-
-@endphp
 <tk:modal
     :attributes="$attributes->whereDoesntStartWith(['actions:', 'cancel:', 'confirm:'])->classes('max-w-sm')"
     :$size

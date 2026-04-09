@@ -3,10 +3,9 @@
     'size' => null,
     'options' => null,
 ])
-
 <div
     wire:ignore.self
-    x-data="autocomplete(@js($options))"
+    x-data="autocomplete(@js($options ?? []))"
     {{ TALLKit::attributesAfter($attributes, 'container:')->classes('[:where(&)]:w-full') }}
 >
     <tk:input
@@ -19,16 +18,12 @@
         :attributes="TALLKit::attributesAfter($attributes, 'popover:')->classes('p-0')"
         :$size
     >
-        @if (Str::of($slot)->contains('data-tallkit-autocomplete-items'))
+        <tk:autocomplete.items
+            :attributes="TALLKit::attributesAfter($attributes, 'items:')"
+            :$items
+            :$size
+        >
             {{ $slot }}
-        @else
-            <tk:autocomplete.items
-                :attributes="TALLKit::attributesAfter($attributes, 'items:')"
-                :$items
-                :$size
-            >
-                {{ $slot }}
-            </tk:autocomplete.items>
-        @endif
+        </tk:autocomplete.items>
     </tk:popover>
 </div>

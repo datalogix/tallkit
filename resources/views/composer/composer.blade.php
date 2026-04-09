@@ -1,15 +1,24 @@
 @props([
+    ...TALLKit::fieldProps(),
+    ...TALLKit::fieldControlProps(),
     'rows' => null,
-    'maxRows' => null,
-    'inline' => null,
+    'maxRows' => 10,
     'submit' => null,
+    'inline' => null,
+    'header' => null,
+    'footer' => null,
+    'actionsLeading' => null,
+    'actionsTrailing' => null,
 ])
+@php
 
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel] = TALLKit::resolveFieldContext($attributes, $label);
+$value = in_livewire() ? null : ($value ?? $slot);
+
+@endphp
 <tk:field.wrapper
-    :$attributes
     :$name
-    :$id
-    :$label
+    :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
 >
     <div
         wire:ignore
@@ -26,100 +35,120 @@
                 'header:', 'input:', 'textarea:', 'footer:', 'actions-leading:', 'actions-trailing:',
             ])
             ->classes(
-                TALLKit::fontSize(size: $size),
-                TALLKit::roundedSize(size: $size, mode: 'large'),
-                TALLKit::padding(size: $size, mode: 'smallest'),
                 '
-                    grid grid-cols-[auto_1fr_1fr_auto]
+                    grid
+                    grid-cols-[auto_1fr_1fr_auto]
 
                     peer
                     w-full
                     appearance-none
-
-                    outline-none
-                    focus-within:ring-2
-                    focus-within:ring-[Highlight]
-
-                    shadow-xs
-                    [&[disabled]]:shadow-none
-
-                    border
-                    border-zinc-200 border-b-zinc-300/80 dark:border-white/10
-                    [&[disabled]]:border-b-zinc-200 dark:[&[disabled]]:border-white/5
-                    [&[disabled][data-invalid]]:border-red-500 dark:[&[disabled][data-invalid]]:border-red-400
-                    [&[data-invalid]]:border-red-500 dark:[&[data-invalid]]:border-red-400
-
-                    text-zinc-700
-                    [&[disabled]]:text-zinc-500
-
-                    dark:text-zinc-300
-                    dark:[&[disabled]]:text-zinc-400
+                    [print-color-adjust:exact]
 
                     bg-white
                     dark:bg-white/10
 
+                    border
+                    border-zinc-300
+                    dark:border-white/10
+
+                    [&[disabled]]:border-zinc-200
+                    dark:[&[disabled]]:border-white/5
+
+                    [&[data-invalid]:not(:has([data-tallkit-control]:focus-visible))]:border-red-500
+                    dark:[&[data-invalid]:not(:has([data-tallkit-control]:focus-visible))]:border-red-400
+
+                    disabled:[&[data-invalid]:not(:has([data-tallkit-control]:focus-visible))]:border-red-500
+                    dark:disabled:[&[data-invalid]:not(:has([data-tallkit-control]:focus-visible))]:border-red-400
+
+                    shadow-xs
+                    [&[disabled]]:shadow-none
+                    [&[disabled]]:[&[data-invalid]]:shadow-none
+
                     [&[disabled]]:opacity-75
                     dark:[&[disabled]]:opacity-50
 
+                    has-[[data-tallkit-control]:focus-visible]:outline-2
+                    has-[[data-tallkit-control]:focus-visible]:outline-blue-700
+                    dark:has-[[data-tallkit-control]:focus-visible]:outline-blue-300
+                    has-[[data-tallkit-control]:focus-visible]:outline-offset-0
+
+                    has-[[data-tallkit-control]:focus-visible]:ring-2
+                    has-[[data-tallkit-control]:focus-visible]:ring-blue-700/20
+                    dark:has-[[data-tallkit-control]:focus-visible]:ring-blue-300/20
+
+                    [&[disabled]]:cursor-not-allowed
                     [&[disabled]]:pointer-events-none
-                '
+                ',
+                match ($size) {
+                    'xs' => 'text-xs rounded-md px-1.5 py-1',
+                    'sm' => 'text-sm rounded-md px-2 py-1.5',
+                    default => 'text-base rounded-lg px-3 py-2',
+                    'lg' => 'text-lg rounded-lg px-3.5 py-2.5',
+                    'xl' => 'text-xl rounded-lg px-4 py-3',
+                    '2xl' => 'text-2xl rounded-xl px-4.5 py-3.5',
+                    '3xl' => 'text-3xl rounded-xl px-5 py-4',
+                },
             )
         }}
     >
-        @isset ($header)
+        @if ($header && !$inline)
             <div {{ TALLKit::attributesAfter($attributes, 'header:')->classes(
                 '
                     flex items-center gap-1
-                    mb-2
-                    col-span-3
-                '
+                    col-span-3 mb-2
+                ',
             ) }}>
                 {{ $header }}
             </div>
-        @endisset
+        @endif
 
-        <div {{ TALLKit::attributesAfter($attributes, 'input:')->classes('
-            col-span-4
-            [[data-inline]_&]:col-span-2
-            [[data-inline]_&]:col-start-2
+        <tk:field.control
+            :$size
+            :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
+                ->classes(
+                    '
+                        col-span-4
+                        [[data-inline]_&]:col-span-2
+                        [[data-inline]_&]:col-start-2
 
-            [&_[data-tallkit-control]]:h-auto
-            [&_[data-tallkit-control]]:p-0
-            [&_[data-tallkit-control]]:bg-transparent
-            [&_[data-tallkit-control]]:border-none
-            [&_[data-tallkit-control]]:focus:outline-none
-            [&_[data-tallkit-control]]:resize-none
-        ') }}>
-            <tk:field.control
-                :$attributes
-                :$size
-            >
-                @isset ($input)
-                    {{ $input }}
-                @else
-                    <tk:textarea
-                        :$id
-                        :$size
-                        :attributes="TALLKit::attributesAfter($attributes, 'textarea:')"
-                        :label="false"
-                        :max-rows="$maxRows ?? 10"
-                        :rows="$inline ? 1 : ($rows ?? 2)"
-                    >{{ $slot }}</tk:textarea>
-                @endisset
-            </tk:field.control>
-        </div>
+                        [&_[data-tallkit-control]]:px-2
+                        [&_[data-tallkit-control]]:py-1.5
+                        [&_[data-tallkit-control]]:h-auto
+                        [&_[data-tallkit-control]]:bg-transparent
+                        [&_[data-tallkit-control]]:border-none
+                        [&_[data-tallkit-control]]:outline-none
+                        [&_[data-tallkit-control]]:ring-0
+                        [&_[data-tallkit-control]]:resize-none
+                        [&_[data-tallkit-control]]:shadow-none
+                        [&_[data-tallkit-control]]:rounded-none
+                    '
+                )"
+        >
+            @isset ($input)
+                {{ $input }}
+            @else
+                <tk:textarea
+                    :attributes="TALLKit::attributesAfter($attributes, 'textarea:')"
+                    :$id
+                    :$size
+                    :$placeholder
+                    :$maxRows
+                    :label="false"
+                    :rows="$inline ? 1 : ($rows ?? 2)"
+                >{{ $value }}</tk:textarea>
+            @endisset
+        </tk:field.control>
 
-        @isset ($footer)
+        @if ($footer && !$inline)
             <div {{ TALLKit::attributesAfter($attributes, 'footer:')->classes(
                 '
                     flex items-center gap-1
-                    mt-2
-                    col-span-3
-                '
+                    col-span-3mt-2
+                ',
             ) }}>
                 {{ $footer }}
             </div>
-        @endisset
+        @endif
 
         @isset ($actionsLeading)
             <div {{ TALLKit::attributesAfter($attributes, 'actions-leading:')->classes(
@@ -129,7 +158,7 @@
                     [[data-inline]_&]:col-span-1
                     [[data-inline]_&]:col-start-1
                     [[data-inline]_&]:row-start-1
-                '
+                ',
             ) }}>
                 {{ $actionsLeading ?? '' }}
             </div>
@@ -141,7 +170,7 @@
                     flex items-start justify-end gap-1
                     col-span-2
                     [[data-inline]_&]:col-span-1
-                '
+                ',
             ) }}>
                 {{ $actionsTrailing ?? '' }}
             </div>

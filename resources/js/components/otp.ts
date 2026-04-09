@@ -6,7 +6,7 @@ export function otp(submit?: string) {
 
     get inputs () {
       return Array.from(
-        this.$root.querySelectorAll('[data-tallkit-otp-input]')
+        this.$root.querySelectorAll('input')
       ) as HTMLInputElement[]
     },
 

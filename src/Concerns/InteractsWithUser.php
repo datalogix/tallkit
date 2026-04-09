@@ -6,7 +6,7 @@ use Illuminate\View\ComponentAttributeBag;
 
 trait InteractsWithUser
 {
-    public function userAttributes(ComponentAttributeBag $attributes)
+    public function resolveUserContext(ComponentAttributeBag $attributes)
     {
         $guard = $attributes->pluck('guard');
         $user = $attributes->pluck('user', auth($guard)->user());

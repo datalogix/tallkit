@@ -6,7 +6,7 @@
     <tk:nav.item
         :attributes="$attributes->whereDoesntStartWith(['dropdown:', 'menu:'])"
         :$size
-        icon-trailing="chevron-down"
+        iconTrailing="chevron-down"
     >
         {{ $label ?? '' }}
     </tk:nav.item>

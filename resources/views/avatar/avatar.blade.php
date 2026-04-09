@@ -11,7 +11,7 @@
 ])
 @php
 
-[, $name, $email, $username] = TALLKit::userAttributes($attributes);
+[$user, $name, $email, $username] = TALLKit::resolveUserContext($attributes);
 $initials = TALLKit::generateInitials($initials ?? $name, $attributes->pluck('initials:single'));
 $ttl = $attributes->pluck('ttl');
 $src ??= TALLKit::findAvatar($email ?? $username, $ttl);

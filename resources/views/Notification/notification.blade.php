@@ -2,7 +2,7 @@
     <tk:button
         icon="bell-outline"
         variant="subtle"
-        icon-dot="13"
+        iconDot="13"
         icon-dot:class="bg-blue-500!"
         class="[&[data-active]]:border [&[data-active]]:border-blue-500"
         ::data-active="opened"

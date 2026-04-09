@@ -12,20 +12,14 @@
     'horizontalLines' => null,
     'sticky' => null,
     'rowSelection' => null,
-    'select-all' => null,
-    'row-key' => null,
-    'no-records' => null,
+    'selectAll' => null,
+    'rowKey' => null,
+    'noRecords' => null,
     'footer' => null,
-    'display-id-column' => null,
-    'map-relations-column' => null,
+    'displayIdColumn' => null,
+    'mapRelationsColumn' => null,
 ])
 @php
-
-$selectAll = ${'select-all'} ?? $attributes->pluck('selectAll');
-$rowKey = ${'row-key'} ?? $attributes->pluck('rowKey');
-$noRecords = ${'no-records'} ?? $attributes->pluck('noRecords');
-$displayIdColumn = ${'display-id-column'} ?? $attributes->pluck('displayIdColumn');
-$mapRelationsColumn = ${'map-relations-column'} ?? $attributes->pluck('mapRelationsColumn');
 
 $cols = collect($cols);
 $rows ??= is_string($resource) ? make_model($resource) : $resource;
@@ -209,7 +203,7 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                                 @if (isset($expanded))
                                     {{ $expanded($row, $cols, $rows) }}
                                 @elseif (isset($rowExpanded))
-                                     {{ $rowExpanded($row, $cols, $rows) }}
+                                    {{ $rowExpanded($row, $cols, $rows) }}
                                 @endif
                             </tk:table.row.expanded>
                         @endif

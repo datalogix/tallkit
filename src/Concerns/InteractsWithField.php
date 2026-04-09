@@ -8,15 +8,59 @@ use TALLKit\Facades\TALLKit;
 
 trait InteractsWithField
 {
-    public function fieldAttributes(ComponentAttributeBag $attributes)
+    public function fieldProps()
     {
+        return [
+            'value' => null,
+            'id' => null,
+            'size' => null,
+            'label' => null,
+            'labelAppend' => null,
+            'labelPrepend' => null,
+            'description' => null,
+            'help' => null,
+            'badge' => null,
+            'info' => null,
+            'prefix' => null,
+            'suffix' => null,
+            'showError' => null,
+        ];
+    }
+
+    public function fieldControlProps()
+    {
+        return [
+            'prepend' => null,
+            'append' => null,
+            'icon' => null,
+            'iconTrailing' => null,
+            'kbd' => null,
+            'loading' => null,
+        ];
+    }
+
+    public function mergeDefinedFieldProps(
+        ComponentAttributeBag $attributes,
+        array $scope
+    ): ComponentAttributeBag {
+        return $this->mergeDefinedProps(
+            $attributes,
+            $scope,
+            $this->fieldProps(),
+            $this->fieldControlProps(),
+        );
+    }
+
+    public function resolveFieldContext(
+        ComponentAttributeBag $attributes,
+        null|bool|string $label = null
+    ) {
         $wireModel = $attributes->whereStartsWith('wire:model')->first();
         $xModel = $attributes->whereStartsWith('x-model')->first();
 
         $name = $attributes->pluck('name', $wireModel ?? $xModel);
         $fieldName = Str::replace(['[', ']'], ['.', ''], Str::before($name, '[]'));
 
-        $label = $attributes->pluck('label');
         $label = $label === true || $label === null ? Str::headline(Str::before($fieldName, '_id')) : $label;
 
         $placeholder = $attributes->pluck('placeholder');

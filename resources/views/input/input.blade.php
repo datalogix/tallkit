@@ -1,29 +1,6 @@
 @props([
-    // field
-    'id' => null,
-    'size' => null,
-    'variant' => null,
-    'align' => null,
-    'labelAppend' => null,
-    'labelPrepend' => null,
-    'description' => null,
-    'help' => null,
-    'badge' => null,
-    'info' => null,
-    'prefix' => null,
-    'suffix' => null,
-    'showError' => null,
-
-    // control
-    'prepend' => null,
-    'append' => null,
-    'icon' => null,
-    'iconTrailing' => null,
-    'kbd' => null,
-    'loading' => null,
-
-    // input
-    'value' => null,
+    ...TALLKit::fieldProps(),
+    ...TALLKit::fieldControlProps(),
     'type' => null,
     'mask' => null,
     'clearable' => null,
@@ -32,7 +9,7 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel] = TALLKit::fieldAttributes($attributes);
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel] = TALLKit::resolveFieldContext($attributes, $label);
 $type ??= TALLKit::detectInputType($name);
 $mask = TALLKit::detectInputMask($name, $mask, $type);
 $viewable ??= $type === 'password';
@@ -53,70 +30,66 @@ $hasControl = $clearable || $copyable || $viewable || $prepend || $icon || $appe
     <tk:slider :$attributes>{{ $slot }}</tk:slider>
 @else
     <tk:field.wrapper
-        :$attributes
-        :$variant
-        :$align
         :$name
-        :$id
-        :$label
-        :$labelAppend
-        :$labelPrepend
-        :$description
-        :$help
-        :$badge
-        :$info
-        :$prefix
-        :$suffix
-        :$size
-        :$showError
+        :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
     >
         <tk:field.control
-            :attributes="$attributes->classes([
-                '
-                    flex items-center
-
-                    bg-white
-                    dark:bg-white/10
-
-                    border
-                    border-zinc-200 border-b-zinc-300/80 dark:border-white/10
-
-                    has-[input:disabled]:border-b-zinc-200
-                    dark:has-[input:disabled]:border-white/5
-
-                    has-[input[data-invalid]:disabled]:border-red-500
-                    dark:has-[input[data-invalid]:disabled]:border-red-400
-                    has-[input[data-invalid]]:border-red-500
-                    dark:has-[input[data-invalid]]:border-red-400
-
-                    shadow-xs
-                    has-[input:disabled]:shadow-none
-                    has-[input[data-invalid]:disabled]:shadow-none
-
-                    has-[input:disabled]:opacity-75
-                    dark:has-[input:disabled]:opacity-50
-
-                    focus-within:ring-2
-                    focus-within:ring-blue-300
-
-                ' => $hasControl,
-                match ($size) {
-                    'xs' => 'rounded-md',
-                    'sm' => 'rounded-md',
-                    default => 'rounded-lg',
-                    'lg' => 'rounded-lg',
-                    'xl' => 'rounded-lg',
-                    '2xl' => 'rounded-xl',
-                    '3xl' => 'rounded-xl',
-                } => $hasControl,
-            ])"
             :$size
-            :$prepend
-            :$append
-            :$icon
-            :$iconTrailing
-            :$kbd
-            :$loading
+            :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
+                ->when(
+                    $hasControl,
+                    fn ($attrs) => $attrs->classes(
+                        '
+                            flex
+                            items-center
+
+                            bg-white
+                            dark:bg-white/10
+
+                            border
+                            border-zinc-300
+                            dark:border-white/10
+
+                            has-[[data-tallkit-control]:disabled]:border-zinc-200
+                            dark:has-[[data-tallkit-control]:disabled]:border-white/5
+
+                            has-[[data-tallkit-control][data-invalid]:not(:focus-visible)]:border-red-500
+                            dark:has-[[data-tallkit-control][data-invalid]:not(:focus-visible)]:border-red-400
+
+                            has-[[data-tallkit-control][data-invalid]:disabled:not(:focus-visible)]:border-red-500
+                            dark:has-[[data-tallkit-control][data-invalid]:disabled:not(:focus-visible)]:border-red-400
+
+                            shadow-xs
+                            has-[[data-tallkit-control]:disabled]:shadow-none
+                            has-[[data-tallkit-control][data-invalid]:disabled]:shadow-none
+
+                            has-[[data-tallkit-control]:disabled]:opacity-75
+                            dark:has-[[data-tallkit-control]:disabled]:opacity-50
+                            has-[[data-tallkit-control]:disabled]:cursor-not-allowed
+
+                            has-[[data-tallkit-control]:focus-visible]:outline-2
+                            has-[[data-tallkit-control]:focus-visible]:outline-blue-700
+                            dark:has-[[data-tallkit-control]:focus-visible]:outline-blue-300
+                            has-[[data-tallkit-control]:focus-visible]:outline-offset-0
+
+                            has-[[data-tallkit-control]:focus-visible]:ring-2
+                            has-[[data-tallkit-control]:focus-visible]:ring-blue-700/20
+                            dark:has-[[data-tallkit-control]:focus-visible]:ring-blue-300/20
+
+                            [&_[data-tallkit-control]]:outline-none
+                        ',
+                        match ($size) {
+                            'xs' => 'rounded-md',
+                            'sm' => 'rounded-md',
+                            default => 'rounded-lg',
+                            'lg' => 'rounded-lg',
+                            'xl' => 'rounded-lg',
+                            '2xl' => 'rounded-xl',
+                            '3xl' => 'rounded-xl',
+                        },
+                    ),
+                )
+            "
         >
             <input
                 type="{{ $type }}"
@@ -128,6 +101,7 @@ $hasControl = $clearable || $copyable || $viewable || $prepend || $icon || $appe
                 @if ($mask) x-data x-mask="{{ $mask }}" @endif
                 {{
                     $attributes
+                        ->dataKey('input')
                         ->dataKey('control')
                         ->dataKey('group-target')
                         ->merge(['wire:model' => $wireModel])
@@ -139,64 +113,29 @@ $hasControl = $clearable || $copyable || $viewable || $prepend || $icon || $appe
                             'input:', 'clearable:', 'copyable:', 'viewable:',
                         ])
                         ->except('class')
-                        ->classes([
+                        ->classes(
                             '
-                                outline-none
                                 bg-transparent
                                 flex-1
                                 peer
                                 block
                                 w-full
                                 appearance-none
+                                [print-color-adjust:exact]
 
                                 text-zinc-700
-                                placeholder-zinc-400
-
                                 disabled:text-zinc-500
-                                disabled:placeholder-zinc-400/70
-
                                 dark:text-zinc-300
                                 dark:disabled:text-zinc-400
+
+                                placeholder-zinc-400
+                                disabled:placeholder-zinc-400/70
                                 dark:placeholder-zinc-400
                                 dark:disabled:placeholder-zinc-500
 
-                                focus:outline-none
+                                disabled:cursor-not-allowed
+                                disabled:resize-none
                             ',
-                            '
-                                bg-white
-                                dark:bg-white/10
-
-                                border
-                                border-zinc-200 border-b-zinc-300/80 dark:border-white/10
-
-                                disabled:border-b-zinc-200
-                                dark:disabled:border-white/5
-
-                                disabled:[&[data-invalid]]:border-red-500
-                                disabled:dark:[&[data-invalid]]:border-red-400
-
-                                [&[data-invalid]]:border-red-500
-                                dark:[&[data-invalid]]:border-red-400
-
-                                shadow-xs
-                                disabled:shadow-none
-                                [&[data-invalid]]:disabled:shadow-none
-
-                                disabled:opacity-75
-                                dark:disabled:opacity-50
-
-                                focus:ring-2
-                                focus:ring-blue-300
-                            ' => !$hasControl,
-                            match ($size) {
-                                'xs' => 'rounded-md',
-                                'sm' => 'rounded-md',
-                                default => 'rounded-lg',
-                                'lg' => 'rounded-lg',
-                                'xl' => 'rounded-lg',
-                                '2xl' => 'rounded-xl',
-                                '3xl' => 'rounded-xl',
-                            } => !$hasControl,
                             match ($size) {
                                 'xs' => 'h-8 text-xs ps-2 pe-2',
                                 'sm' => 'h-9 text-sm ps-2.5 pe-2.5',
@@ -210,8 +149,55 @@ $hasControl = $clearable || $copyable || $viewable || $prepend || $icon || $appe
                                 'color' => $prepend || $icon ? '' : 'ps-1 pe-1',
                                 default => '',
                             },
-                            $attributes->pluck('input:class')
-                        ])
+                            $attributes->pluck('input:class'),
+                         )
+                         ->when(
+                            !$hasControl,
+                            fn ($attrs) => $attrs->classes(
+                                '
+                                    bg-white
+                                    dark:bg-white/10
+
+                                    border
+                                    border-zinc-300
+                                    dark:border-white/10
+
+                                    disabled:border-zinc-200
+                                    dark:disabled:border-white/5
+
+                                    [&[data-invalid]:not(:focus-visible)]:border-red-500
+                                    dark:[&[data-invalid]:not(:focus-visible)]:border-red-400
+
+                                    disabled:[&[data-invalid]:not(:focus-visible)]:border-red-500
+                                    dark:disabled:[&[data-invalid]:not(:focus-visible)]:border-red-400
+
+                                    shadow-xs
+                                    disabled:shadow-none
+                                    [&[data-invalid]]:disabled:shadow-none
+
+                                    disabled:opacity-75
+                                    dark:disabled:opacity-50
+
+                                    focus-visible:outline-2
+                                    focus-visible:outline-blue-700
+                                    dark:focus-visible:outline-blue-300
+                                    focus-visible:outline-offset-0
+
+                                    focus-visible:ring-2
+                                    focus-visible:ring-blue-700/20
+                                    dark:focus-visible:ring-blue-300/20
+                                ',
+                                match ($size) {
+                                    'xs' => 'rounded-md',
+                                    'sm' => 'rounded-md',
+                                    default => 'rounded-lg',
+                                    'lg' => 'rounded-lg',
+                                    'xl' => 'rounded-lg',
+                                    '2xl' => 'rounded-xl',
+                                    '3xl' => 'rounded-xl',
+                                },
+                            ),
+                        )
                 }}
             />
 

@@ -2,8 +2,8 @@
 @import './animation.css';
 @import './alpine.css';
 @import './appearance.css';
+@import './fields.css';
 @import './layout.css';
-@import './select.css';
 @import './safelist.css';
 
 @source '../views';

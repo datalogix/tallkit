@@ -9,7 +9,7 @@
     tooltip="Toggle light and dark mode"
     icon="ph:sun"
     icon:class="block dark:hidden"
-    icon-trailing="ph:moon"
+    iconTrailing="ph:moon"
     icon-trailing:class="hidden dark:block"
 >
     {{ $slot }}

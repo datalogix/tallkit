@@ -52,7 +52,17 @@ if ($loading && $type !== 'submit' && !$isJsMethod) {
                 default => [
                     TALLKit::roundedSize(size: $circle ? 'full': $size),
                     TALLKit::height(size: $size),
-                    $square ? TALLKit::width(size: $size) : TALLKit::paddingInline(size: $size, mode: 'largest'),
+                    $square
+                        ? match($size) {
+                            'xs' => 'w-8',
+                            'sm' => 'w-9',
+                            default => 'w-10',
+                            'lg' => 'w-12',
+                            'xl' => 'w-14',
+                            '2xl' => 'w-16',
+                            '3xl' => 'w-18',
+                        }
+                        : TALLKit::paddingInline(size: $size, mode: 'largest'),
                 ],
             },
             match ($variant) { // Text color...

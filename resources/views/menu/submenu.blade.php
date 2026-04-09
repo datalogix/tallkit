@@ -4,8 +4,8 @@
 >
     <tk:menu.item
         :attributes="$attributes->whereDoesntStartWith(['container:', 'menu:'])"
-        keep-open
-        icon-trailing="chevron-right"
+        keepOpen
+        iconTrailing="chevron-right"
         icon-trailing:class="rtl:rotate-180"
     />
 

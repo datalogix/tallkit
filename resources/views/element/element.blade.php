@@ -11,11 +11,11 @@
     'type' => null,
     'exact' => null,
     'current' => null,
-    'icon-dot' => null,
+    'iconDot' => null,
     'icon' => null,
     'prefix' => null,
     'suffix' => null,
-    'icon-trailing' => null,
+    'iconTrailing' => null,
     'info' => null,
     'badge' => null,
     'kbd' => null,
@@ -26,8 +26,6 @@
 ])
 @php
 
-$iconDot = ${'icon-dot'} ?? $attributes->pluck('iconDot');
-$iconTrailing = ${'icon-trailing'} ?? $attributes->pluck('iconTrailing');
 $as ??= 'span';
 $href ??= route_detect($route, $parameters, $href);
 $ariaLabel = $ariaLabel === true || $ariaLabel === null ? $tooltip : $ariaLabel;

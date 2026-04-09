@@ -1,16 +1,14 @@
 @props([
     'as' => null,
     'label' => null,
-    'label-prepend' => null,
-    'label-append' => null,
+    'labelPrepend' => null,
+    'labelAppend' => null,
     'for' => null,
     'size' => null,
     'srOnly' => null,
 ])
 @php
 
-$labelPrepend = ${'label-prepend'} ?? $attributes->pluck('labelPrepend');
-$labelAppend = ${'label-append'} ?? $attributes->pluck('labelAppend');
 $hasPrependOrAppend = $labelPrepend || $labelAppend;
 
 @endphp
@@ -30,7 +28,7 @@ $hasPrependOrAppend = $labelPrepend || $labelAppend;
     @endif
 
     @if ($labelPrepend)
-        <div {{ TALLKit::attributesAfter($attributes, 'label-prepend:')->classes('mr-auto') }}>
+        <div {{ TALLKit::attributesAfter($attributes, 'labelPrepend:')->classes('mr-auto') }}>
             {{ $labelPrepend }}
         </div>
     @endif
@@ -53,7 +51,7 @@ $hasPrependOrAppend = $labelPrepend || $labelAppend;
             :icon:size="TALLKit::adjustSize(size: $size)"
             :icon-trailing:size="TALLKit::adjustSize(size: $size)"
             :badge:size="TALLKit::adjustSize(size: $size)"
-            :attributes="$attributes->whereDoesntStartWith(['area:', 'label-prepend:', 'label-append:', 'container:', 'info:'])
+            :attributes="$attributes->whereDoesntStartWith(['area:', 'labelPrepend:', 'labelAppend:', 'container:', 'info:'])
                 ->merge(TALLKit::attributesAfter($attributes, 'info:', prepend: 'icon-trailing:')->getAttributes())
                 ->classes(
                     '[:where(&)]:text-zinc-800 dark:[:where(&)]:text-white',
@@ -66,7 +64,7 @@ $hasPrependOrAppend = $labelPrepend || $labelAppend;
     </{{ $as ?? ($for ? 'label' : 'span') }}>
 
     @if ($labelAppend)
-        <div {{ TALLKit::attributesAfter($attributes, 'label-append:')->classes('ml-auto') }}>
+        <div {{ TALLKit::attributesAfter($attributes, 'labelAppend:')->classes('ml-auto') }}>
             {{ $labelAppend }}
         </div>
     @endif

@@ -5,6 +5,8 @@
     'thousands' => null,
     'position' => null,
     'placeholder' => null,
+    'prefix' => null,
+    'suffix' => null,
 ])
 @php
 
@@ -68,9 +70,9 @@ if ($config = data_get($currencies, Str::upper($currency))) {
 
 @endphp
 <tk:input
-    :$attributes
+    :attributes="TALLKit::mergeDefinedFieldProps($attributes, get_defined_vars())"
     :$placeholder
-    :prefix="$position === 'prefix' ? $symbol : null"
-    :suffix="$position === 'suffix' ? $symbol : null"
+    :prefix="$prefix ?? ($position === 'prefix' ? $symbol : null)"
+    :suffix="$suffix ?? ($position === 'suffix' ? $symbol : null)"
     x-mask:dynamic="$money($input, '{{ $delimiter }}', '{{ $thousands }}')"
 />

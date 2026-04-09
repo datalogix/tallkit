@@ -4,13 +4,12 @@
     'route' => null,
     'action' => null,
     'alert' => null,
-    'error-group' => null,
+    'errorGroup' => null,
 ])
 @php
 
 $method = strtoupper($method);
 $action = in_livewire() ? ($action ?? 'submit') : route_detect(routes: [$route, $action], default: request()->url());
-$errorGroup = ${'error-group'} ?? $attributes->pluck('errorGroup');
 
 @endphp
 <form {{

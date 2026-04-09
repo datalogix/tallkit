@@ -8,11 +8,12 @@
     'actions' => null,
     'border' => null,
     'dismissible' => null,
+    'animation' => null,
     'timeout' => null,
     'size' => null,
 ])
 <tk:content
-    x-data="alertComponent({{ Js::from($timeout) }})"
+    x-data="alertComponent({{ Js::from($timeout) }}, {{ Js::from($animation ?? true) }})"
     role="alert"
     :attributes="$attributes
         ->dataKey('alert')
@@ -20,7 +21,7 @@
         ->merge(TALLKit::attributesAfter($attributes, 'message:', prepend: 'description:')->getAttributes())
         ->classes(
             TALLKit::padding(size: $size),
-            'mb-4 transition-opacity duration-300 opacity-100',
+            'mb-4 transition-all duration-300 ease-out opacity-100',
             match ($type) {
                 'danger' => 'text-red-800 bg-red-100 dark:bg-zinc-700 dark:text-red-300',
                 'success' => 'text-green-800 bg-green-100 dark:bg-zinc-700 dark:text-green-300',

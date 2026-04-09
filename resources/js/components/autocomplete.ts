@@ -31,7 +31,7 @@ export function autocomplete(options = {}) {
     fuse: null,
     lastQuery: '',
 
-    minLength: options.minLength || 2,
+    minLength: options.minLength || 1,
     delay: options.delay || 300,
     debounceTimer: null,
 
@@ -90,7 +90,8 @@ export function autocomplete(options = {}) {
 
     init() {
       _popover.init.call(this)
-      this.$items = this.$root.querySelector('[data-tallkit-autocomplete-items]')
+      this.input = this.$root.querySelector('[data-tallkit-control]')
+      this.items = this.$root.querySelector('[role=listbox]')
 
       this.setupARIA()
       this.bind()
@@ -108,12 +109,10 @@ export function autocomplete(options = {}) {
     },
 
     refreshItems() {
-      const nodes = Array.from(
-        this.$root.querySelectorAll('[data-tallkit-autocomplete-item-container]')
-      )
+      const nodes = Array.from(this.items.querySelectorAll('[role=option]'))
 
       this._items = nodes.map((el, index) => {
-        const button = el.querySelector('[data-tallkit-autocomplete-item]')
+        const button = el.querySelector('button')
         const content = el.querySelector('[data-tallkit-button-content]')
 
         return {
@@ -164,6 +163,11 @@ export function autocomplete(options = {}) {
 
       if (this.useCache && this.cache.has(key)) {
         this.onItemsUpdated(this.cache.get(key), true)
+        return
+      }
+
+      if (this._items.length > 0) {
+        this.search()
         return
       }
 
@@ -313,12 +317,10 @@ export function autocomplete(options = {}) {
 
     updateWindow() {
       if (!this.useVirtualization || !this.itemHeight) return
+      if (!this.items) return
 
-      const list = this.$items
-      if (!list) return
-
-      const scrollTop = list.scrollTop
-      const height = list.clientHeight
+      const scrollTop = this.items.scrollTop
+      const height = this.items.clientHeight
 
       const start = Math.floor(scrollTop / this.itemHeight)
       const visible = Math.ceil(height / this.itemHeight)
@@ -329,9 +331,7 @@ export function autocomplete(options = {}) {
 
     render() {
       if (!this.itemHeight) this.calculateItemHeight()
-
-      const list = this.$items
-      if (!list) return
+      if (!this.items) return
 
       if (!this.useVirtualization) {
         this._filtered.forEach(item => {
@@ -344,8 +344,8 @@ export function autocomplete(options = {}) {
         return
       }
 
-      list.style.position = 'relative'
-      list.style.height = `${this.totalHeight}px`
+      this.items.style.position = 'relative'
+      this.items.style.height = `${this.totalHeight}px`
 
       this._items.forEach(item => {
         if (item.el) item.el.style.display = 'none'
@@ -367,11 +367,9 @@ export function autocomplete(options = {}) {
     },
 
     bind() {
-      const input = this.$root.querySelector('[data-tallkit-autocomplete]')
-      const list = this.$items
       let ticking = false
 
-      bind(input, {
+      bind(this.input, {
         ['@input']: (e) => {
           this.query = e.target.value
           this.triggerSearch()
@@ -410,8 +408,8 @@ export function autocomplete(options = {}) {
         ['@keydown.enter.prevent']: () => this.select(this.current),
       })
 
-      if (list) {
-        bind(list, {
+      if (this.items) {
+        bind(this.items, {
           ['@click']: (e) => {
             const itemEl = e.target.closest('[data-tallkit-autocomplete-item-container]')
             if (!itemEl) return
@@ -435,7 +433,7 @@ export function autocomplete(options = {}) {
                 this.render()
 
                 if (this.usePagination) {
-                  const nearBottom = list.scrollTop + list.clientHeight >= list.scrollHeight - 100
+                  const nearBottom = this.items.scrollTop + this.items.clientHeight >= this.items.scrollHeight - 100
                   if (nearBottom) this.loadMore()
                 }
 
@@ -476,11 +474,9 @@ export function autocomplete(options = {}) {
 
     pageDown() {
       if (!this._filtered.length) return
+      if (!this.items) return
 
-      const list = this.$items
-      if (!list) return
-
-      const visibleCount = Math.floor(list.clientHeight / this.itemHeight)
+      const visibleCount = Math.floor(this.items.clientHeight / this.itemHeight)
       let nextIndex = (this.current ?? 0) + visibleCount
       if (nextIndex >= this._filtered.length) nextIndex = this._filtered.length - 1
 
@@ -489,11 +485,9 @@ export function autocomplete(options = {}) {
 
     pageUp() {
       if (!this._filtered.length) return
+      if (!this.items) return
 
-      const list = this.$items
-      if (!list) return
-
-      const visibleCount = Math.floor(list.clientHeight / this.itemHeight)
+      const visibleCount = Math.floor(this.items.clientHeight / this.itemHeight)
       let prevIndex = (this.current ?? 0) - visibleCount
       if (prevIndex < 0) prevIndex = 0
 
@@ -520,24 +514,22 @@ export function autocomplete(options = {}) {
       item.el?.setAttribute('id', id)
       item.button?.setAttribute('data-active', '')
 
-      const input = this.$root.querySelector('[data-tallkit-autocomplete]')
-      input?.setAttribute('aria-activedescendant', id)
+      this.input?.setAttribute('aria-activedescendant', id)
     },
 
     ensureVisible() {
-      const list = this.$items
-      if (!list) return
+      if (!this.items) return
 
       const top = this.current * this.itemHeight
       const bottom = top + this.itemHeight
 
-      const isAbove = top < list.scrollTop
-      const isBelow = bottom > list.scrollTop + list.clientHeight
+      const isAbove = top < this.items.scrollTop
+      const isBelow = bottom > this.items.scrollTop + this.items.clientHeight
 
       if (!isAbove && !isBelow) return
 
-      list.scrollTo({
-        top: isAbove ? top : bottom - list.clientHeight,
+      this.items.scrollTo({
+        top: isAbove ? top : bottom - this.items.clientHeight,
         behavior: this.scrollBehavior
       })
     },
@@ -548,14 +540,11 @@ export function autocomplete(options = {}) {
       const item = this._filtered[index]
       if (!item) return
 
-      const input = this.$root.querySelector('[data-tallkit-autocomplete]')
-
       this.scrollBehavior = 'smooth'
 
       this.selected = item.value
       this.query = item.label
-
-      input.value = item.label
+      this.input.value = item.label
 
       this.$dispatch('input', item.value)
       this.$dispatch('autocomplete-selected', item)
@@ -596,28 +585,19 @@ export function autocomplete(options = {}) {
     },
 
     setupARIA() {
-      const input = this.$root.querySelector('[data-tallkit-autocomplete]')
-      const list = this.$items
+      this.items?.setAttribute('id', `ac-${this.uid}-list`)
+      this.items?.setAttribute('role', 'listbox')
+      this.input?.setAttribute('role', 'combobox')
+      this.input?.setAttribute('aria-autocomplete', 'list')
+      this.input?.setAttribute('aria-expanded', 'false')
+      this.input?.setAttribute('aria-controls', `ac-${this.uid}-list`)
+      this.input?.setAttribute('aria-haspopup', 'listbox')
+      this.input?.setAttribute('aria-live', 'polite')
 
-      if (!input || !list) return
-
-      list.setAttribute('id', `ac-${this.uid}-list`)
-
-      input.setAttribute('role', 'combobox')
-      input.setAttribute('aria-autocomplete', 'list')
-      input.setAttribute('aria-expanded', 'false')
-      input.setAttribute('aria-controls', `ac-${this.uid}-list`)
-      input.setAttribute('aria-haspopup', 'listbox')
-      input.setAttribute('aria-live', 'polite')
-
-      list.setAttribute('role', 'listbox')
     },
 
     updateARIA() {
-      const input = this.$root.querySelector('[data-tallkit-autocomplete]')
-      if (!input) return
-
-      input.setAttribute('aria-expanded', this.state === 'open' ? 'true' : 'false')
+      this.input?.setAttribute('aria-expanded', this.state === 'open' ? 'true' : 'false')
     }
   }
 }

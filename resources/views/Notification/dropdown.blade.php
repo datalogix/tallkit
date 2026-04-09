@@ -1,6 +1,6 @@
 <tk:dropdown>
     <tk:notification.button
-        icon-dot
+        iconDot
         icon-dot:class="bg-green-500!"
     />
 

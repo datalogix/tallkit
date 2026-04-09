@@ -1,22 +1,11 @@
 @props([
-    'variant' => null,
+    ...TALLKit::fieldProps(),
+    'inline' => null,
     'align' => null,
     'name' => null,
-    'id' => null,
-    'label' => null,
-    'labelAppend' => null,
-    'labelPrepend' => null,
-    'description' => null,
-    'help' => null,
-    'badge' => null,
-    'info' => null,
-    'prefix' => null,
-    'suffix' => null,
-    'size' => null,
-    'showError' => null,
 ])
 @if ($label || $description || $help || $prefix || $suffix)
-    <tk:field :$variant :$align :attributes="TALLKit::attributesAfter($attributes, 'field:')">
+    <tk:field :$inline :$align :attributes="TALLKit::attributesAfter($attributes, 'field:')">
         <tk:label
             :attributes="TALLKit::attributesAfter($attributes, 'label:')
                 ->merge(TALLKit::attributesAfter($attributes, 'info:', prepend: true)->getAttributes())
@@ -37,7 +26,7 @@
             :$size
         />
 
-        @if ($variant !== 'inline' && ($prefix || $suffix))
+        @if (!$inline && ($prefix || $suffix))
             <tk:field.group
                 :attributes="TALLKit::attributesAfter($attributes, 'group:')
                     ->merge(TALLKit::attributesAfter($attributes, 'prefix:', prepend: true)->getAttributes())

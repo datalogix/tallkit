@@ -2,14 +2,14 @@
     'size' => null,
     'name' => null,
     'logo' => null,
-    'logo-dark' => null,
+    'logoDark' => null,
     'alt' => null,
     'href' => null,
 ])
 @php
 
 $logo ??= find_image('logo');
-$logoDark = ${'logo-dark'} ?? $attributes->pluck('logoDark') ?? find_image('logo-dark');
+$logoDark ??= find_image('logo-dark');
 $name = $name === true ? config('app.name') : $name;
 $alt ??= $name ?: config('app.name');
 $href ??= route_detect('home');

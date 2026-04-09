@@ -26,7 +26,7 @@
         content:class="flex-1"
         :icon="$reversed ? 'chevron-right' : false"
         icon::class="{ 'transition': {{ $collapse !== false ? 'true' : 'false' }}, 'rotate-90': opened }"
-        :icon-trailing="$reversed ? false : 'chevron-down'"
+        :iconTrailing="$reversed ? false : 'chevron-down'"
         icon-trailing::class="{ 'transition': {{ $collapse !== false ? 'true' : 'false' }}, 'rotate-180': opened }"
     />
 

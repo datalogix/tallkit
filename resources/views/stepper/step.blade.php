@@ -2,15 +2,10 @@
     'index' => null,
     'size' => null,
     'status' => null,
-    'icon-completed' => null,
-    'icon-active' => null,
+    'icon' => null,
+    'iconCompleted' => null,
+    'iconActive' => null,
 ])
-@php
-
-$iconCompleted = ${'icon-completed'} ?? $attributes->pluck('iconCompleted');
-$iconActive = ${'icon-active'} ?? $attributes->pluck('iconActive');
-
-@endphp
 <tk:element
     :attributes="$attributes->whereDoesntStartWith(['icon:', 'bullet:'])->classes(
         'flex flex-col items-center flex-1 text-center gap-2',

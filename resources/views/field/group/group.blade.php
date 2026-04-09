@@ -34,6 +34,9 @@
         '[&>[data-tallkit-group-target]:not(:first-child):not(:last-child)]:rounded-none',
         '[&>[data-tallkit-group-target]:first-child:not(:last-child)]:rounded-e-none',
         '[&>[data-tallkit-group-target]:last-child:not(:first-child)]:rounded-s-none',
+        '[&>[data-tallkit-field-control]:not(:first-child):not(:last-child)]:rounded-none',
+        '[&>[data-tallkit-field-control]:first-child:not(:last-child)]:rounded-e-none',
+        '[&>[data-tallkit-field-control]:last-child:not(:first-child)]:rounded-s-none',
 
         // "Weld" borders for sub-children of group targets (button element inside select element, etc.)...
         '[&>*:not(:first-child):not(:last-child):not(:only-child)_[data-tallkit-group-target]]:rounded-none',

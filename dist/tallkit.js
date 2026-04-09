@@ -8,6 +8,81 @@
       window.Alpine.bind(element, typeof bindings === "function" ? bindings(element, index) : bindings);
     });
   }
+  function parseTimeToMilliseconds(value) {
+    const parsed = Number.parseFloat(value);
+    if (Number.isNaN(parsed)) {
+      return 0;
+    }
+    return value.trim().endsWith("ms") ? parsed : parsed * 1e3;
+  }
+  function getTransitionTimeout(element) {
+    const style = window.getComputedStyle(element);
+    const durations = style.transitionDuration.split(",");
+    const delays = style.transitionDelay.split(",");
+    return durations.reduce((max, duration, index) => {
+      const delay = delays[index] ?? delays[delays.length - 1] ?? "0s";
+      return Math.max(max, parseTimeToMilliseconds(duration) + parseTimeToMilliseconds(delay));
+    }, 0);
+  }
+  function collapseAndRemove(root, options = {}) {
+    let fallbackId = null;
+    let onTransitionEnd = null;
+    let finished = false;
+    const cleanup = () => {
+      if (fallbackId !== null) {
+        clearTimeout(fallbackId);
+        fallbackId = null;
+      }
+      if (onTransitionEnd) {
+        root.removeEventListener("transitionend", onTransitionEnd);
+        onTransitionEnd = null;
+      }
+    };
+    const finish = () => {
+      if (finished) {
+        return;
+      }
+      finished = true;
+      cleanup();
+      if (root.isConnected) {
+        root.remove();
+      }
+      options.onDone?.();
+    };
+    if (!options.animated || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      finish();
+      return cleanup;
+    }
+    const height = root.offsetHeight;
+    const style = window.getComputedStyle(root);
+    root.style.height = `${height}px`;
+    root.style.overflow = "hidden";
+    root.style.willChange = "height, opacity, margin-bottom, padding-top, padding-bottom";
+    root.style.marginBottom = style.marginBottom;
+    root.style.paddingTop = style.paddingTop;
+    root.style.paddingBottom = style.paddingBottom;
+    root.getBoundingClientRect();
+    requestAnimationFrame(() => {
+      root.style.opacity = "0";
+      root.style.height = "0px";
+      root.style.marginBottom = "0px";
+      root.style.paddingTop = "0px";
+      root.style.paddingBottom = "0px";
+    });
+    onTransitionEnd = (event) => {
+      if (event.target !== root) return;
+      if (event.propertyName !== "height") return;
+      finish();
+    };
+    root.addEventListener("transitionend", onTransitionEnd);
+    const transitionTimeout = getTransitionTimeout(root);
+    if (transitionTimeout === 0) {
+      finish();
+    } else {
+      fallbackId = window.setTimeout(() => finish(), transitionTimeout + 50);
+    }
+    return cleanup;
+  }
   function timeout(callback, milliseconds, defaultMilliseconds = 500) {
     let timeoutId = void 0;
     clearTimeout(timeoutId);
@@ -204,7 +279,7 @@
           this.abortController.abort();
         }
         this.abortController = new AbortController();
-        this.loading?.classList.remove("opacity-0");
+        this.loading?.classList.remove("hidden");
         this.address.disabled = true;
         this.neighborhood.disabled = true;
         this.city.disabled = true;
@@ -230,7 +305,7 @@
           if (e.name === "AbortError") return;
           this.zipcode.focus();
         } finally {
-          this.loading?.classList.add("opacity-0");
+          this.loading?.classList.add("hidden");
           this.address.disabled = false;
           this.neighborhood.disabled = false;
           this.city.disabled = false;
@@ -243,32 +318,50 @@
     __proto__: null,
     addressForm
   }, Symbol.toStringTag, { value: "Module" }));
-  function alertComponent(timeout$1) {
+  function alertComponent(timeout$1, animation) {
     return {
       timeoutId: null,
+      cancelDismiss: null,
+      isDismissing: false,
       init() {
         bind(this.$el.querySelectorAll("[data-tallkit-alert-close]"), {
-          ["@click"]() {
-            this.dismiss();
-          }
+          ["@click"]: () => this.dismiss()
         });
         if (timeout$1) {
           this.timeoutId = timeout(() => this.dismiss(), timeout$1, 7e3);
         }
+        this.$el.addEventListener("alpine:destroy", () => this.cleanup());
+      },
+      cleanup() {
+        clearTimeout(this.timeoutId);
+        if (this.cancelDismiss) {
+          this.cancelDismiss();
+        }
+        this.timeoutId = null;
+        this.cancelDismiss = null;
+        this.isDismissing = false;
       },
       dismiss() {
+        if (this.isDismissing) {
+          return;
+        }
+        this.isDismissing = true;
         clearTimeout(this.timeoutId);
+        this.timeoutId = null;
         const root = this.$el.closest("[data-tallkit-alert]");
         if (!root) {
+          this.isDismissing = false;
           return;
         }
         root.classList.remove("opacity-100");
         root.classList.add("opacity-0");
-        root.addEventListener(
-          "transitionend",
-          () => root?.remove(),
-          { once: true }
-        );
+        this.cancelDismiss = collapseAndRemove(root, {
+          animated: animation,
+          onDone: () => {
+            this.cancelDismiss = null;
+            this.isDismissing = false;
+          }
+        });
       }
     };
   }
@@ -1992,7 +2085,7 @@
       _itemsVersion: 0,
       fuse: null,
       lastQuery: "",
-      minLength: options.minLength || 2,
+      minLength: options.minLength || 1,
       delay: options.delay || 300,
       debounceTimer: null,
       page: 1,
@@ -2041,7 +2134,8 @@
       },
       init() {
         _popover.init.call(this);
-        this.$items = this.$root.querySelector("[data-tallkit-autocomplete-items]");
+        this.input = this.$root.querySelector("[data-tallkit-control]");
+        this.items = this.$root.querySelector("[role=listbox]");
         this.setupARIA();
         this.bind();
         this.refreshItems();
@@ -2054,11 +2148,9 @@
         });
       },
       refreshItems() {
-        const nodes = Array.from(
-          this.$root.querySelectorAll("[data-tallkit-autocomplete-item-container]")
-        );
+        const nodes = Array.from(this.items.querySelectorAll("[role=option]"));
         this._items = nodes.map((el, index) => {
-          const button = el.querySelector("[data-tallkit-autocomplete-item]");
+          const button = el.querySelector("button");
           const content = el.querySelector("[data-tallkit-button-content]");
           return {
             el,
@@ -2100,6 +2192,10 @@
         const key = this.getCacheKey();
         if (this.useCache && this.cache.has(key)) {
           this.onItemsUpdated(this.cache.get(key), true);
+          return;
+        }
+        if (this._items.length > 0) {
+          this.search();
           return;
         }
         this.abortAllRequests();
@@ -2213,10 +2309,9 @@
       },
       updateWindow() {
         if (!this.useVirtualization || !this.itemHeight) return;
-        const list = this.$items;
-        if (!list) return;
-        const scrollTop = list.scrollTop;
-        const height = list.clientHeight;
+        if (!this.items) return;
+        const scrollTop = this.items.scrollTop;
+        const height = this.items.clientHeight;
         const start = Math.floor(scrollTop / this.itemHeight);
         const visible = Math.ceil(height / this.itemHeight);
         this.start = Math.max(0, start - this.overscan);
@@ -2224,8 +2319,7 @@
       },
       render() {
         if (!this.itemHeight) this.calculateItemHeight();
-        const list = this.$items;
-        if (!list) return;
+        if (!this.items) return;
         if (!this.useVirtualization) {
           this._filtered.forEach((item) => {
             if (!item.el) return;
@@ -2236,8 +2330,8 @@
           });
           return;
         }
-        list.style.position = "relative";
-        list.style.height = `${this.totalHeight}px`;
+        this.items.style.position = "relative";
+        this.items.style.height = `${this.totalHeight}px`;
         this._items.forEach((item) => {
           if (item.el) item.el.style.display = "none";
         });
@@ -2253,10 +2347,8 @@
         });
       },
       bind() {
-        const input = this.$root.querySelector("[data-tallkit-autocomplete]");
-        const list = this.$items;
         let ticking = false;
-        bind(input, {
+        bind(this.input, {
           ["@input"]: (e) => {
             this.query = e.target.value;
             this.triggerSearch();
@@ -2287,8 +2379,8 @@
           },
           ["@keydown.enter.prevent"]: () => this.select(this.current)
         });
-        if (list) {
-          bind(list, {
+        if (this.items) {
+          bind(this.items, {
             ["@click"]: (e) => {
               const itemEl = e.target.closest("[data-tallkit-autocomplete-item-container]");
               if (!itemEl) return;
@@ -2307,7 +2399,7 @@
                   this.updateWindow();
                   this.render();
                   if (this.usePagination) {
-                    const nearBottom = list.scrollTop + list.clientHeight >= list.scrollHeight - 100;
+                    const nearBottom = this.items.scrollTop + this.items.clientHeight >= this.items.scrollHeight - 100;
                     if (nearBottom) this.loadMore();
                   }
                   ticking = false;
@@ -2340,18 +2432,16 @@
       },
       pageDown() {
         if (!this._filtered.length) return;
-        const list = this.$items;
-        if (!list) return;
-        const visibleCount = Math.floor(list.clientHeight / this.itemHeight);
+        if (!this.items) return;
+        const visibleCount = Math.floor(this.items.clientHeight / this.itemHeight);
         let nextIndex = (this.current ?? 0) + visibleCount;
         if (nextIndex >= this._filtered.length) nextIndex = this._filtered.length - 1;
         this.setActive(nextIndex);
       },
       pageUp() {
         if (!this._filtered.length) return;
-        const list = this.$items;
-        if (!list) return;
-        const visibleCount = Math.floor(list.clientHeight / this.itemHeight);
+        if (!this.items) return;
+        const visibleCount = Math.floor(this.items.clientHeight / this.itemHeight);
         let prevIndex = (this.current ?? 0) - visibleCount;
         if (prevIndex < 0) prevIndex = 0;
         this.setActive(prevIndex);
@@ -2372,19 +2462,17 @@
         const id = `ac-${this.uid}-item-${item.index}`;
         item.el?.setAttribute("id", id);
         item.button?.setAttribute("data-active", "");
-        const input = this.$root.querySelector("[data-tallkit-autocomplete]");
-        input?.setAttribute("aria-activedescendant", id);
+        this.input?.setAttribute("aria-activedescendant", id);
       },
       ensureVisible() {
-        const list = this.$items;
-        if (!list) return;
+        if (!this.items) return;
         const top = this.current * this.itemHeight;
         const bottom = top + this.itemHeight;
-        const isAbove = top < list.scrollTop;
-        const isBelow = bottom > list.scrollTop + list.clientHeight;
+        const isAbove = top < this.items.scrollTop;
+        const isBelow = bottom > this.items.scrollTop + this.items.clientHeight;
         if (!isAbove && !isBelow) return;
-        list.scrollTo({
-          top: isAbove ? top : bottom - list.clientHeight,
+        this.items.scrollTo({
+          top: isAbove ? top : bottom - this.items.clientHeight,
           behavior: this.scrollBehavior
         });
       },
@@ -2392,11 +2480,10 @@
         if (index == null) return;
         const item = this._filtered[index];
         if (!item) return;
-        const input = this.$root.querySelector("[data-tallkit-autocomplete]");
         this.scrollBehavior = "smooth";
         this.selected = item.value;
         this.query = item.label;
-        input.value = item.label;
+        this.input.value = item.label;
         this.$dispatch("input", item.value);
         this.$dispatch("autocomplete-selected", item);
         this.close();
@@ -2427,22 +2514,17 @@
         _popover.close.call(this);
       },
       setupARIA() {
-        const input = this.$root.querySelector("[data-tallkit-autocomplete]");
-        const list = this.$items;
-        if (!input || !list) return;
-        list.setAttribute("id", `ac-${this.uid}-list`);
-        input.setAttribute("role", "combobox");
-        input.setAttribute("aria-autocomplete", "list");
-        input.setAttribute("aria-expanded", "false");
-        input.setAttribute("aria-controls", `ac-${this.uid}-list`);
-        input.setAttribute("aria-haspopup", "listbox");
-        input.setAttribute("aria-live", "polite");
-        list.setAttribute("role", "listbox");
+        this.items?.setAttribute("id", `ac-${this.uid}-list`);
+        this.items?.setAttribute("role", "listbox");
+        this.input?.setAttribute("role", "combobox");
+        this.input?.setAttribute("aria-autocomplete", "list");
+        this.input?.setAttribute("aria-expanded", "false");
+        this.input?.setAttribute("aria-controls", `ac-${this.uid}-list`);
+        this.input?.setAttribute("aria-haspopup", "listbox");
+        this.input?.setAttribute("aria-live", "polite");
       },
       updateARIA() {
-        const input = this.$root.querySelector("[data-tallkit-autocomplete]");
-        if (!input) return;
-        input.setAttribute("aria-expanded", this.state === "open" ? "true" : "false");
+        this.input?.setAttribute("aria-expanded", this.state === "open" ? "true" : "false");
       }
     };
   }
@@ -3296,7 +3378,7 @@
       value: "",
       get inputs() {
         return Array.from(
-          this.$root.querySelectorAll("[data-tallkit-otp-input]")
+          this.$root.querySelectorAll("input")
         );
       },
       get length() {

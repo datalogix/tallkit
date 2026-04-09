@@ -1,62 +1,108 @@
 @props([
+    ...TALLKit::fieldProps(),
     'ticks' => null,
-    'display-value' => null,
+    'displayValue' => null,
 ])
 @php
 
-$displayValue = ${'display-value'} ?? $attributes->pluck('displayValue');
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel] = TALLKit::resolveFieldContext($attributes, $label);
 
 @endphp
 <tk:field.wrapper
-    :$attributes
     :$name
-    :$id
-    :$label
+    :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :prefix="false"
+    :suffix="false"
 >
-    @if (! isset($labelAppend) && $displayValue !== false)
-        <x-slot:label-append>
+    @if (! isset($labelAppend) && $displayValue !== false && in_livewire() && isset(${$name}))
+        <x-slot:labelAppend>
             <span wire:text="{{ $name }}"></span>
-        </x-slot:label-append>
+        </x-slot:labelAppend>
     @endif
 
-    <tk:field.control
-        :$attributes
-        :$size
+    <div
+        wire:ignore
+        x-data="slider"
+        {{ TALLKit::attributesAfter($attributes, 'slider:')->classes('w-full block space-y-1.5') }}
     >
-        <div
-            wire:ignore
-            x-data="slider"
-            data-tallkit-control
-            {{ TALLKit::attributesAfter($attributes, 'slider:')->classes('w-full block space-y-1.5') }}
-        >
-            <input
-                type="range"
-                data-tallkit-control
-                data-tallkit-group-target
-                @isset ($name) name="{{ $name }}" @endisset
-                @isset ($id) id="{{ $id }}" @endisset
-                @if ($invalid) aria-invalid="true" data-invalid @endif
-                {{
-                    $attributes->whereDoesntStartWith([
+        <input
+            type="range"
+            @if ($name) name="{{ $name }}" @endif
+            @if ($id) id="{{ $id }}" @endif
+            @if ($invalid) aria-invalid="true" data-invalid @endif
+            @unless (in_livewire()) value="{{ $value }}" @endif
+            {{
+                $attributes
+                    ->dataKey('slider')
+                    ->dataKey('control')
+                    ->dataKey('group-target')
+                    ->merge(['wire:model' => $wireModel])
+                    ->whereDoesntStartWith([
                         'field:', 'label:', 'info:', 'badge:', 'description:',
                         'group:', 'prefix:', 'suffix:',
                         'help:', 'error:',
                         'control:', 'prepend:', 'icon:', 'append:', 'loading:', 'icon-trailing:', 'kbd:',
                         'slider:', 'ticks:', 'tick:',
-                    ])->classes(
+                    ])
+                    ->classes(
                         '
-                            [--range-active:rgb(0_0_0)]
+                            [--range-active:rgb(0_0_0_/_.8)]
                             dark:[--range-active:rgb(255_255_255)]
 
                             [--range-base:rgb(0_0_0_/_.1)]
                             dark:[--range-base:rgb(255_255_255_/_.1)]
 
                             relative
+                            flex-1
+                            peer
                             block
                             w-full
                             appearance-none
+                            [print-color-adjust:exact]
 
                             bg-[var(--range-base)]
+
+                            text-zinc-700
+                            disabled:text-zinc-500
+                            dark:text-zinc-300
+                            dark:disabled:text-zinc-400
+
+                            disabled:cursor-not-allowed
+                            disabled:resize-none
+
+                            border
+                            border-zinc-200
+                            dark:border-white/10
+
+                            disabled:border-zinc-100
+                            dark:disabled:border-white/5
+
+                            [&[data-invalid]:not(:focus-visible)]:border-red-500
+                            dark:[&[data-invalid]:not(:focus-visible)]:border-red-400
+
+                            disabled:[&[data-invalid]:not(:focus-visible)]:border-red-500
+                            dark:disabled:[&[data-invalid]:not(:focus-visible)]:border-red-400
+
+                            shadow-xs
+                            disabled:shadow-none
+                            [&[data-invalid]]:disabled:shadow-none
+
+                            shadow-xs
+                            disabled:shadow-none
+                            [&[data-invalid]]:disabled:shadow-none
+
+                            disabled:opacity-75
+                            dark:disabled:opacity-50
+
+                            focus-visible:outline-2
+                            focus-visible:outline-blue-700
+                            dark:focus-visible:outline-blue-300
+                            focus-visible:outline-offset-0
+
+                            focus-visible:ring-2
+                            focus-visible:ring-blue-700/20
+                            dark:focus-visible:ring-blue-300/20
+
                             before:absolute
                             before:inset-y-0
                             before:left-0
@@ -66,19 +112,7 @@ $displayValue = ${'display-value'} ?? $attributes->pluck('displayValue');
                             before:content-[\'\']
                             before:z-0
 
-                            text-zinc-700
-                            disabled:text-zinc-500
-
-                            dark:text-zinc-300
-                            dark:disabled:text-zinc-400
-
-                            disabled:opacity-25
-                            dark:disabled:opacity-50
-
-                            border
-                            border-transparent
-                            [&[data-invalid]]:border-red-500
-                            dark:[&[data-invalid]]:border-red-400
+                            disabled:before:opacity-0
 
                             [&::-webkit-slider-thumb]:relative
                             [&::-webkit-slider-thumb]:z-10
@@ -114,18 +148,19 @@ $displayValue = ${'display-value'} ?? $attributes->pluck('displayValue');
                             '3xl' => 'h-5 text-3xl rounded-xl before:rounded-xl [&::-webkit-slider-thumb]:size-6.5 [&::-moz-range-thumb]:size-6.5',
                         },
                     )
-                }}
-            />
+            }}
+        />
 
-            @if ($slot->hasActualContent() || $ticks)
-                <div {{ TALLKit::attributesAfter($attributes, 'ticks:')->classes('flex justify-between') }}>
-                    @foreach (collect($ticks) as $tick)
-                        <tk:slider.tick :attributes="TALLKit::attributesAfter($attributes, 'tick:')->merge($tick, false)" />
-                    @endforeach
+        @if ($slot->hasActualContent() || $ticks)
+            <div {{ TALLKit::attributesAfter($attributes, 'ticks:')->classes('flex justify-between') }}>
+                @foreach (collect($ticks) as $tick)
+                    <tk:slider.tick
+                        :attributes="TALLKit::attributesAfter($attributes, 'tick:')->merge(is_array($tick) ? $tick : ['label' => $tick], false)"
+                    />
+                @endforeach
 
-                    {{ $slot }}
-                </div>
-            @endif
-        </div>
-    </tk:field.control>
+                {{ $slot }}
+            </div>
+        @endif
+    </div>
 </tk:field.wrapper>

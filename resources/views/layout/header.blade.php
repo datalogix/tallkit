@@ -1,14 +1,9 @@
 @props([
     'appearance' => null,
     'menu' => null,
-    'user-menu' => null,
+    'userMenu' => null,
     'align' => null,
 ])
-@php
-
-$userMenu = ${'user-menu'} ?? $attributes->pluck('userMenu');
-
-@endphp
 <div
     {{
         $attributes

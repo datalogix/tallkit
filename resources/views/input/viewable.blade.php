@@ -8,7 +8,7 @@
     icon="eye"
     icon:class="hidden"
     icon::class="{ 'hidden': !viewed }"
-    icon-trailing="eye-off"
+    iconTrailing="eye-off"
     icon-trailing:class="hidden"
     icon-trailing::class="{ 'hidden': viewed }"
 >

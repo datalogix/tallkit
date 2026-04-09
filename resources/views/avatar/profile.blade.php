@@ -5,12 +5,11 @@
     'append' => null,
     'actions' => null,
     'image' => null,
-    'display-email' => true,
+    'displayEmail' => true,
 ])
 @php
 
-$displayEmail = ${'display-email'} ?? $attributes->pluck('displayEmail');
-[$user, $name, $email] = TALLKit::userAttributes($attributes);
+[$user, $name, $email] = TALLKit::resolveUserContext($attributes);
 $image ??= data_get($user, 'image');
 $description ??= data_get($user, 'description', $displayEmail ? $email : null);
 

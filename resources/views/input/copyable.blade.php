@@ -10,7 +10,7 @@
     icon="clipboard-multiple"
     icon:class="hidden"
     icon::class="{ 'hidden': copied }"
-    icon-trailing="clipboard-check-multiple"
+    iconTrailing="clipboard-check-multiple"
     icon-trailing:class="hidden"
     icon-trailing::class="{ 'hidden': !copied }"
 >

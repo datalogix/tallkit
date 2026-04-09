@@ -2,15 +2,9 @@
     'current' => null,
     'steps' => null,
     'size' => null,
-    'icon-completed' => null,
-    'icon-active' => null,
+    'iconCompleted' => null,
+    'iconActive' => null,
 ])
-@php
-
-$iconCompleted = ${'icon-completed'} ?? $attributes->pluck('iconCompleted');
-$iconActive = ${'icon-active'} ?? $attributes->pluck('iconActive');
-
-@endphp
 <div {{
     $attributes
         ->whereDoesntStartWith(['step:', 'line:'])
@@ -21,7 +15,7 @@ $iconActive = ${'icon-active'} ?? $attributes->pluck('iconActive');
             <tk:stepper.step
                 :attributes="TALLKit::attributesAfter($attributes, 'step:')->merge(is_array($step) ? $step : ['label' => $step], false)"
                 :index="$index + 1"
-                :status="$current === $index + 1 ? 'active' : ($current > $index + 1 ? 'completed' : 'pending')"
+                :status="$current == $index + 1 ? 'active' : ($current > $index + 1 ? 'completed' : 'pending')"
                 :$iconCompleted
                 :$iconActive
                 :$size
