@@ -3,8 +3,11 @@
     'align' => null,
     'checked' => null,
     'variant' => null,
+    'indeterminate' => null,
     'iconOn' => null,
     'iconOff' => null,
+    'iconIndeterminate' => null,
+    'group' => null,
 ])
 @php
 
@@ -39,7 +42,10 @@ $checked ??= in_array($value, Arr::wrap($checked));
             {{
                 $attributes
                     ->dataKey('checkbox')
-                    ->merge(['wire:model' => $wireModel])
+                    ->merge([
+                        'wire:model' => $wireModel,
+                        'data-checkbox-group' => $group,
+                    ])
                     ->whereDoesntStartWith([
                         'field:', 'label:', 'info:', 'badge:', 'description:',
                         'group:', 'prefix:', 'suffix:',
@@ -150,8 +156,15 @@ $checked ??= in_array($value, Arr::wrap($checked));
 
                             [&_.checked]:hidden
                             [&_.unchecked]:block
+                            [&_.indeterminate]:hidden
+
                             peer-checked:[&_.checked]:block
                             peer-checked:[&_.unchecked]:hidden
+                            peer-checked:[&_.indeterminate]:hidden
+
+                            peer-indeterminate:[&_.checked]:hidden
+                            peer-indeterminate:[&_.unchecked]:hidden
+                            peer-indeterminate:[&_.indeterminate]:block
                         ',
                     )
             }}
@@ -188,6 +201,13 @@ $checked ??= in_array($value, Arr::wrap($checked));
                 <tk:icon
                     :name="$iconOff"
                     :attributes="TALLKit::attributesAfter($attributes, 'icon-off:')->classes('size-full m-px unchecked')"
+                />
+            @endif
+
+            @if ($indeterminate)
+                <tk:icon
+                    :name="$iconIndeterminate ?? 'minus'"
+                    :attributes="TALLKit::attributesAfter($attributes, 'icon-indeterminate:')->classes('size-full m-px indeterminate')"
                 />
             @endif
         </div>

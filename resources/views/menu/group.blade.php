@@ -1,3 +1,4 @@
+@aware(['size'])
 @props([
     'heading' => null,
     'size' => null,
@@ -22,8 +23,8 @@
     }}
 >
     <tk:menu.separator
-        :attributes="TALLKit::attributesAfter($attributes, 'separator-top:')"
-        {{ 'container:'.TALLKit::dataKey('menu-group-separator-top-container') }}
+        :attributes="TALLKit::attributesAfter($attributes, 'separator-top:')
+            ->merge(['container:'.TALLKit::dataKey('menu-group-separator-top-container') => ''])"
     />
 
     @if ($heading)
@@ -38,7 +39,7 @@
     {{ $slot }}
 
     <tk:menu.separator
-        :attributes="TALLKit::attributesAfter($attributes, 'separator-bottom:')"
-        {{ 'container:'.TALLKit::dataKey('menu-group-separator-bottom-container') }}
+        :attributes="TALLKit::attributesAfter($attributes, 'separator-bottom:')
+            ->merge(['container:'.TALLKit::dataKey('menu-group-separator-bottom-container') => ''])"
     />
 </div>

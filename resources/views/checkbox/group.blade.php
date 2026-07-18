@@ -5,6 +5,7 @@
     'label' => null,
     'iconOn' => null,
     'iconOff' => null,
+    'group' => null,
 ])
 @php
 
@@ -15,6 +16,7 @@ $options = TALLKit::parseOptions($attributes);
 @if ($slot->isNotEmpty() || filled($options))
     <tk:fieldset
         :$label
+        :$size
         :attributes="$attributes->whereDoesntStartWith(['heading:', 'checkbox:', 'error:'])
             ->classes('[&_[data-tallkit-heading]]:mb-2 [&>[data-tallkit-heading]:not(:first-of-type)]:pt-2')
         "
@@ -26,7 +28,7 @@ $options = TALLKit::parseOptions($attributes);
                 <tk:heading
                     :attributes="TALLKit::attributesAfter($attributes, 'heading:')"
                     :label="$optionItemValue"
-                    :size="TALLKit::adjustSize(move: -2)"
+                    :size="TALLKit::adjustSize(size: $size)"
                 />
 
                 @foreach ($optionItemLabel as $optionItemGroupValue => $optionItemGroupLabel)
@@ -41,6 +43,7 @@ $options = TALLKit::parseOptions($attributes);
                         :$align
                         :$iconOn
                         :$iconOff
+                        :$group
                     />
                 @endforeach
             @else
@@ -55,6 +58,7 @@ $options = TALLKit::parseOptions($attributes);
                     :$align
                     :$iconOn
                     :$iconOff
+                    :$group
                 />
             @endif
         @endforeach

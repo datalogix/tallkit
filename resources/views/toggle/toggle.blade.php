@@ -69,15 +69,8 @@ $checked ??= in_array($value, Arr::wrap($checked));
                         has-[input:focus-visible]:ring-blue-700/20
                         dark:has-[input:focus-visible]:ring-blue-300/20
                     ',
-                    match ($size) {
-                        'xs' => 'w-8 h-5',
-                        'sm' => 'w-10 h-6',
-                        default => 'w-12 h-7',
-                        'lg' => 'w-13 h-7.5',
-                        'xl' => 'w-15 h-8.5',
-                        '2xl' => 'w-16 h-9',
-                        '3xl' => 'w-18 h-10',
-                    },
+                    TALLKit::generateClassBySize(size: $size, name: 'w', values: ['8', '9', '10', '12', '14', '16', '18']),
+                    TALLKit::generateClassBySize(size: $size, name: 'h', values: ['5', '6', '7', '8', '9', '10', '12']),
                     TALLKit::iconSize(size: $size),
                     match ($variant) {
                         'accent' => '
@@ -167,15 +160,7 @@ $checked ??= in_array($value, Arr::wrap($checked));
 
                             [:where(&)]:text-zinc-800
                         ',
-                        match ($size) {
-                            'xs' => 'size-4',
-                            'sm' => 'size-4.5',
-                            default => 'size-5',
-                            'lg' => 'size-5.5',
-                            'xl' => 'size-6',
-                            '2xl' => 'size-6.5',
-                            '3xl' => 'size-7',
-                        },
+                        TALLKit::generateClassBySize(size: $size, name: 'size', values: ['3', '4', '5', '6', '7', '8', '10']),
                     )
             }}
         >

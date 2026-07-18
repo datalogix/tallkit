@@ -5,6 +5,7 @@
     aria-live="polite"
     label="No records found"
     variant="subtle"
+    role="status"
 >
     {{ $slot }}
 </tk:text>

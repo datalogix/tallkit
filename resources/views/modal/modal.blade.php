@@ -37,7 +37,7 @@ $closable ??= $variant === 'bare' ? false : true;
 @endisset
 <dialog
     wire:ignore.self
-    x-data="modal(@js($name), @js($dismissible), @js($persist), @js($shortcut))"
+    x-data="modal({ name: @js($name), dismissible: @js($dismissible), persist: @js($persist), shortcut: @js($shortcut) })"
     {{
         $attributes->whereDoesntStartWith([
             'trigger:', 'close:', 'section:',
@@ -161,8 +161,10 @@ $closable ??= $variant === 'bare' ? false : true;
                 {{ $close }}
             @elseif ($closable !== false)
                 <tk:modal.close
-                    :attributes="TALLKit::attributesAfter($attributes, 'close:')->classes('absolute top-0 end-0 mt-4 me-4')"
-                    :size="TALLKit::adjustSize(size: $size)"
+                    :attributes="TALLKit::attributesAfter($attributes, 'close:')
+                        ->classes('absolute top-0 end-0 mt-4 me-4')
+                        ->merge(['size' => TALLKit::adjustSize(size: $size)])
+                    "
                     variant="ghost"
                     icon="close"
                     aria-label="Close modal"

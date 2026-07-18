@@ -4,11 +4,10 @@
     'focusOnOpen' => null,
     'closeOnSelect' => null,
 ])
-
 <tk:modal
     :attributes="TALLKit::attributesAfter($attributes, 'modal:')
         ->classes('fixed mt-20 mx-auto')
-        ->merge($focusOnOpen !== false ? ['x-on:opened' => '$el.querySelector(\'[data-tallkit-command-input]\')?.focus()'] : [])
+        ->merge($focusOnOpen !== false ? ['x-on:opened' => '$el.querySelector(\'[data-tallkit-input]\')?.focus()'] : [])
     "
     variant="bare"
     :$size
@@ -30,7 +29,8 @@
 
     <tk:command
         :attributes="$attributes->whereDoesntStartWith(['trigger:', 'modal:'])
-            ->merge($closeOnSelect !== false ? ['x-on:command-item-selected' => 'close'] : [])
+            ->classes('[:where(&)]:w-md')
+            ->merge($closeOnSelect !== false ? ['x-on:listbox-item-selected' => 'close'] : [])
         "
         :$size
     >

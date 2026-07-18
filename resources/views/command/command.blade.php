@@ -1,51 +1,30 @@
 @props([
-    'items' => null,
     'size' => null,
-    'searchable' => null,
-    'noRecords' => null,
 ])
-
-<div
-    x-data="command"
-    {{
-        $attributes->whereDoesntStartWith(['input:', 'items:',' no-records:'])
-            ->classes(
-                '
-                    bg-white dark:bg-zinc-700
-                    [:where(&)]:w-md block overflow-hidden shadow-xs
-                    border border-zinc-200 dark:border-zinc-600
-                ',
-                TALLKit::roundedSize(size: $size, mode: 'large')
-            )
-    }}
+<tk:listbox
+    :attributes="$attributes->classes(
+        '
+            [:where(&)]:bg-white [:where(&)]:dark:bg-zinc-700
+            [:where(&)]:border [:where(&)]:border-zinc-200 [:where(&)]:dark:border-zinc-600
+            [:where(&)]:overflow-hidden [:where(&)]:shadow-xs
+        ',
+        TALLKit::roundedSize(size: $size, mode: 'large')
+    )"
+    :$size
+    input:class="border-0 py-1 outline-none ring-0! rounded-none"
+    :items:class="TALLKit::paddingInline(size: $size, mode: 'smallest')"
 >
-    @isset ($input)
-        {{ $input }}
-    @elseif ($searchable !== false && Str::of($slot)->doesntContain('data-tallkit-command-input'))
-        <tk:command.input
-            :attributes="TALLKit::attributesAfter($attributes, 'input:')"
-            :$size
-        />
-    @endisset
+    {{ $slot }}
 
-    @if (Str::of($slot)->contains('data-tallkit-command-items'))
-        {{ $slot }}
-    @else
-        <tk:command.items
-            :attributes="TALLKit::attributesAfter($attributes, 'items:')"
-            :$items
-            :$size
-        >
-            {{ $slot }}
-        </tk:command.items>
-    @endif
+    @isset ($input)
+        <x-slot:input>
+            {{ $input }}
+        </x-slot:input>
+    @endisset
 
     @isset ($empty)
-        {{ $empty }}
-    @elseif ($noRecords !== false && Str::of($slot)->doesntContain('data-tallkit-command-no-records'))
-        <tk:command.no-records
-            :attributes="TALLKit::attributesAfter($attributes, 'no-records:')"
-            :$size
-        />
+        <x-slot:empty>
+            {{ $empty }}
+        </x-slot:empty>
     @endisset
-</div>
+</tk:listbox>

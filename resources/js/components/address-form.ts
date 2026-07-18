@@ -1,103 +1,141 @@
-import { bind } from '../utils'
+import { bind, fetchWithRetry, debounce, setFieldValue, cache } from '../utils'
 
-export function addressForm() {
+export function addressForm(options = {}) {
+  const _cache = cache('zipcode', options)
+
   return {
-    get loading() {
-      return this.$root.querySelector('[data-tallkit-loading]')
-    },
-
-    get zipcode () {
-      return this.$root.querySelector('[data-tallkit-address-form-zipcode]')
-    },
-
-    get address() {
-      return this.$root.querySelector('[data-tallkit-address-form-address]')
-    },
-
-    get number() {
-      return this.$root.querySelector('[data-tallkit-address-form-number]')
-    },
-
-    get complement() {
-      return this.$root.querySelector('[data-tallkit-address-form-complement]')
-    },
-
-    get neighborhood() {
-      return this.$root.querySelector('[data-tallkit-address-form-neighborhood]')
-    },
-
-    get city() {
-      return this.$root.querySelector('[data-tallkit-address-form-city]')
-    },
-
-    get state() {
-      return this.$root.querySelector('[data-tallkit-address-form-state]')
-    },
-
     abortController: null,
 
     init() {
-      const that = this
+      this.$els = {
+        loading: this.$root.querySelector('[data-tallkit-loading]'),
+        zipcode: this.$root.querySelector('[data-tallkit-address-form-zipcode]'),
+        address: this.$root.querySelector('[data-tallkit-address-form-address]'),
+        number: this.$root.querySelector('[data-tallkit-address-form-number]'),
+        complement: this.$root.querySelector('[data-tallkit-address-form-complement]'),
+        neighborhood: this.$root.querySelector('[data-tallkit-address-form-neighborhood]'),
+        city: this.$root.querySelector('[data-tallkit-address-form-city]'),
+        state: this.$root.querySelector('[data-tallkit-address-form-state]'),
+      }
 
-      bind(this.zipcode, {
+      const debouncedSearch = debounce(this.search.bind(this))
+
+      bind(this.$els.zipcode, {
         ['@keyup']() {
-          this.search.bind(that)(this.$el.value)
+          debouncedSearch(this.$el.value)
         }
       })
     },
 
+    setLoading(state) {
+      this.$els.loading?.classList.toggle('hidden', !state)
+
+      ;['address', 'neighborhood', 'city', 'state']
+        .map(k => this.$els[k])
+        .filter(Boolean)
+        .forEach(el => el.disabled = state)
+    },
+
+    resolveState(data) {
+      const el = this.$els.state
+      if (!el) return ''
+
+      const isInput = el.tagName.toLowerCase() === 'input'
+      const hasOption = el.querySelector(`option[value="${data.estado}"]`)
+
+      return (isInput || hasOption) ? data.estado : data.uf
+    },
+
+    normalizeZipcode(value) {
+      return value.replace(/\D/g, '')
+    },
+
+    async viaCep(zipcode, signal) {
+      const res = await fetch(`https://viacep.com.br/ws/${zipcode}/json/`, { signal })
+      const data = await res.json()
+
+      if (data.erro) throw new Error('ViaCEP not found')
+
+      return data
+    },
+
+    async brasilApi(zipcode, signal) {
+      const res = await fetch(`https://brasilapi.com.br/api/cep/v1/${zipcode}`, { signal })
+      if (!res.ok) throw new Error('BrasilAPI error')
+
+      const data = await res.json()
+
+      return {
+        logradouro: data.street,
+        bairro: data.neighborhood,
+        localidade: data.city,
+        uf: data.state
+      }
+    },
+
+    async resolveAddress(zipcode, signal) {
+      const providers = [
+        this.viaCep.bind(this),
+        this.brasilApi.bind(this)
+      ]
+
+      for (const provider of providers) {
+        try {
+          return await fetchWithRetry(() => provider(zipcode, signal))
+        } catch (e) {
+          if (e.name === 'AbortError') throw e
+        }
+      }
+
+      throw new Error('All providers failed')
+    },
+
+    fill(data) {
+      setFieldValue(this.$els.address, data.logradouro)
+      setFieldValue(this.$els.neighborhood, data.bairro)
+      setFieldValue(this.$els.city, data.localidade)
+      setFieldValue(this.$els.state, this.resolveState(data))
+
+      this.$els.number?.focus()
+    },
+
     async search(value) {
-      value = value.replace(/\D/g, '')
+      const zipcode = this.normalizeZipcode(value)
+      this.abortController?.abort()
 
-      if (value.length < 8) {
-        return
-      }
-
-      if (this.abortController) {
-        this.abortController.abort()
-      }
+      if (zipcode.length < 8) return
 
       this.abortController = new AbortController()
 
-      this.loading?.classList.remove('hidden')
-      this.address.disabled = true
-      this.neighborhood.disabled = true
-      this.city.disabled = true
-      this.state.disabled = true
+      const { signal } = this.abortController
+
+      const cached = _cache.get(zipcode)
+      if (cached) {
+        this.setLoading(true)
+        await new Promise(r => setTimeout(r, 120))
+        this.fill(cached)
+        this.$dispatch('loaded', { zipcode, data: cached, cached: true })
+        this.setLoading(false)
+        return
+      }
+
+      this.setLoading(true)
+      this.$dispatch('loading', { zipcode })
 
       try {
-        const res = await fetch(`https://viacep.com.br/ws/${value}/json/`, { signal: this.abortController.signal })
-        const data = await res.json()
+        const data = await this.resolveAddress(zipcode, signal)
 
-        if (data.erro) throw new Error('Not found')
+        _cache.set(zipcode, data)
+        this.fill(data)
 
-        this.address.value = data.logradouro
-        this.address.dispatchEvent(new Event('input', { bubbles: true }))
-        this.address.dispatchEvent(new Event('change', { bubbles: true }))
-
-        this.neighborhood.value = data.bairro
-        this.neighborhood.dispatchEvent(new Event('input', { bubbles: true }))
-        this.neighborhood.dispatchEvent(new Event('change', { bubbles: true }))
-
-        this.city.value = data.localidade
-        this.city.dispatchEvent(new Event('input', { bubbles: true }))
-        this.city.dispatchEvent(new Event('change', { bubbles: true }))
-
-        this.state.value = this.state.tagName.toLowerCase() === 'input' || this.state.querySelector(`option[value="${data.estado}"]`) ? data.estado : data.uf
-        this.state.dispatchEvent(new Event('input', { bubbles: true }))
-        this.state.dispatchEvent(new Event('change', { bubbles: true }))
-
-        this.number.focus()
+        this.$dispatch('loaded', { zipcode, data, cached: false })
       } catch (e) {
         if (e.name === 'AbortError') return
 
-        this.zipcode.focus()
+        this.$dispatch('error', { zipcode, error: e })
+        this.$els.zipcode?.focus()
       } finally {
-        this.loading?.classList.add('hidden')
-        this.address.disabled = false
-        this.neighborhood.disabled = false
-        this.city.disabled = false
-        this.state.disabled = false
+        this.setLoading(false)
       }
     }
   }

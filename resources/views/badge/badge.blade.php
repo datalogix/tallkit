@@ -15,6 +15,7 @@
         ->classes(
             '
                 transition
+                duration-300
                 font-medium
                 whitespace-nowrap
                 [print-color-adjust:exact]
@@ -23,7 +24,7 @@
             TALLKit::roundedSize(size: $rounded ? 'full' : $size),
             TALLKit::iconSize(size: $size),
             TALLKit::gap(size: $size),
-            TALLKit::paddingInline(size: $size, mode: $rounded ? 'small' : 'smallest'),
+            TALLKit::paddingInline(size: $size, mode: 'small'),
             TALLKit::paddingBlock(size: $size, mode: 'smallest'),
             TALLKit::borderStyle(style: $border),
         )

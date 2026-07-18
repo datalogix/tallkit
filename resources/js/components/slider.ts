@@ -2,11 +2,10 @@ import { bind, getWireModelInfo } from '../utils'
 
 export function slider() {
   return {
-    get input () {
-      return this.$root.querySelector('[data-tallkit-control]')
-    },
+    input: null,
 
     init() {
+      this.input = this.$root.querySelector('[data-tallkit-control]')
       this.$nextTick(() => this.updateRange())
 
       if (this.$wire) {
@@ -41,7 +40,15 @@ export function slider() {
           })
 
           if (closestTick) {
-            this.setValue(closestTick.getAttribute('value'))
+            let value = parseInt(closestTick.getAttribute('data-value'))
+
+            if (isNaN(value)) {
+              value = parseInt(closestTick.textContent.trim())
+            }
+
+            if (! isNaN(value)) {
+              this.setValue(value)
+            }
           }
         }
       })
@@ -61,6 +68,7 @@ export function slider() {
       const p = ((val - min) * 100) / (max - min)
 
       this.input.style.setProperty('--range-percent', `${p}%`)
+      this.input.classList.toggle('before:rounded-r-none', p < 50)
     }
   }
 }

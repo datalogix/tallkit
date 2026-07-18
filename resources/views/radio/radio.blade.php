@@ -156,15 +156,7 @@ $checked ??= in_array($value, Arr::wrap($checked));
                 {{
                     TALLKit::attributesAfter($attributes, 'icon:')->classes(
                         'rounded-full',
-                        match ($size) {
-                            'xs' => 'size-1.5',
-                            'sm' => 'size-2',
-                            default => 'size-2.5',
-                            'lg' => 'size-3',
-                            'xl' => 'size-3.5',
-                            '2xl' => 'size-4',
-                            '3xl' => 'size-4.5',
-                        },
+                        TALLKit::widthHeight(size: $size, mode: 'smallest'),
                         match ($variant) {
                             'accent' => 'bg-[var(--color-accent-foreground)]',
                             default => 'bg-white dark:bg-zinc-700',

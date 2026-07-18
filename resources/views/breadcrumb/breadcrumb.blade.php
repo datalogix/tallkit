@@ -9,7 +9,7 @@
     @else
         <nav {{ $attributes->whereDoesntStartWith(['item:'])->classes(
             'flex',
-            TALLKit::fontSize(size: $size, mode: $mode, weight: true),
+            TALLKit::fontSize(size: $size, mode: $mode),
         ) }}>
             @foreach (collect($items) as $item)
                 <tk:breadcrumb.item

@@ -12,6 +12,7 @@ $options = TALLKit::parseOptions($attributes);
 @endphp
 @if ($slot->isNotEmpty() || filled($options))
     <tk:fieldset
+        :$label
         :attributes="$attributes->whereDoesntStartWith(['heading:', 'radio:', 'error:'])
             ->classes('[&_[data-tallkit-heading]]:mb-2 [&>[data-tallkit-heading]:not(:first-of-type)]:pt-2')
         "
@@ -21,9 +22,10 @@ $options = TALLKit::parseOptions($attributes);
         @foreach ($options as $optionItemValue => $optionItemLabel)
             @if (is_array($optionItemLabel))
                 <tk:heading
-                    :attributes="TALLKit::attributesAfter($attributes, 'heading:')"
+                    :attributes="TALLKit::attributesAfter($attributes, 'heading:')
+                        ->merge(['size' => TALLKit::adjustSize(size: $size)])
+                    "
                     :label="$optionItemValue"
-                    :size="TALLKit::adjustSize(move: -2)"
                 />
 
                 @foreach ($optionItemLabel as $optionItemGroupValue => $optionItemGroupLabel)

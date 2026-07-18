@@ -1,5 +1,6 @@
 <tk:button
     wire:replace.self
+    x-cloak
     x-data="inputCopyable"
     :$attributes
     :variant="$attributes->pluck('variant', 'none')"

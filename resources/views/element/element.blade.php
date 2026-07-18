@@ -46,7 +46,7 @@ $external ??= $attributes->get('target') === '_blank';
         ->merge([TALLKit::dataKey($name . '-has-icon') => !!$icon && $name])
         ->whereDoesntStartWith(['tooltip:', 'icon-wrapper:', 'icon:', 'icon-dot:', 'content:', 'prefix:', 'suffix:', 'icon-trailing:', 'info:', 'badge:', 'kbd:'])
         ->when($current, fn ($attrs, $value) => $attrs->merge(['data-current' => $value]))
-        ->when($as !== 'p' || $icon, fn ($attrs) => $attrs->classes('inline-flex items-center [:where(&)]:gap-1.5'))
+        ->when($as !== 'p' || $icon, fn ($attrs) => $attrs->classes('inline-flex items-center [:where(&)]:gap-2'))
         ->when($as === 'a', fn ($attrs) => $attrs->merge([
             'target' => $external === true ? '_blank' : $external,
             'wire:navigate' => !$external && $navigate !== false,

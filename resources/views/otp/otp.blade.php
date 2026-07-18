@@ -1,7 +1,7 @@
 @props([
     ...TALLKit::fieldProps(),
     ...TALLKit::fieldControlProps(),
-    'length' => null,
+    'format' => null,
     'private' => null,
     'mode' => null,
     'submit' => null,
@@ -9,6 +9,8 @@
 @php
 
 [$name, $fieldName, $label, $placeholder, $invalid, $wireModel] = TALLKit::resolveFieldContext($attributes, $label);
+$format ??= '999999';
+$groups = explode('-', $format);
 
 @endphp
 <tk:field.wrapper
@@ -16,38 +18,54 @@
     :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
 >
     <div
-        wire:ignore
         x-data="otp(@js($submit))"
         x-modelable="value"
         role="group"
+        {{ $attributes->whereStartsWith('wire:')->merge(['wire:model' => $wireModel]) }}
     >
         <tk:field.control
             :$size
             :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
                 ->classes(
-                    '
-                        w-fit
-                        flex items-center
-                        isolate
-                    ',
-                    match ($size) {
-                        'xs' => 'gap-1',
-                        'sm' => 'gap-1.5',
-                        default => 'gap-2',
-                        'lg' => 'gap-2.5',
-                        'xl' => 'gap-3',
-                        '2xl' => 'gap-3.5',
-                        '3xl' => 'gap-4',
-                    }
+                    'w-fit flex items-center isolate',
+                    TALLKit::gap(size: $size),
                 )
             "
         >
-            @if ($slot->isEmpty() && ($length ?? 6))
-                @for ($i = 0; $i < ($length ?? 6); $i++)
-                    <tk:otp.input :$attributes />
-                @endfor
-            @else
+            @if ($slot->isNotEmpty())
                 {{ $slot }}
+            @elseif (count($groups) > 1)
+                @foreach ($groups as $group)
+                    <tk:otp.group>
+                        @for ($i = 0; $i < strlen($group); $i++)
+                            <tk:otp.input
+                                :attributes="$attributes->whereDoesntStartWith('wire:')"
+                                :$invalid
+                                :mode="match (strtoupper($group[$i])) {
+                                    'A' => 'alpha',
+                                    '9' => 'numeric',
+                                    default => 'alphanumeric',
+                                }"
+                            />
+                        @endfor
+                    </tk:otp.group>
+
+                    @if (! $loop->last)
+                        <tk:otp.separator />
+                    @endif
+                @endforeach
+            @else
+                @for ($i = 0; $i < strlen($format); $i++)
+                    <tk:otp.input
+                        :attributes="$attributes->whereDoesntStartWith('wire:')"
+                        :$invalid
+                        :mode="match (strtoupper($format[$i])) {
+                            'A' => 'alpha',
+                            '9' => 'numeric',
+                            default => 'alphanumeric',
+                        }"
+                    />
+                @endfor
             @endif
         </tk:field.control>
     </div>

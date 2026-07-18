@@ -4,30 +4,30 @@ export function inputViewable() {
   return {
     viewed: false,
 
-    get input () {
-      return this.$el.closest('[data-tallkit-field-control]')?.querySelector('input')
-    },
-
     init() {
-      if (!this.input) {
+      const input = this.$el
+        ?.closest('[data-tallkit-field-control]')
+        ?.querySelector('[data-tallkit-input]')
+
+      if (!input) {
         return
       }
 
-      this.input.setAttribute('type', this.viewed ? 'text' : 'password')
+      input.setAttribute('type', this.viewed ? 'text' : 'password')
 
       bind(this.$el, {
         ['@click']() {
           this.viewed = !this.viewed
-          this.input.setAttribute('type', this.viewed ? 'text' : 'password')
-          this.input.dispatchEvent(new Event('viewed', { bubbles: false }))
+          input.setAttribute('type', this.viewed ? 'text' : 'password')
+          input.dispatchEvent(new Event('viewed', { bubbles: false }))
         }
       })
 
       const inputObserver = new MutationObserver(() => {
-        this.viewed = this.input?.getAttribute('type') !== 'password'
+        this.viewed = input?.getAttribute('type') !== 'password'
       })
 
-      inputObserver.observe(this.input, {
+      inputObserver.observe(input, {
         attributes: true,
         attributeFilter: ['type']
       })

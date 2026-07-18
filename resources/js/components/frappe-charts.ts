@@ -6,7 +6,7 @@ export function frappeCharts() {
 
     chart: null,
 
-    async init() {
+    init() {
       this.load(async () => {
         if (!window.frappe?.Chart) {
           await this.$tallkit.loadScript('https://cdn.jsdelivr.net/npm/frappe-charts@1')
@@ -14,8 +14,12 @@ export function frappeCharts() {
       })
     },
 
+    getDataOptions() {
+      return window.Alpine.evaluate(this.$el, this.$el.getAttribute('data-options') || '{}')
+    },
+
     render(options = {}) {
-      this.chart ??= new window.frappe.Chart(this.$el, options)
+      this.chart ??= new window.frappe.Chart(this.$el, { ...options, ...this.getDataOptions() })
       this.$dispatch('rendered', { chart: this.chart })
     }
   }

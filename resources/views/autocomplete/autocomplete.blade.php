@@ -5,8 +5,8 @@
 ])
 <div
     wire:ignore.self
-    x-data="autocomplete(@js($options ?? []))"
-    {{ TALLKit::attributesAfter($attributes, 'container:')->classes('[:where(&)]:w-full') }}
+    x-data="autocomplete(@js($options))"
+    {{ TALLKit::attributesAfter($attributes, 'container:')->classes('[:where(&)]:w-full relative') }}
 >
     <tk:input
         :attributes="$attributes->whereDoesntStartWith(['container:', 'popover:', 'items:'])"
@@ -15,15 +15,15 @@
     />
 
     <tk:popover
-        :attributes="TALLKit::attributesAfter($attributes, 'popover:')->classes('p-0')"
+        :attributes="TALLKit::attributesAfter($attributes, 'popover:')"
         :$size
     >
-        <tk:autocomplete.items
+        <tk:listbox.items
             :attributes="TALLKit::attributesAfter($attributes, 'items:')"
             :$items
             :$size
         >
-            {{ $slot }}
-        </tk:autocomplete.items>
+            {{ $slot}}
+        </tk:listbox.items>
     </tk:popover>
 </div>

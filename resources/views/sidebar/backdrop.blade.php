@@ -9,6 +9,6 @@
             z-15 fixed inset-0 bg-black/50 hidden
             [&:has(+[data-show-stashed-sidebar])]:block
             lg:[&:has(+[data-show-stashed-sidebar])]:hidden
-        ')->merge(['data-tallkit-sidebar-backdrop' => $name])
+        ')->merge([TALLKit::dataKey('sidebar-backdrop') => $name])
     }}
 ></div>

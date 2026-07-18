@@ -10,14 +10,19 @@
 ])
 <div
     x-data="disclosure"
-    {{ $attributes->dataKey('disclosure-item')->whereDoesntStartWith(['heading:', 'content:'])->classes('group/disclosure') }}
-    @if ($expanded) data-open @endif
+    {{
+        $attributes
+            ->dataKey('disclosure-item')
+            ->whereDoesntStartWith(['heading:', 'content:'])
+            ->classes('group/disclosure')
+            ->merge(['data-open' => $expanded])
+    }}
 >
     <tk:button
         :attributes="TALLKit::attributesAfter($attributes, 'heading:')->classes(
             TALLKit::paddingInline(size: $border ? $size : 'none', mode: 'largest'),
             TALLKit::paddingBlock(size: $size, mode: 'largest'),
-            'w-full',
+            'w-full [&_[data-tallkit-icon]]:ml-auto',
         )"
         :$size
         :$disabled
@@ -30,18 +35,26 @@
         icon-trailing::class="{ 'transition': {{ $collapse !== false ? 'true' : 'false' }}, 'rotate-180': opened }"
     />
 
-    <div {{
-        TALLKit::attributesAfter($attributes, 'content:')
-            ->classes(
-                TALLKit::fontSize(size: $size),
-                TALLKit::paddingInline(size: $border ? $size : 'none', mode: 'largest'),
-                TALLKit::paddingBlock(size: $size, mode: 'largest'),
-                'pt-0!',
-            )
-            ->merge(['x-show' => 'opened'])
-            ->merge($collapse === false ? [] : ['x-collapse' => ''])
-            ->merge(is_string($collapse) ? ['x-collapse.'.$collapse => ''] : [])
-    }}>
+    <div
+        x-cloak
+        {{
+            TALLKit::attributesAfter($attributes, 'content:')
+                ->classes(
+                    TALLKit::fontSize(size: $size),
+                    TALLKit::paddingInline(size: $border ? $size : 'none', mode: 'largest'),
+                    TALLKit::paddingBlock(size: $size, mode: 'largest'),
+                    'pt-0!',
+                )
+                ->merge(['x-show' => 'opened'])
+                ->merge(
+                    match (true) {
+                        $collapse === false => [],
+                        is_string($collapse) => ['x-collapse.'.$collapse => ''],
+                        default => ['x-collapse' => ''],
+                    }
+                )
+        }}
+    >
         {{ $slot }}
     </div>
 </div>

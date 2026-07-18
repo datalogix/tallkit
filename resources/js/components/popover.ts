@@ -1,21 +1,17 @@
 import { bind } from '../utils'
 import { toggleable } from './toggleable'
 
-export function popover ({ mode, position, align }) {
+export function popover ({ mode = 'hover', position = 'bottom', align = 'end' } = {}) {
   const _toggleable = toggleable()
-  let _rAF: number | null = null
 
-  const component = {
+  return {
     ..._toggleable,
 
+    _rAF: null,
     trigger: null,
     popoverElement: null,
     mouseX: 0,
     mouseY: 0,
-
-    get isTouch () {
-      return window.matchMedia('(hover: none)').matches
-    },
 
     init() {
       _toggleable.init.call(this)
@@ -47,12 +43,15 @@ export function popover ({ mode, position, align }) {
         })
       })
 
-      this.livewireCommitCleanup = typeof offCommit === 'function' ? offCommit : () => {}
+      this.livewireCommitCleanup = typeof offCommit === 'function'
+        ? offCommit
+        : () => {}
 
-      if (this.isTouch || mode === 'dropdown') {
+      if (window.matchMedia('(hover: none)').matches || mode === 'dropdown') {
         bind(this.trigger, {
           ['@click']() {
             this.toggle()
+
           },
 
           ['@click.outside'](e) {
@@ -105,34 +104,45 @@ export function popover ({ mode, position, align }) {
           },
         })
       }
+
+      bind(this.trigger, {
+        ['@close']() {
+          this.close()
+        },
+      })
     },
 
-    open() {
-      if (!this.popoverElement?.isConnected) return
-      if (this.popoverElement.matches(':popover-open')) return
+    open(focus = true) {
+      requestAnimationFrame(() => {
+        if (!this.popoverElement?.isConnected) return
+        if (this.popoverElement.matches(':popover-open')) return
 
-      this.popoverElement.showPopover()
+        this.popoverElement.showPopover()
+        if (focus) this.popoverElement.focus()
+      })
     },
 
     close() {
-      if (!this.popoverElement?.isConnected) return
-      if (!this.popoverElement.matches(':popover-open')) return
+      requestAnimationFrame(() => {
+        if (!this.popoverElement?.isConnected) return
+        if (!this.popoverElement.matches(':popover-open')) return
 
-      this.popoverElement.hidePopover()
+        this.popoverElement.hidePopover()
+      })
     },
 
     onOpen() {
       _toggleable.open.call(this)
       this.$root.setAttribute('aria-expanded', 'true')
 
-      window.addEventListener('scroll', this.boundSetPosition, true)
-      window.addEventListener('resize', this.boundSetPosition, true)
+      window.addEventListener('scroll', () => this.boundSetPosition(), true)
+      window.addEventListener('resize', () => this.boundSetPosition(), true)
 
-      this.resizeObserver = new ResizeObserver(this.boundSetPosition)
+      this.resizeObserver = new ResizeObserver(() => this.boundSetPosition())
       this.resizeObserver.observe(this.trigger)
       this.resizeObserver.observe(this.popoverElement)
 
-      this.mutationObserver = new MutationObserver(this.boundSetPosition)
+      this.mutationObserver = new MutationObserver(() => this.boundSetPosition())
       this.mutationObserver.observe(this.trigger, {
         childList: true
       })
@@ -148,8 +158,8 @@ export function popover ({ mode, position, align }) {
       _toggleable.close.call(this)
       this.$root.setAttribute('aria-expanded', 'false')
 
-      window.removeEventListener('scroll', this.boundSetPosition, true)
-      window.removeEventListener('resize', this.boundSetPosition, true)
+      window.removeEventListener('scroll', () => this.boundSetPosition(), true)
+      window.removeEventListener('resize', () => this.boundSetPosition(), true)
 
       this.resizeObserver?.disconnect()
       this.resizeObserver = null
@@ -157,19 +167,10 @@ export function popover ({ mode, position, align }) {
       this.mutationObserver?.disconnect()
       this.mutationObserver = null
 
-      if (_rAF) {
-        cancelAnimationFrame(_rAF)
-        _rAF = null
+      if (this._rAF) {
+        cancelAnimationFrame(this._rAF)
+        this._rAF = null
       }
-    },
-
-    boundSetPosition() {
-      if (_rAF) return
-
-      _rAF = requestAnimationFrame(() => {
-        this.setPosition()
-        _rAF = null
-      })
     },
 
     setPosition() {
@@ -283,9 +284,14 @@ export function popover ({ mode, position, align }) {
       this.popoverElement.dataset.position = computedPosition
       this.popoverElement.dataset.align = computedAlign
     },
+
+    boundSetPosition() {
+      if (this._rAF) return
+
+      this._rAF = requestAnimationFrame(() => {
+        this.setPosition()
+        this._rAF = null
+      })
+    }
   }
-
-  component.boundSetPosition = component.boundSetPosition.bind(component)
-
-  return component
 }

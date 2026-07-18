@@ -47,7 +47,7 @@
             TALLKit::attributesAfter($attributes,
                 prefix: 'section:',
                 prepend: ['icon', 'badge', 'container:', 'list:', 'title:', 'subtitle:', 'separator:', 'content:', 'actions:']
-            )->classes('p-6')
+            )->classes(TALLKit::padding(size: $size, mode: 'largest'))
         "
         :$size
         :$prepend

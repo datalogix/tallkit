@@ -5,12 +5,12 @@ export function inputCopyable() {
     copied: false,
     timeout: null,
 
-    get input () {
-      return this.$el.closest('[data-tallkit-field-control]')?.querySelector('input')
-    },
-
     init() {
-      if (!this.input) {
+      const input = this.$el
+        ?.closest('[data-tallkit-field-control]')
+        ?.querySelector('[data-tallkit-input]')
+
+      if (!input) {
         return
       }
 
@@ -22,8 +22,8 @@ export function inputCopyable() {
           this.popoverElement && this.popoverElement.showPopover()
 
           if (navigator.clipboard) {
-            await navigator.clipboard.writeText(this.input.value)
-            this.input.dispatchEvent(new Event('copied', { bubbles: false }))
+            await navigator.clipboard.writeText(input.value)
+            input.dispatchEvent(new Event('copied', { bubbles: false }))
           }
 
           this.timeout = setTimeout(() => {

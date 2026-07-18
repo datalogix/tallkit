@@ -1,7 +1,12 @@
 @aware(['animate'])
 @props(['animate'])
 <div {{ $attributes->classes(
-    '[:where(&)]:w-full [:where(&)]:rounded [:where(&)]:bg-zinc-400/20 my-1',
+    '
+        [:where(&)]:w-full
+        [:where(&)]:rounded
+        [:where(&)]:bg-zinc-400/20
+        my-1
+    ',
     match ($animate) {
         'shimmer' => '
             relative before:absolute before:inset-0 before:-translate-x-full

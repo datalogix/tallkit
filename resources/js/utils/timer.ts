@@ -23,3 +23,12 @@ export function interval(callback: TimerHandler, milliseconds?: Milliseconds, de
   intervalId = setInterval(callback, ms)
   return intervalId
 }
+
+export function debounce(callback: (...args: any[]) => void, delay: number = 300) {
+  let timeout: number | undefined = undefined
+
+  return (...args: any[]) => {
+    clearTimeout(timeout)
+    timeout = setTimeout(() => callback(...args), delay)
+  }
+}

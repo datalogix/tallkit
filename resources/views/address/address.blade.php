@@ -7,7 +7,9 @@
     'neighborhood' => null,
     'city' => null,
     'state' => null,
-    'inline' => false,
+    'inline' => null,
+    'icon' => null,
+    'mode' => null,
 ])
 @php
 
@@ -23,8 +25,8 @@ $state ??= data_get($data, 'state');
 <tk:text
     as="address"
     :$attributes
-    icon="map-marker"
-    mode="large"
+    :icon="$icon ?? 'map-marker'"
+    :mode="$mode ?? 'large'"
 >
     {{ implode(', ', array_filter([$address, $number, $complement, $neighborhood])) }}
 

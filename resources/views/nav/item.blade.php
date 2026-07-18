@@ -1,4 +1,4 @@
-@aware(['list', 'size', 'variant'])
+@aware(['list', 'size', 'variant', 'indicator'])
 @props([
     'size' => null,
     'variant' => null,
@@ -23,44 +23,38 @@ $square ??= $slot->isEmpty() && !$attributes->get('label');
         TALLKit::fontSize(size: $size, weight: true)
     )"
     :attributes="$attributes
-        ->classes(
+        ->classes([
+            TALLKit::padding(size: $size),
             TALLKit::roundedSize(size: $size),
             '
                 relative
                 [&:is(a,button)]:hover:text-zinc-800 dark:[&:is(a,button)]:hover:text-white
-                [&:is(a,button)]:hover:bg-zinc-800/10 dark:[&:is(a,button)]:hover:bg-white/10
                 [&[disabled]]:opacity-75 dark:[&[disabled]]:opacity-50
                 [&[disabled]]:cursor-default [&[disabled]]:pointer-events-none
             ',
-            match ($square) {
-                true => 'p-3',
-                default => 'p-2.5',
-            },
+            '[&:is(a,button)]:hover:bg-zinc-800/10 dark:[&:is(a,button)]:hover:bg-white/10' => $indicator && $indicator !== 'bg',
             match ($list) {
-                true => 'w-full my-px',
-                default => '
-                    data-current:after:absolute
-                    data-current:after:-bottom-3
-                    data-current:after:inset-x-0
-                    data-current:after:h-[2px]
+                true => 'w-full',
+                default => '',
+            },
+            match ($variant) {
+                'accent' => '
+                    data-current:text-(--color-accent-content)
+                    hover:data-current:text-(--color-accent-content)
+                    hover:data-current:bg-[color-mix(in_oklab,_var(--color-accent-content),_transparent_90%)]
                 ',
-            }
+                default => 'data-current:text-zinc-800 dark:data-current:text-white',
+            },
+        ])
+        ->when(
+            $indicator === false,
+            fn ($c) => $c->classes(
+                match ($variant) {
+                    'accent' => 'data-current:bg-[color-mix(in_oklab,_var(--color-accent-content),_transparent_90%)]',
+                    default => 'data-current:bg-zinc-800/10 dark:data-current:bg-white/10',
+                }
+            )
         )
-        ->classes(match ($variant) {
-            'accent' => [
-                'data-current:text-(--color-accent-content) hover:data-current:text-(--color-accent-content)',
-                'hover:data-current:bg-[color-mix(in_oklab,_var(--color-accent-content),_transparent_90%)]',
-                $list
-                    ? 'data-current:bg-[color-mix(in_oklab,_var(--color-accent-content),_transparent_90%)]'
-                    : 'data-current:after:bg-(--color-accent-content)',
-            ],
-            default => [
-                'data-current:text-zinc-800 dark:data-current:text-white',
-                $list
-                    ? 'data-current:bg-zinc-800/10 dark:data-current:bg-white/10'
-                    : 'data-current:after:bg-zinc-800 dark:data-current:after:bg-white',
-            ],
-        })
     "
 >
     {{ $slot }}

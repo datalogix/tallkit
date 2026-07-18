@@ -1,5 +1,6 @@
 <tk:button
     wire:replace.self
+    x-cloak
     x-data="inputClearable"
     :attributes="$attributes->classes('
         [[data-tallkit-control]:has(:placeholder-shown)_&]:hidden

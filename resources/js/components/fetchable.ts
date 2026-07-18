@@ -1,6 +1,6 @@
 import { loadable } from './loadable'
 
-export function fetchable(url?: string, data?: {}, autofetch?: Boolean, options?: {}) {
+export function fetchable({ url = null, data = null, autofetch = null, ...options} = {}) {
   return {
     ...loadable(),
 

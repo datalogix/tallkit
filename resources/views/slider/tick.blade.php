@@ -1,10 +1,15 @@
 @props([
     'label' => null,
+    'value' => null,
     'size' => null,
 ])
 <tk:text
     as="span"
-    :attributes="$attributes->classes('min-w-5 flex items-center justify-center pointer-events-none')"
+    :attributes="$attributes
+        ->dataKey('slider-tick')
+        ->classes('min-w-5 flex items-center justify-center pointer-events-none')
+        ->merge(['data-value' => $value], false)
+    "
     :$label
     :$size
 >

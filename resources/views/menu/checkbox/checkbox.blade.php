@@ -1,6 +1,5 @@
 @props([
     'checked' => null,
-    'keepOpen' => null,
 ])
 @php
 
@@ -12,7 +11,7 @@ $iconUnchecked ??= $attributes->pluck('icon-unchecked');
     wire:ignore
     x-data="menuCheckbox({{ $checked }})"
     x-modelable="checked"
-    :attributes="$attributes->classes('group/menu-checkbox')->merge(['data-keep-open' => $keepOpen])"
+    :attributes="$attributes->whereDoesntStartWith(['icon-checked:', 'icon-unchecked:'])->classes('group/menu-checkbox')"
     role="menuitemcheckbox"
     icon:class="w-7"
 >

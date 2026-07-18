@@ -6,15 +6,7 @@
     :input:class="TALLKit::classes(
         $attributes->get('input:class'),
         'px-0! text-center uppercase',
-        match($size) {
-            'xs' => 'w-8',
-            'sm' => 'w-9',
-            default => 'w-10',
-            'lg' => 'w-12',
-            'xl' => 'w-14',
-            '2xl' => 'w-16',
-            '3xl' => 'w-18',
-        },
+        TALLKit::width(size: $size).'!',
     )"
     :type="$private ? 'password' : 'text'"
     :icon="false"
@@ -25,6 +17,7 @@
     :kbd="false"
     :copyable="false"
     :viewable="false"
-    data-mode="{{ $mode }}"
+    maxlength="1"
+    data-mode="{{ $mode ?? 'alphanumeric' }}"
     inputmode="{{ $mode === null || $mode === 'numeric' ? 'numeric' : 'text' }}"
 />

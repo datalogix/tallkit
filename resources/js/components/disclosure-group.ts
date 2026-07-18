@@ -1,12 +1,6 @@
-export function disclosureGroup(exclusive?: boolean) {
+export function disclosureGroup({ exclusive = false } = {}) {
   return {
     init () {
-      if (exclusive) {
-        this.initExclusive()
-      }
-    },
-
-    initExclusive () {
       const items = this.$root.querySelectorAll('[data-tallkit-disclosure-item]')
 
       const observe = () => {
@@ -20,6 +14,7 @@ export function disclosureGroup(exclusive?: boolean) {
 
         items.forEach((item) => {
           if (item === current) return
+          if (! exclusive) return
 
           if (item._x_dataStack && item?._x_dataStack[0] && typeof item?._x_dataStack[0].close === 'function') {
             item?._x_dataStack[0].close()
@@ -29,7 +24,7 @@ export function disclosureGroup(exclusive?: boolean) {
         })
 
         observer.disconnect()
-
+        this.$dispatch('changed', { items })
         this.$nextTick(observe)
       })
 

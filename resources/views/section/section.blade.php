@@ -18,9 +18,9 @@
                 'separator:', 'content:',
             ])
             ->classes([
-                '[:where(&)]:space-y-6',
                 '[&:has([data-tallkit-section-content]>:is([data-tallkit-card],[data-tallkit-table-container]))>[data-tallkit-separator]]:hidden' => !$separator,
                 TALLKit::fontSize(size: $size),
+                TALLKit::spaceBlock(size: $size, mode: 'largest'),
             ])
     }}
 >
@@ -31,6 +31,8 @@
                 ->merge(TALLKit::attributesAfter($attributes, 'badge', prepend: 'title:badge')->getAttributes())
             "
             :$size
+            :title:icon:size="$size"
+            :title:badge:size="$size"
             :icon="false"
             :$prepend
             :$title
@@ -56,7 +58,12 @@
     @endif
 
     @if ($slot->hasActualContent() || $content)
-        <div {{ TALLKit::attributesAfter($attributes, 'content:')->classes('space-y-6') }}>
+        <div
+            {{
+                TALLKit::attributesAfter($attributes, 'content:')
+                    ->classes(TALLKit::spaceBlock(size: $size, mode: 'largest'))
+            }}
+        >
             {{ __($content) }}
             {{ $slot }}
         </div>

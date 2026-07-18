@@ -43,7 +43,7 @@ $signUp ??= route_detect([
     >
         @if ($forgotPassword)
             <x-slot:labelAppend>
-                <tk:link-
+                <tk:link
                     :attributes="TALLKit::attributesAfter($attributes, 'forgot-password:')"
                     :href="$forgotPassword"
                     :$size

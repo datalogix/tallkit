@@ -8,12 +8,12 @@
     'icon' => null,
     'tooltip' => null,
     'color' => null,
+    'ttl' => null,
 ])
 @php
 
 [$user, $name, $email, $username] = TALLKit::resolveUserContext($attributes);
 $initials = TALLKit::generateInitials($initials ?? $name, $attributes->pluck('initials:single'));
-$ttl = $attributes->pluck('ttl');
 $src ??= TALLKit::findAvatar($email ?? $username, $ttl);
 
 if ($color === 'auto') {
@@ -37,12 +37,12 @@ if ($tooltip === true) {
             '
                 justify-center
                 relative flex-none isolate
-                after:absolute after:inset-0 after:inset-ring-[1px] after:inset-ring-black/7 dark:after:inset-ring-white/10
+                after:absolute after:inset-0 after:inset-ring-[1px] after:inset-ring-black/5 dark:after:inset-ring-white/5
                 [:where(&)]:bg-zinc-200 dark:[:where(&)]:bg-zinc-800
                 [:where(&)]:text-zinc-800 dark:[:where(&)]:text-white
             ',
             TALLKit::fontSize(size: $size, weight: true),
-            TALLKit::roundedSize(size: !$square ? 'full' : $size, after: true),
+            TALLKit::roundedSize(size: $square ? $size : 'full', after: true),
             TALLKit::widthHeight(size: $size, mode: 'large'),
             match ($color) {
                 'accent' => 'bg-[var(--color-accent)] text-[var(--color-accent-foreground)]',
@@ -77,7 +77,7 @@ if ($tooltip === true) {
         <img
             {{
                 TALLKit::attributesAfter($attributes, 'image:')
-                    ->classes(TALLKit::roundedSize(size: !$square ? 'full' : $size))
+                    ->classes(TALLKit::roundedSize(size: $square ? $size : 'full'))
                     ->merge(['src' => $src, 'alt' => $alt ?? $name])
             }}
         />

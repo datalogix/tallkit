@@ -1,3 +1,4 @@
+@aware(['size'])
 @props([
     'label' => null,
     'size' => null,
@@ -14,7 +15,9 @@
     }}></div>
 
     <tk:heading
-        :attributes="TALLKit::attributesAfter($attributes, 'container:')->classes('text-zinc-500 dark:text-zinc-400')"
+        :attributes="TALLKit::attributesAfter($attributes, 'container:')
+            ->classes('text-zinc-500 dark:text-zinc-400')
+        "
         :size="TALLKit::adjustSize(size: $size)"
         :$label
     >

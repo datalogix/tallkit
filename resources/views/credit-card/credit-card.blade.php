@@ -89,19 +89,18 @@ $types = [
         'mask' => '0000 0000 0000 0000',
         'cardtype' => 'unknown',
         'icon' => null,
-        'lightcolor' => 'fill-gray-500',
-        'darkcolor' => 'fill-gray-600',
+        'lightcolor' => 'fill-zinc-500',
+        'darkcolor' => 'fill-zinc-600',
     ],
 ];
 
 @endphp
 <div
-    x-cloak
     x-data="creditCard(@js(array_replace_recursive(['types' => $types], Arr::wrap($options))))"
     {{ $attributes->classes(
         '
             relative mx-auto max-w-[400px] h-[260px]
-            w-full cursor-pointer transition duration-700 text-gray-700 transform-3d
+            w-full cursor-pointer transition duration-700 text-zinc-700 transform-3d
         '
     ) }}
 >
@@ -217,31 +216,31 @@ $types = [
                     </g>
                     <rect
                         y="61.6"
-                        class="fill-gray-900"
+                        class="fill-zinc-900"
                         width="750"
                         height="78"
                     />
                     <g>
                         <path
-                            class="fill-gray-50"
+                            class="fill-zinc-50"
                             d="M701.1,249.1H48.9c-3.3,0-6-2.7-6-6v-52.5c0-3.3,2.7-6,6-6h652.1c3.3,0,6,2.7,6,6v52.5 C707.1,246.4,704.4,249.1,701.1,249.1z"
                         />
                         <rect
                             x="42.9"
                             y="198.6"
-                            class="fill-gray-200"
+                            class="fill-zinc-200"
                             width="664.1"
                             height="10.5"
                         />
                         <rect
                             x="42.9"
                             y="224.5"
-                            class="fill-gray-200"
+                            class="fill-zinc-200"
                             width="664.1"
                             height="10.5"
                         />
                         <path
-                            class="fill-gray-200"
+                            class="fill-zinc-200"
                             d="M701.1,184.6H618h-8h-10v64.5h10h8h83.1c3.3,0,6-2.7,6-6v-52.5C707.1,187.3,704.4,184.6,701.1,184.6z"
                         />
                     </g>
@@ -253,14 +252,14 @@ $types = [
                     <rect
                         x="58.1"
                         y="378.6"
-                        class="fill-gray-200"
+                        class="fill-zinc-200"
                         width="375.5"
                         height="13.5"
                     />
                     <rect
                         x="58.1"
                         y="405.6"
-                        class="fill-gray-200"
+                        class="fill-zinc-200"
                         width="421.7"
                         height="13.5"
                     />

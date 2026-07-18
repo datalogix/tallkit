@@ -6,7 +6,7 @@ export function echarts() {
 
     chart: null,
 
-    async init() {
+    init() {
       this.load(async () => {
         if (!window.echarts) {
           await this.$tallkit.loadScript('https://cdn.jsdelivr.net/npm/echarts@6')
@@ -14,9 +14,13 @@ export function echarts() {
       })
     },
 
+    getDataOptions() {
+      return window.Alpine.evaluate(this.$el, this.$el.getAttribute('data-options') || '{}')
+    },
+
     render(options = {}) {
       this.chart ??= window.echarts.init(this.$el)
-      this.chart.setOption(options)
+      this.chart.setOption({ ...options, ...this.getDataOptions() })
       this.$dispatch('rendered', { chart: this.chart })
     }
   }

@@ -12,25 +12,28 @@ $method = strtoupper($method);
 $action = in_livewire() ? ($action ?? 'submit') : route_detect(routes: [$route, $action], default: request()->url());
 
 @endphp
-<form {{
-    $attributes->dataKey('form')
-        ->whereDoesntStartWith(['alert:', 'error-group:', 'submit:'])
-        ->classes(
-            '[:where(&)]:space-y-6',
-            match ($errorGroup) {
-                'only' => '[&_[data-tallkit-error]]:hidden',
-                default => ''
-            }
-        )
-        ->when(
-            in_livewire(),
-            fn ($attrs) => $attrs->merge(['wire:submit' => $action]),
-            fn ($attrs) => $attrs
-                ->merge(!$enctype && Str::contains($slot, 'type="file"', true) ? ['enctype' => 'multipart/form-data'] : [])
-                ->merge(['method' => $method])
-                ->merge(['action' => $action])
-        )
-}}>
+<form
+    {{
+        $attributes
+            ->dataKey('form')
+            ->whereDoesntStartWith(['alert:', 'error-group:', 'submit:'])
+            ->classes(
+                '[:where(&)]:space-y-6',
+                match ($errorGroup) {
+                    'only' => '[&_[data-tallkit-error]]:hidden',
+                    default => ''
+                }
+            )
+            ->when(
+                in_livewire(),
+                fn ($attrs) => $attrs->merge(['wire:submit' => $action]),
+                fn ($attrs) => $attrs
+                    ->merge(!$enctype && Str::contains($slot, 'type="file"', true) ? ['enctype' => 'multipart/form-data'] : [])
+                    ->merge(['method' => $method])
+                    ->merge(['action' => $action])
+            )
+    }}
+>
     @unless (in_livewire())
         @unless (in_array($method, ['HEAD', 'GET', 'OPTIONS']))
             @csrf

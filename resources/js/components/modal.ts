@@ -1,11 +1,6 @@
 import { bind } from '../utils'
 
-export function modal(
-  name?: string,
-  dismissible?: boolean,
-  persist?: string | boolean,
-  shortcut?: string
-) {
+export function modal({ name = null, dismissible = null, persist = null, shortcut = null } = {}) {
   return {
     init() {
       const dialog = this.$el

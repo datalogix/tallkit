@@ -17,7 +17,7 @@
         match ($status) {
             'completed' => 'bg-green-600',
             'active' => 'bg-blue-500',
-            default => 'bg-gray-400',
+            default => 'bg-zinc-400',
         },
     )"
 >

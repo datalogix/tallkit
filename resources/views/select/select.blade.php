@@ -60,15 +60,7 @@ $options = TALLKit::parseOptions($attributes);
 
                         [&_[data-tallkit-control]]:outline-none
                     ',
-                    match ($size) {
-                        'xs' => 'rounded-md',
-                        'sm' => 'rounded-md',
-                        default => 'rounded-lg',
-                        'lg' => 'rounded-lg',
-                        'xl' => 'rounded-lg',
-                        '2xl' => 'rounded-xl',
-                        '3xl' => 'rounded-xl',
-                    },
+                    TALLKit::roundedSize(size: $size, mode: 'large'),
                 ),
             )
         "
@@ -127,15 +119,10 @@ $options = TALLKit::parseOptions($attributes);
                             bg-position-[right_.5rem_center]
                             rtl:bg-position-[left_.5rem_center]
                         ',
-                        match ($size) {
-                            'xs' => 'min-h-8 text-xs ps-2 pe-2',
-                            'sm' => 'min-h-9 text-sm ps-2.5 pe-2.5',
-                            default => 'min-h-10 text-base ps-3 pe-3',
-                            'lg' => 'min-h-12 text-lg ps-3.5 pe-3.5',
-                            'xl' => 'min-h-14 text-xl ps-4 pe-4',
-                            '2xl' => 'min-h-16 text-2xl ps-4.5 pe-4.5',
-                            '3xl' => 'min-h-18 text-3xl ps-5 pe-5',
-                        },
+                        TALLKit::fontSize(size: $size, mode: 'large'),
+                        TALLKit::paddingStart(size: $size, mode: 'large'),
+                        TALLKit::paddingEnd(size: $size, mode: 'large'),
+                        TALLKit::generateClassBySize(size: $size, name: 'min-h', values: ['8', '9', '10', '12', '14', '16', '18']),
                         $attributes->pluck('select:class'),
                     )
                     ->when(
@@ -189,15 +176,7 @@ $options = TALLKit::parseOptions($attributes);
                                 focus-visible:ring-blue-700/20
                                 dark:focus-visible:ring-blue-300/20
                             ',
-                            match ($size) {
-                                'xs' => 'rounded-md',
-                                'sm' => 'rounded-md',
-                                default => 'rounded-lg',
-                                'lg' => 'rounded-lg',
-                                'xl' => 'rounded-lg',
-                                '2xl' => 'rounded-xl',
-                                '3xl' => 'rounded-xl',
-                            },
+                            TALLKit::roundedSize(size: $size, mode: 'large'),
                         ),
                     )
             }}

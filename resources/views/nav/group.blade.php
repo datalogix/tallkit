@@ -29,15 +29,7 @@
             {{
                 TALLKit::attributesAfter($attributes, 'container:')
                 ->classes('relative hidden group-data-[open]/disclosure:block space-y-[2px]')
-                ->when($line !== false, fn($attrs) => $attrs->classes(match ($size) {
-                    'xs' => 'ps-8',
-                    'sm' => 'ps-9',
-                    default => 'ps-10',
-                    'lg' => 'ps-11',
-                    'xl' => 'ps-12',
-                    '2xl' => 'ps-13',
-                    '3xl' => 'ps-14',
-                }))
+                ->when($line !== false, fn($attrs) => $attrs->classes(TALLKit::generateClassBySize(size: $size, name: 'ps', values: ['8', '9', '10', '11', '12', '13', '14'])))
                 ->when($collapse === true, fn($attrs) => $attrs->merge(['x-show' => 'opened', 'x-collapse' => '']))
                 ->when(is_string($collapse), fn($attrs) => $attrs->merge(['x-show' => 'opened', 'x-collapse.'.$collapse => '']))
             }}
@@ -45,15 +37,7 @@
             @if ($line !== false)
                 <div {{ TALLKit::attributesAfter($attributes, 'line:')->classes(
                     'absolute inset-y-[3px] w-px bg-zinc-200 dark:bg-white/20 start-0',
-                    match ($size) {
-                        'xs' => 'ms-4',
-                        'sm' => 'ms-4.5',
-                        default => 'ms-5',
-                        'lg' => 'ms-5.5',
-                        'xl' => 'ms-6',
-                        '2xl' => 'ms-6.5',
-                        '3xl' => 'ms-7',
-                    }
+                    TALLKit::generateClassBySize(size: $size, name: 'ms', values: ['4', '4.5', '5', '5.5', '6', '6.5', '7']),
                 ) }}></div>
             @endif
 
@@ -63,9 +47,11 @@
 @elseif ($heading)
     <div {{ $attributes->whereDoesntStartWith(['heading:', 'container:'])->classes('block space-y-[2px]') }}>
         <tk:heading
-            :attributes="TALLKit::attributesAfter($attributes, 'heading:')->classes('leading-none text-zinc-400 p-2.5')"
+            :attributes="TALLKit::attributesAfter($attributes, 'heading:')
+                ->classes('leading-none text-zinc-400 p-2.5')
+                ->merge(['size' => TALLKit::adjustSize(size: $size)])
+            "
             :label="$heading"
-            :size="TALLKit::adjustSize(size: $size)"
         />
 
         <div {{ TALLKit::attributesAfter($attributes, 'container:') }}>

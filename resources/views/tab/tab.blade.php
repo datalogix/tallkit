@@ -7,24 +7,27 @@
 ])
 <tk:button
     :attributes="$attributes
-        ->classes(match ($variant) {
-            'pills' => '
-                px-4 shrink-0 rounded-full
-                bg-zinc-800/10 dark:bg-white/5
-                [&[data-selected]]:bg-zinc-800 dark:[&[data-selected]]:bg-white
-                [&[data-selected]]:text-white dark:[&[data-selected]]:text-zinc-800
-            ',
-            'segmented' => '
-                px-2 shrink-0 rounded-md
-                [&[data-selected]]:bg-white dark:[&[data-selected]]:bg-white/20
-            ',
-            default => '
-                px-2 shrink-0 -mb-px
-                border-b-2 border-transparent
-                [&[data-selected]]:border-zinc-800
-                dark:[&[data-selected]]:border-white
-            '
-        })
+        ->classes(
+            TALLKit::paddingInline(size: $size),
+            match ($variant) {
+                'pills' => '
+                    shrink-0 rounded-full
+                    bg-zinc-800/10 dark:bg-white/5
+                    [&[data-selected]]:bg-zinc-800 dark:[&[data-selected]]:bg-white
+                    [&[data-selected]]:text-white dark:[&[data-selected]]:text-zinc-800
+                ',
+                'segmented' => '
+                    shrink-0 rounded-md
+                    [&[data-selected]]:bg-white dark:[&[data-selected]]:bg-white/20
+                ',
+                default => '
+                    shrink-0 -mb-px
+                    border-b-2 border-transparent
+                    [&[data-selected]]:border-zinc-800
+                    dark:[&[data-selected]]:border-white
+                '
+            }
+        )
         ->merge(['data-selected' => $selected ? '' : false])
         ->merge($name ? [
             'wire:key' => $name,

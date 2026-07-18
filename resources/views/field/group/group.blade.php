@@ -4,7 +4,7 @@
     'size' => null,
 ])
 <tk:field.wrapper
-    :$attributes
+    :attributes="$attributes->whereDoesntStartWith(['prefix:', 'suffix:'])"
     :prefix="null"
     :suffix="null"
     label:as="{{ $attributes->has('label:for') ? 'label' : 'span' }}"
@@ -43,7 +43,7 @@
         '[&>*:first-child:not(:last-child)_[data-tallkit-group-target]]:rounded-e-none',
         '[&>*:last-child:not(:first-child)_[data-tallkit-group-target]]:rounded-s-none',
     ) }}>
-        @if ($prefix)
+        @if ($prefix || TALLKit::attributesAfter($attributes, 'prefix:')->isNotEmpty())
             <tk:field.group.prefix
                 :attributes="TALLKit::attributesAfter($attributes, 'prefix:')"
                 :$size
@@ -54,7 +54,7 @@
 
         {{ $slot }}
 
-        @if ($suffix)
+        @if ($suffix || TALLKit::attributesAfter($attributes, 'suffix:')->isNotEmpty())
             <tk:field.group.suffix
                 :attributes="TALLKit::attributesAfter($attributes, 'suffix:')"
                 :$size

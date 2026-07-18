@@ -1,3 +1,33 @@
+import { animation } from './animation'
+
+type Phase = {
+  from?: string[]
+  to?: string[]
+}
+
+type TransitionOptions = {
+  enter?: Phase
+  leave?: Phase
+  removeOnLeave?: boolean
+}
+
+export function transition(el: HTMLElement, options: TransitionOptions) {
+  const enter = (opts = {}) => animation(el, {
+    from: options.enter?.from,
+    to: options.enter?.to,
+    ...opts,
+  })
+
+  const leave = (opts = {}) => animation(el, {
+    from: options.leave?.from,
+    to: options.leave?.to,
+    remove: options.removeOnLeave ?? true,
+    ...opts,
+  })
+
+  return { enter, leave }
+}
+
 export function parseTimeToMilliseconds(value: string) {
   const parsed = Number.parseFloat(value)
 

@@ -34,7 +34,8 @@ if ($loading && $type !== 'submit' && !$isJsMethod) {
     :type="$type ?? 'button'"
     :icon:size="TALLKit::adjustSize(size: $size)"
     :icon-trailing:size="TALLKit::adjustSize(size: $size)"
-    :content:class="$loading && $hasContent ? '' : null"
+    :badge:size="TALLKit::adjustSize(size: $size)"
+    :content:class="$loading && $hasContent ? 'flex-1' : ($attributes->has('badge') || $attributes->has('iconTrailing') ? 'flex-1' : null)"
     :attributes="$attributes
         ->whereDoesntStartWith(['loading-indicator:', 'loading:'])
         ->classes([
@@ -53,15 +54,7 @@ if ($loading && $type !== 'submit' && !$isJsMethod) {
                     TALLKit::roundedSize(size: $circle ? 'full': $size),
                     TALLKit::height(size: $size),
                     $square
-                        ? match($size) {
-                            'xs' => 'w-8',
-                            'sm' => 'w-9',
-                            default => 'w-10',
-                            'lg' => 'w-12',
-                            'xl' => 'w-14',
-                            '2xl' => 'w-16',
-                            '3xl' => 'w-18',
-                        }
+                        ? TALLKit::width(size: $size)
                         : TALLKit::paddingInline(size: $size, mode: 'largest'),
                 ],
             },
@@ -344,11 +337,7 @@ if ($loading && $type !== 'submit' && !$isJsMethod) {
             match ($variant) { // Shadows...
                 'accent' => 'shadow-[inset_0px_1px_--theme(--color-white/.2)]',
                 'filled', 'ghost', 'subtle', 'none' => '',
-                default => match ($size) {
-                    'xs' => 'shadow-none',
-                    'sm' => 'shadow-xs',
-                    default => 'shadow-xs',
-                },
+                default => 'shadow',
             },
             match ($variant) { // Grouped border treatments...
                 'accent' => '[[data-tallkit-button-group]_&]:border-e-0 [:is([data-tallkit-button-group]>&:last-child,_[data-tallkit-button-group]_:last-child>&)]:border-e-[1px] dark:[:is([data-tallkit-button-group]>&:last-child,_[data-tallkit-button-group]_:last-child>&)]:border-e-0 dark:[:is([data-tallkit-button-group]>&:last-child,_[data-tallkit-button-group]_:last-child>&)]:border-s-[1px] [:is([data-tallkit-button-group]>&:not(:first-child),_[data-tallkit-button-group]_:not(:first-child)>&)]:border-s-[color-mix(in_srgb,var(--color-accent-foreground),transparent_85%)]',

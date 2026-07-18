@@ -1,5 +1,9 @@
+@props([
+    'size' => null,
+    'variant' => null,
+])
 <div
-    {{ $attributes }}
+    {{ $attributes->classes(TALLKit::spaceBlock(size: $size, mode: 'largest')) }}
     x-data="tab"
 >
     {{ $slot }}

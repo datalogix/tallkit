@@ -40,7 +40,6 @@
                 },
             ) }}>
                 <tk:nav
-                    list
                     :attributes="TALLKit::attributesAfter($attributes, 'nav:')->classes(
                         match ($breakpoint) {
                             'sm' => 'max-sm:hidden',
@@ -52,6 +51,7 @@
                         },
                     )"
                     :items="$menu"
+                    list
                 />
                 @php
 
@@ -82,7 +82,7 @@
             </div>
         @endif
 
-        <div {{ TALLKit::attributesAfter($attributes, 'area:')->classes('flex-1 w-full [:where(&)]:space-y-6') }}>
+        <div {{ TALLKit::attributesAfter($attributes, 'area:')->classes('flex-1 min-w-0 w-full [:where(&)]:space-y-6') }}>
             {{ $slot }}
         </div>
     </div>

@@ -12,10 +12,11 @@
             'neighborhood:', 'city:', 'state:'
         ])
         ->merge($autocomplete !== false ? [
-            'x-data' => 'addressForm',
+            'x-data' => 'addressForm(' . Js::from(is_array($autocomplete) ? $autocomplete : []) . ')',
             'wire:replace.self' => ''
         ] : [])
     "
+    :$size
 >
     <div class="grid gap-6 grid-cols-4 lg:grid-cols-5 mb-6">
         <tk:input

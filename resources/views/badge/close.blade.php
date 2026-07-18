@@ -6,7 +6,9 @@
     variant="none"
     tooltip="Close"
     :icon="$slot->isEmpty() ? $icon ?? 'close' : null"
-    :attributes="$attributes->dataKey('badge-close')->classes(
+    :attributes="$attributes
+        ->dataKey('dismissible')
+        ->classes(
         '
             p-px -me-1
             text-current!

@@ -9,7 +9,6 @@
 
 [$name, $fieldName, $label, $placeholder, $invalid, $wireModel] = TALLKit::resolveFieldContext($attributes, $label);
 $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd || $attributes->has('class');
-$value = in_livewire() ? null : ($value ?? $slot);
 
 @endphp
 <tk:field.wrapper
@@ -61,15 +60,7 @@ $value = in_livewire() ? null : ($value ?? $slot);
 
                         [&_[data-tallkit-control]]:outline-none
                     ',
-                    match ($size) {
-                        'xs' => 'rounded-md',
-                        'sm' => 'rounded-md',
-                        default => 'rounded-lg',
-                        'lg' => 'rounded-lg',
-                        'xl' => 'rounded-lg',
-                        '2xl' => 'rounded-xl',
-                        '3xl' => 'rounded-xl',
-                    },
+                    TALLKit::roundedSize(size: $size, mode: 'large'),
                 ),
             )
         "
@@ -119,15 +110,11 @@ $value = in_livewire() ? null : ($value ?? $slot);
                             disabled:cursor-not-allowed
                             disabled:resize-none
                         ',
-                        match ($size) {
-                            'xs' => 'text-xs px-1.5 py-1',
-                            'sm' => 'text-sm px-2 py-1.5',
-                            default => 'text-base px-3 py-2',
-                            'lg' => 'text-lg px-3.5 py-2.5',
-                            'xl' => 'text-xl px-4 py-3',
-                            '2xl' => 'text-2xl px-4.5 py-3.5',
-                            '3xl' => 'text-3xl px-5 py-4',
-                        },
+                        TALLKit::fontSize(size: $size, mode: 'large'),
+                        TALLKit::paddingBlock(size: $size, mode: 'large'),
+                        TALLKit::paddingInline(size: $size, mode: 'large'),
+                        TALLKit::paddingStart(size: $size, mode: 'large'),
+                        TALLKit::paddingEnd(size: $size, mode: 'large'),
                         match ($maxRows ? 'none' : $resize) {
                             'none' => 'resize-none',
                             'both' => 'resize',
@@ -172,18 +159,10 @@ $value = in_livewire() ? null : ($value ?? $slot);
                                 focus-visible:ring-blue-700/20
                                 dark:focus-visible:ring-blue-300/20
                             ',
-                            match ($size) {
-                                'xs' => 'rounded-md',
-                                'sm' => 'rounded-md',
-                                default => 'rounded-lg',
-                                'lg' => 'rounded-lg',
-                                'xl' => 'rounded-lg',
-                                '2xl' => 'rounded-xl',
-                                '3xl' => 'rounded-xl',
-                            },
+                            TALLKit::roundedSize(size: $size, mode: 'large'),
                         ),
                     )
             }}
-        >{{ $value }}</textarea>
+        >{{ in_livewire() ? null : ($value ?? $slot) }}</textarea>
     </tk:field.control>
 </tk:field.wrapper>

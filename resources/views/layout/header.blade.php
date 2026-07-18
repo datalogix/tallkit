@@ -83,10 +83,11 @@
         </div>
 
         @if (isset($header) && ((isset($nav) && filled($nav)) || ($menu && filled($menu))))
-            <div class="hidden lg:block -mt-2">
+            <div class="hidden lg:block">
                 <tk:nav
                     :attributes="TALLKit::attributesAfter($attributes, 'menu:')"
                     :items="$menu"
+                    indicator="line-bottom"
                 >
                     {{ $nav ?? '' }}
                 </tk:nav>
@@ -116,6 +117,7 @@
         <tk:nav
             :attributes="TALLKit::attributesAfter($attributes, 'sidebar-menu:')"
             :items="$menu"
+            :indicator="false"
             list
         >
             {{ $nav ?? '' }}

@@ -8,20 +8,25 @@
     'actions' => null,
     'border' => null,
     'dismissible' => null,
-    'animation' => null,
-    'timeout' => null,
     'size' => null,
+    'progress' => null,
+    'timeout' => null,
+    'pauseOnHover' => null,
+    'options' => null,
 ])
 <tk:content
-    x-data="alertComponent({{ Js::from($timeout) }}, {{ Js::from($animation ?? true) }})"
+    x-data="alertComponent({{ Js::from([
+        'timeout' => $timeout ?? ($progress ? 7000 : null),
+        'pauseOnHover' => $pauseOnHover ?? true,
+    ] + ($options ?? [])) }})"
     role="alert"
     :attributes="$attributes
         ->dataKey('alert')
         ->whereDoesntStartWith(['message:', 'dismissible:'])
         ->merge(TALLKit::attributesAfter($attributes, 'message:', prepend: 'description:')->getAttributes())
         ->classes(
+            'relative overflow-hidden mb-4 transition-all duration-300 ease-out opacity-100',
             TALLKit::padding(size: $size),
-            'mb-4 transition-all duration-300 ease-out opacity-100',
             match ($type) {
                 'danger' => 'text-red-800 bg-red-100 dark:bg-zinc-700 dark:text-red-300',
                 'success' => 'text-green-800 bg-green-100 dark:bg-zinc-700 dark:text-green-300',
@@ -39,7 +44,11 @@
             },
             match ($border) {
                 'top', 'left', 'right', 'bottom' => '',
-                default => 'rounded',
+                default => TALLKit::roundedSize(size: $size, mode: 'small'),
+            },
+            match ($title && ($message || $slot->hasActualContent())) {
+                true => 'items-start',
+                default => 'items-center',
             },
         )
         ->when(
@@ -61,7 +70,6 @@
         default => 'info-circle-outline',
     }"
     icon:class="shrink-0"
-    :$prepend
     :$title
     title:mode="large"
     title:variant="none"
@@ -70,6 +78,20 @@
     :$append
 >
     {{ $slot }}
+
+    @if ($prepend || $progress)
+        <x-slot:prepend>
+            {{ $prepend }}
+
+            @if ($progress)
+                <tk:alert.progress
+                    :attributes="TALLKit::attributesAfter($attributes, 'progress:')"
+                    :type="is_string($progress) ? $progress : null"
+                    :$size
+                />
+            @endif
+        </x-slot:prepend>
+    @endif
 
     @if ($actions || $dismissible)
         <x-slot:actions>

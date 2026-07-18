@@ -5,7 +5,7 @@
 <div
     {{
         $attributes
-            ->classes('[&:not([data-selected])]:hidden [:where(&)]:pt-4')
+            ->classes('[&:not([data-selected])]:hidden')
             ->merge(['data-selected' => $selected ? '' : false])
     }}
     wire:key="{{ $name }}"
