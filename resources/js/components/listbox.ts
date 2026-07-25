@@ -54,6 +54,16 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
           this.next()
         },
 
+        ['@keydown.home.prevent']() {
+          this.lastInteraction = 'keyboard'
+          this.first()
+        },
+
+        ['@keydown.end.prevent']() {
+          this.lastInteraction = 'keyboard'
+          this.last()
+        },
+
         ['@keydown.enter.prevent']() {
           this.select(this.index)
         },
@@ -94,10 +104,43 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
           const index = Number(item.dataset.index)
 
           if (Number.isNaN(index)) return
+          if (this.isDisabled(this.filteredItems[index])) return
 
           if (this.index !== index) {
             this.index = index
           }
+        },
+
+        ['@keydown.esc.prevent']() {
+          this.clear()
+        },
+
+        ['@keydown.arrow-up.prevent']() {
+          this.lastInteraction = 'keyboard'
+          this.prev()
+        },
+
+        ['@keydown.arrow-down.prevent'](e) {
+          this.lastInteraction = 'keyboard'
+          this.next()
+        },
+
+        ['@keydown.home.prevent']() {
+          this.lastInteraction = 'keyboard'
+          this.first()
+        },
+
+        ['@keydown.end.prevent']() {
+          this.lastInteraction = 'keyboard'
+          this.last()
+        },
+
+        ['@keydown.enter.prevent']() {
+          this.select(this.index)
+        },
+
+        ['@keydown.space.prevent']() {
+          this.select(this.index)
         },
       })
 
@@ -113,8 +156,12 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
       ).map((item) => {
         item.hidden = true
 
+        if (item?.firstElementChild.disabled) {
+          item.setAttribute('aria-disabled', 'true')
+        }
+
         return {
-          title: normalize(item.querySelector('[data-item-content]').textContent, { removeSpaces: true }),
+          title: normalize(item.querySelector('[data-item-content]')?.textContent, { removeSpaces: true }),
           el: item.firstElementChild,
           li: item,
         }
@@ -185,14 +232,64 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
       this.toggleNoRecords()
     },
 
+    isDisabled(item) {
+      return !!item?.el?.hasAttribute('disabled')
+    },
+
     prev() {
       if (this.filteredItems.length === 0) return
-      this.index = this.index === null ? this.filteredItems.length - 1 : (this.index - 1 + this.filteredItems.length) % this.filteredItems.length
+
+      let index = this.index === null ? this.filteredItems.length - 1 : (this.index - 1 + this.filteredItems.length) % this.filteredItems.length
+
+      for (let i = 0; i < this.filteredItems.length && this.isDisabled(this.filteredItems[index]); i++) {
+        index = (index - 1 + this.filteredItems.length) % this.filteredItems.length
+      }
+
+      if (this.isDisabled(this.filteredItems[index])) return
+
+      this.index = index
     },
 
     next() {
       if (this.filteredItems.length === 0) return
-      this.index = this.index === null ? 0 : (this.index + 1) % this.filteredItems.length
+
+      let index = this.index === null ? 0 : (this.index + 1) % this.filteredItems.length
+
+      for (let i = 0; i < this.filteredItems.length && this.isDisabled(this.filteredItems[index]); i++) {
+        index = (index + 1) % this.filteredItems.length
+      }
+
+      if (this.isDisabled(this.filteredItems[index])) return
+
+      this.index = index
+    },
+
+    first() {
+      if (this.filteredItems.length === 0) return
+
+      let index = 0
+
+      while (index < this.filteredItems.length && this.isDisabled(this.filteredItems[index])) {
+        index++
+      }
+
+      if (index >= this.filteredItems.length) return
+
+      this.index = index
+    },
+
+    last() {
+      if (this.filteredItems.length === 0) return
+
+      let index = this.filteredItems.length - 1
+
+      while (index >= 0 && this.isDisabled(this.filteredItems[index])) {
+        index--
+      }
+
+      if (index < 0) return
+
+      this.index = index
     },
 
     select(index: number | null) {
@@ -222,6 +319,11 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
       if (!item) return
 
       item.el.dataset.active = 'true'
+      item.li.setAttribute('aria-selected', 'true')
+
+      if (item.li.hasAttribute('id')) {
+        this.list.setAttribute('aria-activedescendant', item.li.getAttribute('id'))
+      }
 
       item.li.scrollIntoView({
         block: 'nearest',
@@ -233,7 +335,10 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
     clearActive() {
       this.filteredItems.forEach(item => {
         delete item.el.dataset.active
+        item.li.removeAttribute('aria-selected')
       })
+
+      this.list.removeAttribute('aria-activedescendant')
     },
 
     clear() {

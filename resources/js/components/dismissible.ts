@@ -7,7 +7,7 @@ export function dismissible(animation?: 'fade' | 'collapse') {
 
     init() {
       bind(this.$root.querySelectorAll('[data-tallkit-dismissible]'), {
-        ['@click']: (e) => {
+        ['@click.stop']: (e) => {
           e.currentTarget.dispatchEvent(new CustomEvent('close'))
           this.dismiss('manual')
         }

@@ -47,10 +47,9 @@
 @elseif ($heading)
     <div {{ $attributes->whereDoesntStartWith(['heading:', 'container:'])->classes('block space-y-[2px]') }}>
         <tk:heading
-            :attributes="TALLKit::attributesAfter($attributes, 'heading:')
-                ->classes('leading-none text-zinc-400 p-2.5')
-                ->merge(['size' => TALLKit::adjustSize(size: $size)])
+            :attributes="TALLKit::attributesAfter($attributes, 'heading:')->classes('leading-none text-zinc-400 p-2.5')
             "
+            :size="TALLKit::adjustSize(size: $size)"
             :label="$heading"
         />
 

@@ -36,10 +36,10 @@
     >
         {{ $content ?? '' }}
 
-        @isset ($input)
-            <x-slot:input>
-                {{ $input }}
-            </x-slot:input>
+        @isset ($search)
+            <x-slot:search>
+                {{ $search }}
+            </x-slot:search>
         @endisset
 
         @isset ($empty)

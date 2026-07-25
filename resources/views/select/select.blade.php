@@ -128,6 +128,7 @@ $options = TALLKit::parseOptions($attributes);
                     ->when(
                         $multiple,
                         fn ($attrs) => $attrs->classes(
+                            TALLKit::paddingEnd(size: $size, mode: 'large'),
                             'overflow-auto bg-none',
                             match ($size) {
                                 'xs' => 'py-2 [&_*]:py-1 space-y-1 [&_option]:px-2 [&_option]:rounded-md [&>optgroup>option]:ms-2 [&>optgroup]:space-y-1 [&>optgroup>option:first-child]:mt-1 [&>optgroup>option:last-child]:mb-1',

@@ -7,12 +7,27 @@
         $attributes
             ->whereDoesntStartWith(['item:'])
             ->classes(
-                'overflow-auto',
+                '
+                    overflow-auto
+                    overscroll-contain
+                    scroll-py-1
+
+                    outline-none
+                    focus-visible:outline-2
+                    focus-visible:outline-blue-700
+                    dark:focus-visible:outline-blue-300
+                    focus-visible:outline-offset-0
+
+                    focus-visible:ring-2
+                    focus-visible:ring-blue-700/20
+                    dark:focus-visible:ring-blue-300/20
+                ',
+                TALLKit::roundedSize(size: $size),
                 TALLKit::spaceBlock(size: $size, mode: 'smallest')
             )
     }}
     role="listbox"
-    tabindex="-1"
+    x-bind:tabindex="filteredItems.length > 0 ? 0 : -1"
 >
     {{ $slot }}
 

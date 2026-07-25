@@ -22,9 +22,8 @@ $options = TALLKit::parseOptions($attributes);
         @foreach ($options as $optionItemValue => $optionItemLabel)
             @if (is_array($optionItemLabel))
                 <tk:heading
-                    :attributes="TALLKit::attributesAfter($attributes, 'heading:')
-                        ->merge(['size' => TALLKit::adjustSize(size: $size)])
-                    "
+                    :attributes="TALLKit::attributesAfter($attributes, 'heading:')"
+                    :size="TALLKit::adjustSize(size: $size)"
                     :label="$optionItemValue"
                 />
 

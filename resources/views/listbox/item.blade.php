@@ -12,6 +12,7 @@
             ->classes('w-full justify-start hover:bg-transparent dark:hover:bg-transparent')"
         :$size
         variant="ghost"
+        tabindex="-1"
         content:data-item-content
     >
         {{ $slot }}

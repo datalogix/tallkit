@@ -6,21 +6,24 @@
     'hideEmpty' => null,
     'clearOnSelect' => null,
     'fuseOptions' => null,
+    'standalone' => null,
 ])
 <div
     wire:ignore.self
-    x-data="listbox({ hideEmpty: @js($hideEmpty), clearOnSelect: @js($clearOnSelect), ...@js($fuseOptions) })"
+    @if ($standalone !== false)
+        x-data="listbox({ hideEmpty: @js($hideEmpty), clearOnSelect: @js($clearOnSelect), ...@js($fuseOptions) })"
+    @endif
     {{
         $attributes
-            ->whereDoesntStartWith(['input:', 'items:', 'item:', 'no-records:'])
+            ->whereDoesntStartWith(['search:', 'items:', 'item:', 'no-records:'])
             ->classes(TALLKit::spaceBlock(size: $size, mode: 'small'))
     }}
 >
-    @isset ($input)
-        {{ $input }}
+    @isset ($search)
+        {{ $search }}
     @elseif ($searchable !== false)
-        <tk:listbox.input
-            :attributes="TALLKit::attributesAfter($attributes, 'input:')"
+        <tk:listbox.search
+            :attributes="TALLKit::attributesAfter($attributes, 'search:')"
             :$size
         />
     @endisset
@@ -28,7 +31,7 @@
     <tk:listbox.items
         :attributes="TALLKit::attributesAfter($attributes, 'items:', prepend: ['item:'])
             ->when(
-                isset($input) || $searchable !== false,
+                isset($search) || $searchable !== false,
                 fn ($attributes) => $attributes->classes(TALLKit::generateClassBySize(size: $size, name: 'max-h', values: ['48', '56', '64', '72', '80', '88', '96']))
             )
         "
@@ -38,7 +41,7 @@
         {{ $slot}}
     </tk:listbox.items>
 
-    @if (isset($input) || $searchable !== false)
+    @if (isset($search) || $searchable !== false)
         @isset ($empty)
             {{ $empty }}
         @elseif ($noRecords !== false)

@@ -11,15 +11,15 @@
         TALLKit::roundedSize(size: $size, mode: 'large')
     )"
     :$size
-    input:class="border-0 py-1 outline-none ring-0! rounded-none"
+    search:class="border-0 py-1 outline-none ring-0! rounded-none"
     :items:class="TALLKit::paddingInline(size: $size, mode: 'smallest')"
 >
     {{ $slot }}
 
-    @isset ($input)
-        <x-slot:input>
-            {{ $input }}
-        </x-slot:input>
+    @isset ($search)
+        <x-slot:search>
+            {{ $search }}
+        </x-slot:search>
     @endisset
 
     @isset ($empty)
