@@ -3,6 +3,11 @@
     'heading' => null,
     'size' => null,
 ])
+@php
+
+$headingId = $heading ? TALLKit::generateId('menu-group', $heading) : null;
+
+@endphp
 <div
     {{
         $attributes
@@ -18,7 +23,7 @@
             )
             ->merge([
                 'role' => 'group',
-                'aria-labelledby' => $heading ? 'menu-group-'.Str::slug($heading) : false
+                'aria-labelledby' => $headingId ?: false
             ])
     }}
 >
@@ -32,7 +37,7 @@
             :attributes="TALLKit::attributesAfter($attributes, 'heading:')"
             :label="$heading"
             :$size
-            id="menu-group-{{ Str::slug($heading) }}"
+            :id="$headingId"
         />
     @endif
 

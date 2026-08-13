@@ -8,9 +8,10 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel] = TALLKit::resolveFieldContext($attributes, $label);
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext($attributes, $label, $id);
 $format ??= '999999';
 $groups = explode('-', $format);
+$describedBy = TALLKit::ariaDescribedBy($id, $description, $help, $invalid, $showError);
 
 @endphp
 <tk:field.wrapper
@@ -18,11 +19,19 @@ $groups = explode('-', $format);
     :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
 >
     <div
+        wire:ignore
         x-data="otp(@js($submit))"
         x-modelable="value"
         role="group"
+        id="{{ $id }}"
+        @if ($label) aria-label="{{ __($label) }}" @endif
+        @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif
         {{ $attributes->whereStartsWith('wire:')->merge(['wire:model' => $wireModel]) }}
     >
+        @if ($name && !$wireModel)
+            <input type="hidden" name="{{ $name }}" x-model="value" />
+        @endif
+
         <tk:field.control
             :$size
             :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())

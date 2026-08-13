@@ -18,7 +18,7 @@ class ClassBuilder implements Stringable
         $this->classes = collect();
 
         if ($classes) {
-            $this->add(...$classes);
+            $this->add(...(is_array($classes) ? $classes : [$classes]));
         }
     }
 

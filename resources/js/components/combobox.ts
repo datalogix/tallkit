@@ -10,7 +10,7 @@ export function combobox({ value = null, multiple = false } = {}) {
     ..._popover,
     ..._listbox,
 
-    value,
+    value: value ?? (multiple ? [] : null),
     combobox: null,
 
     get selectedLabel() {
@@ -22,7 +22,7 @@ export function combobox({ value = null, multiple = false } = {}) {
     },
 
     get selectedCount() {
-      return multiple ? this.value.length : 0
+      return this.items.filter(item => this.isSelected(this.getElementValue(item.el))).length
     },
 
     init() {
@@ -59,7 +59,7 @@ export function combobox({ value = null, multiple = false } = {}) {
       })
 
       bind([this.combobox, this.popoverElement, this.input, this.list], {
-        ['@keydown.esc.prevent']() {
+        ['@keydown.escape.prevent']() {
           this.closeAndFocus()
         },
       })
@@ -84,7 +84,6 @@ export function combobox({ value = null, multiple = false } = {}) {
 
     open() {
       this.popoverElement.style.width = `${this.combobox.offsetWidth}px`
-      this.combobox.setAttribute('aria-expanded', 'true')
       _popover.open.call(this, false)
 
       const target = multiple ? this.value.at(-1) : this.value
@@ -97,7 +96,6 @@ export function combobox({ value = null, multiple = false } = {}) {
     },
 
     close() {
-      this.combobox.setAttribute('aria-expanded', 'false')
       _popover.close.call(this)
       this.clear()
     },
@@ -108,9 +106,15 @@ export function combobox({ value = null, multiple = false } = {}) {
     },
 
     isSelected(v) {
-      return multiple
-        ? this.value.map(String).includes(String(v))
-        : String(this.value ?? '') === String(v)
+      if (!multiple) {
+        return String(this.value ?? '') === String(v)
+      }
+
+      if (!Array.isArray(this.value) && this.value != null) {
+        this.value = [this.value]
+      }
+
+      return this.value.map(String).includes(String(v))
     },
 
     pick(v) {
@@ -130,13 +134,15 @@ export function combobox({ value = null, multiple = false } = {}) {
     },
 
     clearValue() {
-      this.value = multiple ? [] :null
+      this.value = multiple ? [] : null
     },
 
     syncChecked() {
       this.items.forEach(item => {
+        const selected = this.isSelected(this.getElementValue(item.el))
         const mark = item.el.querySelector('[data-tallkit-checkmark]')
-        if (mark) mark.classList.toggle('invisible', !this.isSelected(this.getElementValue(item.el)))
+        if (mark) mark.classList.toggle('invisible', !selected)
+        item.li.setAttribute('aria-selected', String(selected))
       })
     },
 

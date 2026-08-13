@@ -1,4 +1,4 @@
-import { bind } from '../utils'
+import { bind, setFieldChecked } from '../utils'
 
 export function label() {
   return {
@@ -33,18 +33,14 @@ export function label() {
 
           if (type === 'checkbox') {
             if (!isDisabled && !isReadOnly) {
-              control.checked = !control.checked
-              control.dispatchEvent(new Event('input', { bubbles: true }))
-              control.dispatchEvent(new Event('change', { bubbles: true }))
+              setFieldChecked(control, !control.checked)
             }
             return
           }
 
           if (type === 'radio') {
             if (!isDisabled && !isReadOnly && !control.checked) {
-              control.checked = true
-              control.dispatchEvent(new Event('input', { bubbles: true }))
-              control.dispatchEvent(new Event('change', { bubbles: true }))
+              setFieldChecked(control, true)
             }
             return
           }

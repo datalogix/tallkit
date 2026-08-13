@@ -1,10 +1,20 @@
 export function sticky() {
   return {
     init() {
-      const e = this.$el.offsetTop
+      this.updateOffset()
+      this._onResize = () => this.updateOffset()
+      window.addEventListener('resize', this._onResize)
+    },
+
+    updateOffset() {
+      const top = this.$el.offsetTop
       this.$el.style.position = 'sticky'
-      this.$el.style.top = `${e}px`
-      this.$el.style.maxHeight = `calc(100dvh - ${e}px)`
+      this.$el.style.top = `${top}px`
+      this.$el.style.maxHeight = `calc(100dvh - ${top}px)`
+    },
+
+    destroy() {
+      window.removeEventListener('resize', this._onResize)
     }
   }
 }

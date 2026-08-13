@@ -17,12 +17,14 @@
 <tk:content
     x-data="alertComponent({{ Js::from([
         'timeout' => $timeout ?? ($progress ? 7000 : null),
-        'pauseOnHover' => $pauseOnHover ?? true,
+        'pauseOnHover' => $pauseOnHover ?? (bool) $progress,
     ] + ($options ?? [])) }})"
-    role="alert"
+    role="{{ in_array($type, ['danger', 'warning']) ? 'alert' : 'status' }}"
+    aria-live="{{ in_array($type, ['danger', 'warning']) ? 'assertive' : 'polite' }}"
+    aria-atomic="true"
     :attributes="$attributes
         ->dataKey('alert')
-        ->whereDoesntStartWith(['message:', 'dismissible:'])
+        ->whereDoesntStartWith(['message:', 'dismissible:', 'progress:'])
         ->merge(TALLKit::attributesAfter($attributes, 'message:', prepend: 'description:')->getAttributes())
         ->classes(
             'relative overflow-hidden mb-4 transition-all duration-300 ease-out opacity-100',

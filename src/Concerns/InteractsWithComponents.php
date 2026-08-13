@@ -3,6 +3,7 @@
 namespace TALLKit\Concerns;
 
 use Illuminate\Support\Facades\Session;
+use TALLKit\TALLKit;
 
 trait InteractsWithComponents
 {
@@ -12,13 +13,12 @@ trait InteractsWithComponents
         string|bool|null $icon = null,
         string|bool|null $border = null,
         ?string $title = null,
-        ?array $list = null,
         string|bool|null $dismissible = null,
         int|bool|null $timeout = null,
         ?string $size = null,
         ?string $name = null,
     ) {
-        if (blank($message) && blank($title) && blank($list)) {
+        if (blank($message) && blank($title)) {
             return;
         }
 
@@ -28,7 +28,6 @@ trait InteractsWithComponents
             'icon' => $icon,
             'border' => $border,
             'title' => $title,
-            'list' => $list,
             'dismissible' => $dismissible,
             'timeout' => $timeout,
             'size' => $size,
@@ -63,7 +62,7 @@ trait InteractsWithComponents
 
             public function show()
             {
-                $component = app('livewire')->current();
+                $component = in_livewire() ? app('livewire')->current() : null;
 
                 if (! $component) {
                     return;
@@ -78,7 +77,7 @@ trait InteractsWithComponents
 
             public function close()
             {
-                $component = app('livewire')->current();
+                $component = in_livewire() ? app('livewire')->current() : null;
 
                 if (! $component) {
                     return;
@@ -99,7 +98,9 @@ trait InteractsWithComponents
         {
             public function close()
             {
-                app('livewire')->current()?->dispatch('modal-close');
+                if (in_livewire()) {
+                    app('livewire')->current()?->dispatch('modal-close');
+                }
             }
         };
     }
@@ -114,6 +115,10 @@ trait InteractsWithComponents
         ?string $size = null,
 
     ) {
+        if (! in_livewire()) {
+            return;
+        }
+
         return app('livewire')->current()?->js(
             '$tallkit.toast',
             $message,

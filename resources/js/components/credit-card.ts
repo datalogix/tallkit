@@ -7,12 +7,14 @@ export function creditCard(options = {}) {
   return {
     ..._toggleable,
 
+    options: null,
+
     init() {
       _toggleable.init.call(this)
-      this.card = this.$data
+
       this.options = {
         opened: true,
-        types: [],
+        types: {},
         holderName: null,
         number: null,
         type: null,
@@ -24,6 +26,12 @@ export function creditCard(options = {}) {
 
       bind(this.$el, {
         ['@click']() {
+          this.toggle()
+        },
+        ['@keydown.enter.prevent']() {
+          this.toggle()
+        },
+        ['@keydown.space.prevent']() {
           this.toggle()
         },
         [':class']() {
@@ -42,6 +50,10 @@ export function creditCard(options = {}) {
 
     update(options = {}) {
       this.options = { ...this.options, ...options }
+
+      if ('opened' in options) {
+        this.opened = this.options.opened
+      }
     },
 
     flip(isBack = false) {

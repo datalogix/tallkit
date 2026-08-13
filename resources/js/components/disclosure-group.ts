@@ -1,34 +1,41 @@
 export function disclosureGroup({ exclusive = false } = {}) {
   return {
+    observer: null,
+
     init () {
       const items = this.$root.querySelectorAll('[data-tallkit-disclosure-item]')
 
       const observe = () => {
         items.forEach((item) => {
-          observer.observe(item, { attributeFilter: ['data-open'] })
+          this.observer.observe(item, { attributeFilter: ['data-open'] })
         })
       }
 
-      const observer = new MutationObserver((records) => {
-        const current = records[0]?.target
+      this.observer = new MutationObserver((records) => {
+        if (exclusive) {
+          const opened = new Set(
+            records
+              .filter(record => record.target.hasAttribute('data-open'))
+              .map(record => record.target)
+          )
 
-        items.forEach((item) => {
-          if (item === current) return
-          if (! exclusive) return
+          items.forEach((item) => {
+            if (opened.has(item)) return
 
-          if (item._x_dataStack && item?._x_dataStack[0] && typeof item?._x_dataStack[0].close === 'function') {
-            item?._x_dataStack[0].close()
-          } else {
             item.removeAttribute('data-open')
-          }
-        })
+          })
+        }
 
-        observer.disconnect()
+        this.observer.disconnect()
         this.$dispatch('changed', { items })
         this.$nextTick(observe)
       })
 
       observe()
+    },
+
+    destroy () {
+      this.observer?.disconnect()
     }
   }
 }

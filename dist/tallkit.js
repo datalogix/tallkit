@@ -126,99 +126,6 @@
       }
     });
   }
-  function bind(el, bindings) {
-    const elements = el instanceof Element ? [el] : el;
-    elements?.forEach((element, index) => {
-      window.Alpine.bind(element, typeof bindings === "function" ? bindings(element, index) : bindings);
-    });
-  }
-  function cache(name, {
-    ttl = 1e3 * 60 * 60,
-    // 1h
-    persist = true
-  } = {}) {
-    const memory = /* @__PURE__ */ new Map();
-    return {
-      getStorageKey(key) {
-        return ["tallkit", "cache", name, key].filter(Boolean).join(":");
-      },
-      get(key) {
-        const mem = memory.get(key);
-        if (mem && Date.now() < mem.exp) {
-          return mem.data;
-        }
-        if (persist) {
-          try {
-            const raw = localStorage.getItem(this.getStorageKey(key));
-            if (!raw) return null;
-            const parsed = JSON.parse(raw);
-            if (Date.now() > parsed.exp) {
-              localStorage.removeItem(this.getStorageKey(key));
-              return null;
-            }
-            memory.set(key, parsed);
-            return parsed.data;
-          } catch {
-            return null;
-          }
-        }
-        return null;
-      },
-      set(key, data) {
-        const entry = {
-          data,
-          exp: Date.now() + ttl
-        };
-        memory.set(key, entry);
-        if (persist) {
-          try {
-            localStorage.setItem(this.getStorageKey(key), JSON.stringify(entry));
-          } catch {
-          }
-        }
-      }
-    };
-  }
-  async function fetchWithRetry(fn, retries = 2) {
-    try {
-      return await fn();
-    } catch (e) {
-      if (retries <= 0 || e.name === "AbortError") throw e;
-      return fetchWithRetry(fn, retries - 1);
-    }
-  }
-  function setFieldValue(el, value) {
-    if (!el) return;
-    el.value = value?.toString() ?? "";
-    el.dispatchEvent(new Event("input", { bubbles: true }));
-    el.dispatchEvent(new Event("change", { bubbles: true }));
-  }
-  function timeout(callback, milliseconds, defaultMilliseconds = 500) {
-    let timeoutId = void 0;
-    clearTimeout(timeoutId);
-    const ms = !milliseconds || isNaN(parseInt(milliseconds.toString())) ? defaultMilliseconds : parseInt(milliseconds.toString());
-    timeoutId = setTimeout(callback, ms);
-    return timeoutId;
-  }
-  function debounce(callback, delay = 300) {
-    let timeout2 = void 0;
-    return (...args) => {
-      clearTimeout(timeout2);
-      timeout2 = setTimeout(() => callback(...args), delay);
-    };
-  }
-  function getWireModelInfo(element) {
-    for (let attr of element.attributes) {
-      if (attr.name.startsWith("wire:model")) {
-        let modifier = attr.name.includes(".") ? attr.name.split(".").slice(1).join(".") : "";
-        return {
-          name: attr.value,
-          modifier
-        };
-      }
-    }
-    return null;
-  }
   const scripts = /* @__PURE__ */ new Map();
   async function loadScript(src) {
     if (Array.isArray(src)) {
@@ -248,39 +155,14 @@
     scripts.set(src, promise);
     return promise;
   }
-  function normalize(str, options) {
-    if (!options || !str) return str;
-    const opts = {
-      replaceAccents: false,
-      removeSpaces: false,
-      lowercase: false,
-      uppercase: false,
-      mode: void 0,
-      ...options
-    };
-    if (opts?.replaceAccents) {
-      str = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  async function loadRemoteAssets(check, scriptSrc, styleHref) {
+    if (check()) {
+      return;
     }
-    if (opts?.removeSpaces) {
-      str = str.replace(/\s+/g, " ").trim();
+    await loadScript(scriptSrc);
+    if (styleHref) {
+      await loadStyle(styleHref);
     }
-    switch (opts.mode) {
-      case "alpha":
-        str = str.replace(/[^a-z]/gi, "");
-        break;
-      case "alphanumeric":
-        str = str.replace(/[^a-z0-9]/gi, "");
-        break;
-      case "numeric":
-        str = str.replace(/[^0-9]/g, "");
-        break;
-    }
-    if (opts.uppercase && !opts.lowercase) {
-      str = str.toUpperCase();
-    } else if (opts.lowercase && !opts.uppercase) {
-      str = str.toLowerCase();
-    }
-    return str;
   }
   const styles = /* @__PURE__ */ new Map();
   function loadStyle(href) {
@@ -311,6 +193,191 @@
     styles.set(href, promise);
     return promise;
   }
+  function bind(el, bindings) {
+    const elements = el instanceof Element ? [el] : el;
+    Array.from(elements ?? []).filter((element) => element instanceof Element).forEach((element, index) => {
+      window.Alpine.bind(element, typeof bindings === "function" ? bindings(element, index) : bindings);
+    });
+  }
+  function bindShortcut(el, shortcut, callback) {
+    bind(el, {
+      [`@keydown.${shortcut}.document`](event) {
+        event.preventDefault();
+        callback(event);
+      }
+    });
+  }
+  function formatBytes(bytes, decimals = 1) {
+    if (!bytes) return "0 B";
+    const units = ["B", "KB", "MB", "GB", "TB"];
+    const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+    const value = bytes / Math.pow(1024, exponent);
+    return `${exponent === 0 ? value : value.toFixed(decimals)} ${units[exponent]}`;
+  }
+  function cache(name, {
+    ttl = 1e3 * 60 * 60,
+    // 1h
+    persist = true
+  } = {}) {
+    const memory = /* @__PURE__ */ new Map();
+    return {
+      getStorageKey(key) {
+        return ["tallkit", "cache", name, key].filter(Boolean).join(":");
+      },
+      get(key) {
+        const mem = memory.get(key);
+        if (mem) {
+          if (Date.now() < mem.exp) {
+            return mem.data;
+          }
+          memory.delete(key);
+        }
+        if (persist) {
+          try {
+            const raw = localStorage.getItem(this.getStorageKey(key));
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            if (Date.now() > parsed.exp) {
+              localStorage.removeItem(this.getStorageKey(key));
+              return null;
+            }
+            memory.set(key, parsed);
+            return parsed.data;
+          } catch (e) {
+            console.warn("[tallkit] cache read failed", e);
+            return null;
+          }
+        }
+        return null;
+      },
+      set(key, data) {
+        const entry = {
+          data,
+          exp: Date.now() + ttl
+        };
+        memory.set(key, entry);
+        if (persist) {
+          try {
+            localStorage.setItem(this.getStorageKey(key), JSON.stringify(entry));
+          } catch (e) {
+            console.warn("[tallkit] cache write failed", e);
+          }
+        }
+      }
+    };
+  }
+  async function fetchWithRetry(fn, retries = 2) {
+    try {
+      return await fn();
+    } catch (e) {
+      if (retries <= 0 || e.name === "AbortError") throw e;
+      return fetchWithRetry(fn, retries - 1);
+    }
+  }
+  function setFieldValue(el, value) {
+    if (!el) return;
+    el.value = value?.toString() ?? "";
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+  function setFieldChecked(el, checked) {
+    if (!el || el.checked === checked) return;
+    el.checked = checked;
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+  function findFieldInput(el) {
+    return el?.closest("[data-tallkit-field-control]")?.querySelector("[data-tallkit-input]") ?? null;
+  }
+  function getWireModelInfo(element) {
+    for (const attr of element.attributes) {
+      if (attr.name.startsWith("wire:model")) {
+        const modifier = attr.name.includes(".") ? attr.name.split(".").slice(1).join(".") : "";
+        return {
+          name: attr.value,
+          modifier
+        };
+      }
+    }
+    return null;
+  }
+  function escapeHtml(str) {
+    if (str == null) return str;
+    return str.replace(/[&<>"']/g, (char) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    })[char]);
+  }
+  function generateId(prefix, name, suffix) {
+    return slug([
+      "tallkit",
+      prefix,
+      Math.random().toString(36).slice(2, 9),
+      suffix
+    ].filter(Boolean).join("-"));
+  }
+  function slug(str) {
+    return normalize(str, {
+      replaceAccents: true,
+      removeSpaces: true,
+      replaceSpaces: "-",
+      lowercase: true,
+      mode: "alphanumeric"
+    });
+  }
+  function normalize(str, options) {
+    if (!options || !str) return str;
+    const opts = {
+      replaceAccents: false,
+      removeSpaces: false,
+      lowercase: false,
+      uppercase: false,
+      mode: void 0,
+      ...options
+    };
+    if (opts?.replaceAccents) {
+      str = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+    switch (opts.mode) {
+      case "alpha":
+        str = str.replace(/[^a-z\s-]/gi, "");
+        break;
+      case "alphanumeric":
+        str = str.replace(/[^a-z0-9\s-]/gi, "");
+        break;
+      case "numeric":
+        str = str.replace(/[^0-9\s-]/g, "");
+        break;
+    }
+    if (opts?.removeSpaces) {
+      str = str.replace(/\s+/g, " ").trim();
+    }
+    if (opts?.replaceSpaces) {
+      str = str.replace(/\s+/g, opts.replaceSpaces).trim();
+    }
+    if (opts.uppercase && !opts.lowercase) {
+      str = str.toUpperCase();
+    } else if (opts.lowercase && !opts.uppercase) {
+      str = str.toLowerCase();
+    }
+    return str;
+  }
+  function timeout(callback, milliseconds, defaultMilliseconds = 500) {
+    const ms = !milliseconds || isNaN(parseInt(milliseconds.toString())) ? defaultMilliseconds : parseInt(milliseconds.toString());
+    return setTimeout(callback, ms);
+  }
+  function debounce(callback, delay = 300) {
+    let timeout2 = void 0;
+    const debounced = (...args) => {
+      clearTimeout(timeout2);
+      timeout2 = setTimeout(() => callback(...args), delay);
+    };
+    debounced.cancel = () => clearTimeout(timeout2);
+    return debounced;
+  }
   function addressForm(options = {}) {
     const _cache = cache("zipcode", options);
     return {
@@ -328,7 +395,7 @@
         };
         const debouncedSearch = debounce(this.search.bind(this));
         bind(this.$els.zipcode, {
-          ["@keyup"]() {
+          ["@input"]() {
             debouncedSearch(this.$el.value);
           }
         });
@@ -340,9 +407,10 @@
       resolveState(data) {
         const el = this.$els.state;
         if (!el) return "";
-        const isInput = el.tagName.toLowerCase() === "input";
-        const hasOption = el.querySelector(`option[value="${data.estado}"]`);
-        return isInput || hasOption ? data.estado : data.uf;
+        const value = data.estado ?? data.uf;
+        if (el.tagName.toLowerCase() === "input") return value ?? "";
+        const hasOption = value != null && Array.from(el.options ?? []).some((option) => option.value === value);
+        return hasOption ? value : data.uf ?? "";
       },
       normalizeZipcode(value) {
         return value.replace(/\D/g, "");
@@ -388,13 +456,15 @@
       async search(value) {
         const zipcode = this.normalizeZipcode(value);
         this.abortController?.abort();
-        if (zipcode.length < 8) return;
-        this.abortController = new AbortController();
-        const { signal } = this.abortController;
+        if (zipcode.length !== 8) return;
+        const controller = new AbortController();
+        this.abortController = controller;
+        const { signal } = controller;
         const cached = _cache.get(zipcode);
         if (cached) {
           this.setLoading(true);
           await new Promise((r) => setTimeout(r, 120));
+          if (signal.aborted) return;
           this.fill(cached);
           this.$dispatch("loaded", { zipcode, data: cached, cached: true });
           this.setLoading(false);
@@ -404,16 +474,20 @@
         this.$dispatch("loading", { zipcode });
         try {
           const data = await this.resolveAddress(zipcode, signal);
+          if (signal.aborted) return;
           _cache.set(zipcode, data);
           this.fill(data);
           this.$dispatch("loaded", { zipcode, data, cached: false });
         } catch (e) {
-          if (e.name === "AbortError") return;
+          if (e.name === "AbortError" || signal.aborted) return;
           this.$dispatch("error", { zipcode, error: e });
           this.$els.zipcode?.focus();
         } finally {
-          this.setLoading(false);
+          if (!signal.aborted) this.setLoading(false);
         }
+      },
+      destroy() {
+        this.abortController?.abort();
       }
     };
   }
@@ -425,6 +499,7 @@
     return {
       cancelDismiss: null,
       isDismissing: false,
+      _dismissTimeout: null,
       init() {
         bind(this.$root.querySelectorAll("[data-tallkit-dismissible]"), {
           ["@click.stop"]: (e) => {
@@ -459,33 +534,37 @@
           this.isDismissing = false;
           this.cancelDismiss = null;
           this.$dispatch("dismissed", { reason });
+          if (this.$root.isConnected) {
+            this.$root.remove();
+          }
         };
         if (animation2 === "fade") {
-          this.cancelDismiss = fadeOut(this.$root, {
-            remove: true,
-            onDone
-          });
+          this.cancelDismiss = fadeOut(this.$root, { onDone });
         } else if (animation2 === "collapse") {
-          this.cancelDismiss = collapse(this.$root, {
-            remove: true,
-            onDone
-          });
+          this.cancelDismiss = collapse(this.$root, { onDone });
         } else {
-          this.$root.remove();
           onDone();
         }
-        setTimeout(() => {
+        if (this._dismissTimeout) {
+          clearTimeout(this._dismissTimeout);
+        }
+        this._dismissTimeout = setTimeout(() => {
           this.isDismissing = false;
-        }, 2e3);
+          this._dismissTimeout = null;
+        }, Math.max(getTransitionTimeout(this.$root) * 1.5, 500));
       },
       destroy() {
         this.cancelDismiss?.();
         this.cancelDismiss = null;
         this.isDismissing = false;
+        if (this._dismissTimeout) {
+          clearTimeout(this._dismissTimeout);
+          this._dismissTimeout = null;
+        }
       }
     };
   }
-  const __vite_glob_0_14 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_15 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     dismissible
   }, Symbol.toStringTag, { value: "Module" }));
@@ -609,23 +688,37 @@
     __proto__: null,
     alertComponent
   }, Symbol.toStringTag, { value: "Module" }));
+  function dataOptions() {
+    return {
+      getDataOptions() {
+        return window.Alpine.evaluate(this.$el, this.$el.getAttribute("data-options") || "{}");
+      }
+    };
+  }
+  const __vite_glob_0_12 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    dataOptions
+  }, Symbol.toStringTag, { value: "Module" }));
   function loadable() {
     return {
       empty: null,
       loaded: null,
       error: null,
-      async load(cb) {
-        if (!this.$el.hasAttribute("data-silent")) {
+      _loadToken: 0,
+      _pendingLoad: null,
+      async load(cb, silent = false) {
+        if (!silent && !this.$el.hasAttribute("data-silent")) {
           this.start();
         }
+        const token = this._loadToken;
         try {
           const result = await cb();
-          this.complete();
-          if (result) {
+          this.complete(0, token);
+          if (typeof result === "function") {
             this.$nextTick(result);
           }
         } catch (e) {
-          this.fail(e);
+          this.fail(e, 0, token);
         }
       },
       reset() {
@@ -638,23 +731,40 @@
         this.empty = true;
       },
       start() {
+        this._loadToken++;
+        this._clearPendingLoad();
         this.reset();
         this.loaded = false;
         this.$dispatch("started");
       },
-      complete(milliseconds = 0) {
-        timeout(() => {
+      complete(milliseconds = 0, token = this._loadToken) {
+        this._clearPendingLoad();
+        this._pendingLoad = setTimeout(() => {
+          this._pendingLoad = null;
+          if (token !== this._loadToken) return;
           this.reset();
           this.loaded = true;
           this.$dispatch("completed");
         }, milliseconds);
       },
-      fail(error, milliseconds = 0) {
-        timeout(() => {
+      fail(error, milliseconds = 0, token = this._loadToken) {
+        this._clearPendingLoad();
+        this._pendingLoad = setTimeout(() => {
+          this._pendingLoad = null;
+          if (token !== this._loadToken) return;
           this.reset();
           this.error = error;
           this.$dispatch("failed");
         }, milliseconds);
+      },
+      _clearPendingLoad() {
+        if (this._pendingLoad) {
+          clearTimeout(this._pendingLoad);
+          this._pendingLoad = null;
+        }
+      },
+      destroy() {
+        this._clearPendingLoad();
       },
       startAndComplete(completeOnNextTick = false) {
         this.start();
@@ -676,28 +786,33 @@
       }
     };
   }
-  const __vite_glob_0_26 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_27 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     loadable
   }, Symbol.toStringTag, { value: "Module" }));
   function apexcharts() {
+    const _loadable = loadable();
     return {
-      ...loadable(),
+      ..._loadable,
+      ...dataOptions(),
       chart: null,
       init() {
-        this.load(async () => {
-          if (!window.ApexCharts) {
-            await this.$tallkit.loadScript("https://cdn.jsdelivr.net/npm/apexcharts@5");
-          }
-        });
-      },
-      getDataOptions() {
-        return window.Alpine.evaluate(this.$el, this.$el.getAttribute("data-options") || "{}");
+        this.load(() => loadRemoteAssets(() => !!window.ApexCharts, "https://cdn.jsdelivr.net/npm/apexcharts@5"));
       },
       render(options = {}) {
-        this.chart ??= new window.ApexCharts(this.$el, { ...options, ...this.getDataOptions() });
-        this.chart.render();
+        const merged = { ...options, ...this.getDataOptions() };
+        if (this.chart) {
+          this.chart.updateOptions(merged);
+        } else {
+          this.chart = new window.ApexCharts(this.$el, merged);
+          this.chart.render();
+        }
         this.$dispatch("rendered", { chart: this.chart });
+      },
+      destroy() {
+        _loadable.destroy.call(this);
+        this.chart?.destroy();
+        this.chart = null;
       }
     };
   }
@@ -708,14 +823,22 @@
   function sticky() {
     return {
       init() {
-        const e = this.$el.offsetTop;
+        this.updateOffset();
+        this._onResize = () => this.updateOffset();
+        window.addEventListener("resize", this._onResize);
+      },
+      updateOffset() {
+        const top = this.$el.offsetTop;
         this.$el.style.position = "sticky";
-        this.$el.style.top = `${e}px`;
-        this.$el.style.maxHeight = `calc(100dvh - ${e}px)`;
+        this.$el.style.top = `${top}px`;
+        this.$el.style.maxHeight = `calc(100dvh - ${top}px)`;
+      },
+      destroy() {
+        window.removeEventListener("resize", this._onResize);
       }
     };
   }
-  const __vite_glob_0_38 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_39 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     sticky
   }, Symbol.toStringTag, { value: "Module" }));
@@ -761,7 +884,7 @@
       }
     };
   }
-  const __vite_glob_0_44 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_45 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     toggleable
   }, Symbol.toStringTag, { value: "Module" }));
@@ -769,18 +892,40 @@
     const _toggleable = toggleable();
     return {
       ..._toggleable,
-      _rAF: null,
-      trigger: null,
       popoverElement: null,
+      trigger: null,
+      resizeObserver: null,
+      mutationObserver: null,
+      livewireCommitCleanup: null,
+      _rAF: null,
       mouseX: 0,
       mouseY: 0,
       init() {
         _toggleable.init.call(this);
         this.popoverElement = this.$root.lastElementChild?.matches("[popover]") && this.$root.lastElementChild;
-        this.trigger = this.$root.firstElementChild !== this.popoverElement ? this.$root.firstElementChild : this.$root;
         if (!this.popoverElement) return;
-        this.$root.setAttribute("aria-haspopup", "true");
-        this.$root.setAttribute("aria-expanded", "false");
+        this.trigger = this.$root.firstElementChild !== this.popoverElement ? this.$root.firstElementChild : this.$root;
+        if (this.trigger?.matches("[data-tallkit-tooltip]")) {
+          this.trigger = this.trigger.firstElementChild;
+        }
+        const role = this.popoverElement.getAttribute("role");
+        if (!this.trigger.hasAttribute("aria-haspopup") && role !== "tooltip") {
+          this.trigger.setAttribute("aria-haspopup", role === "listbox" || role === "dialog" ? role : "true");
+        }
+        if (!this.trigger.hasAttribute("aria-expanded")) {
+          this.trigger.setAttribute("aria-expanded", "false");
+        }
+        if (!this.popoverElement.id) {
+          this.popoverElement.id = generateId("popover");
+        }
+        if (!this.trigger.hasAttribute("aria-controls")) {
+          this.trigger.setAttribute("aria-controls", this.popoverElement.id);
+        }
+        if (role === "tooltip") {
+          const ids = new Set((this.trigger.getAttribute("aria-describedby") ?? "").split(" ").filter(Boolean));
+          ids.add(this.popoverElement.id);
+          this.trigger.setAttribute("aria-describedby", Array.from(ids).join(" "));
+        }
         this.popoverElement.addEventListener("beforetoggle", (e) => {
           queueMicrotask(() => {
             if (e.newState === "open") {
@@ -790,7 +935,7 @@
             }
           });
         });
-        const offCommit = Livewire?.hook("commit", ({ succeed }) => {
+        const offCommit = window.Livewire?.hook("commit", ({ succeed }) => {
           succeed(() => {
             if (!this.popoverElement?.matches(":popover-open")) return;
             if (!this.$root?.isConnected) return;
@@ -799,30 +944,30 @@
         });
         this.livewireCommitCleanup = typeof offCommit === "function" ? offCommit : () => {
         };
-        if (window.matchMedia("(hover: none)").matches || mode === "dropdown") {
+        if (mode !== "manual" && (window.matchMedia("(hover: none)").matches || mode === "dropdown")) {
           bind(this.trigger, {
             ["@click"]() {
-              this.toggle();
+              this.toggle(!["menu"].includes(role));
             },
             ["@click.outside"](e) {
               if ((this.popoverElement.hasAttribute("data-keep-open") || e.target?.hasAttribute("data-keep-open") || e.target?.closest("[data-keep-open]")) && this.popoverElement.contains(e.target)) {
                 return;
               }
               this.close();
-            },
-            ["@keyup.escape.window"]() {
-              this.close();
             }
           });
         } else if (mode === "hover") {
           bind(this.trigger, {
             ["@mouseenter"]() {
-              this.open();
+              this.open(false);
             },
             ["@mouseleave"]() {
               this.close();
             },
-            ["@keyup.escape.window"]() {
+            ["@focus"]() {
+              this.open();
+            },
+            ["@blur"]() {
               this.close();
             }
           });
@@ -833,9 +978,6 @@
               this.mouseX = event.clientX;
               this.mouseY = event.clientY;
               this.open();
-            },
-            ["@keydown.escape.prevent"]() {
-              this.close();
             }
           });
           bind(this.popoverElement, {
@@ -845,17 +987,30 @@
           });
         }
         bind(this.trigger, {
+          ["@open"]() {
+            this.open();
+          },
           ["@close"]() {
+            this.close();
+          },
+          ["@keydown.escape.window"]() {
             this.close();
           }
         });
+      },
+      destroy() {
+        this.onClose();
+        this.livewireCommitCleanup?.();
       },
       open(focus = true) {
         requestAnimationFrame(() => {
           if (!this.popoverElement?.isConnected) return;
           if (this.popoverElement.matches(":popover-open")) return;
           this.popoverElement.showPopover();
-          if (focus) this.popoverElement.focus();
+          if (focus) {
+            const firstItem = this.popoverElement.querySelector("[role=menuitem], [role=option], [role=tab]");
+            (firstItem ?? this.popoverElement).focus();
+          }
         });
       },
       close() {
@@ -867,9 +1022,11 @@
       },
       onOpen() {
         _toggleable.open.call(this);
-        this.$root.setAttribute("aria-expanded", "true");
-        window.addEventListener("scroll", () => this.boundSetPosition(), true);
-        window.addEventListener("resize", () => this.boundSetPosition(), true);
+        this.trigger.setAttribute("aria-expanded", "true");
+        this._onScroll ??= () => this.boundSetPosition();
+        this._onResize ??= () => this.boundSetPosition();
+        window.addEventListener("scroll", this._onScroll, true);
+        window.addEventListener("resize", this._onResize, true);
         this.resizeObserver = new ResizeObserver(() => this.boundSetPosition());
         this.resizeObserver.observe(this.trigger);
         this.resizeObserver.observe(this.popoverElement);
@@ -884,9 +1041,9 @@
       },
       onClose() {
         _toggleable.close.call(this);
-        this.$root.setAttribute("aria-expanded", "false");
-        window.removeEventListener("scroll", () => this.boundSetPosition(), true);
-        window.removeEventListener("resize", () => this.boundSetPosition(), true);
+        this.trigger.setAttribute("aria-expanded", "false");
+        window.removeEventListener("scroll", this._onScroll, true);
+        window.removeEventListener("resize", this._onResize, true);
         this.resizeObserver?.disconnect();
         this.resizeObserver = null;
         this.mutationObserver?.disconnect();
@@ -992,7 +1149,7 @@
       }
     };
   }
-  const __vite_glob_0_34 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_35 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     popover
   }, Symbol.toStringTag, { value: "Module" }));
@@ -2320,6 +2477,7 @@
       index: null,
       fuse: null,
       lastInteraction: null,
+      debouncedSearch: null,
       init() {
         this.input = this.$root.querySelector("[data-tallkit-input]");
         this.list = this.$root.querySelector("[role=listbox]");
@@ -2328,11 +2486,12 @@
         this.$watch(() => this.index, (index) => {
           this.setActive(index);
         });
+        this.debouncedSearch = debounce(() => this.search(), 150);
         bind(this.input, {
           ["@input"]() {
             this.lastInteraction = "keyboard";
             this.$dispatch("listbox-search-updated", { query: this.input.value });
-            this.search();
+            this.debouncedSearch();
           },
           ["@focus"]() {
             this.search();
@@ -2340,7 +2499,7 @@
           ["@blur"]() {
             this.clear();
           },
-          ["@keydown.esc.prevent"]() {
+          ["@keydown.escape.prevent"]() {
             this.clear();
           },
           ["@keydown.arrow-up.prevent"]() {
@@ -2390,14 +2549,14 @@
               this.index = index;
             }
           },
-          ["@keydown.esc.prevent"]() {
+          ["@keydown.escape.prevent"]() {
             this.clear();
           },
           ["@keydown.arrow-up.prevent"]() {
             this.lastInteraction = "keyboard";
             this.prev();
           },
-          ["@keydown.arrow-down.prevent"](e) {
+          ["@keydown.arrow-down.prevent"]() {
             this.lastInteraction = "keyboard";
             this.next();
           },
@@ -2426,7 +2585,7 @@
           this.list.querySelectorAll("[role=option]")
         ).map((item) => {
           item.hidden = true;
-          if (item?.firstElementChild.disabled) {
+          if (item?.firstElementChild?.disabled) {
             item.setAttribute("aria-disabled", "true");
           }
           return {
@@ -2532,9 +2691,7 @@
         if (!button || button.hasAttribute("disabled")) return;
         button.dispatchEvent(new Event("click", { bubbles: true }));
         if (clearOnSelect) {
-          this.input.value = "";
-          this.input.dispatchEvent(new Event("input", { bubbles: true }));
-          this.input.dispatchEvent(new Event("change", { bubbles: true }));
+          setFieldValue(this.input, "");
         }
         this.$dispatch("listbox-item-selected", { index, item, button });
       },
@@ -2560,6 +2717,7 @@
         this.list.removeAttribute("aria-activedescendant");
       },
       clear() {
+        this.debouncedSearch?.cancel();
         this.clearActive();
         this.index = null;
       },
@@ -2575,7 +2733,7 @@
       }
     };
   }
-  const __vite_glob_0_25 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_26 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     listbox
   }, Symbol.toStringTag, { value: "Module" }));
@@ -2592,7 +2750,7 @@
           ["@blur"]() {
             this.close();
           },
-          ["@keydown.esc.prevent"]() {
+          ["@keydown.escape.prevent"]() {
             this.close();
           }
         });
@@ -2635,22 +2793,28 @@
     badge
   }, Symbol.toStringTag, { value: "Module" }));
   function chartjs() {
+    const _loadable = loadable();
     return {
-      ...loadable(),
+      ..._loadable,
+      ...dataOptions(),
       chart: null,
       init() {
-        this.load(async () => {
-          if (!window.Chart) {
-            await this.$tallkit.loadScript("https://cdn.jsdelivr.net/npm/chart.js@4");
-          }
-        });
-      },
-      getDataOptions() {
-        return window.Alpine.evaluate(this.$el, this.$el.getAttribute("data-options") || "{}");
+        this.load(() => loadRemoteAssets(() => !!window.Chart, "https://cdn.jsdelivr.net/npm/chart.js@4"));
       },
       render(options = {}) {
-        this.chart ??= new window.Chart(this.$el, { ...options, ...this.getDataOptions() });
+        const merged = { ...options, ...this.getDataOptions() };
+        if (this.chart) {
+          Object.assign(this.chart.config, merged);
+          this.chart.update();
+        } else {
+          this.chart = new window.Chart(this.$el, merged);
+        }
         this.$dispatch("rendered", { chart: this.chart });
+      },
+      destroy() {
+        _loadable.destroy.call(this);
+        this.chart?.destroy();
+        this.chart = null;
       }
     };
   }
@@ -2661,36 +2825,28 @@
   function checkboxAll({ group = "" } = {}) {
     return {
       all: null,
-      checkboxes: [],
+      get checkboxes() {
+        return Array.from(document.querySelectorAll(`[data-tallkit-checkbox-group="${group}"]`));
+      },
       init() {
         this.all = this.$root.querySelector("[data-tallkit-checkbox]");
-        this.checkboxes = Array.from(document.querySelectorAll(`[data-checkbox-group="${group}"]`));
         bind(this.all, {
           ["@change"]: () => this.toggleAll()
         });
-        document.addEventListener("change", (event) => {
-          const checkbox = event.target;
-          if (checkbox === this.all || !checkbox.matches(`[data-checkbox-group="${group}"]`)) {
-            return;
-          }
-          this.updateState();
+        bind(this.checkboxes, {
+          ["@change"]: () => this.updateState()
         });
-        this.updateState();
       },
       toggleAll() {
         this.checkboxes.forEach((checkbox) => {
-          checkbox.checked = this.all?.checked;
-          this.$nextTick(() => {
-            checkbox.dispatchEvent(new Event("input", { bubbles: true }));
-            checkbox.dispatchEvent(new Event("change", { bubbles: true }));
-          });
+          checkbox.checked = !!this.all?.checked;
         });
-        this.updateState();
       },
       updateState() {
         if (!this.all) return;
-        const total = this.checkboxes.length;
-        const checked = this.checkboxes.filter((cb) => cb.checked).length;
+        const checkboxes = this.checkboxes;
+        const total = checkboxes.length;
+        const checked = checkboxes.filter((cb) => cb.checked).length;
         this.all.checked = total > 0 && checked === total;
         this.all.indeterminate = checked > 0 && checked < total;
       }
@@ -2706,7 +2862,7 @@
     return {
       ..._popover,
       ..._listbox,
-      value,
+      value: value ?? (multiple ? [] : null),
       combobox: null,
       get selectedLabel() {
         if (multiple || this.value == null) return null;
@@ -2714,7 +2870,7 @@
         return item ? item.el.querySelector("[data-item-content]")?.textContent?.trim() : null;
       },
       get selectedCount() {
-        return multiple ? this.value.length : 0;
+        return this.items.filter((item) => this.isSelected(this.getElementValue(item.el))).length;
       },
       init() {
         _popover.init.call(this);
@@ -2743,7 +2899,7 @@
           }
         });
         bind([this.combobox, this.popoverElement, this.input, this.list], {
-          ["@keydown.esc.prevent"]() {
+          ["@keydown.escape.prevent"]() {
             this.closeAndFocus();
           }
         });
@@ -2763,7 +2919,6 @@
       },
       open() {
         this.popoverElement.style.width = `${this.combobox.offsetWidth}px`;
-        this.combobox.setAttribute("aria-expanded", "true");
         _popover.open.call(this, false);
         const target = multiple ? this.value.at(-1) : this.value;
         const index = this.filteredItems.findIndex((item) => String(this.getElementValue(item.el)) === String(target));
@@ -2773,7 +2928,6 @@
         });
       },
       close() {
-        this.combobox.setAttribute("aria-expanded", "false");
         _popover.close.call(this);
         this.clear();
       },
@@ -2782,7 +2936,13 @@
         this.combobox.focus();
       },
       isSelected(v) {
-        return multiple ? this.value.map(String).includes(String(v)) : String(this.value ?? "") === String(v);
+        if (!multiple) {
+          return String(this.value ?? "") === String(v);
+        }
+        if (!Array.isArray(this.value) && this.value != null) {
+          this.value = [this.value];
+        }
+        return this.value.map(String).includes(String(v));
       },
       pick(v) {
         if (multiple) {
@@ -2801,8 +2961,10 @@
       },
       syncChecked() {
         this.items.forEach((item) => {
+          const selected = this.isSelected(this.getElementValue(item.el));
           const mark = item.el.querySelector("[data-tallkit-checkmark]");
-          if (mark) mark.classList.toggle("invisible", !this.isSelected(this.getElementValue(item.el)));
+          if (mark) mark.classList.toggle("invisible", !selected);
+          item.li.setAttribute("aria-selected", String(selected));
         });
       },
       getElementValue(el) {
@@ -2813,195 +2975,6 @@
   const __vite_glob_0_8 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     combobox
-  }, Symbol.toStringTag, { value: "Module" }));
-  function command({ hideEmpty = false, clearOnSelect = false, ...fuseOptions } = {}) {
-    return {
-      input: null,
-      list: null,
-      noRecords: null,
-      items: [],
-      filteredItems: [],
-      index: null,
-      fuse: null,
-      lastInteraction: null,
-      init() {
-        this.input = this.$root.querySelector("[data-tallkit-input]");
-        this.list = this.$root.querySelector("[role=listbox]");
-        this.noRecords = this.$root.querySelector("[role=status]");
-        this.refreshItems();
-        this.$watch(() => this.index, (index) => {
-          this.setActive(index);
-        });
-        bind(this.input, {
-          ["@input"]() {
-            this.lastInteraction = "keyboard";
-            this.$dispatch("command-search-updated", { query: this.input.value });
-            this.search();
-          },
-          ["@focus"]() {
-            this.search();
-          },
-          ["@blur"]() {
-            this.clear();
-          },
-          ["@keydown.esc.prevent"]() {
-            this.clear();
-          },
-          ["@keydown.arrow-up.prevent"]() {
-            this.lastInteraction = "keyboard";
-            this.prev();
-          },
-          ["@keydown.arrow-down.prevent"]() {
-            this.lastInteraction = "keyboard";
-            this.next();
-          },
-          ["@keydown.enter.prevent"]() {
-            this.select(this.index);
-          },
-          ["@keydown.tab"]() {
-            this.select(this.index);
-          }
-        });
-        bind(this.list, {
-          ["@mouseleave"]: () => this.clear(),
-          ["@mousedown"]: (e) => {
-            const item = e.target.closest("[role=option]");
-            if (!item) return;
-            const index = Number(item.dataset.index);
-            if (!Number.isNaN(index)) {
-              this.select(index);
-            }
-          },
-          ["@mousemove"]: (e) => {
-            if (this.lastInteraction === "keyboard" && e.movementX === 0 && e.movementY === 0) {
-              return;
-            }
-            this.lastInteraction = "mouse";
-            const item = e.target.closest("[role=option]");
-            if (!item) return;
-            const index = Number(item.dataset.index);
-            if (Number.isNaN(index)) return;
-            if (this.index !== index) {
-              this.index = index;
-            }
-          }
-        });
-        this.$nextTick(() => {
-          this.search();
-          this.$dispatch("command-initialized");
-        });
-      },
-      refreshItems() {
-        this.items = Array.from(
-          this.list.querySelectorAll("[role=option]")
-        ).map((item) => {
-          item.hidden = true;
-          return {
-            title: normalize(item.querySelector("[data-item-content]").textContent, { removeSpaces: true }),
-            el: item.firstElementChild,
-            li: item
-          };
-        });
-        const fuseIndex = Fuse.createIndex(["title"], this.items);
-        this.fuse = new Fuse(
-          this.items,
-          {
-            ignoreDiacritics: true,
-            includeScore: true,
-            threshold: 0.1,
-            keys: ["title"],
-            ...fuseOptions
-          },
-          fuseIndex
-        );
-      },
-      search() {
-        let query = this.input.value.trim();
-        this.clear();
-        this.items.forEach((item) => {
-          item.li.hidden = true;
-        });
-        const fragment = document.createDocumentFragment();
-        let results = [];
-        if (query) {
-          results = this.fuse.search(query);
-        } else if (!hideEmpty) {
-          results = this.items.map((item) => ({ item }));
-        }
-        this.filteredItems = results.map((result, index) => {
-          const li = result.item.li;
-          li.hidden = false;
-          li.dataset.index = index;
-          fragment.appendChild(li);
-          return result.item;
-        });
-        this.list.appendChild(fragment);
-        this.$dispatch("command-items-changed", {
-          list: this.list,
-          items: this.items,
-          filteredItems: this.filteredItems
-        });
-        if (this.filteredItems.length && query) {
-          this.$nextTick(() => {
-            this.index = 0;
-          });
-        }
-        this.toggleNoRecords();
-      },
-      prev() {
-        if (this.filteredItems.length === 0) return;
-        this.index = this.index === null ? this.filteredItems.length - 1 : (this.index - 1 + this.filteredItems.length) % this.filteredItems.length;
-      },
-      next() {
-        if (this.filteredItems.length === 0) return;
-        this.index = this.index === null ? 0 : (this.index + 1) % this.filteredItems.length;
-      },
-      select(index) {
-        if (index === null) return;
-        const item = this.filteredItems[index];
-        if (!item) return;
-        const button = item.el;
-        if (!button || button.hasAttribute("disabled")) return;
-        button.dispatchEvent(new Event("click", { bubbles: true }));
-        if (clearOnSelect) {
-          this.input.value = "";
-          this.input.dispatchEvent(new Event("input", { bubbles: true }));
-          this.input.dispatchEvent(new Event("change", { bubbles: true }));
-        }
-        this.$dispatch("command-item-selected", { index, item, button });
-      },
-      setActive(index) {
-        this.clearActive();
-        const item = this.filteredItems[index];
-        if (!item) return;
-        item.el.dataset.active = "true";
-        item.li.scrollIntoView({
-          block: "nearest"
-        });
-        this.$dispatch("command-active-changed", { index, item });
-      },
-      clearActive() {
-        this.filteredItems.forEach((item) => {
-          delete item.el.dataset.active;
-        });
-      },
-      clear() {
-        this.clearActive();
-        this.index = null;
-      },
-      toggleNoRecords() {
-        if (!this.noRecords) return;
-        if (this.filteredItems.length === 0 && (this.input.value && !hideEmpty)) {
-          this.noRecords.removeAttribute("hidden");
-        } else {
-          this.noRecords.setAttribute("hidden", "");
-        }
-      }
-    };
-  }
-  const __vite_glob_0_9 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
-    __proto__: null,
-    command
   }, Symbol.toStringTag, { value: "Module" }));
   function composer({ submit = false, placeholder = false } = {}) {
     return {
@@ -3037,20 +3010,71 @@
       }
     };
   }
-  const __vite_glob_0_10 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_9 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     composer
+  }, Symbol.toStringTag, { value: "Module" }));
+  function copy(targetId = null, content = null) {
+    return {
+      copied: false,
+      timeout: null,
+      findTarget() {
+        if (targetId) {
+          const target = document.getElementById(targetId);
+          if (target) {
+            return target;
+          }
+        }
+        return this.$el.closest("[data-tallkit-field-control]")?.querySelector("[data-tallkit-control]") ?? this.$el.previousElementSibling?.querySelector("[data-tallkit-control]") ?? this.$el.parentElement?.previousElementSibling?.querySelector("[data-tallkit-control]") ?? null;
+      },
+      init() {
+        const target = this.findTarget();
+        if (!target && !content) {
+          this.$el.remove();
+          return;
+        }
+        if (!navigator.clipboard) {
+          this.$el.disabled = true;
+          return;
+        }
+        bind(this.$el, {
+          [":aria-pressed"]() {
+            return this.copied;
+          },
+          async ["@click"]() {
+            clearTimeout(this.timeout);
+            this.copied = true;
+            this.$el.dispatchEvent(new CustomEvent("open"));
+            const text = content ?? ("value" in target ? target.value : target.innerText);
+            await navigator.clipboard.writeText(text);
+            target?.dispatchEvent(new Event("copied", { bubbles: true }));
+            this.timeout = setTimeout(() => {
+              this.$el.dispatchEvent(new CustomEvent("close"));
+              this.copied = false;
+              this.timeout = null;
+            }, 1e3);
+          }
+        });
+      },
+      destroy() {
+        clearTimeout(this.timeout);
+      }
+    };
+  }
+  const __vite_glob_0_10 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    copy
   }, Symbol.toStringTag, { value: "Module" }));
   function creditCard(options = {}) {
     const _toggleable = toggleable();
     return {
       ..._toggleable,
+      options: null,
       init() {
         _toggleable.init.call(this);
-        this.card = this.$data;
         this.options = {
           opened: true,
-          types: [],
+          types: {},
           holderName: null,
           number: null,
           type: null,
@@ -3061,6 +3085,12 @@
         this.opened = this.options.opened;
         bind(this.$el, {
           ["@click"]() {
+            this.toggle();
+          },
+          ["@keydown.enter.prevent"]() {
+            this.toggle();
+          },
+          ["@keydown.space.prevent"]() {
             this.toggle();
           },
           [":class"]() {
@@ -3075,6 +3105,9 @@
       },
       update(options2 = {}) {
         this.options = { ...this.options, ...options2 };
+        if ("opened" in options2) {
+          this.opened = this.options.opened;
+        }
       },
       flip(isBack = false) {
         if (isBack) {
@@ -3091,33 +3124,36 @@
   }, Symbol.toStringTag, { value: "Module" }));
   function disclosureGroup({ exclusive = false } = {}) {
     return {
+      observer: null,
       init() {
         const items = this.$root.querySelectorAll("[data-tallkit-disclosure-item]");
         const observe = () => {
           items.forEach((item) => {
-            observer.observe(item, { attributeFilter: ["data-open"] });
+            this.observer.observe(item, { attributeFilter: ["data-open"] });
           });
         };
-        const observer = new MutationObserver((records) => {
-          const current = records[0]?.target;
-          items.forEach((item) => {
-            if (item === current) return;
-            if (!exclusive) return;
-            if (item._x_dataStack && item?._x_dataStack[0] && typeof item?._x_dataStack[0].close === "function") {
-              item?._x_dataStack[0].close();
-            } else {
+        this.observer = new MutationObserver((records) => {
+          if (exclusive) {
+            const opened = new Set(
+              records.filter((record) => record.target.hasAttribute("data-open")).map((record) => record.target)
+            );
+            items.forEach((item) => {
+              if (opened.has(item)) return;
               item.removeAttribute("data-open");
-            }
-          });
-          observer.disconnect();
+            });
+          }
+          this.observer.disconnect();
           this.$dispatch("changed", { items });
           this.$nextTick(observe);
         });
         observe();
+      },
+      destroy() {
+        this.observer?.disconnect();
       }
     };
   }
-  const __vite_glob_0_12 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_13 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     disclosureGroup
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3125,12 +3161,24 @@
     const _toggleable = toggleable();
     return {
       ..._toggleable,
+      observer: null,
       init() {
         _toggleable.init.call(this, this.$root.hasAttribute("data-open"));
-        new MutationObserver(() => {
+        const panel = this.$root.querySelector(":scope > button + *");
+        if (panel && !panel.id) {
+          panel.id = generateId("disclosure");
+        }
+        this.observer = new MutationObserver(() => {
           this.opened = this.$root.hasAttribute("data-open");
-        }).observe(this.$root, { attributeFilter: ["data-open"] });
+        });
+        this.observer.observe(this.$root, { attributeFilter: ["data-open"] });
         bind(this.$root.querySelectorAll(":scope > button"), {
+          [":aria-controls"]() {
+            return panel?.id ?? null;
+          },
+          [":aria-expanded"]() {
+            return String(this.opened);
+          },
           ["@click"]() {
             this.toggle();
           }
@@ -3143,45 +3191,50 @@
       close() {
         this.$root.removeAttribute("data-open");
         _toggleable.close.call(this);
+      },
+      destroy() {
+        this.observer?.disconnect();
       }
     };
   }
-  const __vite_glob_0_13 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_14 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     disclosure
   }, Symbol.toStringTag, { value: "Module" }));
   function echarts() {
+    const _loadable = loadable();
     return {
-      ...loadable(),
+      ..._loadable,
+      ...dataOptions(),
       chart: null,
       init() {
-        this.load(async () => {
-          if (!window.echarts) {
-            await this.$tallkit.loadScript("https://cdn.jsdelivr.net/npm/echarts@6");
-          }
-        });
-      },
-      getDataOptions() {
-        return window.Alpine.evaluate(this.$el, this.$el.getAttribute("data-options") || "{}");
+        this.load(() => loadRemoteAssets(() => !!window.echarts, "https://cdn.jsdelivr.net/npm/echarts@6"));
       },
       render(options = {}) {
         this.chart ??= window.echarts.init(this.$el);
         this.chart.setOption({ ...options, ...this.getDataOptions() });
         this.$dispatch("rendered", { chart: this.chart });
+      },
+      destroy() {
+        _loadable.destroy.call(this);
+        this.chart?.dispose();
+        this.chart = null;
       }
     };
   }
-  const __vite_glob_0_15 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_16 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     echarts
   }, Symbol.toStringTag, { value: "Module" }));
-  function fetchable({ url = null, data = null, autofetch = null, ...options } = {}) {
+  function fetchable({ url = null, data = null, auto = null, options = {} } = {}) {
+    const _loadable = loadable();
     return {
-      ...loadable(),
+      ..._loadable,
       url: null,
       response: null,
       data: null,
       options: null,
+      _controller: null,
       init() {
         this.clear();
         this.url = url;
@@ -3192,7 +3245,7 @@
           responseType: "json",
           ...options
         };
-        if (this.url && autofetch !== false) {
+        if (this.url && auto !== false) {
           this.fetch();
         }
         if (!this.url && this.data) {
@@ -3201,14 +3254,21 @@
       },
       async fetch(url2 = null, options2 = {}, silent = false) {
         const _url = url2 || this.url;
-        const _options = { ...this.options ?? {}, ...options2 };
+        const _options = {
+          ...this.options ?? {},
+          ...options2,
+          headers: { ...this.options?.headers ?? {}, ...options2.headers ?? {} }
+        };
         this.url = _url;
         this.options = _options;
         if (!_url) {
           return;
         }
+        this._controller?.abort();
+        const controller = new AbortController();
+        this._controller = controller;
         this.load(async () => {
-          this.response = await window.fetch(_url, _options);
+          this.response = await window.fetch(_url, { ..._options, signal: controller.signal });
           if (!this.response.ok) {
             throw new Error(this.response.statusText);
           }
@@ -3220,62 +3280,134 @@
       },
       update(url2 = null, options2 = {}) {
         return this.fetch(url2, options2, true);
-      }
-    };
-  }
-  const __vite_glob_0_16 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
-    __proto__: null,
-    fetchable
-  }, Symbol.toStringTag, { value: "Module" }));
-  function frappeCharts() {
-    return {
-      ...loadable(),
-      chart: null,
-      init() {
-        this.load(async () => {
-          if (!window.frappe?.Chart) {
-            await this.$tallkit.loadScript("https://cdn.jsdelivr.net/npm/frappe-charts@1");
-          }
-        });
       },
-      getDataOptions() {
-        return window.Alpine.evaluate(this.$el, this.$el.getAttribute("data-options") || "{}");
-      },
-      render(options = {}) {
-        this.chart ??= new window.frappe.Chart(this.$el, { ...options, ...this.getDataOptions() });
-        this.$dispatch("rendered", { chart: this.chart });
+      destroy() {
+        _loadable.destroy.call(this);
+        this._controller?.abort();
+        this._controller = null;
       }
     };
   }
   const __vite_glob_0_17 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
-    frappeCharts
+    fetchable
   }, Symbol.toStringTag, { value: "Module" }));
-  function fullCalendar({ locale, ...options } = {}) {
+  function form({
+    focusError = null,
+    toast: toast2 = null,
+    errorMessage = null,
+    successMessage = null
+  } = {}) {
     return {
-      ...loadable(),
-      fullCalendar: null,
+      livewireCommitCleanup: null,
       init() {
-        this.load(async () => {
-          if (!window.FullCalendar) {
-            await this.$tallkit.loadScript([
-              "https://cdn.jsdelivr.net/npm/fullcalendar@6/index.global.min.js",
-              locale && locale !== "en" ? `https://cdn.jsdelivr.net/npm/@fullcalendar/core@6/locales/${locale}.global.min.js` : "https://cdn.jsdelivr.net/npm/@fullcalendar/core@6/locales-all.global.min.js"
-            ]);
-          }
+        if (window.Livewire) {
+          this.watchLivewireCommits();
+        } else if (focusError) {
+          this.focusFirstInvalidField();
+        }
+      },
+      watchLivewireCommits() {
+        const offCommit = window.Livewire.hook("commit", ({ component, succeed }) => {
+          succeed(({ snapshot }) => {
+            if (!this.$el?.isConnected) return;
+            if (component?.el !== this.$el && !component?.el?.contains(this.$el)) return;
+            const id = this.$el?.getAttribute("id") ?? component?.el.getAttribute("wire:id") ?? void 0;
+            const hasErrors = Object.keys(snapshot?.memo?.errors ?? {}).length > 0 || !!this.$el.querySelector('[data-invalid], [aria-invalid="true"]');
+            if (hasErrors) {
+              if ((toast2 === true || toast2 === "error") && errorMessage) {
+                this.$tallkit.toast().error({ message: errorMessage, id, duration: 3e3 });
+              }
+              if (focusError) {
+                this.focusFirstInvalidField();
+              }
+              return;
+            }
+            if ((toast2 === true || toast2 === "success") && successMessage) {
+              this.$tallkit.toast().success({ message: successMessage, id, duration: 3e3 });
+              return;
+            }
+          });
         });
+        this.livewireCommitCleanup = typeof offCommit === "function" ? offCommit : () => {
+        };
       },
-      getDataOptions() {
-        return window.Alpine.evaluate(this.$el, this.$el.getAttribute("data-options") || "{}");
+      focusFirstInvalidField() {
+        const field = this.$el.querySelector('[data-invalid], [aria-invalid="true"]');
+        if (!(field instanceof HTMLElement)) return;
+        field.scrollIntoView({ behavior: "smooth", block: "center" });
+        field.focus({ preventScroll: true });
       },
-      render() {
-        this.fullCalendar ??= new window.FullCalendar.Calendar(this.$el, { ...options, ...this.getDataOptions() });
-        this.fullCalendar.render();
-        this.$dispatch("rendered", { fullCalendar: this.fullCalendar });
+      destroy() {
+        this.livewireCommitCleanup?.();
       }
     };
   }
   const __vite_glob_0_18 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    form
+  }, Symbol.toStringTag, { value: "Module" }));
+  function frappeCharts() {
+    const _loadable = loadable();
+    return {
+      ..._loadable,
+      ...dataOptions(),
+      chart: null,
+      init() {
+        this.load(() => loadRemoteAssets(() => !!window.frappe?.Chart, "https://cdn.jsdelivr.net/npm/frappe-charts@1"));
+      },
+      render(options = {}) {
+        this.chart?.destroy?.();
+        this.chart = new window.frappe.Chart(this.$el, { ...options, ...this.getDataOptions() });
+        this.$dispatch("rendered", { chart: this.chart });
+      },
+      destroy() {
+        _loadable.destroy.call(this);
+        this.chart?.destroy?.();
+        this.chart = null;
+      }
+    };
+  }
+  const __vite_glob_0_19 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    frappeCharts
+  }, Symbol.toStringTag, { value: "Module" }));
+  function fullCalendar({ locale = null, theme = null, palette = null, options = {} } = {}) {
+    const _loadable = loadable();
+    return {
+      ..._loadable,
+      ...dataOptions(),
+      fullCalendar: null,
+      init() {
+        const baseUrl = "https://cdn.jsdelivr.net/npm/fullcalendar@7";
+        this.load(() => loadRemoteAssets(() => !!window.FullCalendar, [
+          `${baseUrl}/all/global.min.js`,
+          locale && locale !== "en" ? `${baseUrl}/locales/${String(locale).replace("_", "-").toLowerCase()}/global.min.js` : `${baseUrl}/locales-all/global.min.js`,
+          `${baseUrl}/themes/${theme ?? "monarch"}/global.js`
+        ], [
+          `${baseUrl}/skeleton.css`,
+          `${baseUrl}/themes/${theme ?? "monarch"}/theme.css`,
+          `${baseUrl}/themes/${theme ?? "monarch"}/palettes/${palette ?? "blue"}.css`
+        ]));
+      },
+      render() {
+        this.fullCalendar?.destroy();
+        this.fullCalendar = new window.FullCalendar.Calendar(this.$el, {
+          locale,
+          ...options,
+          ...this.getDataOptions()
+        });
+        this.fullCalendar.render();
+        this.$dispatch("rendered", { fullCalendar: this.fullCalendar });
+      },
+      destroy() {
+        _loadable.destroy.call(this);
+        this.fullCalendar?.destroy();
+        this.fullCalendar = null;
+      }
+    };
+  }
+  const __vite_glob_0_20 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     fullCalendar
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3284,7 +3416,7 @@
       ...sticky()
     };
   }
-  const __vite_glob_0_19 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_21 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     header
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3292,114 +3424,95 @@
     return {
       ...loadable(),
       init() {
-        this.load(async () => {
-          if (!window.hljs) {
-            await this.$tallkit.loadScript("https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/highlight.min.js");
-            await this.$tallkit.loadStyle("https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/styles/default.min.css");
-          }
-        });
+        this.load(() => loadRemoteAssets(
+          () => !!window.hljs,
+          "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/highlight.min.js",
+          "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/styles/default.min.css"
+        ));
       },
       render(code, language = null) {
         try {
           return language ? window.hljs.highlight(code, { language }).value : window.hljs.highlightAuto(code).value;
         } catch (e) {
           this.fail(e);
+          return escapeHtml(code) ?? "";
         }
       }
     };
   }
-  const __vite_glob_0_20 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_22 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     highlightjs
   }, Symbol.toStringTag, { value: "Module" }));
   function inputClearable() {
     return {
+      hasValue: false,
       init() {
-        const input = this.$el?.closest("[data-tallkit-field-control]")?.querySelector("[data-tallkit-input]");
+        const input = findFieldInput(this.$el);
         if (!input) {
           return;
         }
-        const button = this.$el;
-        button.style.display = input.value ? "inline-flex " : "none";
+        this.hasValue = Boolean(input.value);
         bind(input, {
           ["@input"]() {
-            button.style.display = input.value ? "inline-flex " : "none";
+            this.hasValue = Boolean(input.value);
           }
         });
-        bind(button, {
+        bind(this.$el, {
+          ["x-show"]() {
+            return this.hasValue;
+          },
           ["@click"]() {
-            input.value = "";
-            input.dispatchEvent(new Event("input", { bubbles: false }));
-            input.dispatchEvent(new Event("change", { bubbles: false }));
-            input.dispatchEvent(new Event("cleared", { bubbles: false }));
+            setFieldValue(input, "");
+            input.dispatchEvent(new Event("cleared", { bubbles: true }));
             input.focus();
           }
         });
       }
     };
   }
-  const __vite_glob_0_21 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_23 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     inputClearable
-  }, Symbol.toStringTag, { value: "Module" }));
-  function inputCopyable() {
-    return {
-      copied: false,
-      timeout: null,
-      init() {
-        const input = this.$el?.closest("[data-tallkit-field-control]")?.querySelector("[data-tallkit-input]");
-        if (!input) {
-          return;
-        }
-        bind(this.$el, {
-          async ["@click"]() {
-            clearTimeout(this.timeout);
-            this.copied = true;
-            this.popoverElement && this.popoverElement.showPopover();
-            if (navigator.clipboard) {
-              await navigator.clipboard.writeText(input.value);
-              input.dispatchEvent(new Event("copied", { bubbles: false }));
-            }
-            this.timeout = setTimeout(() => {
-              this.popoverElement && this.popoverElement.hidePopover();
-              this.copied = false;
-            }, 1e3);
-          }
-        });
-      }
-    };
-  }
-  const __vite_glob_0_22 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
-    __proto__: null,
-    inputCopyable
   }, Symbol.toStringTag, { value: "Module" }));
   function inputViewable() {
     return {
       viewed: false,
+      inputObserver: null,
+      originalType: "password",
       init() {
-        const input = this.$el?.closest("[data-tallkit-field-control]")?.querySelector("[data-tallkit-input]");
+        const input = findFieldInput(this.$el);
         if (!input) {
           return;
         }
-        input.setAttribute("type", this.viewed ? "text" : "password");
+        if (input.type) {
+          this.originalType = input.type;
+        }
+        input.setAttribute("type", this.viewed ? "text" : this.originalType);
         bind(this.$el, {
+          [":aria-pressed"]() {
+            return this.viewed;
+          },
           ["@click"]() {
             this.viewed = !this.viewed;
-            input.setAttribute("type", this.viewed ? "text" : "password");
-            input.dispatchEvent(new Event("viewed", { bubbles: false }));
+            input.setAttribute("type", this.viewed ? "text" : this.originalType);
+            input.dispatchEvent(new Event("viewed", { bubbles: true }));
           }
         });
-        const inputObserver = new MutationObserver(() => {
+        this.inputObserver = new MutationObserver(() => {
           this.viewed = input?.getAttribute("type") !== "password";
         });
-        inputObserver.observe(input, {
+        this.inputObserver.observe(input, {
           attributes: true,
           attributeFilter: ["type"]
         });
+      },
+      destroy() {
+        this.inputObserver?.disconnect();
       }
     };
   }
-  const __vite_glob_0_23 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_24 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     inputViewable
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3425,17 +3538,13 @@
             const isDisabled = control.disabled;
             if (type === "checkbox") {
               if (!isDisabled && !isReadOnly) {
-                control.checked = !control.checked;
-                control.dispatchEvent(new Event("input", { bubbles: true }));
-                control.dispatchEvent(new Event("change", { bubbles: true }));
+                setFieldChecked(control, !control.checked);
               }
               return;
             }
             if (type === "radio") {
               if (!isDisabled && !isReadOnly && !control.checked) {
-                control.checked = true;
-                control.dispatchEvent(new Event("input", { bubbles: true }));
-                control.dispatchEvent(new Event("change", { bubbles: true }));
+                setFieldChecked(control, true);
               }
               return;
             }
@@ -3447,7 +3556,7 @@
       }
     };
   }
-  const __vite_glob_0_24 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_25 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     label
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3465,7 +3574,7 @@
           return this.checked;
         }
         if (this.isArray) {
-          return this.value.includes(this.$root.value);
+          return this.value.some((v) => v == this.$root.value);
         }
         return this.value == this.$root.value;
       },
@@ -3482,14 +3591,14 @@
           return;
         }
         if (this.isArray) {
-          this.value = this.isChecked ? this.value.filter((v) => v !== this.$root.value) : [...this.value, this.$root.value];
+          this.value = this.isChecked ? this.value.filter((v) => v != this.$root.value) : [...this.value, this.$root.value];
           return;
         }
-        this.value = this.$root.value;
+        this.value = this.isChecked ? null : this.$root.value;
       }
     };
   }
-  const __vite_glob_0_27 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_28 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     menuCheckbox
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3518,14 +3627,15 @@
       }
     };
   }
-  const __vite_glob_0_28 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_29 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     menuRadio
   }, Symbol.toStringTag, { value: "Module" }));
   function menu() {
     return {
       init() {
-        bind(this.$el.querySelectorAll("[data-tallkit-menu-item]"), {
+        const items = Array.from(this.$el.querySelectorAll("[data-tallkit-menu-item]")).filter((item) => item.closest("[data-tallkit-menu]") === this.$el);
+        bind(items, {
           ["@mouseenter"]() {
             if (this.$el.disabled) {
               return;
@@ -3537,12 +3647,51 @@
               return;
             }
             this.$el.removeAttribute("data-active");
+          },
+          ["@focus"]() {
+            if (this.$el.disabled) {
+              return;
+            }
+            this.$el.setAttribute("data-active", "");
+          },
+          ["@blur"]() {
+            this.$el.removeAttribute("data-active");
           }
         });
+        bind(this.$el, {
+          ["@keydown.arrow-down.prevent"]() {
+            this.focusItem(items, 1);
+          },
+          ["@keydown.arrow-up.prevent"]() {
+            this.focusItem(items, -1);
+          },
+          ["@keydown.home.prevent"]() {
+            this.focusItem(items, "first");
+          },
+          ["@keydown.end.prevent"]() {
+            this.focusItem(items, "last");
+          }
+        });
+      },
+      focusItem(items, direction) {
+        const enabled = items.filter((item) => !item.disabled);
+        if (!enabled.length) return;
+        const currentIndex = enabled.indexOf(document.activeElement);
+        let index;
+        if (direction === "first") {
+          index = 0;
+        } else if (direction === "last") {
+          index = enabled.length - 1;
+        } else if (currentIndex === -1) {
+          index = direction === 1 ? 0 : enabled.length - 1;
+        } else {
+          index = (currentIndex + direction + enabled.length) % enabled.length;
+        }
+        enabled[index].focus();
       }
     };
   }
-  const __vite_glob_0_29 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_30 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     menu
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3558,17 +3707,12 @@
           }
         });
         if (shortcut) {
-          bind(this.$el, {
-            [`@keydown.${shortcut}.document`](event) {
-              event.preventDefault();
-              this.$dispatch("modal-show", { name });
-            }
-          });
+          bindShortcut(this.$el, shortcut, () => this.$dispatch("modal-show", { name }));
         }
       }
     };
   }
-  const __vite_glob_0_30 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_31 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     modalTrigger
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3607,10 +3751,11 @@
           if (persist) {
             const persistAnimation = typeof persist === "string" ? persist : "tilt-shaking";
             dialog.classList.remove(persistAnimation);
+            dialog.focus();
             this.$nextTick(() => dialog.classList.add(persistAnimation));
             return;
           }
-          if (dismissible2 !== false && event.target === dialog || event.target.getAttribute("tabindex") === "0") {
+          if (dismissible2 !== false && (event.target === dialog || event.target.getAttribute("tabindex") === "0")) {
             dialog.close();
           }
         };
@@ -3627,16 +3772,20 @@
           ["@click"](event) {
             handleCloseAttempt(event);
           },
-          ["@keyup.escape.window"](event) {
-            handleCloseAttempt(event);
-          },
-          ...shortcut ? {
-            [`@keydown.${shortcut}.document`](event) {
+          ["@keydown.escape.prevent"](event) {
+            if (persist) {
               event.preventDefault();
-              this.$dispatch("modal-show", { name });
+              handleCloseAttempt(event);
+              return;
             }
-          } : {}
+            if (dismissible2 === false) {
+              event.preventDefault();
+            }
+          }
         });
+        if (shortcut) {
+          bindShortcut(dialog, shortcut, () => this.$dispatch("modal-show", { name }));
+        }
       },
       show() {
         this.$dispatch("modal-show", { name });
@@ -3646,15 +3795,23 @@
       }
     };
   }
-  const __vite_glob_0_31 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_32 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     modal
   }, Symbol.toStringTag, { value: "Module" }));
   function navIndicator({ mode = null } = {}) {
     return {
+      _visibilityTimeout: null,
       init() {
-        document.addEventListener("livewire:navigated", this.move.bind(this));
-        window.addEventListener("resize", this.move.bind(this));
+        this._onMove = this.move.bind(this);
+        document.addEventListener("livewire:navigated", this._onMove);
+        window.addEventListener("resize", this._onMove);
+        this.$nextTick(() => this.move());
+      },
+      destroy() {
+        document.removeEventListener("livewire:navigated", this._onMove);
+        window.removeEventListener("resize", this._onMove);
+        clearTimeout(this._visibilityTimeout);
       },
       move() {
         requestAnimationFrame(() => {
@@ -3663,9 +3820,7 @@
           const link = nav?.querySelector("a[data-current]");
           if (!link) return;
           const indicatorRect = indicator.getBoundingClientRect();
-          nav.getBoundingClientRect();
           const linkRect = link.getBoundingClientRect();
-          const style = getComputedStyle(link);
           const x = link.offsetLeft + nav.offsetLeft;
           const y = link.offsetTop + nav.offsetTop;
           if (linkRect.width <= 0 || linkRect.height <= 0 || linkRect.top <= 0 || linkRect.left <= 0) {
@@ -3675,8 +3830,10 @@
           indicator.style.opacity = "1";
           if (indicatorRect.width <= 0 || indicatorRect.height <= 0 || indicatorRect.top <= 0 || indicatorRect.left <= 0) {
             indicator.style.visibility = "hidden";
-            setTimeout(() => {
+            clearTimeout(this._visibilityTimeout);
+            this._visibilityTimeout = setTimeout(() => {
               indicator.style.visibility = "visible";
+              this._visibilityTimeout = null;
             }, getTransitionTimeout(indicator));
           }
           if (mode === "line-left" || mode === "line-right") {
@@ -3689,6 +3846,7 @@
             indicator.style.transform = `translate(${x}px, ${y + (mode === "line-top" ? -10 : linkRect.height + 10)}px)`;
             return;
           }
+          const style = getComputedStyle(link);
           indicator.style.transform = `translate(${x}px, ${y}px)`;
           indicator.style.width = `${linkRect.width}px`;
           indicator.style.height = `${linkRect.height}px`;
@@ -3697,7 +3855,7 @@
       }
     };
   }
-  const __vite_glob_0_32 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_33 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     navIndicator
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3705,8 +3863,9 @@
     return {
       value: "",
       inputs: [],
+      _syncing: false,
       init() {
-        this.inputs = Array.from(this.$root.querySelectorAll("input"));
+        this.inputs = Array.from(this.$root.querySelectorAll("input[data-mode]"));
         this.$nextTick(() => {
           this.syncFromModel();
           this.updateModel();
@@ -3723,7 +3882,7 @@
         return {
           ["@focus"]: () => this.handleFocus(input, index, inputs),
           ["@blur"]: () => this.$dispatch("otp-blur", { input, index }),
-          ["@paste"]: (e) => this.handlePaste(e, index, inputs),
+          ["@paste.prevent"]: (e) => this.handlePaste(e, index, inputs),
           ["@input"]: () => this.handleInput(input, index, inputs),
           ["@keydown"]: (e) => this.handleKeydown(e, input, index, inputs),
           ["@keydown.arrow-left.prevent"]: () => inputs[index - 1]?.select(),
@@ -3746,11 +3905,17 @@
       },
       handlePaste(e, index, inputs) {
         const pasted = e.clipboardData?.getData("text") ?? "";
-        spreadValue(pasted, index, inputs);
+        this._syncing = true;
+        try {
+          spreadValue(pasted, index, inputs);
+        } finally {
+          this._syncing = false;
+        }
         this.updateModel();
         this.$dispatch("otp-paste", { pasted, index });
       },
       handleInput(input, index, inputs) {
+        if (this._syncing) return;
         const mode = input.dataset.mode;
         const filtered = filterValue(input.value, mode);
         if (filtered.length > 1) {
@@ -3761,7 +3926,7 @@
         }
         this.updateModel();
       },
-      handleKeydown(e, input, index, inputs) {
+      handleKeydown(e, input, _index, _inputs) {
         if (e.ctrlKey || e.metaKey || e.altKey) return;
         const mode = input.dataset.mode;
         if (!isValidKey(e.key, mode)) {
@@ -3770,7 +3935,9 @@
       },
       handleBackspace(input, index, inputs) {
         if (input.value) {
-          input.value = "";
+          this._syncing = true;
+          setFieldValue(input, "");
+          this._syncing = false;
         } else {
           inputs[index - 1]?.select();
         }
@@ -3778,10 +3945,15 @@
       },
       syncFromModel(val = this.value) {
         const chars = String(val).padEnd(this.inputs.length).split("");
-        this.inputs.forEach((input, i) => {
-          const mode = input.dataset.mode;
-          input.value = filterValue(chars[i] ?? "", mode);
-        });
+        this._syncing = true;
+        try {
+          this.inputs.forEach((input, i) => {
+            const mode = input.dataset.mode;
+            setFieldValue(input, filterValue(chars[i] ?? "", mode));
+          });
+        } finally {
+          this._syncing = false;
+        }
       },
       updateModel() {
         const values = this.inputs.map((i) => i.value || "");
@@ -3823,12 +3995,12 @@
       const input = inputs[start + i];
       if (!input) return;
       const mode = input.dataset.mode;
-      input.value = filterValue(char, mode);
+      setFieldValue(input, filterValue(char, mode));
     });
     const next = inputs[Math.min(start + chars.length, inputs.length - 1)];
     next?.focus();
   }
-  const __vite_glob_0_33 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_34 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     otp
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3836,23 +4008,23 @@
     return {
       ...loadable(),
       init() {
-        this.load(async () => {
-          if (!window.prettyPrintJson) {
-            await this.$tallkit.loadScript("https://cdn.jsdelivr.net/npm/pretty-print-json@3/dist/pretty-print-json.min.js");
-            await this.$tallkit.loadStyle("https://cdn.jsdelivr.net/npm/pretty-print-json@3/dist/css/pretty-print-json.min.css");
-          }
-        });
+        this.load(() => loadRemoteAssets(
+          () => !!window.prettyPrintJson,
+          "https://cdn.jsdelivr.net/npm/pretty-print-json@3/dist/pretty-print-json.min.js",
+          "https://cdn.jsdelivr.net/npm/pretty-print-json@3/dist/css/pretty-print-json.min.css"
+        ));
       },
       render(data = null, options = {}) {
         try {
           return window.prettyPrintJson.toHtml(data, options);
         } catch (e) {
           this.fail(e);
+          return "";
         }
       }
     };
   }
-  const __vite_glob_0_35 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_36 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     prettyPrintJson
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3861,6 +4033,7 @@
     const _sticky = sticky();
     return {
       ..._toggleable,
+      ..._sticky,
       init() {
         _toggleable.init.call(this);
         if (sticky$1) {
@@ -3870,7 +4043,7 @@
           this.$el.removeAttribute("data-mobile-cloak");
           this.screenLg = window.innerWidth >= 1024;
           bind(this.$el, {
-            ["x-bind:data-stashed"]() {
+            [":data-stashed"]() {
               return !this.screenLg;
             },
             ["x-resize.document"]() {
@@ -3881,6 +4054,9 @@
             },
             [`@sidebar-${name ?? ""}-toggle.window`]() {
               this.toggle();
+            },
+            ["@keydown.escape.window"]() {
+              if (this.isOpened()) this.close();
             }
           });
         }
@@ -3892,10 +4068,15 @@
       close() {
         this.$el.removeAttribute("data-show-stashed-sidebar");
         _toggleable.close.call(this);
+      },
+      destroy() {
+        if (sticky$1) {
+          _sticky.destroy.call(this);
+        }
       }
     };
   }
-  const __vite_glob_0_36 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_37 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     sidebar
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3943,20 +4124,19 @@
       },
       setValue(value) {
         if (this.input.disabled) return;
-        this.input.value = value;
-        this.input.dispatchEvent(new Event("input", { bubbles: true }));
+        setFieldValue(this.input, value);
       },
       updateRange() {
         const min = Number(this.input.min || 0);
         const max = Number(this.input.max || 100);
         const val = Number(this.input.value);
-        const p = (val - min) * 100 / (max - min);
+        const p = max === min ? 0 : (val - min) * 100 / (max - min);
         this.input.style.setProperty("--range-percent", `${p}%`);
         this.input.classList.toggle("before:rounded-r-none", p < 50);
       }
     };
   }
-  const __vite_glob_0_37 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_38 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     slider
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3968,25 +4148,23 @@
       inside: false,
       init() {
         _popover.init.call(this);
-        _popover.trigger = this.$root.firstElementChild !== this.popoverElement ? this.$root.firstElementChild : this.$root;
-        _popover.popoverElement = this.$root.lastElementChild?.matches("[popover]") && this.$root.lastElementChild;
-        bind(_popover.popoverElement, {
+        bind(this.popoverElement, {
           ["@mouseenter"]() {
             this.inside = true;
-            _popover.trigger.setAttribute("data-active", "");
+            this.trigger.setAttribute("data-active", "");
           },
           ["@mouseleave"]() {
             this.inside = false;
             this.timerToClose();
           }
         });
-        bind(_popover.trigger, {
+        bind(this.trigger, {
           ["@click"]() {
-            this.open();
+            this.toggle(false);
           },
           ["@mouseenter"]() {
             clearTimeout(this._i);
-            this.open();
+            this.open(false);
           },
           ["@mouseleave"]() {
             this.timerToClose();
@@ -3997,70 +4175,113 @@
         this._i = setTimeout(() => {
           if (!this.inside) {
             this.close();
-            _popover.trigger.removeAttribute("data-active");
+            this.trigger.removeAttribute("data-active");
           }
         }, 10);
+      },
+      destroy() {
+        clearTimeout(this._i);
+        _popover.destroy.call(this);
       }
     };
   }
-  const __vite_glob_0_39 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_40 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     submenu
   }, Symbol.toStringTag, { value: "Module" }));
-  function tab() {
+  function tab({ selectFirst = null } = {}) {
     return {
       selected: null,
+      get tabs() {
+        return Array.from(this.$root.querySelectorAll('[role="tab"]')).filter((el) => !el.disabled);
+      },
       init() {
         const selected = this.$root.querySelector("[data-selected]")?.dataset.name;
-        if (selected) {
+        if (selected || selectFirst && this.tabs.length) {
           this.$nextTick(() => {
-            this.select(selected);
+            this.select(selected ?? this.tabs[0]?.dataset.name);
           });
         }
+        bind(this.$root, {
+          ["@keydown.arrow-right.prevent"](event) {
+            this.focusTab(1, event.target);
+          },
+          ["@keydown.arrow-left.prevent"](event) {
+            this.focusTab(-1, event.target);
+          },
+          ["@keydown.home.prevent"](event) {
+            this.focusTab("first", event.target);
+          },
+          ["@keydown.end.prevent"](event) {
+            this.focusTab("last", event.target);
+          }
+        });
       },
       isSelected(name) {
         return this.selected === name;
       },
       select(name) {
         this.selected = name;
+      },
+      focusTab(direction, current) {
+        const tabs = this.tabs;
+        if (!tabs.length) return;
+        const currentIndex = tabs.indexOf(current);
+        let index;
+        if (direction === "first") index = 0;
+        else if (direction === "last") index = tabs.length - 1;
+        else index = (currentIndex + direction + tabs.length) % tabs.length;
+        const next = tabs[index];
+        next.focus();
+        if (next.dataset.name) this.select(next.dataset.name);
       }
     };
   }
-  const __vite_glob_0_40 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_41 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     tab
   }, Symbol.toStringTag, { value: "Module" }));
   function table() {
     return {
-      processedRows: /* @__PURE__ */ new Set(),
+      boundElements: /* @__PURE__ */ new WeakSet(),
       rows: [],
       selected: [],
       selectedIds: [],
       selectAllChecked: false,
+      observer: null,
       init() {
-        this.update();
-        const observer = new MutationObserver(() => this.update());
-        observer.observe(this.$el.querySelector("table > tbody"), { childList: true, subtree: true });
+        this.resetSelection();
+        const tbody = this.$el.querySelector("table > tbody");
+        if (!tbody) return;
+        this.observer = new MutationObserver(() => this.update());
+        this.observer.observe(tbody, { childList: true, subtree: true });
+      },
+      destroy() {
+        this.observer?.disconnect();
       },
       update() {
         this.rows = Array.from(this.$el.querySelector("table > tbody").querySelectorAll(':scope > tr[role="row"]')).map((tr) => {
-          const selection = tr.querySelector("[role=row-selection]");
-          const expanded = tr.querySelectorAll("[role=row-expanded]");
+          const selection = tr.querySelector("[data-role=row-selection]");
+          const expanded = tr.querySelectorAll("[data-role=row-expanded]");
           const row = {
             el: tr,
             id: tr.dataset.id,
             selection,
             expanded
           };
-          if (!this.processedRows.has(row.id)) {
-            this.processedRows.add(row.id);
+          if (selection && !this.boundElements.has(selection)) {
+            this.boundElements.add(selection);
             bind(selection, {
               ["@click"]() {
                 this._updateRowState(row);
                 this._syncSelect();
               }
             });
-            bind(expanded, {
+          }
+          const unboundExpanded = Array.from(expanded).filter((el) => !this.boundElements.has(el));
+          if (unboundExpanded.length) {
+            unboundExpanded.forEach((el) => this.boundElements.add(el));
+            bind(unboundExpanded, {
               ["@click"]() {
                 row.el.dataset.expanded = row.el.dataset.expanded === "open" ? "close" : "open";
               }
@@ -4070,10 +4291,7 @@
         });
         this.rows.forEach((row) => {
           if (row.selection) {
-            row.selection.checked = this.selectedIds.includes(row.id);
-          }
-          if (this.selectAllChecked) {
-            row.selection.checked = true;
+            setFieldChecked(row.selection, this.selectAllChecked || this.selectedIds.includes(row.id));
           }
           this._updateRowState(row);
         });
@@ -4082,27 +4300,33 @@
       toggleAll() {
         this.rows.forEach((row) => {
           if (!row.selection) return;
-          row.selection.checked = this.selectAllChecked;
+          setFieldChecked(row.selection, this.selectAllChecked);
           this._updateRowState(row);
         });
         this._syncSelect();
+      },
+      resetSelection() {
+        this.selected = [];
+        this.selectedIds = [];
+        this.selectAllChecked = false;
+        this.update();
       },
       _updateRowState(row) {
         if (row.selection) {
           row.el.dataset.state = row.selection.checked ? "checked" : "unchecked";
         }
-        if (row.expanded && !row.el.dataset.expanded) {
+        if (row.expanded.length && !row.el.dataset.expanded) {
           row.el.dataset.expanded = "close";
         }
       },
       _syncSelect() {
         this.selected = this.rows.filter((row) => row.selection?.checked);
         this.selectedIds = this.selected.map((row) => row.id);
-        this.selectAllChecked = this.rows.length && this.rows.every((row) => row.selection?.checked);
+        this.selectAllChecked = this.rows.length > 0 && this.rows.every((row) => row.selection?.checked);
       }
     };
   }
-  const __vite_glob_0_41 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_42 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     table
   }, Symbol.toStringTag, { value: "Module" }));
@@ -4116,19 +4340,20 @@
               this.autoRows(minRows, maxRows);
             }
           });
+          this.autoRows(minRows, maxRows);
         }
       },
       autoRows(minRows, maxRows2) {
         this.$el.rows = minRows;
         const style = getComputedStyle(this.$el);
-        const lineHeight = parseFloat(style.lineHeight);
         const padding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+        const lineHeight = parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 1.2 || 16;
         const rows = Math.round((this.$el.scrollHeight - padding) / lineHeight);
         this.$el.rows = Math.min(Math.max(rows, minRows), maxRows2);
       }
     };
   }
-  const __vite_glob_0_42 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_43 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     textarea
   }, Symbol.toStringTag, { value: "Module" }));
@@ -4181,30 +4406,46 @@
           this.idleTimeout = setTimeout(markIdle, this.idleDelay);
         };
         this.resetIdleTimer();
-        this.$el.addEventListener("alpine:destroy", () => {
-          this._listeners.forEach((off) => off());
-        });
+      },
+      destroy() {
+        this._listeners.forEach((off) => off());
       },
       syncAttention() {
         const shouldRun = this.isPageVisible && this.isUserActive;
         this.toasts.forEach((toast2) => {
           if (!toast2.duration || !toast2.attentionAware) return;
           if (shouldRun && toast2.pausedAt) {
-            toast2.resume();
+            toast2.resume("attention");
           }
           if (!shouldRun && !toast2.pausedAt) {
-            toast2.pause();
+            toast2.pause("attention");
           }
         });
       },
       addToast(props) {
+        const position = normalizePosition(props.position);
+        const maxStack = props.maxStack ?? 5;
+        if (maxStack !== false) {
+          const sameSlot = this.toasts.filter((t) => t.position === position);
+          if (sameSlot.length >= maxStack) {
+            const oldest = sameSlot.slice().sort((a, b) => a.createdAt - b.createdAt)[0];
+            if (oldest) {
+              this.removeToast(oldest.id);
+            }
+          }
+        }
         const duration = props.duration ?? getDynamicDuration(props.title, props.message);
+        const manager = this;
+        const currentToast = props.id ? this.toasts.find((t) => t.id === props.id) : null;
+        if (currentToast) {
+          return this.updateToast(currentToast.id, props);
+        }
         const toast2 = window.Alpine.reactive({
           id: crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`,
           createdAt: Date.now(),
           ...props,
           duration,
-          position: normalizePosition(props.position),
+          position,
           attentionAware: props.attentionAware ?? true,
           progress: props.progress ?? true,
           pauseOnHover: props.pauseOnHover ?? true,
@@ -4216,6 +4457,8 @@
           elapsedBeforePause: 0,
           raf: null,
           pausedAt: null,
+          pausedByHover: false,
+          pausedByAttention: false,
           swiping: false,
           startX: 0,
           startY: 0,
@@ -4226,27 +4469,32 @@
             if (!this.duration) return;
             this.startTime = performance.now();
             const loop = (time) => {
-              if (!this.$root.toasts.find((t) => t.id === this.id)) {
+              if (!manager.toasts.find((t) => t.id === this.id)) {
                 this.stop();
                 return;
               }
               if (this.pausedAt) return;
               const elapsed = this.elapsedBeforePause + (time - this.startTime);
               const linear = Math.min(elapsed / this.total, 1);
-              const eased = linear === 1 ? 1 : 1 - Math.pow(2, -10 * linear);
               if (this.progress) {
-                this.progressValue = 1 - eased;
+                this.progressValue = 1 - linear;
               }
               if (linear >= 1) {
-                this.$root.removeToast(this.id);
+                manager.removeToast(this.id);
                 return;
               }
               this.raf = requestAnimationFrame(loop);
             };
             this.raf = requestAnimationFrame(loop);
           },
-          pause() {
-            if (!this.duration || this.pausedAt) return;
+          pause(reason = "attention") {
+            if (!this.duration) return;
+            if (reason === "hover") {
+              this.pausedByHover = true;
+            } else {
+              this.pausedByAttention = true;
+            }
+            if (this.pausedAt) return;
             this.pausedAt = performance.now();
             this.elapsedBeforePause += this.pausedAt - this.startTime;
             if (this.raf) {
@@ -4254,7 +4502,13 @@
               this.raf = null;
             }
           },
-          resume() {
+          resume(reason = "attention") {
+            if (reason === "hover") {
+              this.pausedByHover = false;
+            } else {
+              this.pausedByAttention = false;
+            }
+            if (this.pausedByHover || this.pausedByAttention) return;
             if (!this.pausedAt) return;
             this.pausedAt = null;
             this.start();
@@ -4295,7 +4549,7 @@
             const width = e.currentTarget.offsetWidth;
             const threshold = width * 0.4;
             if (Math.abs(this.currentX) > threshold) {
-              this.$root.removeToast(this.id);
+              manager.removeToast(this.id);
             } else {
               this.currentX = 0;
               this.currentY = 0;
@@ -4335,6 +4589,8 @@
         if (data.duration !== void 0) {
           toast2.stop();
           toast2.pausedAt = null;
+          toast2.pausedByHover = false;
+          toast2.pausedByAttention = false;
           toast2.total = data.duration;
           toast2.elapsedBeforePause = 0;
           toast2.progressValue = 1;
@@ -4342,6 +4598,7 @@
             toast2.start();
           }
         }
+        return toast2;
       },
       removeToast(id) {
         const toast2 = this.toasts.find((t) => t.id === id);
@@ -4356,6 +4613,16 @@
       getToastsByPosition(position) {
         return this.toasts.filter((t) => t.position === position);
       },
+      positionTransform(position) {
+        return {
+          "top-left": "-translate-x-full opacity-0",
+          "top-center": "-translate-y-full opacity-0",
+          "top-right": "translate-x-full opacity-0",
+          "bottom-left": "-translate-x-full opacity-0",
+          "bottom-center": "translate-y-full opacity-0",
+          "bottom-right": "translate-x-full opacity-0"
+        }[String(position)];
+      },
       notify(props) {
         return this.addToast(props);
       },
@@ -4369,8 +4636,7 @@
       error(message, props = {}) {
         return this.notify({
           title: message,
-          type: "danger",
-          duration: 7e3,
+          type: "error",
           ...props
         });
       },
@@ -4378,6 +4644,13 @@
         return this.notify({
           title: message,
           type: "info",
+          ...props
+        });
+      },
+      warning(message, props = {}) {
+        return this.notify({
+          title: message,
+          type: "warning",
           ...props
         });
       },
@@ -4417,12 +4690,12 @@
         });
       },
       promise(promise, messages = {}) {
-        const toast2 = this.loading(messages.loading ?? "Carregando...");
+        const toast2 = this.loading(messages.loading ?? "Loading...");
         const resolveMessage = (msg, data) => typeof msg === "function" ? msg(data) : msg;
         promise.then((data) => {
           if (!this.toasts.find((t) => t.id === toast2.id)) return;
           this.updateToast(toast2.id, {
-            title: resolveMessage(messages.success, data) ?? "Sucesso!",
+            title: resolveMessage(messages.success, data) ?? "Success!",
             type: "success",
             duration: getDynamicDuration(resolveMessage(messages.success, data)),
             progress: true,
@@ -4431,8 +4704,8 @@
         }).catch((error) => {
           if (!this.toasts.find((t) => t.id === toast2.id)) return;
           this.updateToast(toast2.id, {
-            title: resolveMessage(messages.error, error) ?? "Erro!",
-            type: "danger",
+            title: resolveMessage(messages.error, error) ?? "Error!",
+            type: "error",
             duration: getDynamicDuration(resolveMessage(messages.error, error)) * 1.3,
             progress: true,
             swipe: true
@@ -4480,19 +4753,104 @@
     time += lines * 300;
     return Math.min(max, Math.max(min, time));
   }
-  const __vite_glob_0_43 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_44 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     toast: toast$1
   }, Symbol.toStringTag, { value: "Module" }));
-  function upload({ droppable = false } = {}) {
+  function typeFromFile(file) {
+    const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+    if (file.type.startsWith("image/")) return "image";
+    if (file.type.startsWith("video/")) return "video";
+    if (file.type.startsWith("audio/")) return "audio";
+    switch (extension) {
+      case "jpg":
+      case "jpeg":
+      case "png":
+      case "gif":
+        return "image";
+      case "mp4":
+        return "video";
+      case "mp3":
+        return "audio";
+      case "pdf":
+        return "pdf";
+      case "doc":
+      case "docx":
+        return "doc";
+      case "xls":
+      case "xlsx":
+        return "xls";
+      case "ppt":
+      case "pptx":
+        return "ppt";
+      case "rar":
+      case "zip":
+      case "7z":
+        return "archive";
+      case "txt":
+      case "md":
+        return "text";
+      case "csv":
+        return "csv";
+      case "json":
+      case "js":
+      case "ts":
+      case "html":
+      case "css":
+        return "code";
+      default:
+        return "unknown";
+    }
+  }
+  const PREVIEWABLE_TYPES = ["image", "video", "audio", "pdf"];
+  function upload({
+    wireModel = false,
+    multiple = false,
+    droppable = true,
+    maxSize = null,
+    maxFiles = null,
+    sortable = false,
+    invalid = false,
+    files = [],
+    tooLargeMessage = "This file is too large.",
+    invalidTypeMessage = "This file type is not allowed.",
+    tooManyFilesMessage = "Too many files selected."
+  } = {}) {
     return {
       dragOver: false,
+      dragIndex: null,
+      sortable,
+      files: files.map((file) => ({
+        id: file.id ?? generateId("upload-file"),
+        raw: null,
+        name: file.name ?? "",
+        size: file.size ?? 0,
+        url: file.url ?? null,
+        value: file.value ?? null,
+        type: file.type ?? "unknown",
+        status: file.status ?? "done",
+        progress: file.progress ?? 100,
+        error: null,
+        tmpFilename: file.tmpFilename ?? null
+      })),
+      queue: [],
+      activeId: null,
       get multiple() {
-        return this.$refs.fileInput?.multiple ?? false;
+        return this.$refs.fileInput?.multiple ?? multiple;
+      },
+      get accept() {
+        return this.$refs.fileInput?.accept || null;
       },
       init() {
+        bind(this.$refs.fileInput, {
+          ["@change"](event) {
+            const target = event.target;
+            this.addFiles(target.files);
+            target.value = "";
+          }
+        });
         if (!droppable) return;
-        bind(this.$root.querySelector("[data-tallkit-upload-button]"), {
+        bind(this.$root.querySelector("[data-tallkit-upload-dropzone]"), {
           ["@dragover.prevent"]() {
             this.dragOver = true;
           },
@@ -4500,25 +4858,219 @@
             this.dragOver = false;
           },
           ["@drop.prevent"](event) {
-            this.$refs.fileInput.files = event.dataTransfer.files;
-            this.$refs.fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+            this.dragOver = false;
+            this.addFiles(event.dataTransfer?.files ?? null);
           }
         });
+      },
+      destroy() {
+        this.files.forEach((file) => this.revoke(file));
       },
       selectFile() {
         this.$refs.fileInput.click();
       },
-      removeFile(name) {
-        if (!confirm("Are you sure you want to proceed?")) {
+      addFiles(fileList) {
+        if (!fileList?.length) return;
+        if (!this.multiple) {
+          if (this.activeId) {
+            this.cancelUpload(this.activeId);
+          }
+          this.files.forEach((file) => this.revoke(file));
+          this.files = [];
+          this.queue = [];
+        }
+        const incoming = Array.from(fileList);
+        const remaining = this.multiple ? maxFiles ? Math.max(maxFiles - this.files.length, 0) : Infinity : 1;
+        const accepted = incoming.slice(0, remaining);
+        const rejected = this.multiple && maxFiles ? incoming.slice(remaining) : [];
+        accepted.forEach((raw) => {
+          const type = typeFromFile(raw);
+          const url = PREVIEWABLE_TYPES.includes(type) ? URL.createObjectURL(raw) : null;
+          const error = this.validate(raw);
+          const entry = {
+            id: generateId("upload-file"),
+            raw,
+            name: raw.name,
+            size: raw.size,
+            url,
+            value: null,
+            type,
+            status: error ? "error" : "queued",
+            progress: 0,
+            error,
+            tmpFilename: null
+          };
+          this.files.push(entry);
+          if (!error) {
+            this.queue.push(entry.id);
+          }
+        });
+        rejected.forEach((raw) => {
+          const entry = {
+            id: generateId("upload-file"),
+            raw,
+            name: raw.name,
+            size: raw.size,
+            url: null,
+            value: null,
+            type: typeFromFile(raw),
+            status: "error",
+            progress: 0,
+            error: tooManyFilesMessage,
+            tmpFilename: null
+          };
+          this.files.push(entry);
+        });
+        this.processQueue();
+      },
+      validate(file) {
+        if (maxSize && file.size > maxSize * 1024) {
+          return tooLargeMessage;
+        }
+        if (this.accept && !this.matchesAccept(file, this.accept)) {
+          return invalidTypeMessage;
+        }
+        return null;
+      },
+      matchesAccept(file, accept) {
+        return accept.split(",").some((rule) => {
+          rule = rule.trim();
+          if (!rule) return false;
+          if (rule.startsWith(".")) return file.name.toLowerCase().endsWith(rule.toLowerCase());
+          if (rule.endsWith("/*")) return file.type.startsWith(rule.slice(0, -1));
+          return file.type === rule;
+        });
+      },
+      processQueue() {
+        if (this.activeId || !this.queue.length) return;
+        const entry = this.find(this.queue.shift());
+        if (!entry) {
+          this.processQueue();
           return;
         }
-        if (this.$wire) {
-          this.$wire.set(name, null);
+        this.activeId = entry.id;
+        entry.status = "uploading";
+        if (!this.$wire || !wireModel) {
+          entry.status = "done";
+          entry.progress = 100;
+          this.activeId = null;
+          this.$nextTick(() => this.processQueue());
+          return;
         }
+        this.$wire.upload(
+          wireModel,
+          entry.raw,
+          (tmpFilename) => {
+            entry.status = "done";
+            entry.progress = 100;
+            entry.tmpFilename = tmpFilename;
+            this.activeId = null;
+            this.processQueue();
+          },
+          (message) => {
+            entry.status = "error";
+            entry.error = message || "Upload failed.";
+            this.activeId = null;
+            this.processQueue();
+          },
+          (event) => {
+            entry.progress = event.detail.progress;
+          },
+          () => {
+            entry.status = "cancelled";
+            this.activeId = null;
+            this.processQueue();
+          }
+        );
+      },
+      retryUpload(id) {
+        const entry = this.find(id);
+        if (!entry?.raw) return;
+        entry.status = "queued";
+        entry.error = null;
+        entry.progress = 0;
+        this.queue.unshift(entry.id);
+        this.processQueue();
+      },
+      cancelUpload(id) {
+        if (id !== this.activeId || !this.$wire || !wireModel) return;
+        this.$wire.cancelUpload(wireModel);
+      },
+      removeFile(id) {
+        const index = this.files.findIndex((file) => file.id === id);
+        if (index === -1) return;
+        const entry = this.files[index];
+        if (entry.id === this.activeId) {
+          this.cancelUpload(id);
+        } else {
+          this.queue = this.queue.filter((queuedId) => queuedId !== id);
+        }
+        if (this.$wire && wireModel) {
+          if (entry.tmpFilename) {
+            this.$wire.removeUpload(wireModel, entry.tmpFilename);
+          } else if (entry.value !== null) {
+            if (this.multiple) {
+              if (!this.hasPendingUploads) {
+                this.$wire.set(wireModel, this.files.filter((file) => file.id !== id && file.value !== null).map((file) => file.value));
+              }
+            } else {
+              this.$wire.set(wireModel, null);
+            }
+          }
+        }
+        this.revoke(entry);
+        this.files.splice(index, 1);
+      },
+      revoke(entry) {
+        if (entry.raw && entry.url) {
+          URL.revokeObjectURL(entry.url);
+        }
+      },
+      find(id) {
+        return this.files.find((file) => file.id === id) ?? null;
+      },
+      dragStart(index, event) {
+        this.dragIndex = index;
+        event.dataTransfer?.setData("text/plain", String(index));
+      },
+      drop(index) {
+        if (this.dragIndex === null || this.dragIndex === index) return;
+        const [moved] = this.files.splice(this.dragIndex, 1);
+        this.files.splice(index, 0, moved);
+        this.dragIndex = null;
+        if (this.multiple && this.$wire && wireModel && !this.hasPendingUploads) {
+          this.$wire.set(wireModel, this.files.filter((file) => file.value !== null).map((file) => file.value));
+        }
+      },
+      dragEnd() {
+        this.dragIndex = null;
+      },
+      formatSize(bytes) {
+        return formatBytes(bytes);
+      },
+      get activeFiles() {
+        return this.files.filter((file) => file.status === "uploading" || file.status === "queued");
+      },
+      get hasPendingUploads() {
+        return this.files.some((file) => file.status === "uploading" || file.status === "queued");
+      },
+      get aggregateProgress() {
+        const active = this.activeFiles;
+        if (!active.length) return 100;
+        return Math.round(active.reduce((sum, file) => sum + file.progress, 0) / active.length);
+      },
+      get isUploading() {
+        return this.activeFiles.length > 0;
+      },
+      get hasError() {
+        return this.files.some((file) => file.status === "error");
+      },
+      get isInvalid() {
+        return invalid || this.hasError;
       }
     };
   }
-  const __vite_glob_0_45 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_46 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     upload
   }, Symbol.toStringTag, { value: "Module" }));
@@ -4550,7 +5102,7 @@
   }
   function registerAlpineComponents() {
     const components = Object.fromEntries(
-      Object.values([__vite_glob_0_0, __vite_glob_0_1, __vite_glob_0_2, __vite_glob_0_3, __vite_glob_0_4, __vite_glob_0_5, __vite_glob_0_6, __vite_glob_0_7, __vite_glob_0_8, __vite_glob_0_9, __vite_glob_0_10, __vite_glob_0_11, __vite_glob_0_12, __vite_glob_0_13, __vite_glob_0_14, __vite_glob_0_15, __vite_glob_0_16, __vite_glob_0_17, __vite_glob_0_18, __vite_glob_0_19, __vite_glob_0_20, __vite_glob_0_21, __vite_glob_0_22, __vite_glob_0_23, __vite_glob_0_24, __vite_glob_0_25, __vite_glob_0_26, __vite_glob_0_27, __vite_glob_0_28, __vite_glob_0_29, __vite_glob_0_30, __vite_glob_0_31, __vite_glob_0_32, __vite_glob_0_33, __vite_glob_0_34, __vite_glob_0_35, __vite_glob_0_36, __vite_glob_0_37, __vite_glob_0_38, __vite_glob_0_39, __vite_glob_0_40, __vite_glob_0_41, __vite_glob_0_42, __vite_glob_0_43, __vite_glob_0_44, __vite_glob_0_45]).flatMap(
+      Object.values([__vite_glob_0_0, __vite_glob_0_1, __vite_glob_0_2, __vite_glob_0_3, __vite_glob_0_4, __vite_glob_0_5, __vite_glob_0_6, __vite_glob_0_7, __vite_glob_0_8, __vite_glob_0_9, __vite_glob_0_10, __vite_glob_0_11, __vite_glob_0_12, __vite_glob_0_13, __vite_glob_0_14, __vite_glob_0_15, __vite_glob_0_16, __vite_glob_0_17, __vite_glob_0_18, __vite_glob_0_19, __vite_glob_0_20, __vite_glob_0_21, __vite_glob_0_22, __vite_glob_0_23, __vite_glob_0_24, __vite_glob_0_25, __vite_glob_0_26, __vite_glob_0_27, __vite_glob_0_28, __vite_glob_0_29, __vite_glob_0_30, __vite_glob_0_31, __vite_glob_0_32, __vite_glob_0_33, __vite_glob_0_34, __vite_glob_0_35, __vite_glob_0_36, __vite_glob_0_37, __vite_glob_0_38, __vite_glob_0_39, __vite_glob_0_40, __vite_glob_0_41, __vite_glob_0_42, __vite_glob_0_43, __vite_glob_0_44, __vite_glob_0_45, __vite_glob_0_46]).flatMap(
         (module) => Object.entries(module).filter(([, v]) => typeof v === "function")
       )
     );
@@ -4590,7 +5142,11 @@
       if (appearance2 === "system") {
         const media = window.matchMedia("(prefers-color-scheme: dark)");
         window.localStorage.removeItem("tallkit.appearance");
-        media.matches ? this.applyDark(false) : this.applyLight(false);
+        if (media.matches) {
+          this.applyDark(false);
+        } else {
+          this.applyLight(false);
+        }
         this.mode = "system";
       } else if (appearance2 === "dark") {
         this.applyDark();
@@ -4627,36 +5183,42 @@
     }
   };
   function toast(...args) {
-    let detail;
-    if (typeof args[0] === "object" && args[0] !== null && !Array.isArray(args[0])) {
-      detail = args[0];
-    } else {
-      const [message, title, type, duration, position, progress, size] = args;
-      detail = { message, title, type, duration, position, progress, size };
+    if (args.length === 0) {
+      return {
+        success: (...props) => toast({ ...parseArgs(...props), type: "success" }),
+        error: (...props) => toast({ ...parseArgs(...props), type: "error" }),
+        info: (...props) => toast({ ...parseArgs(...props), type: "info" }),
+        warning: (...props) => toast({ ...parseArgs(...props), type: "warning" })
+      };
     }
-    document.dispatchEvent(new CustomEvent("toast", { detail }));
+    document.dispatchEvent(new CustomEvent("toast", { detail: parseArgs(...args) }));
   }
+  const parseArgs = (...args) => {
+    if (typeof args[0] === "object" && args[0] !== null && !Array.isArray(args[0])) {
+      return args[0];
+    }
+    const [message, title, type, duration, position, progress, size] = args;
+    return { message, title, type, duration, position, progress, size };
+  };
   const tallkit$1 = {
     appearance,
     toast,
     loadScript,
     loadStyle,
     modal: (name) => {
-      const dialog = document.querySelector(`dialog[data-modal="${name}"]`);
       return {
         show: () => {
-          dialog?.showModal();
+          document.dispatchEvent(new CustomEvent("modal-show", { detail: { name } }));
         },
         close: () => {
-          dialog?.close();
+          document.dispatchEvent(new CustomEvent("modal-close", { detail: { name } }));
         }
       };
     },
     modals: () => {
-      const dialogs = document.querySelectorAll(`dialog[data-tallkit-modal]`);
       return {
         close: () => {
-          dialogs.forEach((modal2) => modal2.close());
+          document.dispatchEvent(new CustomEvent("modal-close", { detail: {} }));
         }
       };
     }

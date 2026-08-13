@@ -1,18 +1,28 @@
 @props([
-    'method' => 'post',
+    'method' => null,
     'enctype' => null,
     'route' => null,
     'action' => null,
     'alert' => null,
     'errorGroup' => null,
+    'focusError' => null,
+    'toast' => null,
+    'errorMessage' => null,
+    'successMessage' => null,
 ])
 @php
 
-$method = strtoupper($method);
+$method = strtoupper($method ?? 'post');
 $action = in_livewire() ? ($action ?? 'submit') : route_detect(routes: [$route, $action], default: request()->url());
 
 @endphp
 <form
+    x-data="form({
+        focusError: {{ $focusError === false ? 'false' : 'true' }},
+        toast: @js($toast ?? true),
+        errorMessage: @js($errorMessage ?? __('There was an error submitting the form.')),
+        successMessage: @js($successMessage ?? __('Form submitted successfully.')),
+    })"
     {{
         $attributes
             ->dataKey('form')

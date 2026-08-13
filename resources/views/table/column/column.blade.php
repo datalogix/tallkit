@@ -3,60 +3,59 @@
     'name' => null,
     'label' => null,
     'sortable' => null,
+    'sortableAction' => null,
+    'sortableHref' => null,
     'align' => null,
     'sticky' => null,
 ])
 @php
 
-$href = null;
-$action = null;
-
 if ($sortable === true) {
-    $sortBy = $name ?? $label;
+    $sortByColumn = $name ?? $label;
 
     if (in_livewire()) {
-        $action ??= "sort('$sortBy')";
-        $sortable = $sortBy === $sortBy ? $sortDirection : $sortable;
+        $sortableAction ??= "sort('$sortByColumn')";
     } else {
-        $sortDirection ??= request('sortBy') === $sortBy ? request('sortDirection') === 'asc' ? 'desc' : 'asc' : 'asc';
-        $sortable = request('sortBy') === $sortBy ? request('sortDirection') : $sortable;
+        $sortDirection ??= request('sortBy') === $sortByColumn ? request('sortDirection') === 'asc' ? 'desc' : 'asc' : 'asc';
+        $sortable = request('sortBy') === $sortByColumn ? (request('sortDirection') === 'desc' ? 'desc' : 'asc') : $sortable;
 
         if ($rows instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator) {
-            $href ??= $rows->withQueryString()->appends(['sortBy' => $sortBy, 'sortDirection' => $sortDirection])->url($rows->currentPage());
+            $sortableHref ??= $rows->withQueryString()->appends(['sortBy' => $sortByColumn, 'sortDirection' => $sortDirection])->url($rows->currentPage());
         } else if ($rows instanceof \Illuminate\Contracts\Pagination\CursorPaginator) {
-            $href ??= $rows->withQueryString()->appends(['sortBy' => $sortBy, 'sortDirection' => $sortDirection])->url($rows->cursor());
+            $sortableHref ??= $rows->withQueryString()->appends(['sortBy' => $sortByColumn, 'sortDirection' => $sortDirection])->url($rows->cursor());
         }
     }
 }
 
 @endphp
-<th {{ $attributes->whereDoesntStartWith(['container:'])->classes([
-    'py-4 px-6' => !$dense,
-    'p-2.5' => $dense,
-    '
-        [:where(&)]:bg-white/95 dark:[:where(&)]:bg-zinc-800/95
-        z-10
-        first:sticky first:left-0 last:sticky last:right-0
-        first:after:w-8 first:after:absolute first:after:inset-y-0 first:after:right-0 first:after:translate-x-full first:after:pointer-events-none
-        first:after:inset-shadow-[8px_0px_8px_-8px_rgba(0,0,0,0.05)]
-        last:after:w-8 last:after:absolute last:after:inset-y-0 last:after:left-0 last:after:-translate-x-full last:after:pointer-events-none
-        last:after:inset-shadow-[-8px_0px_8px_-8px_rgba(0,0,0,0.05)]
-    ' => $sticky,
-    '[:where(&)]:font-medium [:where(&)]:text-sm',
-    '[:where(&)]:text-zinc-800 dark:[:where(&)]:text-white',
-]) }}>
+<th
+    scope="col"
+    {{
+        $attributes->whereDoesntStartWith(['container:'])
+            ->classes([
+                'py-4 px-6' => !$dense,
+                'p-2.5' => $dense,
+                'tk-table-sticky-column' => $sticky,
+                '[:where(&)]:font-medium [:where(&)]:text-sm',
+                '[:where(&)]:text-zinc-800 dark:[:where(&)]:text-white',
+            ])
+    }}
+>
     <tk:element
-        :attributes="TALLKit::attributesAfter($attributes, 'container:')->classes(
-            'flex w-full group/sortable',
-            match ($align) {
-                'center' => 'text-center justify-center',
-                'right' => 'text-end justify-end',
-                default => 'text-start justify-start',
-            })
+        :attributes="TALLKit::attributesAfter($attributes, 'container:')
+            ->classes([
+                'flex w-full',
+                'group/sortable' => $sortable,
+                match ($align) {
+                    'center' => 'text-center justify-center',
+                    'right' => 'text-end justify-end',
+                    default => 'text-start justify-start',
+                }
+            ])
         "
         :label="$label ?? Str::headline($name)"
-        :$href
-        :$action
+        :href="$sortable ? $sortableHref : null"
+        :action="$sortable ? $sortableAction : null"
         :iconTrailing="match ($sortable) {
             true => 'chevron-up-down',
             'desc' => 'chevron-down',

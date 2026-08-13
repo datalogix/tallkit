@@ -1,36 +1,48 @@
-import { bind } from '../utils'
+import { bind, findFieldInput } from '../utils'
 
 export function inputViewable() {
   return {
     viewed: false,
+    inputObserver: null,
+    originalType: 'password',
 
     init() {
-      const input = this.$el
-        ?.closest('[data-tallkit-field-control]')
-        ?.querySelector('[data-tallkit-input]')
+      const input = findFieldInput(this.$el)
 
       if (!input) {
         return
       }
 
-      input.setAttribute('type', this.viewed ? 'text' : 'password')
+      if (input.type) {
+        this.originalType = input.type
+      }
+
+      input.setAttribute('type', this.viewed ? 'text' : this.originalType)
 
       bind(this.$el, {
+        [':aria-pressed']() {
+          return this.viewed
+        },
+
         ['@click']() {
           this.viewed = !this.viewed
-          input.setAttribute('type', this.viewed ? 'text' : 'password')
-          input.dispatchEvent(new Event('viewed', { bubbles: false }))
+          input.setAttribute('type', this.viewed ? 'text' : this.originalType)
+          input.dispatchEvent(new Event('viewed', { bubbles: true }))
         }
       })
 
-      const inputObserver = new MutationObserver(() => {
+      this.inputObserver = new MutationObserver(() => {
         this.viewed = input?.getAttribute('type') !== 'password'
       })
 
-      inputObserver.observe(input, {
+      this.inputObserver.observe(input, {
         attributes: true,
         attributeFilter: ['type']
       })
+    },
+
+    destroy() {
+      this.inputObserver?.disconnect()
     }
   }
 }

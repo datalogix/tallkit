@@ -1,6 +1,7 @@
 @props([
     'items' => null,
     'size' => null,
+    'multiple' => null,
 ])
 <ul
     {{
@@ -27,13 +28,17 @@
             )
     }}
     role="listbox"
+    @if ($multiple) aria-multiselectable="true" @endif
     x-bind:tabindex="filteredItems.length > 0 ? 0 : -1"
 >
     {{ $slot }}
 
-    @foreach (collect($items) as $item)
+    @foreach (collect($items) as $index => $item)
         <tk:listbox.item
-            :attributes="TALLKit::attributesAfter($attributes, 'item:')->merge(is_array($item) ? $item : ['label' => $item], false)"
+            :attributes="TALLKit::attributesAfter($attributes, 'item:')
+                ->merge(is_array($item) ? $item : ['label' => $item], false)
+                ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId('listbox-item', (string) data_get($item, 'value', $index))] : [], false)
+            "
             :$size
         />
     @endforeach

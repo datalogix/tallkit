@@ -18,8 +18,8 @@
                 )
         }}
     >
-        @foreach (collect($items) as $item)
-            <li>
+        @foreach (collect($items) as $index => $item)
+            <li @if (in_livewire()) wire:key="{{ TALLKit::generateId('list-item', (string) $index) }}" @endif>
                 <tk:text
                     :attributes="TALLKit::attributesAfter($attributes, 'item:')"
                     :label="$item"

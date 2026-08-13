@@ -1,12 +1,12 @@
 @props([
     'url' => null,
     'data' => null,
-    'autoFetch' => null,
+    'auto' => null,
     'chart' => null,
     'options' => null,
 ])
 <tk:loadable
-    x-data="fetchable({{ Js::from($url) }}, {{ Js::from($data) }}, {{ Js::from($autoFetch) }}, {{ Js::from($options) }})"
+    x-data="fetchable({{ Js::from(['url' => $url, 'data' => $data, 'auto' => $auto, 'options' => $options]) }})"
     :attributes="$attributes->whereDoesntStartWith(['chart:', 'json:'])"
 >
     @if ($slot->isNotEmpty())

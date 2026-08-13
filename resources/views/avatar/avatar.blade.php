@@ -17,7 +17,7 @@ $initials = TALLKit::generateInitials($initials ?? $name, $attributes->pluck('in
 $src ??= TALLKit::findAvatar($email ?? $username, $ttl);
 
 if ($color === 'auto') {
-    $colors = ['red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose', 'slate', 'gray', 'zinc', 'stone', 'taupe', 'mauve', 'mist', 'olive'];
+    $colors = ['red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose', 'slate', 'gray', 'zinc', 'stone'];
     $colorSeed = $attributes->pluck('color:seed') ?? $name ?? $icon ?? $initials;
     $hash = crc32((string) $colorSeed);
     $color = $colors[$hash % count($colors)];
@@ -51,7 +51,6 @@ if ($tooltip === true) {
                 'outline' => '',
                 'ghost' => 'bg-transparent',
                 'subtle' => 'bg-transparent text-zinc-500',
-                default => '',
                 'red' => 'bg-red-200 text-red-800',
                 'orange' => 'bg-orange-200 text-orange-800',
                 'amber' => 'bg-amber-200 text-amber-800',
@@ -69,6 +68,11 @@ if ($tooltip === true) {
                 'fuchsia' => 'bg-fuchsia-200 text-fuchsia-800',
                 'pink' => 'bg-pink-200 text-pink-800',
                 'rose' => 'bg-rose-200 text-rose-800',
+                'slate' => 'bg-slate-200 text-slate-800',
+                'gray' => 'bg-gray-200 text-gray-800',
+                'zinc' => 'bg-zinc-200 text-zinc-800',
+                'stone' => 'bg-stone-200 text-stone-800',
+                default => '',
             },
         )
     "
@@ -78,7 +82,7 @@ if ($tooltip === true) {
             {{
                 TALLKit::attributesAfter($attributes, 'image:')
                     ->classes(TALLKit::roundedSize(size: $square ? $size : 'full'))
-                    ->merge(['src' => $src, 'alt' => $alt ?? $name])
+                    ->merge(['src' => $src, 'alt' => (string) ($alt ?? $name)])
             }}
         />
     @elseif (($initials || $slot->hasActualContent()) && !$icon)

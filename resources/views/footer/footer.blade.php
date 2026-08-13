@@ -2,7 +2,9 @@
     'container' => null,
 ])
 <footer {{
-    $attributes->whereDoesntStartWith(['container:'])
+    $attributes
+        ->dataKey('footer')
+        ->whereDoesntStartWith(['container:'])
         ->classes('[grid-area:footer]')
         ->classes(['p-6 lg:p-8' => !$container])
     }}

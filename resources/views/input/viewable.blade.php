@@ -1,7 +1,7 @@
 <tk:button
     wire:replace.self
     x-cloak
-    x-data="inputViewable"
+    x-data="inputViewable()"
     :$attributes
     :variant="$attributes->pluck('variant', 'none')"
     tabindex="-1"

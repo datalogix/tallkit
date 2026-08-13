@@ -1,18 +1,22 @@
+@aware(['size'])
 @props([
+    'size' => null,
     'keepOpen' => null,
     'items' => null,
 ])
-<div
+<tk:menu.group
+    :attributes="$attributes->whereDoesntStartWith(['item:'])->merge(['data-keep-open' => $keepOpen])"
+    :$size
     wire:ignore
     x-data="{ value: null }"
     x-modelable="value"
-    {{ $attributes->whereDoesntStartWith(['item:'])->merge(['data-keep-open' => $keepOpen]) }}
 >
     @foreach (collect($items) as $item)
         <tk:menu.checkbox
             :attributes="TALLKit::attributesAfter($attributes, 'item:')->merge(is_array($item) ? $item : ['label' => $item], false)"
+            :$size
         />
     @endforeach
 
     {{ $slot }}
-</div>
+</tk:menu.group>

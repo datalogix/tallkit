@@ -37,7 +37,11 @@ export const appearance = {
     if (appearance === 'system') {
       const media = window.matchMedia('(prefers-color-scheme: dark)')
       window.localStorage.removeItem('tallkit.appearance')
-      media.matches ? this.applyDark(false) : this.applyLight(false)
+      if (media.matches) {
+        this.applyDark(false)
+      } else {
+        this.applyLight(false)
+      }
       this.mode = 'system'
     } else if (appearance === 'dark') {
       this.applyDark()

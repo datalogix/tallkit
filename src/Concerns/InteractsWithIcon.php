@@ -15,29 +15,41 @@ trait InteractsWithIcon
             return null;
         }
 
-        return Cache::driver('file')->rememberForever("tallkit-icon-{$name}", function () use ($name) {
-            $path = storage_path('app/tallkit/icons/'.Str::snake($name).'.svg');
+        $cacheKey = "tallkit-icon-{$name}";
 
-            if (File::exists($path)) {
-                return File::get($path);
-            }
+        $cached = Cache::store()->get($cacheKey);
 
-            $response = Http::get("https://api.iconify.design/{$name}.svg");
+        if ($cached) {
+            return $cached;
+        }
 
-            if (! $response->successful()) {
-                return '';
-            }
+        $path = storage_path('app/tallkit/icons/'.Str::snake($name).'.svg');
 
-            $contents = $response->body();
+        if (File::exists($path)) {
+            $contents = File::get($path);
 
-            if (Str::doesntContain($contents, '<svg', true)) {
-                return '';
-            }
-
-            File::ensureDirectoryExists(dirname($path));
-            File::put($path, $contents);
+            Cache::store()->rememberForever($cacheKey, fn () => $contents);
 
             return $contents;
-        });
+        }
+
+        $response = Http::get("https://api.iconify.design/{$name}.svg");
+
+        if (! $response->successful()) {
+            return '';
+        }
+
+        $contents = $response->body();
+
+        if (Str::doesntContain($contents, '<svg', true)) {
+            return '';
+        }
+
+        File::ensureDirectoryExists(dirname($path));
+        File::put($path, $contents);
+
+        Cache::store()->rememberForever($cacheKey, fn () => $contents);
+
+        return $contents;
     }
 }

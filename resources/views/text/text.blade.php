@@ -31,7 +31,7 @@
     :$kbd
     :attributes="$attributes->classes(
         TALLKit::fontSize(size: $size, mode: $mode, weight: $weight),
-        TALLKit::iconSize(size: $size),
+        TALLKit::iconSize(size: $size, mode: $mode),
         match ($variant) {
             'accent' => 'text-[var(--color-accent-content)]',
             'strong' => '[:where(&)]:text-zinc-800 dark:[:where(&)]:text-white',

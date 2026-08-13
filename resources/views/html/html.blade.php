@@ -37,7 +37,10 @@ $livewire ??= class_exists(\Livewire\Livewire::class);
 
 @endphp
 <!DOCTYPE html>
-<html {{ TALLKit::attributesAfter($attributes, 'html:')->merge(['lang' => Str::replace($lang, '_', '-')]) }}>
+<html {{ TALLKit::attributesAfter($attributes, 'html:')->merge([
+    'lang' => Str::replace($lang, '_', '-'),
+    'dir' => in_array(Str::before($lang, '_'), config('app.rtl_locales', ['ar', 'fa', 'he', 'ur'])) ? 'rtl' : 'ltr',
+]) }}>
 <head {{ TALLKit::attributesAfter($attributes, 'head:') }}>
     @if ($charset) <meta charset="{{ $charset }}"> @endif
     @if ($viewport) <meta name="viewport" content="{{ $viewport }}"> @endif
@@ -68,7 +71,7 @@ $livewire ??= class_exists(\Livewire\Livewire::class);
     @if ($googleFonts) <tk:google.fonts :attributes="TALLKit::attributesAfter($attributes, 'google-fonts:')->merge($googleFonts)->merge(['noscript' => true])" /> @endif
     @if ($gtm) <tk:google.gtm :id="$gtm" noscript /> @endif
     {{ $slot }}
-    @foreach ($components as $c => $component) <x-dynamic-component :attributes="TALLKit::attributesAfter($attributes, 'components:')->merge($attrs)" :$component /> @endforeach
+    @foreach ($components as $c => $component) <x-dynamic-component :attributes="TALLKit::attributesAfter($attributes, 'components:')" :$component /> @endforeach
     @if ($toast && $livewire) @persist('toast') <tk:toast :attributes="TALLKit::attributesAfter($attributes, 'toast:')" /> @endpersist @endif
     @if ($toast && !$livewire) <tk:toast :attributes="TALLKit::attributesAfter($attributes, 'toast:')" /> @endif
     @foreach ($scripts as $script) <script src="{{ $script }}"></script> @endforeach

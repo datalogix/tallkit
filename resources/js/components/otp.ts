@@ -1,4 +1,4 @@
-import { bind } from '../utils'
+import { bind, setFieldValue } from '../utils'
 
 type Mode = 'numeric' | 'alpha' | 'alphanumeric'
 
@@ -6,9 +6,10 @@ export function otp(submit?: string) {
   return {
     value: '',
     inputs: [],
+    _syncing: false,
 
     init() {
-      this.inputs = Array.from(this.$root.querySelectorAll('input'))
+      this.inputs = Array.from(this.$root.querySelectorAll('input[data-mode]'))
 
       this.$nextTick(() => {
         this.syncFromModel()
@@ -29,7 +30,7 @@ export function otp(submit?: string) {
       return {
         ['@focus']: () => this.handleFocus(input, index, inputs),
         ['@blur']: () => this.$dispatch('otp-blur', { input, index }),
-        ['@paste']: (e: ClipboardEvent) => this.handlePaste(e, index, inputs),
+        ['@paste.prevent']: (e: ClipboardEvent) => this.handlePaste(e, index, inputs),
         ['@input']: () => this.handleInput(input, index, inputs),
         ['@keydown']: (e: KeyboardEvent) => this.handleKeydown(e, input, index, inputs),
         ['@keydown.arrow-left.prevent']: () => inputs[index - 1]?.select(),
@@ -56,13 +57,22 @@ export function otp(submit?: string) {
 
     handlePaste(e: ClipboardEvent, index: number, inputs: HTMLInputElement[]) {
       const pasted = e.clipboardData?.getData('text') ?? ''
-      spreadValue(pasted, index, inputs)
+
+      this._syncing = true
+      try {
+        spreadValue(pasted, index, inputs)
+      } finally {
+        this._syncing = false
+      }
+
       this.updateModel()
 
       this.$dispatch('otp-paste', { pasted, index })
     },
 
     handleInput(input: HTMLInputElement, index: number, inputs: HTMLInputElement[]) {
+      if (this._syncing) return
+
       const mode = input.dataset.mode as Mode
       const filtered = filterValue(input.value, mode)
 
@@ -76,7 +86,7 @@ export function otp(submit?: string) {
       this.updateModel()
     },
 
-    handleKeydown(e: KeyboardEvent, input: HTMLInputElement, index: number, inputs: HTMLInputElement[]) {
+    handleKeydown(e: KeyboardEvent, input: HTMLInputElement, _index: number, _inputs: HTMLInputElement[]) {
       if (e.ctrlKey || e.metaKey || e.altKey) return
 
       const mode = input.dataset.mode as Mode
@@ -88,7 +98,9 @@ export function otp(submit?: string) {
 
     handleBackspace(input: HTMLInputElement, index: number, inputs: HTMLInputElement[]) {
       if (input.value) {
-        input.value = ''
+        this._syncing = true
+        setFieldValue(input, '')
+        this._syncing = false
       } else {
         inputs[index - 1]?.select()
       }
@@ -99,10 +111,15 @@ export function otp(submit?: string) {
     syncFromModel(val: string = this.value) {
       const chars = String(val).padEnd(this.inputs.length).split('')
 
-      this.inputs.forEach((input, i) => {
-        const mode = input.dataset.mode as Mode
-        input.value = filterValue(chars[i] ?? '', mode)
-      })
+      this._syncing = true
+      try {
+        this.inputs.forEach((input, i) => {
+          const mode = input.dataset.mode as Mode
+          setFieldValue(input, filterValue(chars[i] ?? '', mode))
+        })
+      } finally {
+        this._syncing = false
+      }
     },
 
     updateModel() {
@@ -158,7 +175,7 @@ function spreadValue(value: string, start: number, inputs: HTMLInputElement[]) {
     if (!input) return
 
     const mode = input.dataset.mode as Mode
-    input.value = filterValue(char, mode)
+    setFieldValue(input, filterValue(char, mode))
   })
 
   const next = inputs[Math.min(start + chars.length, inputs.length - 1)]

@@ -8,8 +8,8 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel] = TALLKit::resolveFieldContext($attributes, $label);
-$checked ??= in_array($value, Arr::wrap($checked));
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext($attributes, $label, $id);
+$checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
 
 @endphp
 <tk:field.wrapper
@@ -25,12 +25,7 @@ $checked ??= in_array($value, Arr::wrap($checked));
             TALLKit::attributesAfter($attributes, 'control:')
                 ->classes(
                     '
-                        transition-colors
-                        transition-shadow
-                        transition-transform
-                        duration-200
-                        ease-out
-                        motion-reduce:transition-none
+                        tk-control-transition
 
                         rounded-full
                         inline-flex
@@ -69,7 +64,7 @@ $checked ??= in_array($value, Arr::wrap($checked));
                         has-[input:focus-visible]:ring-blue-700/20
                         dark:has-[input:focus-visible]:ring-blue-300/20
                     ',
-                    TALLKit::generateClassBySize(size: $size, name: 'w', values: ['8', '9', '10', '12', '14', '16', '18']),
+                    TALLKit::generateClassBySize(size: $size, name: 'w', values: ['8', '10', '12', '14', '16', '18', '22']),
                     TALLKit::generateClassBySize(size: $size, name: 'h', values: ['5', '6', '7', '8', '9', '10', '12']),
                     TALLKit::iconSize(size: $size),
                     match ($variant) {
@@ -78,7 +73,6 @@ $checked ??= in_array($value, Arr::wrap($checked));
                             has-[input:checked]:[&_span]:bg-[var(--color-accent-foreground)]
                             has-[input:checked]:[&_span]:text-[var(--color-accent-content)]
                         ',
-                        default => 'has-[input:checked]:bg-zinc-800 dark:has-[input:checked]:bg-white dark:has-[input:checked]:[&_span]:bg-zinc-800',
                         'red' => 'has-[input:checked]:bg-red-600 dark:has-[input:checked]:bg-red-500',
                         'orange' => 'has-[input:checked]:bg-orange-600 dark:has-[input:checked]:bg-orange-500',
                         'amber' => 'has-[input:checked]:bg-amber-600 dark:has-[input:checked]:bg-amber-500',
@@ -96,30 +90,31 @@ $checked ??= in_array($value, Arr::wrap($checked));
                         'fuchsia' => 'has-[input:checked]:bg-fuchsia-600 dark:has-[input:checked]:bg-fuchsia-500',
                         'pink' => 'has-[input:checked]:bg-pink-600 dark:has-[input:checked]:bg-pink-500',
                         'rose' => 'has-[input:checked]:bg-rose-600 dark:has-[input:checked]:bg-rose-500',
+                        default => 'has-[input:checked]:bg-zinc-800 dark:has-[input:checked]:bg-white dark:has-[input:checked]:[&_span]:bg-zinc-800',
                     },
                 )
         }}
     >
         <input
-            @if ($name) name="{{ $name }}" @endif
-            @if ($id) id="{{ $id }}" @endif
-            @if ($invalid) aria-invalid="true" data-invalid @endif
             @checked($checked)
-            value="{{ $value }}"
             type="checkbox"
             role="switch"
-            aria-label="{{ __('Toggle') }}"
             {{
                 $attributes
                     ->dataKey('toggle')
-                    ->merge(['wire:model' => $wireModel])
-                    ->whereDoesntStartWith([
-                        'field:', 'label:', 'info:', 'badge:', 'description:',
-                        'group:', 'prefix:', 'suffix:',
-                        'help:', 'error:',
-                        'control:',
-                        'icon:', 'icon-on:', 'icon-off:',
+                    ->merge([
+                        'name' => $name,
+                        'id' => $id,
+                        'value' => $value,
+                        'wire:model' => $wireModel,
+                        'aria-label' => $label ? null : __('Toggle'),
+                        'aria-describedby' => TALLKit::ariaDescribedBy($id, $description, $help, $invalid, $showError),
+                        'aria-invalid' => $invalid ? 'true' : null,
+                        'data-invalid' => $invalid ? true : null,
                     ])
+                    ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes([
+                        'icon:', 'icon-on:', 'icon-off:',
+                    ]))
                     ->classes('sr-only peer')
             }}
         />
@@ -137,12 +132,7 @@ $checked ??= in_array($value, Arr::wrap($checked));
                             shadow-sm
                             pointer-events-none
 
-                            transition-colors
-                            transition-shadow
-                            transition-transform
-                            duration-200
-                            ease-out
-                            motion-reduce:transition-none
+                            tk-control-transition
 
                             flex
                             items-center
@@ -166,14 +156,14 @@ $checked ??= in_array($value, Arr::wrap($checked));
         >
             @if ($iconOn)
                 <tk:icon
-                    :name="$iconOn"
+                    :icon="$iconOn"
                     :attributes="TALLKit::attributesAfter($attributes, 'icon-on:')->classes('checked')"
                 />
             @endif
 
             @if ($iconOff)
                 <tk:icon
-                    :name="$iconOff"
+                    :icon="$iconOff"
                     :attributes="TALLKit::attributesAfter($attributes, 'icon-off:')->classes('unchecked')"
                 />
             @endif

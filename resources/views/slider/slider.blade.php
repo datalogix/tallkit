@@ -6,7 +6,7 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel] = TALLKit::resolveFieldContext($attributes, $label);
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext($attributes, $label, $id);
 $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd || $attributes->has('class');
 
 @endphp
@@ -48,23 +48,24 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
         >
             <input
                 type="range"
-                @if ($name) name="{{ $name }}" @endif
-                @if ($id) id="{{ $id }}" @endif
-                @if ($invalid) aria-invalid="true" data-invalid @endif
-                @unless (in_livewire()) value="{{ $value }}" @endif
                 {{
                     $attributes
                         ->dataKey('slider')
                         ->dataKey('control')
                         ->dataKey('group-target')
-                        ->merge(['wire:model' => $wireModel])
-                        ->whereDoesntStartWith([
-                            'field:', 'label:', 'info:', 'badge:', 'description:',
-                            'group:', 'prefix:', 'suffix:',
-                            'help:', 'error:',
-                            'control:', 'prepend:', 'icon:', 'append:', 'loading:', 'icon-trailing:', 'kbd:',
-                            'slider:', 'ticks:', 'tick:',
+                        ->merge([
+                            'name' => $name,
+                            'id' => $id,
+                            'value' => in_livewire() ? null : $value,
+                            'wire:model' => $wireModel,
+                            'aria-describedby' => TALLKit::ariaDescribedBy($id, $description, $help, $invalid, $showError),
+                            'aria-invalid' => $invalid ? 'true' : null,
+                            'data-invalid' => $invalid ? true : null,
                         ])
+                        ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes([
+                            'prepend:', 'icon:', 'append:', 'loading:', 'icon-trailing:', 'kbd:',
+                            'slider:', 'ticks:', 'tick:',
+                        ]))
                         ->classes(
                             '
                                 [--range-active:rgb(0_0_0_/_.8)]
@@ -89,31 +90,14 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
                                 dark:disabled:text-zinc-400
 
                                 disabled:cursor-not-allowed
-                                disabled:resize-none
 
                                 border
                                 border-zinc-300
                                 dark:border-white/10
-
-                                disabled:border-zinc-200
-                                dark:disabled:border-white/5
-
-                                [&[data-invalid]:not(:focus-visible)]:border-red-500
-                                dark:[&[data-invalid]:not(:focus-visible)]:border-red-400
-
-                                disabled:[&[data-invalid]:not(:focus-visible)]:border-red-500
-                                dark:disabled:[&[data-invalid]:not(:focus-visible)]:border-red-400
-
                                 shadow-xs
-                                disabled:shadow-none
-                                [&[data-invalid]]:disabled:shadow-none
 
-                                shadow-xs
-                                disabled:shadow-none
-                                [&[data-invalid]]:disabled:shadow-none
-
-                                disabled:opacity-75
-                                dark:disabled:opacity-50
+                                tk-control-invalid-border
+                                tk-control-disabled
 
                                 outline-none
 
@@ -151,6 +135,7 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
                                 [&::-webkit-slider-thumb]:appearance-none
                                 [&::-webkit-slider-thumb]:border
                                 [&::-webkit-slider-thumb]:border-zinc-300
+                                dark:[&::-webkit-slider-thumb]:border-white/10
                                 [&::-webkit-slider-thumb]:size-5
                                 [&::-webkit-slider-thumb]:bg-white
                                 [&::-webkit-slider-thumb]:rounded-full
@@ -163,6 +148,7 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
                                 [&::-moz-range-thumb]:appearance-none
                                 [&::-moz-range-thumb]:border
                                 [&::-moz-range-thumb]:border-zinc-300
+                                dark:[&::-moz-range-thumb]:border-white/10
                                 [&::-moz-range-thumb]:size-5
                                 [&::-moz-range-thumb]:bg-white
                                 [&::-moz-range-thumb]:rounded-full

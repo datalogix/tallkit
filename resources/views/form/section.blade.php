@@ -28,6 +28,7 @@
         :$description
         :$append
         :$actions
+        :$separator
     >
         <tk:alert.session
             :attributes="TALLKit::attributesAfter($attributes, 'alert:')"

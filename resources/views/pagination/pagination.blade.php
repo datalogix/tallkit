@@ -22,7 +22,7 @@ $textColors = TALLKit::classes('text-zinc-700 dark:text-zinc-300');
     <div {{ $attributes
         ->whereDoesntStartWith([
             'separator:', 'container:', 'nav:', 'results:', 'total:',
-            'pages:', 'page:', 'first-page:', 'prev-page:', 'next:', 'last-page:', 'dots:',
+            'pages:', 'page:', 'first-page:', 'prev-page:', 'next-page:', 'last-page:', 'dots:',
         ])
         ->classes($textColors)
     }}>
@@ -55,7 +55,7 @@ $textColors = TALLKit::classes('text-zinc-700 dark:text-zinc-300');
                             <span class="font-medium">{{ $paginator->lastItem() }}</span>
                             <span>{!! __('of') !!}</span>
                             <span class="font-medium">{{ $paginator->total() }}</span>
-                            <span>{!! __('results') !!}</span>
+                            <span>{!! trans_choice('pagination.results', $paginator->total()) !!}</span>
                         </tk:text>
 
                         <tk:text
@@ -107,16 +107,16 @@ $textColors = TALLKit::classes('text-zinc-700 dark:text-zinc-300');
                                         :attributes="TALLKit::attributesAfter($attributes, 'dots:')->classes('px-px hidden lg:inline-flex')"
                                         :label="$element"
                                         :$size
-                                        aria-disabled="true"
+                                        aria-hidden="true"
                                     />
                                 @endif
 
                                 @if (is_array($element))
-                                    @foreach ($element as $page => $url)
+                                    @foreach ($element as $page => $href)
                                         <tk:pagination.page
                                             :attributes="TALLKit::attributesAfter($attributes, 'page:')->classes('px-3.5 hidden lg:inline-flex')"
                                             :$page
-                                            :$url
+                                            :$href
                                             :$size
                                         />
                                     @endforeach

@@ -1,4 +1,5 @@
 @aware(['paginator'])
+@props(['paginator'])
 @php
 
 $wireKey = method_exists($paginator, 'getCursorName') && in_livewire()
@@ -13,7 +14,6 @@ $action = method_exists($paginator, 'getCursorName')
 <tk:button
     :$attributes
     :aria-disabled="!$paginator->hasMorePages()"
-    :aria-hidden="!$paginator->hasMorePages()"
     :disabled="!$paginator->hasMorePages()"
     :rel="in_livewire() ? false : 'next'"
     :href="in_livewire() ? false : $paginator->nextPageUrl()"

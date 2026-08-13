@@ -44,7 +44,7 @@ if (is_string($loading) || $loading === true) {
                 {{
                     TALLKit::attributesAfter($attributes, 'prepend:')
                         ->dataKey('field-control-prepend')
-                        ->classes('flex items-center justify-center gap-x-1.5 ps-3 text-zinc-400')
+                        ->classes('flex items-center justify-center gap-x-1.5 ps-3 text-zinc-500 dark:text-zinc-400')
                 }}
             >
                 {{ $prepend ?? '' }}
@@ -71,10 +71,7 @@ if (is_string($loading) || $loading === true) {
                 {{
                     TALLKit::attributesAfter($attributes, 'append:')
                         ->dataKey('field-control-append')
-                        ->classes('
-                            flex items-center justify-center gap-x-1.5 pe-3 text-zinc-400
-                            [&:has([data-tallkit-loading].hidden)]:pe-0
-                        ')
+                        ->classes('flex items-center justify-center gap-x-1.5 pe-3 text-zinc-500 dark:text-zinc-400')
                         ->classes(['[&:has([data-tallkit-loading].hidden)]:pe-0' => !$append && $loading && !$iconTrailing && !$kbd])
                 }}
             >

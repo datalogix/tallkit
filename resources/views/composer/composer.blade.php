@@ -12,7 +12,7 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel] = TALLKit::resolveFieldContext($attributes, $label);
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext($attributes, $label, $id);
 
 @endphp
 <tk:field.wrapper
@@ -20,13 +20,18 @@
     :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
 >
     <div
+        wire:ignore.self
         x-data="composer({ submit: @js($submit), placeholder: @js($placeholder ? __($placeholder) : null) })"
         role="group"
-        @if ($invalid) aria-invalid="true" data-invalid @endif
-        @if ($inline) data-inline @endif
         {{
             $attributes
-                ->merge(['wire:model' => $wireModel])
+                ->merge([
+                    'wire:model' => $wireModel,
+                    'aria-describedby' => TALLKit::ariaDescribedBy($id, $description, $help, $invalid, $showError),
+                    'aria-invalid' => $invalid ? 'true' : null,
+                    'data-invalid' => $invalid ? true : null,
+                    'data-inline' => $inline ? true : null,
+                ])
                 ->whereDoesntStartWith([
                     'field:', 'label:', 'info:', 'badge:', 'description:',
                     'group:', 'prefix:', 'suffix:',
@@ -104,15 +109,15 @@
                         [[data-inline]_&]:col-span-2
                         [[data-inline]_&]:col-start-2
 
-                        [&_[data-tallkit-control]]:p-0
-                        [&_[data-tallkit-control]]:h-auto
-                        [&_[data-tallkit-control]]:bg-transparent
-                        [&_[data-tallkit-control]]:border-none
-                        [&_[data-tallkit-control]]:outline-none
-                        [&_[data-tallkit-control]]:ring-0
-                        [&_[data-tallkit-control]]:resize-none
-                        [&_[data-tallkit-control]]:shadow-none
-                        [&_[data-tallkit-control]]:rounded-none
+                        [&_[data-tallkit-control]]:p-0!
+                        [&_[data-tallkit-control]]:h-auto!
+                        [&_[data-tallkit-control]]:bg-transparent!
+                        [&_[data-tallkit-control]]:border-none!
+                        [&_[data-tallkit-control]]:outline-none!
+                        [&_[data-tallkit-control]]:ring-0!
+                        [&_[data-tallkit-control]]:resize-none!
+                        [&_[data-tallkit-control]]:shadow-none!
+                        [&_[data-tallkit-control]]:rounded-none!
                     '
                 )"
         >

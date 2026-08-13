@@ -1,3 +1,4 @@
+import { loadRemoteAssets } from '../utils'
 import { loadable } from './loadable'
 
 export function prettyPrintJson () {
@@ -5,12 +6,11 @@ export function prettyPrintJson () {
     ...loadable(),
 
     init () {
-      this.load(async () => {
-        if (!window.prettyPrintJson) {
-          await this.$tallkit.loadScript('https://cdn.jsdelivr.net/npm/pretty-print-json@3/dist/pretty-print-json.min.js')
-          await this.$tallkit.loadStyle('https://cdn.jsdelivr.net/npm/pretty-print-json@3/dist/css/pretty-print-json.min.css')
-        }
-      })
+      this.load(() => loadRemoteAssets(
+        () => !!window.prettyPrintJson,
+        'https://cdn.jsdelivr.net/npm/pretty-print-json@3/dist/pretty-print-json.min.js',
+        'https://cdn.jsdelivr.net/npm/pretty-print-json@3/dist/css/pretty-print-json.min.css'
+      ))
     },
 
     render (data = null, options = {}) {
@@ -18,6 +18,8 @@ export function prettyPrintJson () {
         return window.prettyPrintJson.toHtml(data, options)
       } catch(e) {
         this.fail(e)
+
+        return ''
       }
     },
   }

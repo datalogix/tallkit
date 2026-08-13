@@ -4,6 +4,7 @@
     'size' => null,
     'image' => null,
     'svg' => null,
+    'tooltip' => null,
 ])
 @php
 
@@ -42,14 +43,27 @@ if (Str::isUrl($iconName)) {
     }
 }
 
+$isDecorative = ! $tooltip && ! $attributes->has('aria-label') && ! $attributes->has('aria-labelledby');
+
+$ariaLabel = ! $attributes->has('aria-label') && ! $attributes->has('aria-labelledby') ? $tooltip : null;
+
 @endphp
-<tk:tooltip.wrapper :$attributes>
+<tk:tooltip.wrapper :$attributes :$tooltip>
     @if ($image)
         <img
             src="{{ $image }}"
-            {{ $attributes->dataKey('icon')->classes('object-cover rounded', TALLKit::widthHeight($size)) }}
+            {{
+                $attributes
+                    ->dataKey('icon')
+                    ->classes('object-cover rounded', TALLKit::widthHeight($size))
+                    ->when($isDecorative, fn ($attrs) => $attrs->merge(['aria-hidden' => 'true', 'alt' => '']))
+                    ->when($ariaLabel, fn ($attrs, $value) => $attrs->merge(['aria-label' => __($value)]))
+            }}
         />
     @else
-        {!! Str::of($svg)->replace('<svg', '<svg '.$attributes->dataKey('icon')->classes('text-current', TALLKit::widthHeight($size))) !!}
+        {!! Str::of($svg)->replace('<svg', '<svg '
+            .($isDecorative ? 'aria-hidden="true" focusable="false" ' : '')
+            .$attributes->dataKey('icon')->classes('text-current', TALLKit::widthHeight($size))
+                ->when($ariaLabel, fn ($attrs, $value) => $attrs->merge(['aria-label' => __($value)]))) !!}
     @endif
 </tk:tooltip.wrapper>

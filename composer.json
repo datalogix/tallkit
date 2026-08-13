@@ -25,8 +25,14 @@
         "gehrisandro/tailwind-merge-laravel": "^1.4",
         "illuminate/container": "^10.0|^11.0|^12.0|^13.0",
         "illuminate/contracts": "^10.0|^11.0|^12.0|^13.0",
+        "illuminate/database": "^10.0|^11.0|^12.0|^13.0",
         "illuminate/support": "^10.0|^11.0|^12.0|^13.0",
-        "illuminate/view": "^10.0|^11.0|^12.0|^13.0"
+        "illuminate/view": "^10.0|^11.0|^12.0|^13.0",
+        "nesbot/carbon": "^2.0|^3.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.30",
+        "livewire/livewire": "^3.7|^4.2"
     },
     "autoload": {
         "psr-4": {
@@ -69,9 +75,5 @@
         "sort-packages": true
     },
     "minimum-stability": "dev",
-    "prefer-stable": true,
-    "require-dev": {
-        "laravel/pint": "^1.29",
-        "livewire/livewire": "^3.7|^4.2"
-    }
+    "prefer-stable": true
 }

@@ -15,7 +15,7 @@ $contentClasses = TALLKit::classes(
 
 @endphp
 @if ($slot->hasActualContent() || $label)
-    <div role="none" class="flex items-center w-full">
+    <div role="none" {{ TALLKit::dataKey('separator') }} class="flex items-center w-full">
         <div {{ $attributes->whereDoesntStartWith(['content:'])->classes($contentClasses->add('grow')) }}></div>
 
         <span {{ TALLKit::attributesAfter($attributes, 'content:')->classes(
@@ -29,5 +29,5 @@ $contentClasses = TALLKit::classes(
         <div {{ $attributes->whereDoesntStartWith(['content:'])->classes($contentClasses->add('grow')) }}></div>
     </div>
 @else
-    <div role="none" {{ $attributes->whereDoesntStartWith(['content:'])->classes($contentClasses->add('shrink-0')) }}></div>
+    <div role="none" {{ $attributes->dataKey('separator')->whereDoesntStartWith(['content:'])->classes($contentClasses->add('shrink-0')) }}></div>
 @endif

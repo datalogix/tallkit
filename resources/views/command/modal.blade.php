@@ -33,6 +33,7 @@
             ->merge($closeOnSelect !== false ? ['x-on:listbox-item-selected' => 'close'] : [])
         "
         :$size
+        search:x-on:keydown.escape.prevent="close"
     >
         {{ $content ?? '' }}
 

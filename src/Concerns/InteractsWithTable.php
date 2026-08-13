@@ -19,9 +19,9 @@ trait InteractsWithTable
         $value = $this->formatDateTimeValue($value);
         $value = $this->formatEnumValue($value);
         $value = $this->formatSerializableValue($value);
+        $value = $this->applyTranslation($value, $col);
         $value = $this->formatArrayValue($value);
         $value = $this->formatStringValue($value);
-        $value = $this->applyTranslation($value, $col);
 
         return $value;
     }
@@ -124,7 +124,7 @@ trait InteractsWithTable
     protected function formatArrayValue(mixed $value)
     {
         if (is_array($value)) {
-            return implode('<br />', $value);
+            return implode('<br />', array_map(fn ($item) => e($item), $value));
         }
 
         return $value;
@@ -133,7 +133,7 @@ trait InteractsWithTable
     protected function formatStringValue(mixed $value)
     {
         if (is_string($value)) {
-            return nl2br($value);
+            return nl2br(e($value));
         }
 
         return $value;

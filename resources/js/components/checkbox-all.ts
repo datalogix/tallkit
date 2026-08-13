@@ -3,50 +3,35 @@ import { bind } from '../utils'
 export function checkboxAll({ group = '' } = {}) {
   return {
     all: null,
-    checkboxes: [],
+
+    get checkboxes() {
+      return Array.from(document.querySelectorAll(`[data-tallkit-checkbox-group="${group}"]`))
+    },
 
     init() {
       this.all = this.$root.querySelector('[data-tallkit-checkbox]')
-      this.checkboxes = Array.from(document.querySelectorAll(`[data-checkbox-group="${group}"]`))
 
       bind(this.all, {
         ['@change']: () => this.toggleAll()
       })
 
-      document.addEventListener('change', (event) => {
-        const checkbox = event.target
-
-        if (
-          checkbox === this.all ||
-          !checkbox.matches(`[data-checkbox-group="${group}"]`)
-        ) {
-          return
-        }
-
-        this.updateState()
+      bind(this.checkboxes, {
+        ['@change']: () => this.updateState()
       })
-
-      this.updateState()
     },
 
     toggleAll() {
       this.checkboxes.forEach((checkbox) => {
-        checkbox.checked = this.all?.checked
-
-        this.$nextTick(() => {
-          checkbox.dispatchEvent(new Event('input', { bubbles: true }))
-          checkbox.dispatchEvent(new Event('change', { bubbles: true }))
-        })
+        checkbox.checked = !!this.all?.checked
       })
-
-      this.updateState()
     },
 
     updateState() {
       if (! this.all) return
 
-      const total = this.checkboxes.length
-      const checked = this.checkboxes.filter(cb => cb.checked).length
+      const checkboxes = this.checkboxes
+      const total = checkboxes.length
+      const checked = checkboxes.filter(cb => cb.checked).length
 
       this.all.checked = total > 0 && checked === total
       this.all.indeterminate = checked > 0 && checked < total

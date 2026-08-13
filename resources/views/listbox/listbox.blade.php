@@ -7,6 +7,7 @@
     'clearOnSelect' => null,
     'fuseOptions' => null,
     'standalone' => null,
+    'multiple' => null,
 ])
 <div
     wire:ignore.self
@@ -37,6 +38,7 @@
         "
         :$items
         :$size
+        :$multiple
     >
         {{ $slot}}
     </tk:listbox.items>

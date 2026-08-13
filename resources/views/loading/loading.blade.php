@@ -3,6 +3,9 @@
     'size' => null,
 ])
 <span
+    role="status"
+    aria-live="polite"
+    aria-label="{{ __('Loading...') }}"
     {{
         $attributes
             ->dataKey('loading')

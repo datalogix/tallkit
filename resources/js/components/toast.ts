@@ -62,10 +62,10 @@ export function toast() {
       }
 
       this.resetIdleTimer()
+    },
 
-      this.$el.addEventListener('alpine:destroy', () => {
-        this._listeners.forEach(off => off())
-      })
+    destroy() {
+      this._listeners.forEach(off => off())
     },
 
     syncAttention() {
@@ -75,34 +75,45 @@ export function toast() {
         if (!toast.duration || !toast.attentionAware) return
 
         if (shouldRun && toast.pausedAt) {
-          toast.resume()
+          toast.resume('attention')
         }
 
         if (!shouldRun && !toast.pausedAt) {
-          toast.pause()
+          toast.pause('attention')
         }
       })
     },
 
     addToast(props) {
-      /*
-      if (this.toasts.length >= 5) {
-        const oldest = this.toasts.slice().sort((a, b) => a.createdAt - b.createdAt)[0]
+      const position = normalizePosition(props.position)
+      const maxStack = props.maxStack ?? 5
 
-        if (oldest) {
-          this.removeToast(oldest.id)
+      if (maxStack !== false) {
+        const sameSlot = this.toasts.filter(t => t.position === position)
+
+        if (sameSlot.length >= maxStack) {
+          const oldest = sameSlot.slice().sort((a, b) => a.createdAt - b.createdAt)[0]
+
+          if (oldest) {
+            this.removeToast(oldest.id)
+          }
         }
       }
-      */
 
       const duration = props.duration ?? getDynamicDuration(props.title, props.message)
+      const manager = this
+      const currentToast = props.id ? this.toasts.find(t => t.id === props.id) : null
+
+      if (currentToast) {
+        return this.updateToast(currentToast.id, props)
+      }
 
       const toast = window.Alpine.reactive({
         id: crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`,
         createdAt: Date.now(),
         ...props,
         duration,
-        position: normalizePosition(props.position),
+        position,
 
         attentionAware: props.attentionAware ?? true,
         progress: props.progress ?? true,
@@ -117,6 +128,8 @@ export function toast() {
         elapsedBeforePause: 0,
         raf: null,
         pausedAt: null,
+        pausedByHover: false,
+        pausedByAttention: false,
 
         swiping: false,
         startX: 0,
@@ -131,7 +144,7 @@ export function toast() {
           this.startTime = performance.now()
 
           const loop = (time) => {
-            if (!this.$root.toasts.find(t => t.id === this.id)) {
+            if (!manager.toasts.find(t => t.id === this.id)) {
               this.stop()
               return
             }
@@ -140,14 +153,13 @@ export function toast() {
 
             const elapsed = this.elapsedBeforePause + (time - this.startTime)
             const linear = Math.min(elapsed / this.total, 1)
-            const eased = linear === 1 ? 1 : 1 - Math.pow(2, -10 * linear)
 
             if (this.progress) {
-              this.progressValue = 1 - eased
+              this.progressValue = 1 - linear
             }
 
             if (linear >= 1) {
-              this.$root.removeToast(this.id)
+              manager.removeToast(this.id)
               return
             }
 
@@ -157,8 +169,16 @@ export function toast() {
           this.raf = requestAnimationFrame(loop)
         },
 
-        pause() {
-          if (!this.duration || this.pausedAt) return
+        pause(reason = 'attention') {
+          if (!this.duration) return
+
+          if (reason === 'hover') {
+            this.pausedByHover = true
+          } else {
+            this.pausedByAttention = true
+          }
+
+          if (this.pausedAt) return
 
           this.pausedAt = performance.now()
           this.elapsedBeforePause += this.pausedAt - this.startTime
@@ -169,7 +189,14 @@ export function toast() {
           }
         },
 
-        resume() {
+        resume(reason = 'attention') {
+          if (reason === 'hover') {
+            this.pausedByHover = false
+          } else {
+            this.pausedByAttention = false
+          }
+
+          if (this.pausedByHover || this.pausedByAttention) return
           if (!this.pausedAt) return
 
           this.pausedAt = null
@@ -223,7 +250,7 @@ export function toast() {
           const threshold = width * 0.4
 
           if (Math.abs(this.currentX) > threshold) {
-            this.$root.removeToast(this.id)
+            manager.removeToast(this.id)
           } else {
             this.currentX = 0
             this.currentY = 0
@@ -245,7 +272,6 @@ export function toast() {
     updateToast(id, data) {
       const toast = this.toasts.find(t => t.id === id)
       if (!toast) return
-
 
       const allowed = [
         'title',
@@ -273,6 +299,8 @@ export function toast() {
         toast.stop()
 
         toast.pausedAt = null
+        toast.pausedByHover = false
+        toast.pausedByAttention = false
         toast.total = data.duration
         toast.elapsedBeforePause = 0
 
@@ -282,6 +310,8 @@ export function toast() {
           toast.start()
         }
       }
+
+      return toast
     },
 
     removeToast(id) {
@@ -301,6 +331,17 @@ export function toast() {
       return this.toasts.filter(t => t.position === position)
     },
 
+    positionTransform(position) {
+      return {
+        'top-left': '-translate-x-full opacity-0',
+        'top-center': '-translate-y-full opacity-0',
+        'top-right': 'translate-x-full opacity-0',
+        'bottom-left': '-translate-x-full opacity-0',
+        'bottom-center': 'translate-y-full opacity-0',
+        'bottom-right': 'translate-x-full opacity-0',
+      }[String(position)]
+    },
+
     notify(props) {
       return this.addToast(props)
     },
@@ -316,8 +357,7 @@ export function toast() {
     error(message, props = {}) {
       return this.notify({
         title: message,
-        type: 'danger',
-        duration: 7000,
+        type: 'error',
         ...props
       })
     },
@@ -326,6 +366,14 @@ export function toast() {
       return this.notify({
         title: message,
         type: 'info',
+        ...props
+      })
+    },
+
+    warning(message, props = {}) {
+      return this.notify({
+        title: message,
+        type: 'warning',
         ...props
       })
     },
@@ -376,7 +424,7 @@ export function toast() {
     },
 
     promise(promise, messages = {}) {
-      const toast = this.loading(messages.loading ?? 'Carregando...')
+      const toast = this.loading(messages.loading ?? 'Loading...')
       const resolveMessage = (msg, data) => typeof msg === 'function' ? msg(data) : msg
 
       promise
@@ -384,7 +432,7 @@ export function toast() {
           if (!this.toasts.find(t => t.id === toast.id)) return
 
           this.updateToast(toast.id, {
-            title: resolveMessage(messages.success, data) ?? 'Sucesso!',
+            title: resolveMessage(messages.success, data) ?? 'Success!',
             type: 'success',
             duration: getDynamicDuration(resolveMessage(messages.success, data)),
             progress: true,
@@ -395,8 +443,8 @@ export function toast() {
           if (!this.toasts.find(t => t.id === toast.id)) return
 
           this.updateToast(toast.id, {
-            title: resolveMessage(messages.error, error) ?? 'Erro!',
-            type: 'danger',
+            title: resolveMessage(messages.error, error) ?? 'Error!',
+            type: 'error',
             duration: getDynamicDuration(resolveMessage(messages.error, error)) * 1.3,
             progress: true,
             swipe: true,

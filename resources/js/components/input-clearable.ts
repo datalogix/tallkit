@@ -1,31 +1,32 @@
-import { bind } from '../utils'
+import { bind, findFieldInput, setFieldValue } from '../utils'
 
 export function inputClearable() {
   return {
+    hasValue: false,
+
     init() {
-      const input = this.$el
-        ?.closest('[data-tallkit-field-control]')
-        ?.querySelector('[data-tallkit-input]')
+      const input = findFieldInput(this.$el)
 
       if (!input) {
         return
       }
 
-      const button = this.$el
-      button.style.display = input.value ? 'inline-flex ' : 'none'
+      this.hasValue = Boolean(input.value)
 
       bind(input, {
         ['@input']() {
-          button.style.display = input.value ? 'inline-flex ' : 'none'
+          this.hasValue = Boolean(input.value)
         }
       })
 
-      bind(button, {
+      bind(this.$el, {
+        ['x-show']() {
+          return this.hasValue
+        },
+
         ['@click']() {
-          input.value = ''
-          input.dispatchEvent(new Event('input', { bubbles: false }))
-          input.dispatchEvent(new Event('change', { bubbles: false }))
-          input.dispatchEvent(new Event('cleared', { bubbles: false }))
+          setFieldValue(input, '')
+          input.dispatchEvent(new Event('cleared', { bubbles: true }))
           input.focus()
         }
       })

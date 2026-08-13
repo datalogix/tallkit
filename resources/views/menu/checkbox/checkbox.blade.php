@@ -1,5 +1,9 @@
+@aware(['size'])
 @props([
     'checked' => null,
+    'size' => null,
+    'icon' => null,
+    'iconUnchecked' => null,
 ])
 @php
 
@@ -9,22 +13,23 @@ $iconUnchecked ??= $attributes->pluck('icon-unchecked');
 @endphp
 <tk:menu.item
     wire:ignore
-    x-data="menuCheckbox({{ $checked }})"
+    x-data="menuCheckbox({{ Js::from($checked) }})"
     x-modelable="checked"
     :attributes="$attributes->whereDoesntStartWith(['icon-checked:', 'icon-unchecked:'])->classes('group/menu-checkbox')"
     role="menuitemcheckbox"
+    :$size
     icon:class="w-7"
 >
     <x-slot:icon>
         <tk:icon
             :attributes="TALLKit::attributesAfter($attributes, 'icon-checked:')->classes('hidden group-data-checked/menu-checkbox:block')"
             :$icon
-            size="sm"
+            :size="TALLKit::adjustSize(size: $size)"
         />
         <tk:icon
             :attributes="TALLKit::attributesAfter($attributes, 'icon-unchecked:')->classes('block group-data-checked/menu-checkbox:hidden')"
             :icon="$iconUnchecked"
-            size="sm"
+            :size="TALLKit::adjustSize(size: $size)"
         />
     </x-slot:icon>
 

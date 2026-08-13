@@ -1,34 +1,30 @@
 export type Milliseconds = string | boolean | number
 
 export function timeout(callback: TimerHandler, milliseconds?: Milliseconds, defaultMilliseconds: number = 500) {
-  let timeoutId: number | undefined = undefined
-  clearTimeout(timeoutId)
-
   const ms = !milliseconds || isNaN(parseInt(milliseconds.toString()))
     ? defaultMilliseconds
     : parseInt(milliseconds.toString())
 
-  timeoutId = setTimeout(callback, ms)
-  return timeoutId
+  return setTimeout(callback, ms)
 }
 
 export function interval(callback: TimerHandler, milliseconds?: Milliseconds, defaultMilliseconds: number = 500) {
-  let intervalId: number | undefined = undefined
-  clearInterval(intervalId)
-
   const ms = !milliseconds || isNaN(parseInt(milliseconds.toString()))
     ? defaultMilliseconds
     : parseInt(milliseconds.toString())
 
-  intervalId = setInterval(callback, ms)
-  return intervalId
+  return setInterval(callback, ms)
 }
 
 export function debounce(callback: (...args: any[]) => void, delay: number = 300) {
   let timeout: number | undefined = undefined
 
-  return (...args: any[]) => {
+  const debounced = (...args: any[]) => {
     clearTimeout(timeout)
     timeout = setTimeout(() => callback(...args), delay)
   }
+
+  debounced.cancel = () => clearTimeout(timeout)
+
+  return debounced
 }

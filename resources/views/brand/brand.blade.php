@@ -38,7 +38,24 @@ $href ??= route_detect('home');
                 TALLKit::roundedSize(size: $size, mode: 'small'),
             )
         }}>
-            {{ $logo }}
+            @if ($logoDark)
+                <span class="block dark:hidden">{{ $logo }}</span>
+
+                @if (TALLKit::isSlot($logoDark))
+                    <span class="hidden dark:block">{{ $logoDark }}</span>
+                @else
+                    <img
+                        src="{{ $logoDark }}"
+                        {{
+                            TALLKit::attributesAfter($attributes, 'image-dark:')
+                                ->classes('hidden dark:block h-full')
+                                ->merge($alt ? ['alt' => $alt] : [])
+                        }}
+                    />
+                @endif
+            @else
+                {{ $logo }}
+            @endif
         </div>
     @elseif ($logo || $logoDark || $slot->isNotEmpty())
         <div {{
@@ -53,7 +70,7 @@ $href ??= route_detect('home');
                 )
         }}>
             @if (TALLKit::isSlot($logoDark))
-                {{ $logoDark }}
+                <span class="hidden dark:block">{{ $logoDark }}</span>
             @elseif ($logoDark)
                 <img
                     src="{{ $logoDark }}"

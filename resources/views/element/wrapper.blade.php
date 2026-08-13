@@ -1,15 +1,5 @@
 @props([
-    // element
-    'label' => null,
-    'icon' => null,
-    'prefix' => null,
-    'suffix' => null,
-    'iconTrailing' => null,
-    'info' => null,
-    'badge' => null,
-    'prepend' => null,
-    'append' => null,
-    'kbd' => null,
+    ...TALLKit::elementProps(),
 ])
 @if ($slot->hasActualContent() || $label)
     <tk:element

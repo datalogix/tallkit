@@ -12,8 +12,12 @@ export function cache(name: string, {
     get(key: string) {
       const mem = memory.get(key)
 
-      if (mem && Date.now() < mem.exp) {
-        return mem.data
+      if (mem) {
+        if (Date.now() < mem.exp) {
+          return mem.data
+        }
+
+        memory.delete(key)
       }
 
       if (persist) {
@@ -31,7 +35,9 @@ export function cache(name: string, {
           memory.set(key, parsed)
 
           return parsed.data
-        } catch {
+        } catch (e) {
+          console.warn('[tallkit] cache read failed', e)
+
           return null
         }
       }
@@ -50,8 +56,8 @@ export function cache(name: string, {
       if (persist) {
         try {
           localStorage.setItem(this.getStorageKey(key), JSON.stringify(entry))
-        } catch {
-          //
+        } catch (e) {
+          console.warn('[tallkit] cache write failed', e)
         }
       }
     },

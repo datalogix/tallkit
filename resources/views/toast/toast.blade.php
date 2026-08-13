@@ -1,4 +1,5 @@
 <div
+    wire:ignore
     x-data="toast"
     tabindex="-1"
     {{
@@ -29,6 +30,9 @@
                 :key="toast.id"
             >
                 <div
+                    :role="toast.type === 'error' ? 'alert' : 'status'"
+                    :aria-live="toast.type === 'error' ? 'assertive' : 'polite'"
+                    aria-atomic="true"
                     {{ TALLKit::attributesAfter($attributes, 'container:')->classes(
                         '
                             m-1 shadow-lg rounded-xl
@@ -55,29 +59,15 @@
                     x-show="toast.visible"
                     x-bind="{
                         'x-transition:enter': 'transition ease-out duration-350',
-                        'x-transition:enter-start': {
-                            'top-left': '-translate-x-full opacity-0',
-                            'top-center': '-translate-y-full opacity-0',
-                            'top-right': 'translate-x-full opacity-0',
-                            'bottom-left': '-translate-x-full opacity-0',
-                            'bottom-center': 'translate-y-full opacity-0',
-                            'bottom-right': 'translate-x-full opacity-0',
-                        }[position],
+                        'x-transition:enter-start': positionTransform(position),
                         'x-transition:enter-end': 'translate-0 opacity-100',
                         'x-transition:leave': 'transition ease-in duration-200',
                         'x-transition:leave-start': 'translate-0 opacity-100',
-                        'x-transition:leave-end': {
-                            'top-left': '-translate-x-full opacity-0',
-                            'top-center': '-translate-y-full opacity-0',
-                            'top-right': 'translate-x-full opacity-0',
-                            'bottom-left': '-translate-x-full opacity-0',
-                            'bottom-center': 'translate-y-full opacity-0',
-                            'bottom-right': 'translate-x-full opacity-0',
-                        }[position],
+                        'x-transition:leave-end': positionTransform(position),
                     }"
                     @click.stop="toast.swiping && $event.preventDefault()"
-                    @mouseenter="toast.pauseOnHover && toast.pause()"
-                    @mouseleave="toast.pauseOnHover && toast.resume()"
+                    @mouseenter="toast.pauseOnHover && toast.pause('hover')"
+                    @mouseleave="toast.pauseOnHover && toast.resume('hover')"
                     @pointerdown="toast.swipe && toast.onPointerDown($event)"
                     @pointermove="toast.swipe && toast.onPointerMove($event)"
                     @pointerup="toast.swipe && toast.onPointerUp($event)"
@@ -93,14 +83,18 @@
                         name="info"
                     />
                     <tk:icon
-                        :attributes="TALLKit::attributesAfter($attributes, 'icon:')->merge(TALLKit::attributesAfter($attributes, 'icon-danger:')->getAttributes())->classes('shrink-0 text-red-500 dark:text-red-400')"
-                        x-show="toast.type === 'danger'"
+                        :attributes="TALLKit::attributesAfter($attributes, 'icon:')->merge(TALLKit::attributesAfter($attributes, 'icon-error:')->getAttributes())->classes('shrink-0 text-red-500 dark:text-red-400')"
+                        x-show="toast.type === 'error'"
                         name="cancel"
                     />
                     <tk:icon
                         :attributes="TALLKit::attributesAfter($attributes, 'icon:')->merge(TALLKit::attributesAfter($attributes, 'icon-warning:')->getAttributes())->classes('shrink-0 text-amber-500 dark:text-amber-400')"
-                        x-show="toast.type === 'warn'"
+                        x-show="toast.type === 'warning'"
                         name="warning"
+                    />
+                    <tk:loading
+                        :attributes="TALLKit::attributesAfter($attributes, 'icon:')->merge(TALLKit::attributesAfter($attributes, 'icon-loading:')->getAttributes())->classes('shrink-0 text-zinc-500 dark:text-zinc-400')"
+                        x-show="toast.type === 'loading'"
                     />
                     <div class="flex-1 flex flex-col gap-2">
                         <div
@@ -116,11 +110,12 @@
                     <tk:button
                         :attributes="TALLKit::attributesAfter($attributes, 'close:')"
                         x-on:click="removeToast(toast.id)"
-                        icon="times"
+                        icon="close"
                         variant="none"
+                        tooltip="Close"
                     />
                     <div
-                        x-show="progress"
+                        x-show="toast.progress"
                         {{ TALLKit::attributesAfter($attributes, 'progress:')->classes('bg-black/5 dark:bg-black/10 h-full absolute inset-0 pointer-events-none origin-left') }}
                         :style="toast.progress ? { transform: `scaleX(${toast.progressValue})` } : {}"
                     ></div>

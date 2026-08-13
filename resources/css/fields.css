@@ -20,7 +20,7 @@
 
 .dark [data-tallkit-select]:not([multiple]), .dark [data-tallkit-combobox] {
   padding-inline-end: 2.5rem;
-  background-image: url("data:image/svg+xml,%3csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M8 9L12 5L16 9' stroke='%23A1A1A1' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3e%3cpath d='M16 15L12 19L8 15' stroke='%23A1A1A1' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml,%3csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M8 9L12 5L16 9' stroke='%23A1A1AA' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3e%3cpath d='M16 15L12 19L8 15' stroke='%23A1A1AA' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3e%3c/svg%3e");
 
   &[disabled] {
     background-image: url("data:image/svg+xml,%3csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M8 9L12 5L16 9' stroke='%23606060' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3e%3cpath d='M16 15L12 19L8 15' stroke='%23606060' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3e%3c/svg%3e");
@@ -35,4 +35,194 @@
   background-image: url("data:image/svg+xml,%3Csvg width='10' height='10' viewBox='0 0 10 10' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 10 L10 0 M3 10 L10 3 M6 10 L10 6' stroke='%23A1A1AA' stroke-width='1'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: bottom right;
+}
+
+@utility tk-field-control-base {
+  @apply
+    bg-transparent flex-1 block w-full appearance-none [print-color-adjust:exact]
+
+    text-zinc-700 disabled:text-zinc-500
+    dark:text-zinc-300 dark:disabled:text-zinc-400
+
+    placeholder-zinc-400 disabled:placeholder-zinc-400/70
+    dark:placeholder-zinc-400 dark:disabled:placeholder-zinc-500
+
+    disabled:cursor-not-allowed disabled:resize-none;
+}
+
+@utility tk-control-transition {
+  @apply
+    transition-colors transition-shadow transition-transform
+    duration-200 ease-out motion-reduce:transition-none;
+}
+
+@utility tk-control-surface {
+  @apply
+    bg-white dark:bg-white/10
+    border border-zinc-300 dark:border-white/10
+    shadow-xs;
+}
+
+@utility tk-control-invalid-border {
+  @apply
+    [&[data-invalid]:not(:focus-visible)]:border-red-500
+    dark:[&[data-invalid]:not(:focus-visible)]:border-red-400;
+}
+
+@utility tk-control-invalid-border-nested {
+  @apply
+    has-[[data-tallkit-control][data-invalid]:not(:focus-visible)]:border-red-500
+    dark:has-[[data-tallkit-control][data-invalid]:not(:focus-visible)]:border-red-400;
+}
+
+@utility tk-control-disabled {
+  @apply
+    disabled:border-zinc-200 dark:disabled:border-white/5
+    disabled:[&[data-invalid]:not(:focus-visible)]:border-red-500
+    dark:disabled:[&[data-invalid]:not(:focus-visible)]:border-red-400
+    disabled:shadow-none
+    [&[data-invalid]]:disabled:shadow-none
+    disabled:opacity-75 dark:disabled:opacity-50;
+}
+
+@utility tk-control-disabled-nested {
+  @apply
+    has-[[data-tallkit-control]:disabled]:border-zinc-200
+    dark:has-[[data-tallkit-control]:disabled]:border-white/5
+    has-[[data-tallkit-control][data-invalid]:disabled:not(:focus-visible)]:border-red-500
+    dark:has-[[data-tallkit-control][data-invalid]:disabled:not(:focus-visible)]:border-red-400
+    has-[[data-tallkit-control]:disabled]:shadow-none
+    has-[[data-tallkit-control][data-invalid]:disabled]:shadow-none
+    has-[[data-tallkit-control]:disabled]:opacity-75
+    dark:has-[[data-tallkit-control]:disabled]:opacity-50
+    has-[[data-tallkit-control]:disabled]:cursor-not-allowed;
+}
+
+@utility tk-control-focus-ring {
+  @apply
+    focus-visible:outline-2 focus-visible:outline-blue-700
+    dark:focus-visible:outline-blue-300 focus-visible:outline-offset-0
+    focus-visible:ring-2 focus-visible:ring-blue-700/20
+    dark:focus-visible:ring-blue-300/20;
+}
+
+@utility tk-control-focus-ring-nested {
+  @apply
+    has-[[data-tallkit-control]:focus-visible]:outline-2
+    has-[[data-tallkit-control]:focus-visible]:outline-blue-700
+    dark:has-[[data-tallkit-control]:focus-visible]:outline-blue-300
+    has-[[data-tallkit-control]:focus-visible]:outline-offset-0
+    has-[[data-tallkit-control]:focus-visible]:ring-2
+    has-[[data-tallkit-control]:focus-visible]:ring-blue-700/20
+    dark:has-[[data-tallkit-control]:focus-visible]:ring-blue-300/20;
+}
+
+@utility tk-control-focus-ring-expanded {
+  @apply
+    [&:is(:focus-visible,[aria-expanded=true])]:outline-2
+    [&:is(:focus-visible,[aria-expanded=true])]:outline-blue-700
+    dark:[&:is(:focus-visible,[aria-expanded=true])]:outline-blue-300
+    [&:is(:focus-visible,[aria-expanded=true])]:outline-offset-0
+    [&:is(:focus-visible,[aria-expanded=true])]:ring-2
+    [&:is(:focus-visible,[aria-expanded=true])]:ring-blue-700/20
+    dark:[&:is(:focus-visible,[aria-expanded=true])]:ring-blue-300/20;
+}
+
+@utility tk-control-focus-ring-expanded-nested {
+  @apply
+    has-[[data-tallkit-control]:is(:focus-visible,[aria-expanded=true])]:outline-2
+    has-[[data-tallkit-control]:is(:focus-visible,[aria-expanded=true])]:outline-blue-700
+    dark:has-[[data-tallkit-control]:is(:focus-visible,[aria-expanded=true])]:outline-blue-300
+    has-[[data-tallkit-control]:is(:focus-visible,[aria-expanded=true])]:outline-offset-0
+    has-[[data-tallkit-control]:is(:focus-visible,[aria-expanded=true])]:ring-2
+    has-[[data-tallkit-control]:is(:focus-visible,[aria-expanded=true])]:ring-blue-700/20
+    dark:has-[[data-tallkit-control]:is(:focus-visible,[aria-expanded=true])]:ring-blue-300/20;
+}
+
+.tk-control-wrapper {
+  @apply
+    flex items-center
+    tk-control-surface
+    tk-control-disabled-nested
+    tk-control-invalid-border-nested
+    tk-control-focus-ring-nested
+    [&_[data-tallkit-control]]:outline-none;
+}
+
+.tk-control-standalone {
+  @apply
+    tk-control-surface
+    tk-control-disabled
+    tk-control-invalid-border
+    tk-control-focus-ring;
+}
+
+.tk-control-wrapper-expanded {
+  @apply
+    flex items-center
+    tk-control-surface
+    tk-control-disabled-nested
+    tk-control-invalid-border-nested
+    tk-control-focus-ring-expanded-nested
+    [&_[data-tallkit-control]]:outline-none;
+}
+
+.tk-control-standalone-expanded {
+  @apply
+    tk-control-surface
+    tk-control-disabled
+    tk-control-invalid-border
+    tk-control-focus-ring-expanded;
+}
+
+.tk-control-wrapper-no-disabled {
+  @apply
+    flex items-center
+    tk-control-surface
+    tk-control-invalid-border-nested
+    tk-control-focus-ring-nested
+    [&_[data-tallkit-control]]:outline-none;
+}
+
+.tk-field-group {
+  @apply
+    w-full flex
+    [&_[data-tallkit-field]]:grow
+    [&_[data-tallkit-input]]:grow
+    [&_[data-tallkit-label]]:hidden
+
+    /* All inputs borders */
+    [&>[data-tallkit-input]:last-child:not(:first-child)>[data-tallkit-group-target]:not([data-invalid])]:border-s-0
+    [&>[data-tallkit-input]:not(:first-child):not(:last-child)>[data-tallkit-group-target]:not([data-invalid])]:border-s-0
+    [&>[data-tallkit-input]:has(+[data-tallkit-input-group-suffix])>[data-tallkit-group-target]:not([data-invalid])]:border-e-0
+
+    /* Selects and date pickers borders */
+    [&>*:last-child:not(:first-child)_[data-tallkit-group-target]:not([data-invalid])]:border-s-0
+    [&>*:not(:first-child):not(:last-child)_[data-tallkit-group-target]:not([data-invalid])]:border-s-0
+    [&>*:has(+[data-tallkit-input-group-suffix])_[data-tallkit-group-target]:not([data-invalid])]:border-e-0
+
+    /* Buttons borders */
+    [&>[data-tallkit-group-target]:last-child:not(:first-child)]:border-s-0
+    [&>[data-tallkit-group-target]:not(:first-child):not(:last-child)]:border-s-0
+    [&>[data-tallkit-group-target]:has(+[data-tallkit-input-group-suffix])]:border-e-0
+
+    /* "Weld" the borders of inputs together by overriding their border radiuses */
+    [&>[data-tallkit-group-target]:not(:first-child):not(:last-child)]:rounded-none
+    [&>[data-tallkit-group-target]:first-child:not(:last-child)]:rounded-e-none
+    [&>[data-tallkit-group-target]:last-child:not(:first-child)]:rounded-s-none
+    [&>[data-tallkit-field-control]:not(:first-child):not(:last-child)]:rounded-none
+    [&>[data-tallkit-field-control]:first-child:not(:last-child)]:rounded-e-none
+    [&>[data-tallkit-field-control]:last-child:not(:first-child)]:rounded-s-none
+
+    /* "Weld" borders for sub-children of group targets (button element inside select element, etc.) */
+    [&>*:not(:first-child):not(:last-child):not(:only-child)_[data-tallkit-group-target]]:rounded-none
+    [&>*:first-child:not(:last-child)_[data-tallkit-group-target]]:rounded-e-none
+    [&>*:last-child:not(:first-child)_[data-tallkit-group-target]]:rounded-s-none;
+}
+
+.tk-control-standalone-no-disabled {
+  @apply
+    tk-control-surface
+    tk-control-invalid-border
+    tk-control-focus-ring;
 }

@@ -1,13 +1,13 @@
 <tfoot {{ $attributes
     ->whereDoesntStartWith(['row:', 'cell:'])
-    ->classes('*:font-semibold *:text-zinc-900 dark:*:text-white')
+    ->classes('*:font-semibold *:text-zinc-800 dark:*:text-white')
 }}>
     @if (Str::contains($slot, '<tr', true))
         {{ $slot }}
     @else
         <tk:table.row
             :attributes="TALLKit::attributesAfter($attributes, 'row:')"
-            role="row-foot"
+            data-role="row-foot"
         >
             @if (Str::contains($slot, '<td', true))
                 {{ $slot }}

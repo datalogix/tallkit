@@ -40,9 +40,19 @@ trait CanPretendToBeAFile
 
     protected function matchesCache($lastModified)
     {
+        if ($lastModified === false) {
+            return false;
+        }
+
         $ifModifiedSince = app(Request::class)->header('if-modified-since');
 
-        return $ifModifiedSince !== null && @strtotime($ifModifiedSince) === $lastModified;
+        if ($ifModifiedSince === null) {
+            return false;
+        }
+
+        $ifModifiedSinceTimestamp = @strtotime($ifModifiedSince);
+
+        return $ifModifiedSinceTimestamp !== false && $ifModifiedSinceTimestamp === $lastModified;
     }
 
     protected function httpDate($timestamp)
@@ -59,5 +69,7 @@ trait CanPretendToBeAFile
         if (Str::endsWith($file, '.js')) {
             return 'application/javascript; charset=utf-8';
         }
+
+        return null;
     }
 }

@@ -27,7 +27,7 @@ $hasSuffix = $suffix || TALLKit::attributesAfter($attributes, 'suffix:')->isNotE
         />
 
         <tk:text
-            :attributes="TALLKit::attributesAfter($attributes, 'description:')"
+            :attributes="TALLKit::attributesAfter($attributes, 'description:')->merge(['id' => $id ? $id.'-description' : null])"
             :label="$description"
             :$size
         />
@@ -49,14 +49,14 @@ $hasSuffix = $suffix || TALLKit::attributesAfter($attributes, 'suffix:')->isNotE
         @endif
 
         <tk:text
-            :attributes="TALLKit::attributesAfter($attributes, 'help:')"
+            :attributes="TALLKit::attributesAfter($attributes, 'help:')->merge(['id' => $id ? $id.'-help' : null])"
             :label="$help"
             :$size
         />
 
         @if ($showError !== false)
             <tk:error
-                :attributes="TALLKit::attributesAfter($attributes, 'error:')"
+                :attributes="TALLKit::attributesAfter($attributes, 'error:')->merge(['id' => $id ? $id.'-error' : null])"
                 :$name
                 :$size
             />

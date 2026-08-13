@@ -1,26 +1,30 @@
+import { loadRemoteAssets } from '../utils'
+import { dataOptions } from './data-options'
 import { loadable } from './loadable'
 
 export function frappeCharts() {
+  const _loadable = loadable()
+
   return {
-    ...loadable(),
+    ..._loadable,
+    ...dataOptions(),
 
     chart: null,
 
     init() {
-      this.load(async () => {
-        if (!window.frappe?.Chart) {
-          await this.$tallkit.loadScript('https://cdn.jsdelivr.net/npm/frappe-charts@1')
-        }
-      })
-    },
-
-    getDataOptions() {
-      return window.Alpine.evaluate(this.$el, this.$el.getAttribute('data-options') || '{}')
+      this.load(() => loadRemoteAssets(() => !!window.frappe?.Chart, 'https://cdn.jsdelivr.net/npm/frappe-charts@1'))
     },
 
     render(options = {}) {
-      this.chart ??= new window.frappe.Chart(this.$el, { ...options, ...this.getDataOptions() })
+      this.chart?.destroy?.()
+      this.chart = new window.frappe.Chart(this.$el, { ...options, ...this.getDataOptions() })
       this.$dispatch('rendered', { chart: this.chart })
+    },
+
+    destroy() {
+      _loadable.destroy.call(this)
+      this.chart?.destroy?.()
+      this.chart = null
     }
   }
 }

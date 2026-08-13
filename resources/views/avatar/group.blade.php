@@ -9,11 +9,11 @@
      match ($size) {
         'xs' => '-space-x-3',
         'sm' => '-space-x-4',
-        default => '-space-x-5',
         'lg' => '-space-x-6',
         'xl' => '-space-x-8',
         '2xl' => '-space-x-10',
         '3xl' => '-space-x-12',
+        default => '-space-x-5',
      },
 ) }}>
     @foreach (collect($avatars)->take($max) as $avatar)
@@ -26,7 +26,8 @@
 
     @if ($max && collect($avatars)->count() > $max)
         <tk:avatar
-            initials="..."
+            initials="+{{ collect($avatars)->count() - $max }}"
+            :tooltip="__(':count more', ['count' => collect($avatars)->count() - $max])"
             :$size
             :$square
         />

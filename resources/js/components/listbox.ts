@@ -1,5 +1,5 @@
 import Fuse from 'fuse.js'
-import { bind, normalize } from '../utils'
+import { bind, debounce, normalize, setFieldValue } from '../utils'
 
 export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptions } = {}) {
   return {
@@ -13,6 +13,7 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
     index: null,
     fuse: null,
     lastInteraction: null,
+    debouncedSearch: null,
 
     init() {
       this.input = this.$root.querySelector('[data-tallkit-input]')
@@ -25,11 +26,13 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
         this.setActive(index)
       })
 
+      this.debouncedSearch = debounce(() => this.search(), 150)
+
       bind(this.input, {
         ['@input']() {
           this.lastInteraction = 'keyboard'
           this.$dispatch('listbox-search-updated', { query: this.input.value })
-          this.search()
+          this.debouncedSearch()
         },
 
         ['@focus']() {
@@ -40,7 +43,7 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
           this.clear()
         },
 
-        ['@keydown.esc.prevent']() {
+        ['@keydown.escape.prevent']() {
           this.clear()
         },
 
@@ -111,7 +114,7 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
           }
         },
 
-        ['@keydown.esc.prevent']() {
+        ['@keydown.escape.prevent']() {
           this.clear()
         },
 
@@ -120,7 +123,7 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
           this.prev()
         },
 
-        ['@keydown.arrow-down.prevent'](e) {
+        ['@keydown.arrow-down.prevent']() {
           this.lastInteraction = 'keyboard'
           this.next()
         },
@@ -156,7 +159,7 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
       ).map((item) => {
         item.hidden = true
 
-        if (item?.firstElementChild.disabled) {
+        if (item?.firstElementChild?.disabled) {
           item.setAttribute('aria-disabled', 'true')
         }
 
@@ -304,9 +307,7 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
       button.dispatchEvent(new Event('click', { bubbles: true }))
 
       if (clearOnSelect) {
-        this.input.value = ''
-        this.input.dispatchEvent(new Event('input', { bubbles: true }))
-        this.input.dispatchEvent(new Event('change', { bubbles: true }))
+        setFieldValue(this.input, '')
       }
 
       this.$dispatch('listbox-item-selected', { index, item, button })
@@ -342,6 +343,7 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
     },
 
     clear() {
+      this.debouncedSearch?.cancel()
       this.clearActive()
       this.index = null
     },

@@ -1,9 +1,10 @@
-import { bind, fadeOut, collapse } from '../utils'
+import { bind, fadeOut, collapse, getTransitionTimeout } from '../utils'
 
 export function dismissible(animation?: 'fade' | 'collapse') {
   return {
     cancelDismiss: null as (() => void) | null,
     isDismissing: false,
+    _dismissTimeout: null as ReturnType<typeof setTimeout> | null,
 
     init() {
       bind(this.$root.querySelectorAll('[data-tallkit-dismissible]'), {
@@ -49,32 +50,39 @@ export function dismissible(animation?: 'fade' | 'collapse') {
         this.isDismissing = false
         this.cancelDismiss = null
         this.$dispatch('dismissed', { reason })
+
+        if (this.$root.isConnected) {
+          this.$root.remove()
+        }
       }
 
       if (animation === 'fade') {
-        this.cancelDismiss = fadeOut(this.$root, {
-          remove: true,
-          onDone
-        })
+        this.cancelDismiss = fadeOut(this.$root, { onDone })
       } else if (animation === 'collapse') {
-        this.cancelDismiss = collapse(this.$root, {
-          remove: true,
-          onDone
-        })
+        this.cancelDismiss = collapse(this.$root, { onDone })
       } else {
-        this.$root.remove()
         onDone()
       }
 
-      setTimeout(() => {
+      if (this._dismissTimeout) {
+        clearTimeout(this._dismissTimeout)
+      }
+
+      this._dismissTimeout = setTimeout(() => {
         this.isDismissing = false
-      }, 2000)
+        this._dismissTimeout = null
+      }, Math.max(getTransitionTimeout(this.$root) * 1.5, 500))
     },
 
     destroy() {
       this.cancelDismiss?.()
       this.cancelDismiss = null
       this.isDismissing = false
+
+      if (this._dismissTimeout) {
+        clearTimeout(this._dismissTimeout)
+        this._dismissTimeout = null
+      }
     },
   }
 }

@@ -39,6 +39,17 @@ trait InteractsWithField
         ];
     }
 
+    public function fieldExcludedPrefixes(array $extra = [])
+    {
+        return [
+            'field:', 'label:', 'info:', 'badge:', 'description:',
+            'group:', 'prefix:', 'suffix:',
+            'help:', 'error:',
+            'control:',
+            ...$extra,
+        ];
+    }
+
     public function mergeDefinedFieldProps(
         ComponentAttributeBag $attributes,
         array $scope
@@ -53,7 +64,8 @@ trait InteractsWithField
 
     public function resolveFieldContext(
         ComponentAttributeBag $attributes,
-        null|bool|string $label = null
+        null|bool|string $label = null,
+        ?string $id = null,
     ) {
         $wireModel = $attributes->whereStartsWith('wire:model')->first();
         $xModel = $attributes->whereStartsWith('x-model')->first();
@@ -66,8 +78,9 @@ trait InteractsWithField
         $placeholder = $attributes->pluck('placeholder');
         $placeholder = $placeholder === true ? $label : $placeholder;
 
-        $invalid = $attributes->pluck('invalid', $name && TALLKit::hasError($name));
+        $invalid = $attributes->pluck('invalid', fn () => $name && TALLKit::hasError($name));
         $wireModel = ! $wireModel && in_livewire() && $fieldName && ! $xModel ? $fieldName : false;
+        $id ??= TALLKit::generateId('field', $fieldName ?: null);
 
         return [
             $name,
@@ -76,7 +89,28 @@ trait InteractsWithField
             $placeholder,
             $invalid,
             $wireModel,
+            $id,
         ];
+    }
+
+    public function ariaDescribedBy(
+        ?string $id,
+        mixed $description = null,
+        mixed $help = null,
+        mixed $invalid = null,
+        mixed $showError = null,
+    ): ?string {
+        if (! $id) {
+            return null;
+        }
+
+        $ids = collect([
+            $description ? "{$id}-description" : null,
+            $help ? "{$id}-help" : null,
+            $invalid && $showError !== false ? "{$id}-error" : null,
+        ])->filter();
+
+        return $ids->isNotEmpty() ? $ids->implode(' ') : null;
     }
 
     public function detectInputType(?string $name = null)
@@ -111,7 +145,7 @@ trait InteractsWithField
         null|string|bool $mask = null,
         ?string $type = null
     ) {
-        if ($mask === false || ! in_array($type, ['text', 'tel'])) {
+        if ($mask === false) {
             return null;
         }
 
@@ -135,7 +169,7 @@ trait InteractsWithField
             return $mask;
         }
 
-        if (blank($name) && blank($type)) {
+        if (! in_array($type, ['text', 'tel']) || (blank($name) && blank($type))) {
             return null;
         }
 

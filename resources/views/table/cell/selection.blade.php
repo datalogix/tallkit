@@ -7,7 +7,8 @@
     @else
         <tk:checkbox
             :attributes="TALLKit::attributesAfter($attributes, 'checkbox:')"
-            role="row-selection"
+            data-role="row-selection"
+            aria-label="{{ __('Select row') }}"
             size="sm"
         />
     @endif

@@ -8,10 +8,10 @@
     @else
         <tk:checkbox
             :attributes="TALLKit::attributesAfter($attributes, 'checkbox:')"
-            role="checkbox"
             x-model="selectAllChecked"
             x-on:change="toggleAll"
             :label="false"
+            aria-label="{{ __('Select all rows') }}"
             size="sm"
         />
     @endif

@@ -16,13 +16,11 @@ export function toggleable() {
     open (storage = true) {
       this.opened = true
       if (storage) this.lastOpened = this.opened
-      //dispatch('open', this)
     },
 
     close (storage = true) {
       this.opened = false
       if (storage) this.lastOpened = this.opened
-      //dispatch('close', this)
     },
 
     toggle (storage = true) {

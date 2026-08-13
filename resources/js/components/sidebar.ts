@@ -8,6 +8,7 @@ export function sidebar(name?: string, sticky?: boolean, stashable?: boolean) {
 
   return {
     ..._toggleable,
+    ..._sticky,
 
     init() {
       _toggleable.init.call(this)
@@ -21,7 +22,7 @@ export function sidebar(name?: string, sticky?: boolean, stashable?: boolean) {
         this.screenLg = window.innerWidth >= 1024
 
         bind(this.$el, {
-          ['x-bind:data-stashed']() {
+          [':data-stashed']() {
             return !this.screenLg
           },
 
@@ -36,6 +37,10 @@ export function sidebar(name?: string, sticky?: boolean, stashable?: boolean) {
           [`@sidebar-${name ?? ''}-toggle.window`]() {
             this.toggle()
           },
+
+          ['@keydown.escape.window']() {
+            if (this.isOpened()) this.close()
+          },
         })
       }
     },
@@ -48,6 +53,12 @@ export function sidebar(name?: string, sticky?: boolean, stashable?: boolean) {
     close() {
       this.$el.removeAttribute('data-show-stashed-sidebar')
       _toggleable.close.call(this)
+    },
+
+    destroy() {
+      if (sticky) {
+        _sticky.destroy.call(this)
+      }
     },
   }
 }

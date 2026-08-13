@@ -13,6 +13,7 @@ $options = TALLKit::parseOptions($attributes);
 @if ($slot->isNotEmpty() || filled($options))
     <tk:fieldset
         :$label
+        :$size
         :attributes="$attributes->whereDoesntStartWith(['heading:', 'radio:', 'error:'])
             ->classes('[&_[data-tallkit-heading]]:mb-2 [&>[data-tallkit-heading]:not(:first-of-type)]:pt-2')
         "
@@ -29,10 +30,13 @@ $options = TALLKit::parseOptions($attributes);
 
                 @foreach ($optionItemLabel as $optionItemGroupValue => $optionItemGroupLabel)
                     <tk:radio
-                        :attributes="TALLKit::attributesAfter($attributes, 'radio:')"
+                        :attributes="TALLKit::attributesAfter($attributes, 'radio:')
+                            ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId('field', $fieldName, (string) $optionItemGroupValue)] : [], false)
+                        "
                         :label="$optionItemGroupLabel"
                         :value="$optionItemGroupValue"
                         :show-error="false"
+                        :id="TALLKit::generateId('field', $fieldName, (string) $optionItemGroupValue)"
                         :$name
                         :$size
                         :$variant
@@ -41,10 +45,13 @@ $options = TALLKit::parseOptions($attributes);
                 @endforeach
             @else
                 <tk:radio
-                    :attributes="TALLKit::attributesAfter($attributes, 'radio:')"
+                    :attributes="TALLKit::attributesAfter($attributes, 'radio:')
+                        ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId('field', $fieldName, (string) $optionItemValue)] : [], false)
+                    "
                     :label="$optionItemLabel"
                     :value="$optionItemValue"
                     :show-error="false"
+                    :id="TALLKit::generateId('field', $fieldName, (string) $optionItemValue)"
                     :$name
                     :$size
                     :$variant

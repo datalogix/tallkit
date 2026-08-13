@@ -11,13 +11,11 @@ export function submenu() {
 
     init() {
       _popover.init.call(this)
-      _popover.trigger = this.$root.firstElementChild !== this.popoverElement ? this.$root.firstElementChild : this.$root
-      _popover.popoverElement = this.$root.lastElementChild?.matches('[popover]') && this.$root.lastElementChild
 
-      bind(_popover.popoverElement, {
+      bind(this.popoverElement, {
         ['@mouseenter']() {
           this.inside = true
-          _popover.trigger.setAttribute('data-active', '')
+          this.trigger.setAttribute('data-active', '')
         },
 
         ['@mouseleave']() {
@@ -26,14 +24,14 @@ export function submenu() {
         },
       })
 
-      bind(_popover.trigger, {
+      bind(this.trigger, {
         ['@click']() {
-          this.open()
+          this.toggle(false)
         },
 
         ['@mouseenter']() {
           clearTimeout(this._i)
-          this.open()
+          this.open(false)
         },
 
         ['@mouseleave']() {
@@ -46,9 +44,14 @@ export function submenu() {
       this._i = setTimeout(() => {
         if (! this.inside) {
           this.close()
-          _popover.trigger.removeAttribute('data-active')
+          this.trigger.removeAttribute('data-active')
         }
       }, 10)
+    },
+
+    destroy() {
+      clearTimeout(this._i)
+      _popover.destroy.call(this)
     }
   }
 }

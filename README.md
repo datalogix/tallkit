@@ -1,45 +1,53 @@
-# component
-- autocomplete
-- checkbox
-- command
-- composer
-- field
+# TALLKit
 
-# cores
-- alert
-- avatar
-- badge
-- button
-- header
+A set of Blade components for the TALL stack (Tailwind, Alpine.js, Laravel, Livewire).
 
+## Installation
 
-- autocomplete, command, heading (revisar component / dynamic load items)
-- menu
-- alert,avatar,badge,button,header (revisar cores / variant)
-- nav (adicionar linha / bg que se movimenta ao item selecionado)
-- paginator (add select per page)
-- stepper
-- tab
-- table
+```bash
+composer require datalogix/tallkit
+```
 
-## fields
-- checkbox
-- composer
-- field
-- input
-- password
-- opt
-- radio
-- select
+The package registers `TALLKit\TALLKitServiceProvider` automatically via Laravel package discovery. Include the compiled assets in your app (see `dist/tallkit.js` / `dist/tallkit.min.js`) and the `resources/css` stylesheets in your Tailwind build.
+
+## Usage
+
+Components are anonymous Blade views registered under the `tk:` tag namespace:
+
+```blade
+<tk:button variant="solid" icon="check">
+    Save
+</tk:button>
+
+<tk:alert type="success" title="Done">
+    Your changes were saved.
+</tk:alert>
+```
+
+The standard Laravel `<x-tallkit::*>` syntax also works if you prefer it.
+
+## Development
+
+```bash
+composer install
+pnpm install
+
+composer test   # Pint + PHPUnit
+pnpm lint       # ESLint
+pnpm build      # Bundle resources/js into dist/
+```
+
+## Roadmap
+
 - slider
-- textarea
-- toggle
 - upload
+- paginator (add select per page)
 
+### Add
 
-# Added
-- notifications
-- editor
+- auth (2fa, register by google/github/)
+- Notifications
+- Editor
 - Kanban
 - Pillbox
 - Color Picker

@@ -1,4 +1,4 @@
-import { bind, getWireModelInfo } from '../utils'
+import { bind, getWireModelInfo, setFieldValue } from '../utils'
 
 export function slider() {
   return {
@@ -57,15 +57,14 @@ export function slider() {
     setValue(value) {
       if (this.input.disabled) return
 
-      this.input.value = value;
-      this.input.dispatchEvent(new Event('input', { bubbles: true }))
+      setFieldValue(this.input, value)
     },
 
     updateRange() {
       const min = Number(this.input.min || 0)
       const max = Number(this.input.max || 100)
       const val = Number(this.input.value)
-      const p = ((val - min) * 100) / (max - min)
+      const p = max === min ? 0 : ((val - min) * 100) / (max - min)
 
       this.input.style.setProperty('--range-percent', `${p}%`)
       this.input.classList.toggle('before:rounded-r-none', p < 50)

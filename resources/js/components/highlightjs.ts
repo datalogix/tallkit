@@ -1,3 +1,4 @@
+import { loadRemoteAssets, escapeHtml } from '../utils'
 import { loadable } from './loadable'
 
 export function highlightjs () {
@@ -5,12 +6,11 @@ export function highlightjs () {
     ...loadable(),
 
     init () {
-      this.load(async () => {
-        if (!window.hljs) {
-          await this.$tallkit.loadScript('https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/highlight.min.js')
-          await this.$tallkit.loadStyle('https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/styles/default.min.css')
-        }
-      })
+      this.load(() => loadRemoteAssets(
+        () => !!window.hljs,
+        'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/highlight.min.js',
+        'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/styles/default.min.css'
+      ))
     },
 
     render(code, language = null) {
@@ -20,6 +20,8 @@ export function highlightjs () {
           : window.hljs.highlightAuto(code).value
       } catch(e) {
         this.fail(e)
+
+        return escapeHtml(code) ?? ''
       }
     },
   }

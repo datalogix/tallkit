@@ -1,26 +1,37 @@
+import { loadRemoteAssets } from '../utils'
+import { dataOptions } from './data-options'
 import { loadable } from './loadable'
 
 export function chartjs() {
+  const _loadable = loadable()
+
   return {
-    ...loadable(),
+    ..._loadable,
+    ...dataOptions(),
 
     chart: null,
 
     init() {
-      this.load(async () => {
-        if (!window.Chart) {
-          await this.$tallkit.loadScript('https://cdn.jsdelivr.net/npm/chart.js@4')
-        }
-      })
-    },
-
-    getDataOptions() {
-      return window.Alpine.evaluate(this.$el, this.$el.getAttribute('data-options') || '{}')
+      this.load(() => loadRemoteAssets(() => !!window.Chart, 'https://cdn.jsdelivr.net/npm/chart.js@4'))
     },
 
     render(options = {}) {
-      this.chart ??= new window.Chart(this.$el, { ...options, ...this.getDataOptions() })
+      const merged = { ...options, ...this.getDataOptions() }
+
+      if (this.chart) {
+        Object.assign(this.chart.config, merged)
+        this.chart.update()
+      } else {
+        this.chart = new window.Chart(this.$el, merged)
+      }
+
       this.$dispatch('rendered', { chart: this.chart })
+    },
+
+    destroy() {
+      _loadable.destroy.call(this)
+      this.chart?.destroy()
+      this.chart = null
     }
   }
 }

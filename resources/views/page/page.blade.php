@@ -1,7 +1,6 @@
 @props([
     'breakpoint' => null,
     'menu' => null,
-    'actions' => null,
 ])
 <tk:section :attributes="$attributes->whereDoesntStartWith(['container:', 'menu:', 'nav:', 'select:', 'area:'])">
     @isset ($header)

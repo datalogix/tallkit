@@ -28,10 +28,10 @@
         <div
             {{
                 TALLKit::attributesAfter($attributes, 'container:')
-                ->classes('relative hidden group-data-[open]/disclosure:block space-y-[2px]')
-                ->when($line !== false, fn($attrs) => $attrs->classes(TALLKit::generateClassBySize(size: $size, name: 'ps', values: ['8', '9', '10', '11', '12', '13', '14'])))
-                ->when($collapse === true, fn($attrs) => $attrs->merge(['x-show' => 'opened', 'x-collapse' => '']))
-                ->when(is_string($collapse), fn($attrs) => $attrs->merge(['x-show' => 'opened', 'x-collapse.'.$collapse => '']))
+                    ->classes('relative hidden group-data-[open]/disclosure:block space-y-[2px]')
+                    ->when($line !== false, fn($attrs) => $attrs->classes(TALLKit::generateClassBySize(size: $size, name: 'ps', values: ['8', '9', '10', '11', '12', '13', '14'])))
+                    ->when($collapse === true, fn($attrs) => $attrs->merge(['x-show' => 'opened', 'x-collapse' => '']))
+                    ->when(is_string($collapse), fn($attrs) => $attrs->merge(['x-show' => 'opened', 'x-collapse.'.$collapse => '']))
             }}
         >
             @if ($line !== false)
@@ -47,8 +47,7 @@
 @elseif ($heading)
     <div {{ $attributes->whereDoesntStartWith(['heading:', 'container:'])->classes('block space-y-[2px]') }}>
         <tk:heading
-            :attributes="TALLKit::attributesAfter($attributes, 'heading:')->classes('leading-none text-zinc-400 p-2.5')
-            "
+            :attributes="TALLKit::attributesAfter($attributes, 'heading:')->classes('leading-none text-zinc-500 dark:text-zinc-400 p-2.5')"
             :size="TALLKit::adjustSize(size: $size)"
             :label="$heading"
         />

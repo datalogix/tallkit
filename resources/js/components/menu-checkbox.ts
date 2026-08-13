@@ -18,7 +18,7 @@ export function menuCheckbox(checked?: boolean) {
       }
 
       if (this.isArray) {
-        return this.value.includes(this.$root.value)
+        return this.value.some(v => v == this.$root.value)
       }
 
       return this.value == this.$root.value
@@ -40,12 +40,12 @@ export function menuCheckbox(checked?: boolean) {
 
       if (this.isArray) {
         this.value = this.isChecked
-          ? this.value.filter(v => v !== this.$root.value)
+          ? this.value.filter(v => v != this.$root.value)
           : [...this.value, this.$root.value]
         return
       }
 
-      this.value = this.$root.value
+      this.value = this.isChecked ? null : this.$root.value
     },
   }
 }

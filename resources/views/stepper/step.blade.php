@@ -1,3 +1,4 @@
+@aware(['size'])
 @props([
     'index' => null,
     'size' => null,
@@ -7,19 +8,23 @@
     'iconActive' => null,
 ])
 <tk:element
-    :attributes="$attributes->whereDoesntStartWith(['icon:', 'bullet:'])->classes(
-        'flex flex-col items-center flex-1 text-center gap-2',
-        TALLKit::fontSize(size: $size),
-    )"
+    :attributes="$attributes->whereDoesntStartWith(['icon:', 'bullet:'])
+        ->classes(
+            'flex flex-col items-center flex-1 text-center gap-2',
+            TALLKit::fontSize(size: $size),
+        )
+        ->merge(['aria-current' => $status === 'active' ? 'step' : false])
+    "
     :icon:class="TALLKit::classes(
         'rounded-full text-white flex items-center justify-center font-semibold shrink-0',
         TALLKit::widthHeight(size: $size, mode: 'large'),
         match ($status) {
-            'completed' => 'bg-green-600',
-            'active' => 'bg-blue-500',
-            default => 'bg-zinc-400',
+            'completed' => 'bg-green-600 dark:bg-green-700',
+            'active' => 'bg-blue-500 dark:bg-blue-600',
+            default => 'bg-zinc-400 dark:bg-zinc-600',
         },
     )"
+    role="listitem"
 >
     <x-slot:icon>
         @if ($icon)

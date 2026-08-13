@@ -1,27 +1,37 @@
+import { loadRemoteAssets } from '../utils'
+import { dataOptions } from './data-options'
 import { loadable } from './loadable'
 
 export function apexcharts() {
+  const _loadable = loadable()
+
   return {
-    ...loadable(),
+    ..._loadable,
+    ...dataOptions(),
 
     chart: null,
 
     init() {
-      this.load(async () => {
-        if (!window.ApexCharts) {
-          await this.$tallkit.loadScript('https://cdn.jsdelivr.net/npm/apexcharts@5')
-        }
-      })
-    },
-
-    getDataOptions() {
-      return window.Alpine.evaluate(this.$el, this.$el.getAttribute('data-options') || '{}')
+      this.load(() => loadRemoteAssets(() => !!window.ApexCharts, 'https://cdn.jsdelivr.net/npm/apexcharts@5'))
     },
 
     render(options = {}) {
-      this.chart ??= new window.ApexCharts(this.$el, { ...options, ...this.getDataOptions() })
-      this.chart.render()
+      const merged = { ...options, ...this.getDataOptions() }
+
+      if (this.chart) {
+        this.chart.updateOptions(merged)
+      } else {
+        this.chart = new window.ApexCharts(this.$el, merged)
+        this.chart.render()
+      }
+
       this.$dispatch('rendered', { chart: this.chart })
+    },
+
+    destroy() {
+      _loadable.destroy.call(this)
+      this.chart?.destroy()
+      this.chart = null
     }
   }
 }

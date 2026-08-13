@@ -8,6 +8,7 @@
         :$size
         variant="ghost"
         icon="ellipsis-vertical"
+        tooltip="More options"
     />
 
     <tk:menu

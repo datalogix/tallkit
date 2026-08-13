@@ -7,13 +7,11 @@
 <div
     popover="manual"
     role="tooltip"
-    aria-hidden="true"
     {{
         $attributes->whereDoesntStartWith(['kbd:', 'arrow:'])->classes(
             'group relative overflow-visible text-white border border-white/10',
             match ($variant) {
                 'accent' => 'bg-[var(--color-accent)] text-[var(--color-accent-foreground)]',
-                default => 'bg-zinc-800 dark:bg-zinc-700',
                 'red' => 'bg-red-600 dark:bg-red-700',
                 'orange' => 'bg-orange-600 dark:bg-orange-500',
                 'amber' => 'bg-amber-600 dark:bg-amber-700',
@@ -31,6 +29,7 @@
                 'fuchsia' => 'bg-fuchsia-600 dark:bg-fuchsia-700',
                 'pink' => 'bg-pink-600 dark:bg-pink-700',
                 'rose' => 'bg-rose-600 dark:bg-rose-700',
+                default => 'bg-zinc-800 dark:bg-zinc-700',
             },
             TALLKit::fontSize(size: $size, weight: true, mode: 'small'),
             TALLKit::padding(size: $size, mode: 'smallest'),

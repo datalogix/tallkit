@@ -22,7 +22,7 @@
 ])
 @php
 
-$name ??= Str::random();
+$name ??= TALLKit::generateId('modal');
 $closable ??= $variant === 'bare' ? false : true;
 
 @endphp
@@ -38,6 +38,7 @@ $closable ??= $variant === 'bare' ? false : true;
 <dialog
     wire:ignore.self
     x-data="modal({ name: @js($name), dismissible: @js($dismissible), persist: @js($persist), shortcut: @js($shortcut) })"
+    closedby="none"
     {{
         $attributes->whereDoesntStartWith([
             'trigger:', 'close:', 'section:',
@@ -131,7 +132,11 @@ $closable ??= $variant === 'bare' ? false : true;
                 'flyout', 'bare' => '',
             },
         )
-        ->merge(['data-modal' => $name])
+        ->merge([
+            TALLKit::dataKey('modal') => $name,
+            'aria-labelledby' => $title ? $name.'-title' : null,
+            'aria-describedby' => $subtitle ? $name.'-subtitle' : null,
+        ])
     }}
 >
     <span tabindex="0" class="sr-only"></span>
@@ -146,7 +151,9 @@ $closable ??= $variant === 'bare' ? false : true;
         :$size
         :$prepend
         :$title
+        title:id="{{ $name.'-title' }}"
         :$subtitle
+        subtitle:id="{{ $name.'-subtitle' }}"
         :$description
         :$append
         :$content
@@ -167,7 +174,7 @@ $closable ??= $variant === 'bare' ? false : true;
                     "
                     variant="ghost"
                     icon="close"
-                    aria-label="Close modal"
+                    tooltip="Close"
                 />
             @endif
         </x-slot:actions>

@@ -15,7 +15,11 @@
         position: @js($position ?? 'top'),
         align: @js($align ?? 'center')
     })"
-    {{ TALLKit::attributesAfter($attributes, 'container:')->classes('contents') }}
+    {{
+        TALLKit::attributesAfter($attributes, 'container:')
+            ->dataKey('tooltip')
+            ->classes('contents')
+    }}
 >
     @if (strip_tags($slot) === (string) $slot)
         <span>{{ $slot }}</span>

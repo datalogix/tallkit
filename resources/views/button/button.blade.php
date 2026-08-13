@@ -358,7 +358,13 @@ if ($loading && $type !== 'submit' && !$isJsMethod) {
 >
     @if ($loading)
         <x-slot:prepend>
-            <div {{ TALLKit::attributesAfter($attributes, 'loading-indicator:')->classes('absolute inset-0 flex items-center justify-center opacity-0') }}>
+            <div
+                {{
+                    TALLKit::attributesAfter($attributes, 'loading-indicator:')
+                        ->dataKey('button-loading-indicator')
+                        ->classes('absolute inset-0 flex items-center justify-center opacity-0')
+                }}
+            >
                 <tk:loading
                     :attributes="TALLKit::attributesAfter($attributes, 'loading:')->when(is_string($loading), fn ($attrs, $value) => $attrs->merge(['variant' => $value]))"
                     :$size

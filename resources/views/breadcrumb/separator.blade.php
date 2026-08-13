@@ -9,7 +9,7 @@ $separatorClasses = TALLKit::classes('group-last/breadcrumb:hidden mx-2 opacity-
 @endphp
 @if ($icon == null)
     <tk:icon
-        :attributes="$attributes->classes($separatorClasses, 'rtl:inline')"
+        :attributes="$attributes->classes($separatorClasses, 'rtl:hidden')"
         :$size
         icon="chevron-right"
     />

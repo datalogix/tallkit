@@ -57,7 +57,12 @@ $currency ??= match (app()->getLocale()) {
     'en_US', 'en' => 'USD',
     'en_GB' => 'GBP',
     'ja_JP' => 'JPY',
-    default => 'EUR',
+    default => match (Str::before(app()->getLocale(), '_')) {
+        'pt' => 'BRL',
+        'en' => 'USD',
+        'ja' => 'JPY',
+        default => 'EUR',
+    },
 };
 
 if ($config = data_get($currencies, Str::upper($currency))) {

@@ -5,12 +5,17 @@
     'align' => null,
 ])
 <div
+    wire:ignore.self
     x-data="popover({
         mode: @js($mode ?? ($hover ? 'hover' : 'dropdown')),
         position: @js($position ?? 'bottom'),
         align: @js($align ?? 'start'),
     })"
-    {{ $attributes->classes('inline-flex') }}
+    {{
+        $attributes
+            ->dataKey('dropdown')
+            ->classes('inline-flex')
+    }}
 >
     {{ $slot }}
 </div>

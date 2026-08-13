@@ -8,14 +8,17 @@
         name="kbd"
         :attributes="$attributes->classes(
             TALLKit::fontSize(size: $size, weight: true),
-            'pointer-events-none ms-auto rounded',
+            '
+                pointer-events-none ms-auto rounded
+                text-zinc-500 dark:text-zinc-400
+            ',
             match ($variant) {
-                'text' => 'text-zinc-400',
-                default => '
-                    px-1 py-0.5
-                    bg-zinc-800/10 dark:bg-white/10
-                    text-zinc-500 dark:text-zinc-300
-                ',
+                'text' => 'bg-transparent',
+                default => TALLKit::classes(
+                    TALLKit::paddingInline(size: TALLKit::adjustSize(size: $size), mode: 'small'),
+                    TALLKit::paddingBlock(size: TALLKit::adjustSize(size: $size), mode: 'smallest'),
+                    'bg-zinc-800/10 dark:bg-white/10',
+                ),
             },
         )"
         :$label

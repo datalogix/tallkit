@@ -1,5 +1,5 @@
 @aware(['animate'])
-@props(['animate'])
+@props(['animate' => null])
 <div {{ $attributes->classes(
     '
         [:where(&)]:w-full

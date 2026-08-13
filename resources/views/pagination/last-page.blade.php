@@ -1,8 +1,8 @@
 @aware(['paginator'])
+@props(['paginator'])
 <tk:button
     :$attributes
     :aria-disabled="$paginator->onLastPage()"
-    :aria-hidden="$paginator->onLastPage()"
     :disabled="$paginator->onLastPage()"
     :rel="in_livewire() ? false : 'last'"
     :href="in_livewire() ? false : $paginator->url($paginator->lastPage())"

@@ -19,7 +19,7 @@ export function autocomplete(options = {}) {
           this.close()
         },
 
-        ['@keydown.esc.prevent']() {
+        ['@keydown.escape.prevent']() {
           this.close()
         },
       })

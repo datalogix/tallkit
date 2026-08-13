@@ -13,11 +13,11 @@ class ComponentAttributeBagMixin
 
             unset($this->attributes[$key]);
 
-            return $result ?? $default;
+            return $result ?? ($default instanceof \Closure ? $default() : $default);
         };
     }
 
-    public function classes(...$classes)
+    public function classes()
     {
         return fn (...$classes) => $this->twMerge(new ClassBuilder($classes));
     }

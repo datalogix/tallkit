@@ -1,23 +1,32 @@
-import { bind } from '../utils'
+import { bind, setFieldChecked } from '../utils'
 
 export function table() {
   return {
-    processedRows: new Set(),
+    boundElements: new WeakSet(),
     rows: [],
     selected: [],
     selectedIds: [],
     selectAllChecked: false,
+    observer: null,
 
     init() {
-      this.update()
-      const observer = new MutationObserver(() => this.update())
-      observer.observe(this.$el.querySelector('table > tbody'), { childList: true, subtree: true })
+      this.resetSelection()
+
+      const tbody = this.$el.querySelector('table > tbody')
+      if (!tbody) return
+
+      this.observer = new MutationObserver(() => this.update())
+      this.observer.observe(tbody, { childList: true, subtree: true })
+    },
+
+    destroy() {
+      this.observer?.disconnect()
     },
 
     update() {
       this.rows = Array.from(this.$el.querySelector('table > tbody').querySelectorAll(':scope > tr[role="row"]')).map(tr => {
-        const selection = tr.querySelector('[role=row-selection]')
-        const expanded = tr.querySelectorAll('[role=row-expanded]')
+        const selection = tr.querySelector('[data-role=row-selection]')
+        const expanded = tr.querySelectorAll('[data-role=row-expanded]')
 
         const row = {
           el: tr,
@@ -26,8 +35,8 @@ export function table() {
           expanded,
         }
 
-        if (!this.processedRows.has(row.id)) {
-          this.processedRows.add(row.id)
+        if (selection && !this.boundElements.has(selection)) {
+          this.boundElements.add(selection)
 
           bind(selection, {
             ['@click']() {
@@ -35,8 +44,14 @@ export function table() {
               this._syncSelect()
             }
           })
+        }
 
-          bind(expanded, {
+        const unboundExpanded = Array.from(expanded).filter(el => !this.boundElements.has(el))
+
+        if (unboundExpanded.length) {
+          unboundExpanded.forEach(el => this.boundElements.add(el))
+
+          bind(unboundExpanded, {
             ['@click']() {
               row.el.dataset.expanded = row.el.dataset.expanded === 'open' ? 'close' : 'open'
             }
@@ -48,11 +63,7 @@ export function table() {
 
       this.rows.forEach(row => {
         if (row.selection) {
-          row.selection.checked = this.selectedIds.includes(row.id)
-        }
-
-        if (this.selectAllChecked) {
-          row.selection.checked = true
+          setFieldChecked(row.selection, this.selectAllChecked || this.selectedIds.includes(row.id))
         }
 
         this._updateRowState(row)
@@ -64,10 +75,17 @@ export function table() {
     toggleAll() {
       this.rows.forEach(row => {
         if (!row.selection) return
-        row.selection.checked = this.selectAllChecked
+        setFieldChecked(row.selection, this.selectAllChecked)
         this._updateRowState(row)
       })
       this._syncSelect()
+    },
+
+    resetSelection() {
+      this.selected = []
+      this.selectedIds = []
+      this.selectAllChecked = false
+      this.update()
     },
 
     _updateRowState(row) {
@@ -75,7 +93,7 @@ export function table() {
         row.el.dataset.state = row.selection.checked ? 'checked' : 'unchecked'
       }
 
-      if (row.expanded && !row.el.dataset.expanded) {
+      if (row.expanded.length && !row.el.dataset.expanded) {
         row.el.dataset.expanded = 'close'
       }
     },
@@ -83,7 +101,7 @@ export function table() {
     _syncSelect() {
       this.selected = this.rows.filter(row => row.selection?.checked)
       this.selectedIds = this.selected.map(row => row.id)
-      this.selectAllChecked = this.rows.length && this.rows.every(row => row.selection?.checked)
+      this.selectAllChecked = this.rows.length > 0 && this.rows.every(row => row.selection?.checked)
     },
   }
 }

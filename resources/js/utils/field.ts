@@ -8,3 +8,20 @@ export function setFieldValue(
   el.dispatchEvent(new Event('input', { bubbles: true }))
   el.dispatchEvent(new Event('change', { bubbles: true }))
 }
+
+export function setFieldChecked(
+  el: HTMLInputElement | null | undefined,
+  checked: boolean
+) {
+  if (!el || el.checked === checked) return
+
+  el.checked = checked
+  el.dispatchEvent(new Event('input', { bubbles: true }))
+  el.dispatchEvent(new Event('change', { bubbles: true }))
+}
+
+export function findFieldInput(el: Element | null | undefined): HTMLInputElement | null {
+  return el
+    ?.closest('[data-tallkit-field-control]')
+    ?.querySelector('[data-tallkit-input]') ?? null
+}

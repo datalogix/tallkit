@@ -1,4 +1,4 @@
-import { bind } from '../utils'
+import { bind, bindShortcut } from '../utils'
 
 export function modalTrigger({ name = null, shortcut = null } = {}) {
   return {
@@ -14,12 +14,7 @@ export function modalTrigger({ name = null, shortcut = null } = {}) {
       })
 
       if (shortcut) {
-        bind(this.$el, {
-          [`@keydown.${shortcut}.document`](event) {
-            event.preventDefault()
-            this.$dispatch('modal-show', { name })
-          },
-        })
+        bindShortcut(this.$el, shortcut, () => this.$dispatch('modal-show', { name }))
       }
     }
   }

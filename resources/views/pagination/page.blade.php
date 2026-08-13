@@ -1,5 +1,5 @@
 @aware(['paginator'])
-@props(['page' => 1])
+@props(['paginator', 'page' => 1])
 <tk:button
     :$attributes
     :aria-current="$paginator->currentPage() === $page ? 'page' : false"

@@ -2,12 +2,12 @@
     'size' => null,
     'mode' => null,
     'variant' => null,
-    'contrast' => null,
 ])
 <tk:element.wrapper
     name="heading"
     :attributes="$attributes->classes(
         TALLKit::fontSize(size: $size, mode: $mode ?? 'largest', weight: true),
+        '[:where(&)]:w-fit [&:has(+[data-tallkit-text])]:mb-2 [[data-tallkit-text]+&]:mt-2',
         match ($variant) {
             'none' => '',
             'accent' => 'text-[var(--color-accent-content)]',
@@ -32,7 +32,6 @@
             'pink' => 'text-pink-600 dark:text-pink-400',
             'rose' => 'text-rose-600 dark:text-rose-400',
         },
-        '[&:has(+[data-tallkit-text])]:mb-2 [[data-tallkit-text]+&]:mt-2'
     )"
 >
     {{ $slot }}

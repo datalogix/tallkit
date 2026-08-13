@@ -1,4 +1,5 @@
 @aware(['paginator'])
+@props(['paginator'])
 @php
 
 $disabled = $paginator->onFirstPage();
@@ -15,7 +16,6 @@ $action = method_exists($paginator, 'getCursorName')
 <tk:button
     :$attributes
     :aria-disabled="$disabled"
-    :aria-hidden="$disabled"
     :disabled="$disabled"
     :rel="in_livewire() ? false : 'prev'"
     :href="in_livewire() ? false : $paginator->previousPageUrl()"

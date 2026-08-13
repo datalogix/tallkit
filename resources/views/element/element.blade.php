@@ -45,8 +45,11 @@ $external ??= $attributes->get('target') === '_blank';
         ->dataKey($name)
         ->merge([TALLKit::dataKey($name . '-has-icon') => !!$icon && $name])
         ->whereDoesntStartWith(['tooltip:', 'icon-wrapper:', 'icon:', 'icon-dot:', 'content:', 'prefix:', 'suffix:', 'icon-trailing:', 'info:', 'badge:', 'kbd:'])
-        ->when($current, fn ($attrs, $value) => $attrs->merge(['data-current' => $value]))
-        ->when($as !== 'p' || $icon, fn ($attrs) => $attrs->classes('inline-flex items-center [:where(&)]:gap-2'))
+        ->when($current, fn ($attrs, $value) => $attrs->merge([
+            'data-current' => $value,
+            'aria-current' => $value === true ? 'page' : $value,
+        ]))
+        ->when($as !== 'p' || $icon, fn ($attrs) => $attrs->classes('inline-flex justify-center items-center [:where(&)]:gap-2'))
         ->when($as === 'a', fn ($attrs) => $attrs->merge([
             'target' => $external === true ? '_blank' : $external,
             'wire:navigate' => !$external && $navigate !== false,
@@ -124,10 +127,10 @@ $external ??= $attributes->get('target') === '_blank';
             {{ $slot }}
         @elseif (TALLKit::isSlot($label))
             {{ $label }}
-        @elseif (str_contains($label, "\n"))
+        @elseif (is_string($label) && str_contains($label, "\n"))
             {!! nl2br(__(e($label))) !!}
         @else
-            {!! __($label) !!}
+            {!! __(e($label)) !!}
         @endif
 
         @if (isset($suffix) && $suffix !== '')

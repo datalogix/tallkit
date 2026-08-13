@@ -22,23 +22,17 @@ trait InteractsWithSize
         ?string $mode,
         array $scaleBySize,
     ) {
-        if (is_string($size) && array_key_exists($size, $scaleBySize)) {
-            $value = $scaleBySize[$size];
+        $value = is_string($size) && array_key_exists($size, $scaleBySize)
+            ? $scaleBySize[$size]
+            : $scaleBySize['md'];
 
-            if (! is_array($value)) {
-                return (string) $value;
-            }
+        if (! is_array($value)) {
+            return (string) $value;
         }
-
-        $sizeKey = is_string($size) && isset($scaleBySize[$size]) && is_array($scaleBySize[$size])
-            ? $size
-            : 'md';
 
         $modeIndex = max(0, min(4, 2 + $this->modeIncrement($mode)));
 
-        return is_array($scaleBySize[$sizeKey])
-            ? $scaleBySize[$sizeKey][$modeIndex]
-            : $scaleBySize[$sizeKey];
+        return $value[$modeIndex];
     }
 
     public function adjustSize(
@@ -110,11 +104,9 @@ trait InteractsWithSize
         return $textClass.' [:where(&)]:'.$weightScale[$weightIndex];
     }
 
-    public function width(
-        ?string $size = null,
-        ?string $mode = null,
-    ) {
-        $value = $this->incrementalByMode($size, $mode, [
+    protected function dimensionScale(): array
+    {
+        return [
             'xs' => ['2', '4', '8', '10', '14'],
             'sm' => ['2.5', '5', '9', '12', '18'],
             'md' => ['3', '6', '10', '14', '22'],
@@ -124,7 +116,14 @@ trait InteractsWithSize
             '3xl' => ['5', '10', '18', '22', '40'],
             'none' => '0',
             'full' => 'full',
-        ]);
+        ];
+    }
+
+    public function width(
+        ?string $size = null,
+        ?string $mode = null,
+    ) {
+        $value = $this->incrementalByMode($size, $mode, $this->dimensionScale());
 
         return '[:where(&)]:w-'.$value;
     }
@@ -133,17 +132,7 @@ trait InteractsWithSize
         ?string $size = null,
         ?string $mode = null,
     ) {
-        $value = $this->incrementalByMode($size, $mode, [
-            'xs' => ['2', '4', '8', '10', '14'],
-            'sm' => ['2.5', '5', '9', '12', '18'],
-            'md' => ['3', '6', '10', '14', '22'],
-            'lg' => ['3.5', '7', '12', '16', '26'],
-            'xl' => ['4', '8', '14', '18', '30'],
-            '2xl' => ['4.5', '9', '16', '20', '36'],
-            '3xl' => ['5', '10', '18', '22', '40'],
-            'none' => '0',
-            'full' => 'full',
-        ]);
+        $value = $this->incrementalByMode($size, $mode, $this->dimensionScale());
 
         return '[:where(&)]:h-'.$value;
     }
@@ -243,11 +232,9 @@ trait InteractsWithSize
         return '[:where(&)]:px-'.$value;
     }
 
-    public function paddingBlock(
-        ?string $size = null,
-        ?string $mode = null,
-    ) {
-        $value = $this->incrementalByMode($size, $mode, [
+    protected function tightSpacingScale(): array
+    {
+        return [
             'xs' => ['px', '0.5', '1', '1.5', '2'],
             'sm' => ['0.5', '1', '1.5', '2', '2.5'],
             'md' => ['1', '1.5', '2', '2.5', '3'],
@@ -256,7 +243,14 @@ trait InteractsWithSize
             '2xl' => ['2.5', '3', '3.5', '4', '4.5'],
             '3xl' => ['3', '3.5', '4', '4.5', '5'],
             'none' => '0',
-        ]);
+        ];
+    }
+
+    public function paddingBlock(
+        ?string $size = null,
+        ?string $mode = null,
+    ) {
+        $value = $this->incrementalByMode($size, $mode, $this->tightSpacingScale());
 
         return '[:where(&)]:py-'.$value;
     }
@@ -265,16 +259,7 @@ trait InteractsWithSize
         ?string $size = null,
         ?string $mode = null,
     ) {
-        $value = $this->incrementalByMode($size, $mode, [
-            'xs' => ['px', '0.5', '1', '1.5', '2'],
-            'sm' => ['0.5', '1', '1.5', '2', '2.5'],
-            'md' => ['1', '1.5', '2', '2.5', '3'],
-            'lg' => ['1.5', '2', '2.5', '3', '3.5'],
-            'xl' => ['2', '2.5', '3', '3.5', '4'],
-            '2xl' => ['2.5', '3', '3.5', '4', '4.5'],
-            '3xl' => ['3', '3.5', '4', '4.5', '5'],
-            'none' => '0',
-        ]);
+        $value = $this->incrementalByMode($size, $mode, $this->tightSpacingScale());
 
         return '[:where(&)]:ps-'.$value;
     }
@@ -283,16 +268,7 @@ trait InteractsWithSize
         ?string $size = null,
         ?string $mode = null,
     ) {
-        $value = $this->incrementalByMode($size, $mode, [
-            'xs' => ['px', '0.5', '1', '1.5', '2'],
-            'sm' => ['0.5', '1', '1.5', '2', '2.5'],
-            'md' => ['1', '1.5', '2', '2.5', '3'],
-            'lg' => ['1.5', '2', '2.5', '3', '3.5'],
-            'xl' => ['2', '2.5', '3', '3.5', '4'],
-            '2xl' => ['2.5', '3', '3.5', '4', '4.5'],
-            '3xl' => ['3', '3.5', '4', '4.5', '5'],
-            'none' => '0',
-        ]);
+        $value = $this->incrementalByMode($size, $mode, $this->tightSpacingScale());
 
         return '[:where(&)]:pe-'.$value;
     }
@@ -301,16 +277,7 @@ trait InteractsWithSize
         ?string $size = null,
         ?string $mode = null,
     ) {
-        $value = $this->incrementalByMode($size, $mode, [
-            'xs' => ['px', '0.5', '1', '1.5', '2'],
-            'sm' => ['0.5', '1', '1.5', '2', '2.5'],
-            'md' => ['1', '1.5', '2', '2.5', '3'],
-            'lg' => ['1.5', '2', '2.5', '3', '3.5'],
-            'xl' => ['2', '2.5', '3', '3.5', '4'],
-            '2xl' => ['2.5', '3', '3.5', '4', '4.5'],
-            '3xl' => ['3', '3.5', '4', '4.5', '5'],
-            'none' => '0',
-        ]);
+        $value = $this->incrementalByMode($size, $mode, $this->tightSpacingScale());
 
         return '[:where(&)]:mt-'.$value;
     }
@@ -319,52 +286,39 @@ trait InteractsWithSize
         ?string $size = null,
         ?string $mode = null,
     ) {
-        $value = $this->incrementalByMode($size, $mode, [
+        $value = $this->incrementalByMode($size, $mode, $this->tightSpacingScale());
+
+        return '[:where(&)]:mb-'.$value;
+    }
+
+    protected function wideSpacingScale(): array
+    {
+        return [
             'xs' => ['px', '0.5', '1', '1.5', '2'],
             'sm' => ['0.5', '1', '1.5', '2', '2.5'],
             'md' => ['1', '1.5', '2', '2.5', '3'],
             'lg' => ['1.5', '2', '2.5', '3', '3.5'],
             'xl' => ['2', '2.5', '3', '3.5', '4'],
-            '2xl' => ['2.5', '3', '3.5', '4', '4.5'],
-            '3xl' => ['3', '3.5', '4', '4.5', '5'],
+            '2xl' => ['2.5', '3', '3.5', '4', '5'],
+            '3xl' => ['3', '3.5', '4', '5', '6'],
             'none' => '0',
-        ]);
-
-        return '[:where(&)]:mb-'.$value;
+        ];
     }
 
     public function gap(
         ?string $size = null,
         ?string $mode = null,
     ) {
-        $value = $this->incrementalByMode($size, $mode, [
-            'xs' => ['px', '0.5', '1', '1.5', '2'],
-            'sm' => ['0.5', '1', '1.5', '2', '2.5'],
-            'md' => ['1', '1.5', '2', '2.5', '3'],
-            'lg' => ['1.5', '2', '2.5', '3', '3.5'],
-            'xl' => ['2', '2.5', '3', '3.5', '4'],
-            '2xl' => ['2.5', '3', '3.5', '4', '5'],
-            '3xl' => ['3', '3.5', '4', '5', '6'],
-            'none' => '0',
-        ]);
+        $value = $this->incrementalByMode($size, $mode, $this->wideSpacingScale());
 
         return '[:where(&)]:gap-'.$value;
     }
 
-     public function gapBlock(
+    public function gapBlock(
         ?string $size = null,
         ?string $mode = null,
     ) {
-        $value = $this->incrementalByMode($size, $mode, [
-            'xs' => ['px', '0.5', '1', '1.5', '2'],
-            'sm' => ['0.5', '1', '1.5', '2', '2.5'],
-            'md' => ['1', '1.5', '2', '2.5', '3'],
-            'lg' => ['1.5', '2', '2.5', '3', '3.5'],
-            'xl' => ['2', '2.5', '3', '3.5', '4'],
-            '2xl' => ['2.5', '3', '3.5', '4', '5'],
-            '3xl' => ['3', '3.5', '4', '5', '6'],
-            'none' => '0',
-        ]);
+        $value = $this->incrementalByMode($size, $mode, $this->wideSpacingScale());
 
         return '[:where(&)]:gap-y-'.$value;
     }
@@ -373,16 +327,7 @@ trait InteractsWithSize
         ?string $size = null,
         ?string $mode = null,
     ) {
-        $value = $this->incrementalByMode($size, $mode, [
-            'xs' => ['px', '0.5', '1', '1.5', '2'],
-            'sm' => ['0.5', '1', '1.5', '2', '2.5'],
-            'md' => ['1', '1.5', '2', '2.5', '3'],
-            'lg' => ['1.5', '2', '2.5', '3', '3.5'],
-            'xl' => ['2', '2.5', '3', '3.5', '4'],
-            '2xl' => ['2.5', '3', '3.5', '4', '5'],
-            '3xl' => ['3', '3.5', '4', '5', '6'],
-            'none' => '0',
-        ]);
+        $value = $this->incrementalByMode($size, $mode, $this->wideSpacingScale());
 
         return '[:where(&)]:gap-x-'.$value;
     }
@@ -391,16 +336,7 @@ trait InteractsWithSize
         ?string $size = null,
         ?string $mode = null,
     ) {
-        $value = $this->incrementalByMode($size, $mode, [
-            'xs' => ['px', '0.5', '1', '1.5', '2'],
-            'sm' => ['0.5', '1', '1.5', '2', '2.5'],
-            'md' => ['1', '1.5', '2', '2.5', '3'],
-            'lg' => ['1.5', '2', '2.5', '3', '3.5'],
-            'xl' => ['2', '2.5', '3', '3.5', '4'],
-            '2xl' => ['2.5', '3', '3.5', '4', '5'],
-            '3xl' => ['3', '3.5', '4', '5', '6'],
-            'none' => '0',
-        ]);
+        $value = $this->incrementalByMode($size, $mode, $this->wideSpacingScale());
 
         return '[:where(&)]:space-y-'.$value;
     }
@@ -409,16 +345,7 @@ trait InteractsWithSize
         ?string $size = null,
         ?string $mode = null,
     ) {
-        $value = $this->incrementalByMode($size, $mode, [
-            'xs' => ['px', '0.5', '1', '1.5', '2'],
-            'sm' => ['0.5', '1', '1.5', '2', '2.5'],
-            'md' => ['1', '1.5', '2', '2.5', '3'],
-            'lg' => ['1.5', '2', '2.5', '3', '3.5'],
-            'xl' => ['2', '2.5', '3', '3.5', '4'],
-            '2xl' => ['2.5', '3', '3.5', '4', '5'],
-            '3xl' => ['3', '3.5', '4', '5', '6'],
-            'none' => '0',
-        ]);
+        $value = $this->incrementalByMode($size, $mode, $this->wideSpacingScale());
 
         return '[:where(&)]:space-x-'.$value;
     }

@@ -8,7 +8,7 @@
         $attributes
             ->whereDoesntStartWith([
                 'header:', 'area:', 'brand:', 'menu:', 'spacer:',
-                'appearance', 'user-menu:', 'sidebar', 'main:',
+                'appearance:', 'sidebar', 'main:',
             ])
             ->classes('min-h-screen')
     }}
@@ -59,35 +59,17 @@
         {{ $append ?? '' }}
         {{ $search ?? '' }}
 
-        @if (
-            $appearance === 'toggle' ||
-            (($appearance === null || $appearance === true) && !($userMenu || isset($avatarMenu)))
-        )
-            <tk:appearance.toggle
-                :attributes="TALLKit::attributesAfter($attributes, 'appearance:')"
-            />
-        @endif
+        <tk:appearance.menu
+            :attributes="TALLKit::attributesAfter($attributes, 'appearance:')"
+            :mode="$appearance"
+            :items="$userMenu"
+        >
+            @isset ($avatarMenu)
+                <x-slot:menu>{{ $avatarMenu }}</x-slot:menu>
+            @endisset
 
-        {{ $notification ?? '' }}
-
-        @if ($userMenu || isset($avatarMenu))
-            <tk:avatar.menu
-                :attributes="TALLKit::attributesAfter($attributes, 'user-menu:')"
-                :items="$userMenu"
-            >
-                {{ $avatarMenu ?? '' }}
-
-                @if ($appearance === 'selector' || $appearance === null || $appearance === true)
-                    <x-slot:prepend>
-                        <tk:appearance.menu-item
-                            :attributes="TALLKit::attributesAfter($attributes, 'appearance-menu-item:')"
-                        />
-
-                        <tk:menu.separator />
-                    </x-slot:prepend>
-                @endif
-            </tk:avatar.menu>
-        @endif
+            {{ $notification ?? '' }}
+        </tk:appearance.menu>
     </tk:header>
 
     <tk:main

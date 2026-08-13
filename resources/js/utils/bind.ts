@@ -4,7 +4,18 @@ export function bind(
 ) {
   const elements = el instanceof Element ? [el] : el
 
-  elements?.forEach((element, index) => {
-    window.Alpine.bind(element, typeof bindings === 'function' ? bindings(element, index) : bindings)
+  Array.from(elements ?? [])
+    .filter((element): element is Element => element instanceof Element)
+    .forEach((element, index) => {
+      window.Alpine.bind(element, typeof bindings === 'function' ? bindings(element, index) : bindings)
+    })
+}
+
+export function bindShortcut(el: null | Element, shortcut: string, callback: (event: KeyboardEvent) => void) {
+  bind(el, {
+    [`@keydown.${shortcut}.document`](event: KeyboardEvent) {
+      event.preventDefault()
+      callback(event)
+    }
   })
 }

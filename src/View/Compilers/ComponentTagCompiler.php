@@ -120,7 +120,7 @@ class ComponentTagCompiler extends BaseComponentTagCompiler
 
                 unset($attributes['slot']);
 
-                return '@slot('.$slot.') '.$this->componentString('tallkit-'.$matches[1], $attributes)."\n@endComponentClass##END-COMPONENT-CLASS##".' @endslot';
+                return '@slot('.$slot.') '.$this->componentString('tallkit::'.$matches[1], $attributes)."\n@endComponentClass##END-COMPONENT-CLASS##".' @endslot';
             }
 
             return $this->componentString('tallkit::'.$matches[1], $attributes)."\n@endComponentClass##END-COMPONENT-CLASS##";

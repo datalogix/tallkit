@@ -19,7 +19,7 @@ $square ??= $slot->isEmpty() && !$attributes->get('label');
     :badge:size="TALLKit::adjustSize(size: $size)"
     :badge:class="$square ? '' : 'ms-2'"
     :content:class="TALLKit::classes(
-        'flex-1 leading-none whitespace-nowrap',
+        'flex-1 leading-none whitespace-nowrap justify-start text-start',
         TALLKit::fontSize(size: $size, weight: true)
     )"
     :attributes="$attributes
@@ -34,7 +34,7 @@ $square ??= $slot->isEmpty() && !$attributes->get('label');
             ',
             '[&:is(a,button)]:hover:bg-zinc-800/10 dark:[&:is(a,button)]:hover:bg-white/10' => $indicator && $indicator !== 'bg',
             match ($list) {
-                true => 'w-full',
+                true => 'w-full justify-start',
                 default => '',
             },
             match ($variant) {

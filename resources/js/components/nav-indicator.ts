@@ -2,9 +2,21 @@ import { getTransitionTimeout } from '../utils'
 
 export function navIndicator({ mode = null } = {}) {
   return {
+    _visibilityTimeout: null as ReturnType<typeof setTimeout> | null,
+
     init () {
-      document.addEventListener('livewire:navigated', this.move.bind(this))
-      window.addEventListener('resize', this.move.bind(this))
+      this._onMove = this.move.bind(this)
+
+      document.addEventListener('livewire:navigated', this._onMove)
+      window.addEventListener('resize', this._onMove)
+
+      this.$nextTick(() => this.move())
+    },
+
+    destroy () {
+      document.removeEventListener('livewire:navigated', this._onMove)
+      window.removeEventListener('resize', this._onMove)
+      clearTimeout(this._visibilityTimeout)
     },
 
     move () {
@@ -16,9 +28,7 @@ export function navIndicator({ mode = null } = {}) {
         if (!link) return
 
         const indicatorRect = indicator.getBoundingClientRect()
-        const navRect = nav.getBoundingClientRect()
         const linkRect = link.getBoundingClientRect()
-        const style = getComputedStyle(link)
 
         const x = link.offsetLeft + nav.offsetLeft
         const y = link.offsetTop + nav.offsetTop
@@ -33,8 +43,10 @@ export function navIndicator({ mode = null } = {}) {
         if (indicatorRect.width <= 0 || indicatorRect.height <= 0 || indicatorRect.top <= 0 || indicatorRect.left <= 0) {
           indicator.style.visibility = 'hidden'
 
-          setTimeout(() => {
+          clearTimeout(this._visibilityTimeout)
+          this._visibilityTimeout = setTimeout(() => {
             indicator.style.visibility = 'visible'
+            this._visibilityTimeout = null
           }, getTransitionTimeout(indicator))
         }
 
@@ -50,7 +62,7 @@ export function navIndicator({ mode = null } = {}) {
           return
         }
 
-        // bg
+        const style = getComputedStyle(link)
         indicator.style.transform = `translate(${x}px, ${y}px)`
         indicator.style.width = `${linkRect.width}px`
         indicator.style.height = `${linkRect.height}px`

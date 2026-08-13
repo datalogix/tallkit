@@ -1,4 +1,4 @@
-import { bind } from '../utils'
+import { bind, generateId } from '../utils'
 import { toggleable } from './toggleable'
 
 export function popover ({ mode = 'hover', position = 'bottom', align = 'end' } = {}) {
@@ -7,9 +7,14 @@ export function popover ({ mode = 'hover', position = 'bottom', align = 'end' } 
   return {
     ..._toggleable,
 
-    _rAF: null,
-    trigger: null,
     popoverElement: null,
+    trigger: null,
+
+    resizeObserver: null,
+    mutationObserver: null,
+    livewireCommitCleanup: null,
+    _rAF: null,
+
     mouseX: 0,
     mouseY: 0,
 
@@ -17,12 +22,38 @@ export function popover ({ mode = 'hover', position = 'bottom', align = 'end' } 
       _toggleable.init.call(this)
 
       this.popoverElement = this.$root.lastElementChild?.matches('[popover]') && this.$root.lastElementChild
-      this.trigger = this.$root.firstElementChild !== this.popoverElement ? this.$root.firstElementChild : this.$root
 
       if (!this.popoverElement) return
 
-      this.$root.setAttribute('aria-haspopup', 'true')
-      this.$root.setAttribute('aria-expanded', 'false')
+      this.trigger = this.$root.firstElementChild !== this.popoverElement ? this.$root.firstElementChild : this.$root
+
+      if (this.trigger?.matches('[data-tallkit-tooltip]')) {
+         this.trigger = this.trigger.firstElementChild
+      }
+
+      const role = this.popoverElement.getAttribute('role')
+
+      if (!this.trigger.hasAttribute('aria-haspopup') && role !== 'tooltip') {
+        this.trigger.setAttribute('aria-haspopup', role === 'listbox' || role === 'dialog' ? role : 'true')
+      }
+
+      if (!this.trigger.hasAttribute('aria-expanded')) {
+        this.trigger.setAttribute('aria-expanded', 'false')
+      }
+
+      if (!this.popoverElement.id) {
+        this.popoverElement.id = generateId('popover')
+      }
+
+      if (!this.trigger.hasAttribute('aria-controls')) {
+        this.trigger.setAttribute('aria-controls', this.popoverElement.id)
+      }
+
+      if (role === 'tooltip') {
+        const ids = new Set((this.trigger.getAttribute('aria-describedby') ?? '').split(' ').filter(Boolean))
+        ids.add(this.popoverElement.id)
+        this.trigger.setAttribute('aria-describedby', Array.from(ids).join(' '))
+      }
 
       this.popoverElement.addEventListener('beforetoggle', (e) => {
         queueMicrotask(() => {
@@ -34,7 +65,7 @@ export function popover ({ mode = 'hover', position = 'bottom', align = 'end' } 
         })
       })
 
-      const offCommit = Livewire?.hook('commit', ({ succeed }) => {
+      const offCommit = window.Livewire?.hook('commit', ({ succeed }) => {
         succeed(() => {
           if (!this.popoverElement?.matches(':popover-open')) return
           if (!this.$root?.isConnected) return
@@ -47,11 +78,10 @@ export function popover ({ mode = 'hover', position = 'bottom', align = 'end' } 
         ? offCommit
         : () => {}
 
-      if (window.matchMedia('(hover: none)').matches || mode === 'dropdown') {
+      if (mode !== 'manual' && (window.matchMedia('(hover: none)').matches || mode === 'dropdown')) {
         bind(this.trigger, {
           ['@click']() {
-            this.toggle()
-
+            this.toggle(!['menu'].includes(role))
           },
 
           ['@click.outside'](e) {
@@ -65,22 +95,22 @@ export function popover ({ mode = 'hover', position = 'bottom', align = 'end' } 
 
             this.close()
           },
-
-          ['@keyup.escape.window']() {
-            this.close()
-          },
         })
       } else if (mode === 'hover') {
         bind(this.trigger, {
           ['@mouseenter']() {
-            this.open()
+            this.open(false)
           },
 
           ['@mouseleave']() {
             this.close()
           },
 
-          ['@keyup.escape.window']() {
+          ['@focus']() {
+            this.open()
+          },
+
+          ['@blur']() {
             this.close()
           },
         })
@@ -92,10 +122,6 @@ export function popover ({ mode = 'hover', position = 'bottom', align = 'end' } 
             this.mouseY = event.clientY
             this.open()
           },
-
-          ['@keydown.escape.prevent']() {
-            this.close()
-          },
         })
 
         bind(this.popoverElement, {
@@ -106,10 +132,23 @@ export function popover ({ mode = 'hover', position = 'bottom', align = 'end' } 
       }
 
       bind(this.trigger, {
+        ['@open']() {
+          this.open()
+        },
+
         ['@close']() {
           this.close()
         },
+
+        ['@keydown.escape.window']() {
+          this.close()
+        },
       })
+    },
+
+    destroy() {
+      this.onClose()
+      this.livewireCommitCleanup?.()
     },
 
     open(focus = true) {
@@ -118,7 +157,11 @@ export function popover ({ mode = 'hover', position = 'bottom', align = 'end' } 
         if (this.popoverElement.matches(':popover-open')) return
 
         this.popoverElement.showPopover()
-        if (focus) this.popoverElement.focus()
+
+        if (focus) {
+          const firstItem = this.popoverElement.querySelector('[role=menuitem], [role=option], [role=tab]')
+          ;(firstItem ?? this.popoverElement).focus()
+        }
       })
     },
 
@@ -133,10 +176,13 @@ export function popover ({ mode = 'hover', position = 'bottom', align = 'end' } 
 
     onOpen() {
       _toggleable.open.call(this)
-      this.$root.setAttribute('aria-expanded', 'true')
+      this.trigger.setAttribute('aria-expanded', 'true')
 
-      window.addEventListener('scroll', () => this.boundSetPosition(), true)
-      window.addEventListener('resize', () => this.boundSetPosition(), true)
+      this._onScroll ??= () => this.boundSetPosition()
+      this._onResize ??= () => this.boundSetPosition()
+
+      window.addEventListener('scroll', this._onScroll, true)
+      window.addEventListener('resize', this._onResize, true)
 
       this.resizeObserver = new ResizeObserver(() => this.boundSetPosition())
       this.resizeObserver.observe(this.trigger)
@@ -156,10 +202,10 @@ export function popover ({ mode = 'hover', position = 'bottom', align = 'end' } 
 
     onClose() {
       _toggleable.close.call(this)
-      this.$root.setAttribute('aria-expanded', 'false')
+      this.trigger.setAttribute('aria-expanded', 'false')
 
-      window.removeEventListener('scroll', () => this.boundSetPosition(), true)
-      window.removeEventListener('resize', () => this.boundSetPosition(), true)
+      window.removeEventListener('scroll', this._onScroll, true)
+      window.removeEventListener('resize', this._onResize, true)
 
       this.resizeObserver?.disconnect()
       this.resizeObserver = null

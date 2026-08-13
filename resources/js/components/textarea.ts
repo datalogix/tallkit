@@ -11,6 +11,8 @@ export function textarea(maxRows: number) {
             this.autoRows(minRows, maxRows)
           }
         })
+
+        this.autoRows(minRows, maxRows)
       }
     },
 
@@ -18,8 +20,8 @@ export function textarea(maxRows: number) {
       this.$el.rows = minRows
 
       const style = getComputedStyle(this.$el)
-      const lineHeight = parseFloat(style.lineHeight)
       const padding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom)
+      const lineHeight = parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 1.2 || 16
       const rows = Math.round((this.$el.scrollHeight - padding) / lineHeight)
 
       this.$el.rows = Math.min(Math.max(rows, minRows), maxRows)

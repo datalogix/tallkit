@@ -1,4 +1,4 @@
-import { bind } from '../utils'
+import { bind, bindShortcut } from '../utils'
 
 export function modal({ name = null, dismissible = null, persist = null, shortcut = null } = {}) {
   return {
@@ -41,12 +41,14 @@ export function modal({ name = null, dismissible = null, persist = null, shortcu
         if (persist) {
           const persistAnimation = typeof persist === 'string' ? persist : 'tilt-shaking'
           dialog.classList.remove(persistAnimation)
+          dialog.focus()
+
           this.$nextTick(() => dialog.classList.add(persistAnimation))
 
           return
         }
 
-        if (dismissible !== false && event.target === dialog || event.target.getAttribute('tabindex') === '0') {
+        if (dismissible !== false && (event.target === dialog || event.target.getAttribute('tabindex') === '0')) {
           dialog.close()
         }
       }
@@ -67,17 +69,22 @@ export function modal({ name = null, dismissible = null, persist = null, shortcu
           handleCloseAttempt(event)
         },
 
-        ['@keyup.escape.window'](event) {
-          handleCloseAttempt(event)
-        },
-
-        ...(shortcut ? {
-          [`@keydown.${shortcut}.document`](event) {
+        ['@keydown.escape.prevent'](event) {
+          if (persist) {
             event.preventDefault()
-            this.$dispatch('modal-show', { name })
+            handleCloseAttempt(event)
+            return
           }
-        } : {})
+
+          if (dismissible === false) {
+            event.preventDefault()
+          }
+        },
       })
+
+      if (shortcut) {
+        bindShortcut(dialog, shortcut, () => this.$dispatch('modal-show', { name }))
+      }
     },
 
     show() {

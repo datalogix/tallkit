@@ -28,7 +28,7 @@
         :$disabled
         :label="$heading"
         variant="none"
-        content:class="flex-1"
+        content:class="flex-1 justify-start"
         :icon="$reversed ? 'chevron-right' : false"
         icon::class="{ 'transition': {{ $collapse !== false ? 'true' : 'false' }}, 'rotate-90': opened }"
         :iconTrailing="$reversed ? false : 'chevron-down'"

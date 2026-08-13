@@ -21,7 +21,7 @@ export function addressForm(options = {}) {
       const debouncedSearch = debounce(this.search.bind(this))
 
       bind(this.$els.zipcode, {
-        ['@keyup']() {
+        ['@input']() {
           debouncedSearch(this.$el.value)
         }
       })
@@ -40,10 +40,13 @@ export function addressForm(options = {}) {
       const el = this.$els.state
       if (!el) return ''
 
-      const isInput = el.tagName.toLowerCase() === 'input'
-      const hasOption = el.querySelector(`option[value="${data.estado}"]`)
+      const value = data.estado ?? data.uf
 
-      return (isInput || hasOption) ? data.estado : data.uf
+      if (el.tagName.toLowerCase() === 'input') return value ?? ''
+
+      const hasOption = value != null && Array.from(el.options ?? []).some(option => option.value === value)
+
+      return hasOption ? value : (data.uf ?? '')
     },
 
     normalizeZipcode(value) {
@@ -103,16 +106,19 @@ export function addressForm(options = {}) {
       const zipcode = this.normalizeZipcode(value)
       this.abortController?.abort()
 
-      if (zipcode.length < 8) return
+      if (zipcode.length !== 8) return
 
-      this.abortController = new AbortController()
+      const controller = new AbortController()
+      this.abortController = controller
 
-      const { signal } = this.abortController
+      const { signal } = controller
 
       const cached = _cache.get(zipcode)
       if (cached) {
         this.setLoading(true)
         await new Promise(r => setTimeout(r, 120))
+        if (signal.aborted) return
+
         this.fill(cached)
         this.$dispatch('loaded', { zipcode, data: cached, cached: true })
         this.setLoading(false)
@@ -124,19 +130,24 @@ export function addressForm(options = {}) {
 
       try {
         const data = await this.resolveAddress(zipcode, signal)
+        if (signal.aborted) return
 
         _cache.set(zipcode, data)
         this.fill(data)
 
         this.$dispatch('loaded', { zipcode, data, cached: false })
       } catch (e) {
-        if (e.name === 'AbortError') return
+        if (e.name === 'AbortError' || signal.aborted) return
 
         this.$dispatch('error', { zipcode, error: e })
         this.$els.zipcode?.focus()
       } finally {
-        this.setLoading(false)
+        if (!signal.aborted) this.setLoading(false)
       }
+    },
+
+    destroy() {
+      this.abortController?.abort()
     }
   }
 }

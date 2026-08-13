@@ -71,13 +71,14 @@ $cols = $cols->filter()
         });
     });
 
-$hasRowExpanded = isset($expanded) || isset($rowExpanded) || Str::contains($slot, 'role="row-expanded"', true);
-$hasRowSelection = $rowSelection || Str::contains($slot, 'role="row-selection"', true) || $selectAll;
+$hasRowExpanded = isset($expanded) || isset($rowExpanded) || Str::contains($slot, 'data-role="row-expanded"', true);
+$hasRowSelection = $rowSelection || Str::contains($slot, 'data-role="row-selection"', true) || $selectAll;
 $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 0);
 
 @endphp
 <div {{
     TALLKit::attributesAfter($attributes, 'container:')
+        ->dataKey('table-container')
         ->classes([
             'overflow-hidden',
             'border border-zinc-800/10 dark:border-white/20 rounded-md' => $dense || $border
@@ -98,12 +99,14 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                     '
                         relative
                         [:where(&)]:min-w-full
-                        text-zinc-800
+                        text-zinc-800 dark:text-white
                         divide-y divide-zinc-800/10 dark:divide-white/20
                         whitespace-nowrap
                     ',
                 )
         }}>
+            {{ $slot }}
+
             @if (Str::doesntContain($slot, '<thead', true) && $cols->isNotEmpty())
                 <tk:table.columns :attributes="TALLKit::attributesAfter($attributes, 'columns:')->merge(TALLKit::attributesAfter($attributes, 'thead:')->toArray())">
                     @if ($hasRowExpanded)
@@ -136,7 +139,7 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                 </tk:table.columns>
             @endif
 
-            @if (Str::doesntContain($slot, '<tbody', true) && $cols->isNotEmpty() && ($pagination === false || $rows->isNotEmpty()))
+            @if (Str::doesntContain($slot, '<tbody', true) && $cols->isNotEmpty())
                 <tk:table.rows :attributes="TALLKit::attributesAfter($attributes, 'rows:')->merge(TALLKit::attributesAfter($attributes, 'tbody:')->toArray())">
                     @forelse ($rows as $index => $row)
                         <tk:table.row
@@ -187,7 +190,8 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                                         @endphp
 
                                         @if (is_bool($rowValue))
-                                            <tk:icon :name="$rowValue === true ? 'check' : 'times'" />
+                                            <span class="sr-only">{{ $rowValue === true ? __('Yes') : __('No') }}</span>
+                                            <tk:icon :icon="$rowValue === true ? 'check' : 'close'" />
                                         @else
                                             {!! $rowValue !!}
                                         @endif
@@ -208,13 +212,11 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                             </tk:table.row.expanded>
                         @endif
                     @empty
-                        @if ($pagination === false)
-                            <tk:table.row.no-records :attributes="TALLKit::attributesAfter($attributes, 'no-records:')
-                                ->merge(['colspan' => $colspan])
-                            ">
-                                {{ $noRecords }}
-                            </tk:table.row.no-records>
-                        @endif
+                        <tk:table.row.no-records :attributes="TALLKit::attributesAfter($attributes, 'no-records:')
+                            ->merge(['colspan' => $colspan])
+                        ">
+                            {{ $noRecords }}
+                        </tk:table.row.no-records>
                     @endforelse
                 </tk:table.rows>
             @endif
@@ -227,8 +229,6 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                     {{ $footer }}
                 </tk:table.footer>
             @endif
-
-            {{ $slot }}
         </table>
     </div>
 

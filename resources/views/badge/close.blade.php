@@ -8,6 +8,7 @@
     :icon="$slot->isEmpty() ? $icon ?? 'close' : null"
     :attributes="$attributes
         ->dataKey('dismissible')
+        ->dataKey('badge-close')
         ->classes(
         '
             p-px -me-1

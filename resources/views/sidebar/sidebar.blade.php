@@ -14,6 +14,7 @@
     data-mobile-cloak
     {{
         $attributes
+            ->dataKey('sidebar')
             ->whereDoesntStartWith(['backdrop:'])
             ->classes(
                 '

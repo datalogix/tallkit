@@ -10,9 +10,11 @@
     }}
     wire:key="{{ $name }}"
     data-name="{{ $name }}"
+    id="{{ TALLKit::generateId('tabpanel', $name) }}"
+    aria-labelledby="{{ TALLKit::generateId('tab', $name) }}"
     role="tabpanel"
-    :tabindex="isSelected('{{ $name }}') ? 0 : -1"
-    :data-selected="isSelected('{{ $name }}')"
+    :tabindex="isSelected(@js($name)) ? 0 : -1"
+    :data-selected="isSelected(@js($name))"
 >
     {{ $slot }}
 </div>

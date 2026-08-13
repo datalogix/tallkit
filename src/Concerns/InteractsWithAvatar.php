@@ -18,7 +18,7 @@ trait InteractsWithAvatar
             return $value;
         }
 
-        return Cache::driver('file')->remember("tallkit-avatar-{$value}", $ttl ?? 60 * 60 * 24 * 30, function () use ($value) {
+        return Cache::store()->remember("tallkit-avatar-{$value}", $ttl ?? 60 * 60 * 24 * 30, function () use ($value) {
             try {
                 $response = Http::timeout(3)
                     ->retry(2, 200)

@@ -1,10 +1,11 @@
+@aware(['size'])
 @props([
-    'items' => null,
     'size' => null,
+    'items' => null,
 ])
 <tk:dropdown :attributes="TALLKit::attributesAfter($attributes, 'dropdown:')">
     <tk:nav.item
-        :attributes="$attributes->whereDoesntStartWith(['dropdown:', 'menu:'])"
+        :attributes="$attributes->except(['href'])->whereDoesntStartWith(['dropdown:', 'menu:'])"
         :$size
         iconTrailing="chevron-down"
     >

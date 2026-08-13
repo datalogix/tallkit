@@ -20,7 +20,7 @@ if (filter_var($families, FILTER_VALIDATE_URL) !== false) {
 
 @endphp
 @if ($noscript && ! $useStylesheet)
-    <noscript><link rel="stylesheet" href="{!! $url !!}" /></noscript>
+    <noscript><link rel="stylesheet" href="{{ $url }}" /></noscript>
 @endif
 
 @if (! $noscript)
@@ -34,16 +34,16 @@ if (filter_var($families, FILTER_VALIDATE_URL) !== false) {
     @endif
 
     @if ($preload)
-        <link rel="preload" as="style" href="{!! $url !!}" />
+        <link rel="preload" as="style" href="{{ $url }}" />
     @endif
 
     @if ($useStylesheet)
-        <link rel="stylesheet" href="{!! $url !!}" />
+        <link rel="stylesheet" href="{{ $url }}" />
     @else
         <script>
             var l=document.createElement('link');
             l.rel='stylesheet';
-            l.href='{!! $url !!}';
+            l.href=@js($url);
             document.querySelector("head").appendChild(l);
         </script>
     @endif

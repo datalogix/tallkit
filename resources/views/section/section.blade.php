@@ -20,7 +20,7 @@
             ->classes([
                 '[&:has([data-tallkit-section-content]>:is([data-tallkit-card],[data-tallkit-table-container]))>[data-tallkit-separator]]:hidden' => !$separator,
                 TALLKit::fontSize(size: $size),
-                TALLKit::spaceBlock(size: $size, mode: 'largest'),
+                TALLKit::generateClassBySize(size: $size, name: 'space-y', values: [3, 3.5, 4, 4.5, 5, 5.5, 6]),
             ])
     }}
 >
@@ -61,7 +61,8 @@
         <div
             {{
                 TALLKit::attributesAfter($attributes, 'content:')
-                    ->classes(TALLKit::spaceBlock(size: $size, mode: 'largest'))
+                    ->dataKey('section-content')
+                    ->classes(TALLKit::generateClassBySize(size: $size, name: 'space-y', values: [3, 3.5, 4, 4.5, 5, 5.5, 6]))
             }}
         >
             {{ __($content) }}

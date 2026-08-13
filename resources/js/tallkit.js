@@ -9,25 +9,21 @@ const tallkit = {
   loadScript,
   loadStyle,
   modal: (name) => {
-    const dialog = document.querySelector(`dialog[data-modal="${name}"]`)
-
     return {
       show: () => {
-        dialog?.showModal()
+        document.dispatchEvent(new CustomEvent('modal-show', { detail: { name } }))
       },
 
       close: () => {
-        dialog?.close()
+        document.dispatchEvent(new CustomEvent('modal-close', { detail: { name } }))
       }
     }
   },
 
   modals: () => {
-    const dialogs = document.querySelectorAll(`dialog[data-tallkit-modal]`)
-
     return {
       close: () => {
-        dialogs.forEach(modal => modal.close())
+        document.dispatchEvent(new CustomEvent('modal-close', { detail: {} }))
       }
     }
   }

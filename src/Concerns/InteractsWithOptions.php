@@ -21,7 +21,7 @@ trait InteractsWithOptions
 
         if (is_subclass_of($options, \BackedEnum::class) || is_subclass_of($options, \UnitEnum::class)) {
             return Arr::mapWithKeys($options::cases(), fn ($enum) => [
-                $enum->value => method_exists($enum, 'label') ? $enum->label() : $enum->name,
+                ($enum instanceof \BackedEnum ? $enum->value : $enum->name) => method_exists($enum, 'label') ? $enum->label() : $enum->name,
             ]);
         }
 

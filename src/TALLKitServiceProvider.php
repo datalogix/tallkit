@@ -23,6 +23,8 @@ class TALLKitServiceProvider extends ServiceProvider
 
         $loader = AliasLoader::getInstance();
         $loader->alias('TALLKit', Facades\TALLKit::class);
+
+        $this->mergeConfigFrom(__DIR__.'/../config/tallkit.php', 'tallkit');
     }
 
     public function boot()
@@ -38,9 +40,13 @@ class TALLKitServiceProvider extends ServiceProvider
         $this->bootMacros();
 
         AssetManager::boot();
+
+        $this->publishes([
+            __DIR__.'/../config/tallkit.php' => config_path('tallkit.php'),
+        ], 'tallkit-config');
     }
 
-    public function bootComponentPath()
+    protected function bootComponentPath()
     {
         if (file_exists(resource_path('views/tallkit'))) {
             Blade::anonymousComponentPath(resource_path('views/tallkit'), 'tallkit');
@@ -63,7 +69,7 @@ class TALLKitServiceProvider extends ServiceProvider
         $bladeCompiler->precompiler(fn ($value) => $compiler->compile($value));
     }
 
-    public function bootMacros()
+    protected function bootMacros()
     {
         ComponentAttributeBag::mixin(new ComponentAttributeBagMixin);
     }
