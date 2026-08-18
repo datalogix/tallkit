@@ -1,4 +1,4 @@
-import { getTransitionTimeout } from '../utils'
+import { dataKey, getTransitionTimeout } from '../utils'
 
 export function navIndicator({ mode = null } = {}) {
   return {
@@ -22,7 +22,7 @@ export function navIndicator({ mode = null } = {}) {
     move () {
       requestAnimationFrame(() => {
         const indicator = this.$el
-        const nav = indicator.closest('[data-tallkit-nav]') ?? indicator.parentElement.previousElementSibling
+        const nav = indicator.closest(dataKey('nav')) ?? indicator.parentElement.previousElementSibling
         const link = nav?.querySelector('a[data-current]')
 
         if (!link) return

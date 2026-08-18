@@ -1,4 +1,4 @@
-import { bind } from '../utils'
+import { dataKey, bind } from '../utils'
 
 export function composer({ submit = false, placeholder = false } = {}) {
   return {
@@ -12,11 +12,11 @@ export function composer({ submit = false, placeholder = false } = {}) {
       const modes = !submit ? [] : (Array.isArray(submit) ? submit : [submit])
 
       const labelFor = this.$el.parentElement
-        ?.closest('[data-tallkit-field]')
-        ?.querySelector('[data-tallkit-label]')
+        ?.closest(dataKey('field'))
+        ?.querySelector(dataKey('label'))
         ?.getAttribute('for') ?? null
 
-      bind(this.$el.querySelector('[data-tallkit-control]'), {
+      bind(this.$el.querySelector(dataKey('control')), {
         'x-model': 'value',
         ...(labelFor && { id: labelFor }),
         ...(placeholder && { placeholder }),

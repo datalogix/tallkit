@@ -1,11 +1,11 @@
-import { bind, bindShortcut } from '../utils'
+import { dataKey, bind, bindShortcut } from '../utils'
 
 export function modal({ name = null, dismissible = null, persist = null, shortcut = null } = {}) {
   return {
     init() {
       const dialog = this.$el
 
-      bind(dialog.querySelectorAll('[data-tallkit-modal-close],[data-tallkit-modal-auto-close]'), {
+      bind(dialog.querySelectorAll(`${dataKey('modal-close')},${dataKey('modal-auto-close')}`), {
         ['@click']() {
           dialog.close()
         },

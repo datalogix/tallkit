@@ -1,9 +1,11 @@
+import { dataKey } from '../utils'
+
 export function disclosureGroup({ exclusive = false } = {}) {
   return {
     observer: null,
 
     init () {
-      const items = this.$root.querySelectorAll('[data-tallkit-disclosure-item]')
+      const items = this.$root.querySelectorAll(dataKey('disclosure-item'))
 
       const observe = () => {
         items.forEach((item) => {

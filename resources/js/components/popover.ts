@@ -1,4 +1,4 @@
-import { bind, generateId } from '../utils'
+import { dataKey,bind, generateId } from '../utils'
 import { toggleable } from './toggleable'
 
 export function popover ({ mode = 'hover', position = 'bottom', align = 'end' } = {}) {
@@ -27,7 +27,7 @@ export function popover ({ mode = 'hover', position = 'bottom', align = 'end' } 
 
       this.trigger = this.$root.firstElementChild !== this.popoverElement ? this.$root.firstElementChild : this.$root
 
-      if (this.trigger?.matches('[data-tallkit-tooltip]')) {
+      if (this.trigger?.matches(dataKey('tooltip'))) {
          this.trigger = this.trigger.firstElementChild
       }
 

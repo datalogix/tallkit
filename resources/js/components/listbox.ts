@@ -1,5 +1,5 @@
 import Fuse from 'fuse.js'
-import { bind, debounce, normalize, setFieldValue } from '../utils'
+import { dataKey, bind, debounce, normalize, setFieldValue } from '../utils'
 
 export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptions } = {}) {
   return {
@@ -16,7 +16,7 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
     debouncedSearch: null,
 
     init() {
-      this.input = this.$root.querySelector('[data-tallkit-input]')
+      this.input = this.$root.querySelector(dataKey('input'))
       this.list = this.$root.querySelector('[role=listbox]')
       this.noRecords = this.$root.querySelector('[role=status]')
 

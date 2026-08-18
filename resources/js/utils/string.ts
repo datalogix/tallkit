@@ -1,3 +1,9 @@
+export function dataKey(name: string, value?: string) {
+  return value
+    ? `[data-tallkit-${name}="${value}"]`
+    : `[data-tallkit-${name}]`
+}
+
 export function escapeHtml(str?: string | null) {
   if (str == null) return str
 

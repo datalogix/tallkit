@@ -1,10 +1,10 @@
-import { bind } from '../utils'
+import { dataKey, bind } from '../utils'
 
 export function menu() {
   return {
     init() {
-      const items = Array.from(this.$el.querySelectorAll('[data-tallkit-menu-item]'))
-        .filter(item => item.closest('[data-tallkit-menu]') === this.$el)
+      const items = Array.from(this.$el.querySelectorAll(dataKey('menu-item')))
+        .filter(item => item.closest(dataKey('menu')) === this.$el)
 
       bind(items, {
         ['@mouseenter']() {

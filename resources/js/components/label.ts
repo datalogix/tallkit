@@ -1,4 +1,4 @@
-import { bind, setFieldChecked } from '../utils'
+import { dataKey, bind, setFieldChecked } from '../utils'
 
 export function label() {
   return {
@@ -12,8 +12,8 @@ export function label() {
       }
 
       let control = this.$el.parentElement
-        ?.closest('[data-tallkit-field]')
-        ?.querySelector('[data-tallkit-control]')
+        ?.closest(dataKey('field'))
+        ?.querySelector(dataKey('control'))
 
       if (control && !control.matches('input, select, textarea, [contenteditable=""], [contenteditable="true"], [role="textbox"]')) {
         control = control.querySelector('input, select, textarea, [contenteditable=""], [contenteditable="true"], [role="textbox"]')

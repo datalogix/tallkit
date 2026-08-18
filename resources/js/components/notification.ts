@@ -1,12 +1,12 @@
-import { bind } from '../utils'
+import { dataKey, bind } from '../utils'
 
 export function notification({ channel = null } = {}) {
   return {
     init() {
-      bind(this.$el.querySelectorAll('[data-tallkit-notification-mark-all]'), {
+      bind(this.$el.querySelectorAll(dataKey('notification-mark-all')), {
         ['@click']() {
           this.$el.closest('[role=tabpanel]')
-            .querySelectorAll('[data-tallkit-notification-item]')
+            .querySelectorAll(dataKey('notification-item'))
             .forEach((el) => el.dispatchEvent(new CustomEvent('dismiss')))
         },
       })

@@ -1,11 +1,11 @@
-import { bind, getWireModelInfo, setFieldValue } from '../utils'
+import { dataKey, bind, getWireModelInfo, setFieldValue } from '../utils'
 
 export function slider() {
   return {
     input: null,
 
     init() {
-      this.input = this.$root.querySelector('[data-tallkit-control]')
+      this.input = this.$root.querySelector(dataKey('control'))
       this.$nextTick(() => this.updateRange())
 
       if (this.$wire) {
@@ -20,9 +20,9 @@ export function slider() {
         ['@input']: () => this.updateRange()
       })
 
-      bind(this.$root.querySelector('[data-tallkit-slider-ticks]'), {
+      bind(this.$root.querySelector(dataKey('slider-ticks')), {
         ['@click']: (e) => {
-          const ticks = [...this.$root.querySelectorAll('[data-tallkit-slider-tick]')]
+          const ticks = [...this.$root.querySelectorAll(dataKey('slider-tick'))]
           const clickX = e.clientX
 
           let closestTick = null

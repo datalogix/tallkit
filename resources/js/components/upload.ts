@@ -1,4 +1,4 @@
-import { bind, formatBytes, detectFileType, generateId } from '../utils'
+import { dataKey, bind, formatBytes, detectFileType, generateId } from '../utils'
 
 const PREVIEWABLE_TYPES = ['image', 'video', 'audio', 'pdf']
 
@@ -92,7 +92,7 @@ export function upload({
 
       if (!droppable) return
 
-      bind(this.$root.querySelector('[data-tallkit-upload-dropzone]'), {
+      bind(this.$root.querySelector(dataKey('upload-dropzone')), {
         ['@dragover.prevent']() {
           this.dragOver = true
         },
@@ -379,7 +379,9 @@ export function upload({
     syncFieldError() {
       if (this.isInvalid) return
 
-      this.$root.closest('[data-tallkit-field]')?.querySelector('[data-tallkit-error]')?.remove()
+      this.$root.closest(dataKey('field'))
+        ?.querySelector(dataKey('error'))
+        ?.remove()
     },
 
     revoke(entry) {

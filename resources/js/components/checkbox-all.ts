@@ -1,15 +1,15 @@
-import { bind } from '../utils'
+import { dataKey, bind } from '../utils'
 
 export function checkboxAll({ group = '' } = {}) {
   return {
     all: null,
 
     get checkboxes() {
-      return Array.from(document.querySelectorAll(`[data-tallkit-checkbox-group="${group}"]`))
+      return Array.from(document.querySelectorAll(dataKey('checkbox-group', group)))
     },
 
     init() {
-      this.all = this.$root.querySelector('[data-tallkit-checkbox]')
+      this.all = this.$root.querySelector(dataKey('checkbox'))
 
       bind(this.all, {
         ['@change']: () => this.toggleAll()

@@ -1,3 +1,5 @@
+import { dataKey } from './string'
+
 export function setFieldValue(
   el: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null | undefined,
   value: string | number | null | undefined
@@ -22,6 +24,6 @@ export function setFieldChecked(
 
 export function findFieldInput(el: Element | null | undefined): HTMLInputElement | null {
   return el
-    ?.closest('[data-tallkit-field-control]')
-    ?.querySelector('[data-tallkit-input]') ?? null
+    ?.closest(dataKey('field-control'))
+    ?.querySelector(dataKey('input')) ?? null
 }

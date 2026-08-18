@@ -1,4 +1,4 @@
-import { bind } from '../utils'
+import { dataKey, bind } from '../utils'
 import { popover } from './popover'
 import { listbox } from './listbox'
 
@@ -29,7 +29,7 @@ export function combobox({ value = null, multiple = false } = {}) {
       _popover.init.call(this)
       _listbox.init.call(this)
 
-      this.combobox = this.$root.querySelector('[data-tallkit-combobox]')
+      this.combobox = this.$root.querySelector(dataKey('combobox'))
 
       bind(this.combobox, {
         ['@click']() {
@@ -91,7 +91,7 @@ export function combobox({ value = null, multiple = false } = {}) {
       this.index = index === -1 ? null : index
 
       requestAnimationFrame(() => {
-        this.list?.focus()
+        this.input?.focus()
       })
     },
 
@@ -140,7 +140,7 @@ export function combobox({ value = null, multiple = false } = {}) {
     syncChecked() {
       this.items.forEach(item => {
         const selected = this.isSelected(this.getElementValue(item.el))
-        const mark = item.el.querySelector('[data-tallkit-checkmark]')
+        const mark = item.el.querySelector(dataKey('checkmark'))
         if (mark) mark.classList.toggle('invisible', !selected)
         item.li.setAttribute('aria-selected', String(selected))
       })

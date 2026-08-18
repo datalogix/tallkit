@@ -1,4 +1,4 @@
-import { bind, fadeOut, collapse, getTransitionTimeout } from '../utils'
+import { dataKey, bind, fadeOut, collapse, getTransitionTimeout } from '../utils'
 
 export function dismissible(animation?: 'fade' | 'collapse') {
   return {
@@ -7,7 +7,7 @@ export function dismissible(animation?: 'fade' | 'collapse') {
     _dismissTimeout: null as ReturnType<typeof setTimeout> | null,
 
     init() {
-      bind(this.$root.querySelectorAll('[data-tallkit-dismissible]'), {
+      bind(this.$root.querySelectorAll(dataKey('dismissible')), {
         ['@click.stop']: (e) => {
           e.currentTarget.dispatchEvent(new CustomEvent('close'))
           this.dismiss('manual')

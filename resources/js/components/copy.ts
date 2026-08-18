@@ -1,4 +1,4 @@
-import { bind } from '../utils'
+import { dataKey, bind } from '../utils'
 
 export function copy(
   targetId = null,
@@ -17,9 +17,11 @@ export function copy(
         }
       }
 
-      return this.$el.closest('[data-tallkit-field-control]')?.querySelector('[data-tallkit-control]')
-        ?? this.$el.previousElementSibling?.querySelector('[data-tallkit-control]')
-        ?? this.$el.parentElement?.previousElementSibling?.querySelector('[data-tallkit-control]')
+      const controlKey = dataKey('control')
+
+      return this.$el.closest(dataKey('field-control'))?.querySelector(controlKey)
+        ?? this.$el.previousElementSibling?.querySelector(controlKey)
+        ?? this.$el.parentElement?.previousElementSibling?.querySelector(controlKey)
         ?? null
     },
 

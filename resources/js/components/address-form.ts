@@ -1,4 +1,4 @@
-import { bind, fetchWithRetry, debounce, setFieldValue, cache } from '../utils'
+import { dataKey, bind, fetchWithRetry, debounce, setFieldValue, cache } from '../utils'
 
 export function addressForm(options = {}) {
   const _cache = cache('zipcode', options)
@@ -8,14 +8,14 @@ export function addressForm(options = {}) {
 
     init() {
       this.$els = {
-        loading: this.$root.querySelector('[data-tallkit-loading]'),
-        zipcode: this.$root.querySelector('[data-tallkit-address-form-zipcode]'),
-        address: this.$root.querySelector('[data-tallkit-address-form-address]'),
-        number: this.$root.querySelector('[data-tallkit-address-form-number]'),
-        complement: this.$root.querySelector('[data-tallkit-address-form-complement]'),
-        neighborhood: this.$root.querySelector('[data-tallkit-address-form-neighborhood]'),
-        city: this.$root.querySelector('[data-tallkit-address-form-city]'),
-        state: this.$root.querySelector('[data-tallkit-address-form-state]'),
+        loading: this.$root.querySelector(dataKey('loading')),
+        zipcode: this.$root.querySelector(dataKey('address-form-zipcode')),
+        address: this.$root.querySelector(dataKey('address-form-address')),
+        number: this.$root.querySelector(dataKey('address-form-number')),
+        complement: this.$root.querySelector(dataKey('address-form-complement')),
+        neighborhood: this.$root.querySelector(dataKey('address-form-neighborhood')),
+        city: this.$root.querySelector(dataKey('address-form-city')),
+        state: this.$root.querySelector(dataKey('address-form-state')),
       }
 
       const debouncedSearch = debounce(this.search.bind(this))

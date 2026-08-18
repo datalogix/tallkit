@@ -319,32 +319,8 @@
         return "unknown";
     }
   }
-  function setFieldValue(el, value) {
-    if (!el) return;
-    el.value = value?.toString() ?? "";
-    el.dispatchEvent(new Event("input", { bubbles: true }));
-    el.dispatchEvent(new Event("change", { bubbles: true }));
-  }
-  function setFieldChecked(el, checked) {
-    if (!el || el.checked === checked) return;
-    el.checked = checked;
-    el.dispatchEvent(new Event("input", { bubbles: true }));
-    el.dispatchEvent(new Event("change", { bubbles: true }));
-  }
-  function findFieldInput(el) {
-    return el?.closest("[data-tallkit-field-control]")?.querySelector("[data-tallkit-input]") ?? null;
-  }
-  function getWireModelInfo(element) {
-    for (const attr of element.attributes) {
-      if (attr.name.startsWith("wire:model")) {
-        const modifier = attr.name.includes(".") ? attr.name.split(".").slice(1).join(".") : "";
-        return {
-          name: attr.value,
-          modifier
-        };
-      }
-    }
-    return null;
+  function dataKey(name, value) {
+    return value ? `[data-tallkit-${name}="${value}"]` : `[data-tallkit-${name}]`;
   }
   function escapeHtml(str) {
     if (str == null) return str;
@@ -410,6 +386,33 @@
     }
     return str;
   }
+  function setFieldValue(el, value) {
+    if (!el) return;
+    el.value = value?.toString() ?? "";
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+  function setFieldChecked(el, checked) {
+    if (!el || el.checked === checked) return;
+    el.checked = checked;
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+  function findFieldInput(el) {
+    return el?.closest(dataKey("field-control"))?.querySelector(dataKey("input")) ?? null;
+  }
+  function getWireModelInfo(element) {
+    for (const attr of element.attributes) {
+      if (attr.name.startsWith("wire:model")) {
+        const modifier = attr.name.includes(".") ? attr.name.split(".").slice(1).join(".") : "";
+        return {
+          name: attr.value,
+          modifier
+        };
+      }
+    }
+    return null;
+  }
   function timeout(callback, milliseconds, defaultMilliseconds = 500) {
     const ms = !milliseconds || isNaN(parseInt(milliseconds.toString())) ? defaultMilliseconds : parseInt(milliseconds.toString());
     return setTimeout(callback, ms);
@@ -429,14 +432,14 @@
       abortController: null,
       init() {
         this.$els = {
-          loading: this.$root.querySelector("[data-tallkit-loading]"),
-          zipcode: this.$root.querySelector("[data-tallkit-address-form-zipcode]"),
-          address: this.$root.querySelector("[data-tallkit-address-form-address]"),
-          number: this.$root.querySelector("[data-tallkit-address-form-number]"),
-          complement: this.$root.querySelector("[data-tallkit-address-form-complement]"),
-          neighborhood: this.$root.querySelector("[data-tallkit-address-form-neighborhood]"),
-          city: this.$root.querySelector("[data-tallkit-address-form-city]"),
-          state: this.$root.querySelector("[data-tallkit-address-form-state]")
+          loading: this.$root.querySelector(dataKey("loading")),
+          zipcode: this.$root.querySelector(dataKey("address-form-zipcode")),
+          address: this.$root.querySelector(dataKey("address-form-address")),
+          number: this.$root.querySelector(dataKey("address-form-number")),
+          complement: this.$root.querySelector(dataKey("address-form-complement")),
+          neighborhood: this.$root.querySelector(dataKey("address-form-neighborhood")),
+          city: this.$root.querySelector(dataKey("address-form-city")),
+          state: this.$root.querySelector(dataKey("address-form-state"))
         };
         const debouncedSearch = debounce(this.search.bind(this));
         bind(this.$els.zipcode, {
@@ -546,7 +549,7 @@
       isDismissing: false,
       _dismissTimeout: null,
       init() {
-        bind(this.$root.querySelectorAll("[data-tallkit-dismissible]"), {
+        bind(this.$root.querySelectorAll(dataKey("dismissible")), {
           ["@click.stop"]: (e) => {
             e.currentTarget.dispatchEvent(new CustomEvent("close"));
             this.dismiss("manual");
@@ -626,7 +629,7 @@
       state: "idle",
       init() {
         _dismissible.init.call(this);
-        this.progressEl = this.$root.querySelector("[data-tallkit-alert-progress]");
+        this.progressEl = this.$root.querySelector(dataKey("alert-progress"));
         this.startTimer();
         this.initProgress();
         this.visibilityHandler = this.handleVisibility.bind(this);
@@ -950,7 +953,7 @@
         this.popoverElement = this.$root.lastElementChild?.matches("[popover]") && this.$root.lastElementChild;
         if (!this.popoverElement) return;
         this.trigger = this.$root.firstElementChild !== this.popoverElement ? this.$root.firstElementChild : this.$root;
-        if (this.trigger?.matches("[data-tallkit-tooltip]")) {
+        if (this.trigger?.matches(dataKey("tooltip"))) {
           this.trigger = this.trigger.firstElementChild;
         }
         const role = this.popoverElement.getAttribute("role");
@@ -2524,7 +2527,7 @@
       lastInteraction: null,
       debouncedSearch: null,
       init() {
-        this.input = this.$root.querySelector("[data-tallkit-input]");
+        this.input = this.$root.querySelector(dataKey("input"));
         this.list = this.$root.querySelector("[role=listbox]");
         this.noRecords = this.$root.querySelector("[role=status]");
         this.refreshItems();
@@ -2871,10 +2874,10 @@
     return {
       all: null,
       get checkboxes() {
-        return Array.from(document.querySelectorAll(`[data-tallkit-checkbox-group="${group}"]`));
+        return Array.from(document.querySelectorAll(dataKey("checkbox-group", group)));
       },
       init() {
-        this.all = this.$root.querySelector("[data-tallkit-checkbox]");
+        this.all = this.$root.querySelector(dataKey("checkbox"));
         bind(this.all, {
           ["@change"]: () => this.toggleAll()
         });
@@ -2920,7 +2923,7 @@
       init() {
         _popover.init.call(this);
         _listbox.init.call(this);
-        this.combobox = this.$root.querySelector("[data-tallkit-combobox]");
+        this.combobox = this.$root.querySelector(dataKey("combobox"));
         bind(this.combobox, {
           ["@click"]() {
             this.combobox.focus();
@@ -2969,7 +2972,7 @@
         const index = this.filteredItems.findIndex((item) => String(this.getElementValue(item.el)) === String(target));
         this.index = index === -1 ? null : index;
         requestAnimationFrame(() => {
-          this.list?.focus();
+          this.input?.focus();
         });
       },
       close() {
@@ -3007,7 +3010,7 @@
       syncChecked() {
         this.items.forEach((item) => {
           const selected = this.isSelected(this.getElementValue(item.el));
-          const mark = item.el.querySelector("[data-tallkit-checkmark]");
+          const mark = item.el.querySelector(dataKey("checkmark"));
           if (mark) mark.classList.toggle("invisible", !selected);
           item.li.setAttribute("aria-selected", String(selected));
         });
@@ -3029,8 +3032,8 @@
           "x-modelable": "value"
         });
         const modes = !submit ? [] : Array.isArray(submit) ? submit : [submit];
-        const labelFor = this.$el.parentElement?.closest("[data-tallkit-field]")?.querySelector("[data-tallkit-label]")?.getAttribute("for") ?? null;
-        bind(this.$el.querySelector("[data-tallkit-control]"), {
+        const labelFor = this.$el.parentElement?.closest(dataKey("field"))?.querySelector(dataKey("label"))?.getAttribute("for") ?? null;
+        bind(this.$el.querySelector(dataKey("control")), {
           "x-model": "value",
           ...labelFor && { id: labelFor },
           ...placeholder && { placeholder },
@@ -3070,7 +3073,8 @@
             return target;
           }
         }
-        return this.$el.closest("[data-tallkit-field-control]")?.querySelector("[data-tallkit-control]") ?? this.$el.previousElementSibling?.querySelector("[data-tallkit-control]") ?? this.$el.parentElement?.previousElementSibling?.querySelector("[data-tallkit-control]") ?? null;
+        const controlKey = dataKey("control");
+        return this.$el.closest(dataKey("field-control"))?.querySelector(controlKey) ?? this.$el.previousElementSibling?.querySelector(controlKey) ?? this.$el.parentElement?.previousElementSibling?.querySelector(controlKey) ?? null;
       },
       init() {
         const target = this.findTarget();
@@ -3171,7 +3175,7 @@
     return {
       observer: null,
       init() {
-        const items = this.$root.querySelectorAll("[data-tallkit-disclosure-item]");
+        const items = this.$root.querySelectorAll(dataKey("disclosure-item"));
         const observe = () => {
           items.forEach((item) => {
             this.observer.observe(item, { attributeFilter: ["data-open"] });
@@ -3567,7 +3571,7 @@
         if (this.$el.tagName.toLowerCase() === "label" && this.$el.hasAttribute("for") && !!document.getElementById(this.$el.getAttribute("for"))) {
           return;
         }
-        let control = this.$el.parentElement?.closest("[data-tallkit-field]")?.querySelector("[data-tallkit-control]");
+        let control = this.$el.parentElement?.closest(dataKey("field"))?.querySelector(dataKey("control"));
         if (control && !control.matches('input, select, textarea, [contenteditable=""], [contenteditable="true"], [role="textbox"]')) {
           control = control.querySelector('input, select, textarea, [contenteditable=""], [contenteditable="true"], [role="textbox"]');
         }
@@ -3679,7 +3683,7 @@
   function menu() {
     return {
       init() {
-        const items = Array.from(this.$el.querySelectorAll("[data-tallkit-menu-item]")).filter((item) => item.closest("[data-tallkit-menu]") === this.$el);
+        const items = Array.from(this.$el.querySelectorAll(dataKey("menu-item"))).filter((item) => item.closest(dataKey("menu")) === this.$el);
         bind(items, {
           ["@mouseenter"]() {
             if (this.$el.disabled) {
@@ -3765,7 +3769,7 @@
     return {
       init() {
         const dialog = this.$el;
-        bind(dialog.querySelectorAll("[data-tallkit-modal-close],[data-tallkit-modal-auto-close]"), {
+        bind(dialog.querySelectorAll(`${dataKey("modal-close")},${dataKey("modal-auto-close")}`), {
           ["@click"]() {
             dialog.close();
           }
@@ -3855,7 +3859,7 @@
       move() {
         requestAnimationFrame(() => {
           const indicator = this.$el;
-          const nav = indicator.closest("[data-tallkit-nav]") ?? indicator.parentElement.previousElementSibling;
+          const nav = indicator.closest(dataKey("nav")) ?? indicator.parentElement.previousElementSibling;
           const link = nav?.querySelector("a[data-current]");
           if (!link) return;
           const indicatorRect = indicator.getBoundingClientRect();
@@ -3910,9 +3914,9 @@
   function notification({ channel = null } = {}) {
     return {
       init() {
-        bind(this.$el.querySelectorAll("[data-tallkit-notification-mark-all]"), {
+        bind(this.$el.querySelectorAll(dataKey("notification-mark-all")), {
           ["@click"]() {
-            this.$el.closest("[role=tabpanel]").querySelectorAll("[data-tallkit-notification-item]").forEach((el) => el.dispatchEvent(new CustomEvent("dismiss")));
+            this.$el.closest("[role=tabpanel]").querySelectorAll(dataKey("notification-item")).forEach((el) => el.dispatchEvent(new CustomEvent("dismiss")));
           }
         });
         if (!channel || !window.Echo || !this.$wire) {
@@ -4177,7 +4181,7 @@
     return {
       input: null,
       init() {
-        this.input = this.$root.querySelector("[data-tallkit-control]");
+        this.input = this.$root.querySelector(dataKey("control"));
         this.$nextTick(() => this.updateRange());
         if (this.$wire) {
           const prop = getWireModelInfo(this.input);
@@ -4188,9 +4192,9 @@
         bind(this.input, {
           ["@input"]: () => this.updateRange()
         });
-        bind(this.$root.querySelector("[data-tallkit-slider-ticks]"), {
+        bind(this.$root.querySelector(dataKey("slider-ticks")), {
           ["@click"]: (e) => {
-            const ticks = [...this.$root.querySelectorAll("[data-tallkit-slider-tick]")];
+            const ticks = [...this.$root.querySelectorAll(dataKey("slider-tick"))];
             const clickX = e.clientX;
             let closestTick = null;
             let minDistance = Infinity;
@@ -4924,7 +4928,7 @@
           }
         });
         if (!droppable) return;
-        bind(this.$root.querySelector("[data-tallkit-upload-dropzone]"), {
+        bind(this.$root.querySelector(dataKey("upload-dropzone")), {
           ["@dragover.prevent"]() {
             this.dragOver = true;
           },
@@ -5149,7 +5153,7 @@
       },
       syncFieldError() {
         if (this.isInvalid) return;
-        this.$root.closest("[data-tallkit-field]")?.querySelector("[data-tallkit-error]")?.remove();
+        this.$root.closest(dataKey("field"))?.querySelector(dataKey("error"))?.remove();
       },
       revoke(entry) {
         if (entry.raw && entry.url) {

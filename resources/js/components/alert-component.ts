@@ -1,4 +1,4 @@
-import { timeout as _timeout, bind } from '../utils'
+import { dataKey, timeout as _timeout, bind } from '../utils'
 import { dismissible } from './dismissible'
 
 export function alertComponent({ timeout = 0, pauseOnHover = false } = {}) {
@@ -21,7 +21,7 @@ export function alertComponent({ timeout = 0, pauseOnHover = false } = {}) {
 
     init() {
       _dismissible.init.call(this)
-      this.progressEl = this.$root.querySelector('[data-tallkit-alert-progress]')
+      this.progressEl = this.$root.querySelector(dataKey('alert-progress'))
 
       this.startTimer()
       this.initProgress()
