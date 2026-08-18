@@ -9,7 +9,8 @@
     'actions' => null,
 ])
 <tk:modal
-    :attributes="$attributes->whereDoesntStartWith(['actions:', 'cancel:', 'confirm:'])->classes('max-w-sm')"
+    :attributes="$attributes->whereDoesntStartWith(['actions:', 'cancel:', 'confirm:'])
+        ->classes('[:where(&)]:max-w-sm')"
     :$size
     :title="$title ?? match ($variant) {
         default => 'Are you sure?',

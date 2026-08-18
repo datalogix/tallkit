@@ -45,7 +45,7 @@ $external ??= $attributes->get('target') === '_blank';
         ->dataKey($name)
         ->merge([TALLKit::dataKey($name . '-has-icon') => !!$icon && $name])
         ->whereDoesntStartWith(['tooltip:', 'icon-wrapper:', 'icon:', 'icon-dot:', 'content:', 'prefix:', 'suffix:', 'icon-trailing:', 'info:', 'badge:', 'kbd:'])
-        ->when($current, fn ($attrs, $value) => $attrs->merge([
+        ->when($current && $as !== 'p' && $as !== 'span', fn ($attrs, $value) => $attrs->merge([
             'data-current' => $value,
             'aria-current' => $value === true ? 'page' : $value,
         ]))

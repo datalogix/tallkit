@@ -38,6 +38,8 @@ export function modal({ name = null, dismissible = null, persist = null, shortcu
       })
 
       const handleCloseAttempt = (event) => {
+        event.preventDefault()
+
         if (persist) {
           const persistAnimation = typeof persist === 'string' ? persist : 'tilt-shaking'
           dialog.classList.remove(persistAnimation)
@@ -70,15 +72,7 @@ export function modal({ name = null, dismissible = null, persist = null, shortcu
         },
 
         ['@keydown.escape.prevent'](event) {
-          if (persist) {
-            event.preventDefault()
-            handleCloseAttempt(event)
-            return
-          }
-
-          if (dismissible === false) {
-            event.preventDefault()
-          }
+          handleCloseAttempt(event)
         },
       })
 

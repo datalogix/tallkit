@@ -14,6 +14,8 @@ use TALLKit\View\BladeDirectives;
 use TALLKit\View\Compilers\ComponentTagCompiler;
 use TALLKit\View\ComponentAttributeBagMixin;
 
+use function Livewire\on;
+
 class TALLKitServiceProvider extends ServiceProvider
 {
     public function register()
@@ -31,6 +33,8 @@ class TALLKitServiceProvider extends ServiceProvider
     {
         if (class_exists(Livewire::class)) {
             Component::mixin(new ComponentMixin);
+
+            $this->bootMagicActions();
         }
 
         BladeDirectives::register();
@@ -72,5 +76,20 @@ class TALLKitServiceProvider extends ServiceProvider
     protected function bootMacros()
     {
         ComponentAttributeBag::mixin(new ComponentAttributeBagMixin);
+    }
+
+    protected function bootMagicActions()
+    {
+        // Methods added via `Component::mixin()` aren't visible to Livewire's
+        // "public method" check when called directly from the browser (eg.
+        // `wire:click="markNotificationAsRead(...)"`), so they need to be
+        // dispatched manually through the `call` hook instead.
+        on('call', function ($component, $method, $params, $componentContext, $returnEarly) {
+            if (! in_array($method, ['markNotificationAsRead', 'markAllNotificationsAsRead', 'deleteNotification'])) {
+                return;
+            }
+
+            $returnEarly($component->{$method}(...$params));
+        });
     }
 }

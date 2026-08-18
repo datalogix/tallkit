@@ -1,111 +1,143 @@
 @props([
-    'rootAttributes' => null,
+    'size' => null,
+    'multiple' => null,
 ])
 <div
-    class="relative flex flex-col rounded-lg overflow-hidden border border-zinc-300 dark:border-white/10 transition-all duration-200"
-    :class="multiple ? 'h-48 w-54' : 'size-full'"
+    {{
+        $attributes->whereDoesntStartWith([
+            'actions:',
+            'view:', 'edit:', 'cancel:', 'retry:', 'remove:',
+            'preview:', 'info:', 'progress:',
+            'file-name:', 'file-info:', 'file-size:',
+        ])->classes([
+            '
+                relative flex flex-col rounded-lg overflow-hidden
+                border border-zinc-300 dark:border-white/10
+                transition-all duration-200
+            ',
+            'size-full' => !$multiple,
+            match ($size) {
+                'xs' => 'h-40 w-46',
+                'sm' => 'h-44 w-50',
+                'lg' => 'h-52 w-58',
+                'xl' => 'h-56 w-62',
+                '2xl' => 'h-60 w-66',
+                '3xl' => 'h-64 w-70',
+                default => 'h-48 w-54',
+            } => $multiple,
+        ])
+    }}
+    :class="{ 'ring-2 ring-blue-700 dark:ring-blue-300': dragOverIndex === index }"
     :draggable="sortable"
     @dragstart="dragStart(index, $event)"
-    @dragover.prevent
-    @drop.prevent="drop(index)"
+    @dragover.prevent="dragOverTile(index)"
+    @dragleave.prevent="dragLeaveTile(index, $event)"
+    @drop.prevent.stop="dropOnTile(index, $event)"
     @dragend="dragEnd"
 >
-    <template x-if="file.type === 'image'">
-        <img :src="file.url" class="size-full object-cover" />
-    </template>
-
-    <template x-if="file.type === 'video'">
-        <video :src="file.url" controls class="size-full"></video>
-    </template>
-
-    <template x-if="file.type === 'audio'">
-        <audio :src="file.url" controls class="h-32 w-full"></audio>
-    </template>
-
-    <template x-if="file.type === 'pdf'">
-        <iframe :src="file.url + '#toolbar=0'" class="size-full pointer-events-none"></iframe>
-    </template>
-
-    @foreach (['doc', 'xls', 'ppt', 'archive', 'text', 'csv', 'code', 'unknown'] as $fallbackType)
-        <template x-if="file.type === '{{ $fallbackType }}'">
-            <div class="size-full flex items-center justify-center p-2">
-                <tk:icon name="ph:file-{{ $fallbackType }}" size="xl" />
-            </div>
-        </template>
-    @endforeach
-
     <div
-        x-show="file.status === 'error'"
-        class="absolute inset-0 z-10 flex items-center justify-center bg-red-500/10 p-2"
+        {{
+            TALLKit::attributesAfter($attributes, 'actions:')
+                ->classes('flex items-center justify-end gap-1 bg-black/50 px-2 py-1')
+        }}
     >
-        <tk:text x-text="file.error" class="text-center" variant="red" size="sm" />
-    </div>
-
-    <div class="absolute inset-x-0 bottom-0 flex flex-col">
-        <div
-            x-show="file.status === 'uploading'"
-            class="h-1 bg-black/10 dark:bg-white/20"
-        >
-            <div
-                class="h-full bg-blue-700 dark:bg-blue-300 transition-[width] duration-150"
-                :style="{ width: file.progress + '%' }"
-            ></div>
-        </div>
-
-        <div class="flex items-center justify-between gap-2 bg-black/50 px-2 py-1">
-            <tk:text x-text="file.name" class="flex-1 truncate text-white" size="xs" />
-            <tk:text x-text="formatSize(file.size)" class="shrink-0 text-white/70" size="xs" />
-        </div>
-    </div>
-
-    <div class="absolute top-1 right-1 flex gap-1">
         <tk:button
+            :attributes="TALLKit::attributesAfter($attributes, 'view:')"
+            :size="TALLKit::adjustSize($size)"
             x-show="file.url"
-            :attributes="TALLKit::attributesAfter($rootAttributes, 'view:')"
             variant="none"
-            size="xs"
             icon="eye"
-            tooltip="{{ __('View') }}"
-            @click="window.open(file.url, '_blank', 'noopener')"
+            tooltip="View"
+            @click="$event.currentTarget.blur(); viewFile(file.id)"
         />
 
         <tk:button
+            :attributes="TALLKit::attributesAfter($attributes, 'edit:')"
+            :size="TALLKit::adjustSize($size)"
             x-show="!multiple && file.status === 'done'"
-            :attributes="TALLKit::attributesAfter($rootAttributes, 'edit:')"
             variant="none"
-            size="xs"
             icon="pencil"
-            tooltip="{{ __('Edit') }}"
+            tooltip="Edit"
             @click="selectFile"
         />
 
         <tk:button
+            :attributes="TALLKit::attributesAfter($attributes, 'cancel:')"
+            :size="TALLKit::adjustSize($size)"
             x-show="file.status === 'uploading'"
-            :attributes="TALLKit::attributesAfter($rootAttributes, 'cancel:')"
             variant="none"
-            size="xs"
             icon="close"
-            tooltip="{{ __('Cancel') }}"
+            tooltip="Cancel"
             @click="cancelUpload(file.id)"
         />
 
         <tk:button
+            :attributes="TALLKit::attributesAfter($attributes, 'retry:')"
+            :size="TALLKit::adjustSize($size)"
             x-show="file.status === 'error' || file.status === 'cancelled'"
-            :attributes="TALLKit::attributesAfter($rootAttributes, 'retry:')"
             variant="none"
-            size="xs"
             icon="refresh"
-            tooltip="{{ __('Retry') }}"
+            tooltip="Retry"
             @click="retryUpload(file.id)"
         />
 
         <tk:button
-            :attributes="TALLKit::attributesAfter($rootAttributes, 'remove:')"
+            :attributes="TALLKit::attributesAfter($attributes, 'remove:')"
+            :size="TALLKit::adjustSize($size)"
             variant="none"
-            size="xs"
             icon="trash"
-            tooltip="{{ __('Remove') }}"
+            tooltip="Remove"
             @click="removeFile(file.id)"
         />
+    </div>
+
+    <tk:upload.preview
+        :attributes="TALLKit::attributesAfter($attributes, 'preview:')"
+        :$size
+    />
+
+    <div
+        {{
+            TALLKit::attributesAfter($attributes, 'info:')
+                ->classes('flex flex-col')
+        }}
+    >
+        <tk:progress
+            x-show="file.status === 'uploading'"
+            :attributes="TALLKit::attributesAfter($attributes, 'progress:')->classes('rounded-none')"
+            :$size
+            position="none"
+            variant="blue"
+            variable="file.progress"
+            bar:class="rounded-none"
+        />
+
+        <div
+            {{
+                TALLKit::attributesAfter($attributes, 'file-info:')
+                    ->classes('flex items-center justify-between gap-2 bg-black/50 px-2 py-1')
+            }}
+        >
+            <span
+                {{
+                    TALLKit::attributesAfter($attributes, 'file-name:')
+                        ->classes(
+                            'flex-1 truncate text-white',
+                            TALLKit::fontSize(size: TALLKit::adjustSize($size))
+                        )
+                }}
+                x-text="file.name"
+            ></span>
+            <span
+                {{
+                    TALLKit::attributesAfter($attributes, 'file-size:')
+                        ->classes(
+                            'shrink-0 text-white/70',
+                            TALLKit::fontSize(size: TALLKit::adjustSize($size))
+                        )
+                }}
+                x-text="formatSize(file.size)"
+            ></span>
+        </div>
     </div>
 </div>

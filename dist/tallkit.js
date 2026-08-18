@@ -207,13 +207,6 @@
       }
     });
   }
-  function formatBytes(bytes, decimals = 1) {
-    if (!bytes) return "0 B";
-    const units = ["B", "KB", "MB", "GB", "TB"];
-    const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
-    const value = bytes / Math.pow(1024, exponent);
-    return `${exponent === 0 ? value : value.toFixed(decimals)} ${units[exponent]}`;
-  }
   function cache(name, {
     ttl = 1e3 * 60 * 60,
     // 1h
@@ -272,6 +265,58 @@
     } catch (e) {
       if (retries <= 0 || e.name === "AbortError") throw e;
       return fetchWithRetry(fn, retries - 1);
+    }
+  }
+  function formatBytes(bytes, decimals = 1) {
+    if (!bytes) return "0 B";
+    const units = ["B", "KB", "MB", "GB", "TB"];
+    const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+    const value = bytes / Math.pow(1024, exponent);
+    return `${exponent === 0 ? value : value.toFixed(decimals)} ${units[exponent]}`;
+  }
+  function detectFileType(type, name) {
+    if (type.startsWith("image/")) return "image";
+    if (type.startsWith("video/")) return "video";
+    if (type.startsWith("audio/")) return "audio";
+    const extension = name.split(".").pop()?.toLowerCase() ?? "";
+    switch (extension) {
+      case "jpg":
+      case "jpeg":
+      case "png":
+      case "gif":
+        return "image";
+      case "mp4":
+        return "video";
+      case "mp3":
+        return "audio";
+      case "pdf":
+        return "pdf";
+      case "doc":
+      case "docx":
+        return "doc";
+      case "xls":
+      case "xlsx":
+        return "xls";
+      case "ppt":
+      case "pptx":
+        return "ppt";
+      case "rar":
+      case "zip":
+      case "7z":
+        return "archive";
+      case "txt":
+      case "md":
+        return "text";
+      case "csv":
+        return "csv";
+      case "json":
+      case "js":
+      case "ts":
+      case "html":
+      case "css":
+        return "code";
+      default:
+        return "unknown";
     }
   }
   function setFieldValue(el, value) {
@@ -838,7 +883,7 @@
       }
     };
   }
-  const __vite_glob_0_39 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_42 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     sticky
   }, Symbol.toStringTag, { value: "Module" }));
@@ -884,7 +929,7 @@
       }
     };
   }
-  const __vite_glob_0_45 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_48 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     toggleable
   }, Symbol.toStringTag, { value: "Module" }));
@@ -1149,7 +1194,7 @@
       }
     };
   }
-  const __vite_glob_0_35 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_37 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     popover
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3748,6 +3793,7 @@
           }
         });
         const handleCloseAttempt = (event) => {
+          event.preventDefault();
           if (persist) {
             const persistAnimation = typeof persist === "string" ? persist : "tilt-shaking";
             dialog.classList.remove(persistAnimation);
@@ -3773,14 +3819,7 @@
             handleCloseAttempt(event);
           },
           ["@keydown.escape.prevent"](event) {
-            if (persist) {
-              event.preventDefault();
-              handleCloseAttempt(event);
-              return;
-            }
-            if (dismissible2 === false) {
-              event.preventDefault();
-            }
+            handleCloseAttempt(event);
           }
         });
         if (shortcut) {
@@ -3858,6 +3897,41 @@
   const __vite_glob_0_33 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     navIndicator
+  }, Symbol.toStringTag, { value: "Module" }));
+  function notificationItem() {
+    return {
+      ...dismissible("collapse")
+    };
+  }
+  const __vite_glob_0_34 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    notificationItem
+  }, Symbol.toStringTag, { value: "Module" }));
+  function notification({ channel = null } = {}) {
+    return {
+      init() {
+        bind(this.$el.querySelectorAll("[data-tallkit-notification-mark-all]"), {
+          ["@click"]() {
+            this.$el.closest("[role=tabpanel]").querySelectorAll("[data-tallkit-notification-item]").forEach((el) => el.dispatchEvent(new CustomEvent("dismiss")));
+          }
+        });
+        if (!channel || !window.Echo || !this.$wire) {
+          return;
+        }
+        window.Echo.private(channel).notification(() => {
+          this.$wire.$refresh();
+        });
+      },
+      destroy() {
+        if (channel && window.Echo) {
+          window.Echo.leave(channel);
+        }
+      }
+    };
+  }
+  const __vite_glob_0_35 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    notification
   }, Symbol.toStringTag, { value: "Module" }));
   function otp(submit) {
     return {
@@ -4000,7 +4074,7 @@
     const next = inputs[Math.min(start + chars.length, inputs.length - 1)];
     next?.focus();
   }
-  const __vite_glob_0_34 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_36 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     otp
   }, Symbol.toStringTag, { value: "Module" }));
@@ -4024,9 +4098,28 @@
       }
     };
   }
-  const __vite_glob_0_36 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_38 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     prettyPrintJson
+  }, Symbol.toStringTag, { value: "Module" }));
+  function progress(percentage = null) {
+    return {
+      value: 0,
+      init() {
+        this.updateValue(percentage ?? 0);
+      },
+      updateValue(n) {
+        const num = Number(n);
+        if (Number.isNaN(num)) {
+          return;
+        }
+        this.value = Math.max(0, Math.min(100, num));
+      }
+    };
+  }
+  const __vite_glob_0_39 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    progress
   }, Symbol.toStringTag, { value: "Module" }));
   function sidebar(name, sticky$1, stashable) {
     const _toggleable = toggleable();
@@ -4076,7 +4169,7 @@
       }
     };
   }
-  const __vite_glob_0_37 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_40 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     sidebar
   }, Symbol.toStringTag, { value: "Module" }));
@@ -4136,7 +4229,7 @@
       }
     };
   }
-  const __vite_glob_0_38 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_41 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     slider
   }, Symbol.toStringTag, { value: "Module" }));
@@ -4185,7 +4278,7 @@
       }
     };
   }
-  const __vite_glob_0_40 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_43 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     submenu
   }, Symbol.toStringTag, { value: "Module" }));
@@ -4237,7 +4330,7 @@
       }
     };
   }
-  const __vite_glob_0_41 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_44 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     tab
   }, Symbol.toStringTag, { value: "Module" }));
@@ -4326,7 +4419,7 @@
       }
     };
   }
-  const __vite_glob_0_42 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_45 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     table
   }, Symbol.toStringTag, { value: "Module" }));
@@ -4353,7 +4446,7 @@
       }
     };
   }
-  const __vite_glob_0_43 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_46 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     textarea
   }, Symbol.toStringTag, { value: "Module" }));
@@ -4753,55 +4846,10 @@
     time += lines * 300;
     return Math.min(max, Math.max(min, time));
   }
-  const __vite_glob_0_44 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_47 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     toast: toast$1
   }, Symbol.toStringTag, { value: "Module" }));
-  function typeFromFile(file) {
-    const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
-    if (file.type.startsWith("image/")) return "image";
-    if (file.type.startsWith("video/")) return "video";
-    if (file.type.startsWith("audio/")) return "audio";
-    switch (extension) {
-      case "jpg":
-      case "jpeg":
-      case "png":
-      case "gif":
-        return "image";
-      case "mp4":
-        return "video";
-      case "mp3":
-        return "audio";
-      case "pdf":
-        return "pdf";
-      case "doc":
-      case "docx":
-        return "doc";
-      case "xls":
-      case "xlsx":
-        return "xls";
-      case "ppt":
-      case "pptx":
-        return "ppt";
-      case "rar":
-      case "zip":
-      case "7z":
-        return "archive";
-      case "txt":
-      case "md":
-        return "text";
-      case "csv":
-        return "csv";
-      case "json":
-      case "js":
-      case "ts":
-      case "html":
-      case "css":
-        return "code";
-      default:
-        return "unknown";
-    }
-  }
   const PREVIEWABLE_TYPES = ["image", "video", "audio", "pdf"];
   function upload({
     wireModel = false,
@@ -4814,12 +4862,15 @@
     files = [],
     tooLargeMessage = "This file is too large.",
     invalidTypeMessage = "This file type is not allowed.",
-    tooManyFilesMessage = "Too many files selected."
+    tooManyFilesMessage = "Too many files selected.",
+    previewName = null
   } = {}) {
     return {
       dragOver: false,
       dragIndex: null,
+      dragOverIndex: null,
       sortable,
+      previewId: null,
       files: files.map((file) => ({
         id: file.id ?? generateId("upload-file"),
         raw: null,
@@ -4831,7 +4882,8 @@
         status: file.status ?? "done",
         progress: file.progress ?? 100,
         error: null,
-        tmpFilename: file.tmpFilename ?? null
+        tmpFilename: file.tmpFilename ?? null,
+        previewLoaded: PREVIEWABLE_TYPES.includes(file.type)
       })),
       queue: [],
       activeId: null,
@@ -4841,12 +4893,34 @@
       get accept() {
         return this.$refs.fileInput?.accept || null;
       },
+      get activeFiles() {
+        return this.files.filter((file) => file.status === "uploading" || file.status === "queued");
+      },
+      get hasPendingUploads() {
+        return this.files.some((file) => file.status === "uploading" || file.status === "queued");
+      },
+      get aggregateProgress() {
+        const active = this.activeFiles;
+        if (!active.length) return 100;
+        return Math.round(active.reduce((sum, file) => sum + file.progress, 0) / active.length);
+      },
+      get isUploading() {
+        return this.activeFiles.length > 0;
+      },
+      get hasError() {
+        return this.files.some((file) => file.status === "error");
+      },
+      get isInvalid() {
+        return invalid || this.hasError;
+      },
+      get previewFile() {
+        return this.find(this.previewId);
+      },
       init() {
         bind(this.$refs.fileInput, {
-          ["@change"](event) {
-            const target = event.target;
-            this.addFiles(target.files);
-            target.value = "";
+          ["@change"](e) {
+            this.addFiles(e.target.files);
+            e.target.value = "";
           }
         });
         if (!droppable) return;
@@ -4854,12 +4928,13 @@
           ["@dragover.prevent"]() {
             this.dragOver = true;
           },
-          ["@dragleave.prevent"]() {
+          ["@dragleave.prevent"](e) {
+            if (e.currentTarget.contains(e.relatedTarget)) return;
             this.dragOver = false;
           },
-          ["@drop.prevent"](event) {
+          ["@drop.prevent"](e) {
             this.dragOver = false;
-            this.addFiles(event.dataTransfer?.files ?? null);
+            this.addFiles(e.dataTransfer?.files ?? null);
           }
         });
       },
@@ -4868,6 +4943,25 @@
       },
       selectFile() {
         this.$refs.fileInput.click();
+      },
+      viewFile(id) {
+        this.previewId = id;
+        if (!this.previewFile) {
+          this.previewId = null;
+          return;
+        }
+        if (this.previewFile.previewLoaded) {
+          this.$dispatch("modal-show", { name: previewName });
+          return;
+        }
+        this.openFile();
+      },
+      openFile() {
+        const url = this.previewFile?.url;
+        if (!url) {
+          return;
+        }
+        window.open(url, "_blank", "noopener");
       },
       addFiles(fileList) {
         if (!fileList?.length) return;
@@ -4884,24 +4978,9 @@
         const accepted = incoming.slice(0, remaining);
         const rejected = this.multiple && maxFiles ? incoming.slice(remaining) : [];
         accepted.forEach((raw) => {
-          const type = typeFromFile(raw);
-          const url = PREVIEWABLE_TYPES.includes(type) ? URL.createObjectURL(raw) : null;
-          const error = this.validate(raw);
-          const entry = {
-            id: generateId("upload-file"),
-            raw,
-            name: raw.name,
-            size: raw.size,
-            url,
-            value: null,
-            type,
-            status: error ? "error" : "queued",
-            progress: 0,
-            error,
-            tmpFilename: null
-          };
+          const entry = this.createFileEntry(raw);
           this.files.push(entry);
-          if (!error) {
+          if (!entry.error) {
             this.queue.push(entry.id);
           }
         });
@@ -4913,7 +4992,7 @@
             size: raw.size,
             url: null,
             value: null,
-            type: typeFromFile(raw),
+            type: detectFileType(raw.type, raw.name),
             status: "error",
             progress: 0,
             error: tooManyFilesMessage,
@@ -4922,6 +5001,27 @@
           this.files.push(entry);
         });
         this.processQueue();
+        this.syncFieldError();
+      },
+      createFileEntry(raw) {
+        const type = detectFileType(raw.type, raw.name);
+        const previewable = PREVIEWABLE_TYPES.includes(type);
+        const url = previewable ? URL.createObjectURL(raw) : null;
+        const error = this.validate(raw);
+        return {
+          id: generateId("upload-file"),
+          raw,
+          name: raw.name,
+          size: raw.size,
+          url,
+          value: null,
+          type,
+          status: error ? "error" : "queued",
+          progress: 0,
+          error,
+          tmpFilename: null,
+          previewLoaded: previewable
+        };
       },
       validate(file) {
         if (maxSize && file.size > maxSize * 1024) {
@@ -4942,7 +5042,9 @@
         });
       },
       processQueue() {
-        if (this.activeId || !this.queue.length) return;
+        if (this.activeId || !this.queue.length) {
+          return;
+        }
         const entry = this.find(this.queue.shift());
         if (!entry) {
           this.processQueue();
@@ -4966,15 +5068,17 @@
             entry.tmpFilename = tmpFilename;
             this.activeId = null;
             this.processQueue();
+            this.syncFieldError();
           },
           (message) => {
             entry.status = "error";
             entry.error = message || "Upload failed.";
             this.activeId = null;
             this.processQueue();
+            this.syncFieldError();
           },
-          (event) => {
-            entry.progress = event.detail.progress;
+          (e) => {
+            entry.progress = e.detail.progress;
           },
           () => {
             entry.status = "cancelled";
@@ -5005,21 +5109,47 @@
         } else {
           this.queue = this.queue.filter((queuedId) => queuedId !== id);
         }
-        if (this.$wire && wireModel) {
-          if (entry.tmpFilename) {
-            this.$wire.removeUpload(wireModel, entry.tmpFilename);
-          } else if (entry.value !== null) {
-            if (this.multiple) {
-              if (!this.hasPendingUploads) {
-                this.$wire.set(wireModel, this.files.filter((file) => file.id !== id && file.value !== null).map((file) => file.value));
-              }
-            } else {
-              this.$wire.set(wireModel, null);
-            }
-          }
-        }
+        this.detachFromWire(entry, this.files.filter((file) => file.id !== id));
         this.revoke(entry);
         this.files.splice(index, 1);
+        this.syncFieldError();
+      },
+      replaceFile(index, fileList) {
+        const raw = fileList?.[0];
+        const entry = this.files[index];
+        if (!raw || !entry) return;
+        if (entry.id === this.activeId) {
+          this.cancelUpload(entry.id);
+        } else {
+          this.queue = this.queue.filter((queuedId) => queuedId !== entry.id);
+        }
+        this.detachFromWire(entry, this.files.filter((file) => file.id !== entry.id));
+        this.revoke(entry);
+        const next = this.createFileEntry(raw);
+        this.files.splice(index, 1, next);
+        if (!next.error) {
+          this.queue.push(next.id);
+          this.processQueue();
+        }
+        this.syncFieldError();
+      },
+      detachFromWire(entry, remainingFiles) {
+        if (!this.$wire || !wireModel) return;
+        if (entry.tmpFilename) {
+          this.$wire.removeUpload(wireModel, entry.tmpFilename);
+        } else if (entry.value !== null) {
+          if (this.multiple) {
+            if (!this.hasPendingUploads) {
+              this.$wire.set(wireModel, remainingFiles.filter((file) => file.value !== null).map((file) => file.value));
+            }
+          } else {
+            this.$wire.set(wireModel, null);
+          }
+        }
+      },
+      syncFieldError() {
+        if (this.isInvalid) return;
+        this.$root.closest("[data-tallkit-field]")?.querySelector("[data-tallkit-error]")?.remove();
       },
       revoke(entry) {
         if (entry.raw && entry.url) {
@@ -5029,9 +5159,28 @@
       find(id) {
         return this.files.find((file) => file.id === id) ?? null;
       },
-      dragStart(index, event) {
+      dragStart(index, e) {
         this.dragIndex = index;
-        event.dataTransfer?.setData("text/plain", String(index));
+        e.dataTransfer?.setData("text/plain", String(index));
+      },
+      dragOverTile(index) {
+        if (this.dragIndex === index) return;
+        this.dragOverIndex = index;
+      },
+      dragLeaveTile(index, e) {
+        if (this.dragOverIndex !== index) return;
+        if (e.currentTarget.contains(e.relatedTarget)) return;
+        this.dragOverIndex = null;
+      },
+      dropOnTile(index, e) {
+        this.dragOverIndex = null;
+        this.dragOver = false;
+        const fileList = e.dataTransfer?.files;
+        if (fileList?.length) {
+          this.replaceFile(index, fileList);
+          return;
+        }
+        this.drop(index);
       },
       drop(index) {
         if (this.dragIndex === null || this.dragIndex === index) return;
@@ -5044,33 +5193,14 @@
       },
       dragEnd() {
         this.dragIndex = null;
+        this.dragOverIndex = null;
       },
       formatSize(bytes) {
         return formatBytes(bytes);
-      },
-      get activeFiles() {
-        return this.files.filter((file) => file.status === "uploading" || file.status === "queued");
-      },
-      get hasPendingUploads() {
-        return this.files.some((file) => file.status === "uploading" || file.status === "queued");
-      },
-      get aggregateProgress() {
-        const active = this.activeFiles;
-        if (!active.length) return 100;
-        return Math.round(active.reduce((sum, file) => sum + file.progress, 0) / active.length);
-      },
-      get isUploading() {
-        return this.activeFiles.length > 0;
-      },
-      get hasError() {
-        return this.files.some((file) => file.status === "error");
-      },
-      get isInvalid() {
-        return invalid || this.hasError;
       }
     };
   }
-  const __vite_glob_0_46 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_49 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     upload
   }, Symbol.toStringTag, { value: "Module" }));
@@ -5102,7 +5232,7 @@
   }
   function registerAlpineComponents() {
     const components = Object.fromEntries(
-      Object.values([__vite_glob_0_0, __vite_glob_0_1, __vite_glob_0_2, __vite_glob_0_3, __vite_glob_0_4, __vite_glob_0_5, __vite_glob_0_6, __vite_glob_0_7, __vite_glob_0_8, __vite_glob_0_9, __vite_glob_0_10, __vite_glob_0_11, __vite_glob_0_12, __vite_glob_0_13, __vite_glob_0_14, __vite_glob_0_15, __vite_glob_0_16, __vite_glob_0_17, __vite_glob_0_18, __vite_glob_0_19, __vite_glob_0_20, __vite_glob_0_21, __vite_glob_0_22, __vite_glob_0_23, __vite_glob_0_24, __vite_glob_0_25, __vite_glob_0_26, __vite_glob_0_27, __vite_glob_0_28, __vite_glob_0_29, __vite_glob_0_30, __vite_glob_0_31, __vite_glob_0_32, __vite_glob_0_33, __vite_glob_0_34, __vite_glob_0_35, __vite_glob_0_36, __vite_glob_0_37, __vite_glob_0_38, __vite_glob_0_39, __vite_glob_0_40, __vite_glob_0_41, __vite_glob_0_42, __vite_glob_0_43, __vite_glob_0_44, __vite_glob_0_45, __vite_glob_0_46]).flatMap(
+      Object.values([__vite_glob_0_0, __vite_glob_0_1, __vite_glob_0_2, __vite_glob_0_3, __vite_glob_0_4, __vite_glob_0_5, __vite_glob_0_6, __vite_glob_0_7, __vite_glob_0_8, __vite_glob_0_9, __vite_glob_0_10, __vite_glob_0_11, __vite_glob_0_12, __vite_glob_0_13, __vite_glob_0_14, __vite_glob_0_15, __vite_glob_0_16, __vite_glob_0_17, __vite_glob_0_18, __vite_glob_0_19, __vite_glob_0_20, __vite_glob_0_21, __vite_glob_0_22, __vite_glob_0_23, __vite_glob_0_24, __vite_glob_0_25, __vite_glob_0_26, __vite_glob_0_27, __vite_glob_0_28, __vite_glob_0_29, __vite_glob_0_30, __vite_glob_0_31, __vite_glob_0_32, __vite_glob_0_33, __vite_glob_0_34, __vite_glob_0_35, __vite_glob_0_36, __vite_glob_0_37, __vite_glob_0_38, __vite_glob_0_39, __vite_glob_0_40, __vite_glob_0_41, __vite_glob_0_42, __vite_glob_0_43, __vite_glob_0_44, __vite_glob_0_45, __vite_glob_0_46, __vite_glob_0_47, __vite_glob_0_48, __vite_glob_0_49]).flatMap(
         (module) => Object.entries(module).filter(([, v]) => typeof v === "function")
       )
     );
@@ -5197,8 +5327,8 @@
     if (typeof args[0] === "object" && args[0] !== null && !Array.isArray(args[0])) {
       return args[0];
     }
-    const [message, title, type, duration, position, progress, size] = args;
-    return { message, title, type, duration, position, progress, size };
+    const [message, title, type, duration, position, progress2, size] = args;
+    return { message, title, type, duration, position, progress: progress2, size };
   };
   const tallkit$1 = {
     appearance,

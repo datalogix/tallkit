@@ -1,43 +1,4 @@
-import { bind, formatBytes, generateId } from '../utils'
-
-type FileStatus = 'queued' | 'uploading' | 'done' | 'error' | 'cancelled'
-
-interface UploadFile {
-  id: string
-  raw: File | null
-  name: string
-  size: number
-  url: string | null
-  value: string | null
-  type: string
-  status: FileStatus
-  progress: number
-  error: string | null
-  tmpFilename: string | null
-}
-
-function typeFromFile(file: File): string {
-  const extension = file.name.split('.').pop()?.toLowerCase() ?? ''
-
-  if (file.type.startsWith('image/')) return 'image'
-  if (file.type.startsWith('video/')) return 'video'
-  if (file.type.startsWith('audio/')) return 'audio'
-
-  switch (extension) {
-    case 'jpg': case 'jpeg': case 'png': case 'gif': return 'image'
-    case 'mp4': return 'video'
-    case 'mp3': return 'audio'
-    case 'pdf': return 'pdf'
-    case 'doc': case 'docx': return 'doc'
-    case 'xls': case 'xlsx': return 'xls'
-    case 'ppt': case 'pptx': return 'ppt'
-    case 'rar': case 'zip': case '7z': return 'archive'
-    case 'txt': case 'md': return 'text'
-    case 'csv': return 'csv'
-    case 'json': case 'js': case 'ts': case 'html': case 'css': return 'code'
-    default: return 'unknown'
-  }
-}
+import { bind, formatBytes, detectFileType, generateId } from '../utils'
 
 const PREVIEWABLE_TYPES = ['image', 'video', 'audio', 'pdf']
 
@@ -53,23 +14,14 @@ export function upload({
   tooLargeMessage = 'This file is too large.',
   invalidTypeMessage = 'This file type is not allowed.',
   tooManyFilesMessage = 'Too many files selected.',
-}: {
-  wireModel?: string | false
-  multiple?: boolean
-  droppable?: boolean
-  maxSize?: number | null
-  maxFiles?: number | null
-  sortable?: boolean
-  invalid?: boolean
-  files?: Partial<UploadFile>[]
-  tooLargeMessage?: string
-  invalidTypeMessage?: string
-  tooManyFilesMessage?: string
+  previewName = null,
 } = {}) {
   return {
     dragOver: false,
-    dragIndex: null as number | null,
+    dragIndex: null,
+    dragOverIndex: null,
     sortable,
+    previewId: null,
 
     files: files.map((file) => ({
       id: file.id ?? generateId('upload-file'),
@@ -83,10 +35,11 @@ export function upload({
       progress: file.progress ?? 100,
       error: null,
       tmpFilename: file.tmpFilename ?? null,
-    })) as UploadFile[],
+      previewLoaded: PREVIEWABLE_TYPES.includes(file.type),
+    })),
 
-    queue: [] as string[],
-    activeId: null as string | null,
+    queue: [],
+    activeId: null,
 
     get multiple() {
       return this.$refs.fileInput?.multiple ?? multiple
@@ -96,12 +49,44 @@ export function upload({
       return this.$refs.fileInput?.accept || null
     },
 
+    get activeFiles() {
+      return this.files.filter((file) => file.status === 'uploading' || file.status === 'queued')
+    },
+
+    get hasPendingUploads() {
+      return this.files.some((file) =>
+        file.status === 'uploading' || file.status === 'queued')
+    },
+
+    get aggregateProgress() {
+      const active = this.activeFiles
+
+      if (!active.length) return 100
+
+      return Math.round(active.reduce((sum, file) => sum + file.progress, 0) / active.length)
+    },
+
+    get isUploading() {
+      return this.activeFiles.length > 0
+    },
+
+    get hasError() {
+      return this.files.some((file) => file.status === 'error')
+    },
+
+    get isInvalid() {
+      return invalid || this.hasError
+    },
+
+    get previewFile() {
+      return this.find(this.previewId)
+    },
+
     init() {
       bind(this.$refs.fileInput, {
-        ['@change'](event: Event) {
-          const target = event.target as HTMLInputElement
-          this.addFiles(target.files)
-          target.value = ''
+        ['@change'](e) {
+          this.addFiles(e.target.files)
+          e.target.value = ''
         }
       })
 
@@ -112,27 +97,55 @@ export function upload({
           this.dragOver = true
         },
 
-        ['@dragleave.prevent']() {
+        ['@dragleave.prevent'](e) {
+          if (e.currentTarget.contains(e.relatedTarget)) return
+
           this.dragOver = false
         },
 
-        ['@drop.prevent'](event: DragEvent) {
+        ['@drop.prevent'](e) {
           this.dragOver = false
-          this.addFiles(event.dataTransfer?.files ?? null)
+          this.addFiles(e.dataTransfer?.files ?? null)
         }
       })
 
     },
 
     destroy() {
-      this.files.forEach((file: UploadFile) => this.revoke(file))
+      this.files.forEach((file) => this.revoke(file))
     },
 
     selectFile() {
       this.$refs.fileInput.click()
     },
 
-    addFiles(fileList: FileList | null) {
+    viewFile(id) {
+      this.previewId = id
+
+      if (! this.previewFile) {
+        this.previewId = null
+        return
+      }
+
+      if (this.previewFile.previewLoaded) {
+        this.$dispatch('modal-show', { name: previewName })
+        return
+      }
+
+      this.openFile()
+    },
+
+    openFile() {
+      const url = this.previewFile?.url
+
+      if (!url) {
+        return
+      }
+
+      window.open(url, '_blank', 'noopener')
+    },
+
+    addFiles(fileList) {
       if (!fileList?.length) return
 
       if (!this.multiple) {
@@ -140,7 +153,7 @@ export function upload({
           this.cancelUpload(this.activeId)
         }
 
-        this.files.forEach((file: UploadFile) => this.revoke(file))
+        this.files.forEach((file) => this.revoke(file))
         this.files = []
         this.queue = []
       }
@@ -155,40 +168,24 @@ export function upload({
       const rejected = this.multiple && maxFiles ? incoming.slice(remaining) : []
 
       accepted.forEach((raw) => {
-        const type = typeFromFile(raw)
-        const url = PREVIEWABLE_TYPES.includes(type) ? URL.createObjectURL(raw) : null
-        const error = this.validate(raw)
-
-        const entry: UploadFile = {
-          id: generateId('upload-file'),
-          raw,
-          name: raw.name,
-          size: raw.size,
-          url,
-          value: null,
-          type,
-          status: error ? 'error' : 'queued',
-          progress: 0,
-          error,
-          tmpFilename: null,
-        }
+        const entry = this.createFileEntry(raw)
 
         this.files.push(entry)
 
-        if (!error) {
+        if (!entry.error) {
           this.queue.push(entry.id)
         }
       })
 
       rejected.forEach((raw) => {
-        const entry: UploadFile = {
+        const entry = {
           id: generateId('upload-file'),
           raw,
           name: raw.name,
           size: raw.size,
           url: null,
           value: null,
-          type: typeFromFile(raw),
+          type: detectFileType(raw.type, raw.name),
           status: 'error',
           progress: 0,
           error: tooManyFilesMessage,
@@ -199,9 +196,32 @@ export function upload({
       })
 
       this.processQueue()
+      this.syncFieldError()
     },
 
-    validate(file: File): string | null {
+    createFileEntry(raw) {
+      const type = detectFileType(raw.type, raw.name)
+      const previewable = PREVIEWABLE_TYPES.includes(type)
+      const url = previewable ? URL.createObjectURL(raw) : null
+      const error = this.validate(raw)
+
+      return {
+        id: generateId('upload-file'),
+        raw,
+        name: raw.name,
+        size: raw.size,
+        url,
+        value: null,
+        type,
+        status: error ? 'error' : 'queued',
+        progress: 0,
+        error,
+        tmpFilename: null,
+        previewLoaded: previewable,
+      }
+    },
+
+    validate(file)  {
       if (maxSize && file.size > maxSize * 1024) {
         return tooLargeMessage
       }
@@ -213,7 +233,7 @@ export function upload({
       return null
     },
 
-    matchesAccept(file: File, accept: string): boolean {
+    matchesAccept(file, accept) {
       return accept.split(',').some((rule) => {
         rule = rule.trim()
 
@@ -226,7 +246,9 @@ export function upload({
     },
 
     processQueue() {
-      if (this.activeId || !this.queue.length) return
+      if (this.activeId || !this.queue.length) {
+        return
+      }
 
       const entry = this.find(this.queue.shift())
 
@@ -249,21 +271,23 @@ export function upload({
       this.$wire.upload(
         wireModel,
         entry.raw,
-        (tmpFilename: string) => {
+        (tmpFilename) => {
           entry.status = 'done'
           entry.progress = 100
           entry.tmpFilename = tmpFilename
           this.activeId = null
           this.processQueue()
+          this.syncFieldError()
         },
-        (message: string) => {
+        (message) => {
           entry.status = 'error'
           entry.error = message || 'Upload failed.'
           this.activeId = null
           this.processQueue()
+          this.syncFieldError()
         },
-        (event: { detail: { progress: number } }) => {
-          entry.progress = event.detail.progress
+        (e) => {
+          entry.progress = e.detail.progress
         },
         () => {
           entry.status = 'cancelled'
@@ -273,7 +297,7 @@ export function upload({
       )
     },
 
-    retryUpload(id: string) {
+    retryUpload(id) {
       const entry = this.find(id)
       if (!entry?.raw) return
 
@@ -284,14 +308,14 @@ export function upload({
       this.processQueue()
     },
 
-    cancelUpload(id: string) {
+    cancelUpload(id) {
       if (id !== this.activeId || !this.$wire || !wireModel) return
 
       this.$wire.cancelUpload(wireModel)
     },
 
-    removeFile(id: string) {
-      const index = this.files.findIndex((file: UploadFile) => file.id === id)
+    removeFile(id) {
+      const index = this.files.findIndex((file) => file.id === id)
       if (index === -1) return
 
       const entry = this.files[index]
@@ -299,45 +323,108 @@ export function upload({
       if (entry.id === this.activeId) {
         this.cancelUpload(id)
       } else {
-        this.queue = this.queue.filter((queuedId: string) => queuedId !== id)
+        this.queue = this.queue.filter((queuedId) => queuedId !== id)
       }
 
-      if (this.$wire && wireModel) {
-        if (entry.tmpFilename) {
-          this.$wire.removeUpload(wireModel, entry.tmpFilename)
-        } else if (entry.value !== null) {
-          if (this.multiple) {
-            if (!this.hasPendingUploads) {
-              this.$wire.set(wireModel, this.files
-                .filter((file: UploadFile) => file.id !== id && file.value !== null)
-                .map((file: UploadFile) => file.value))
-            }
-          } else {
-            this.$wire.set(wireModel, null)
-          }
-        }
-      }
+      this.detachFromWire(entry, this.files.filter((file) => file.id !== id))
 
       this.revoke(entry)
       this.files.splice(index, 1)
+      this.syncFieldError()
     },
 
-    revoke(entry: UploadFile) {
+    replaceFile(index, fileList) {
+      const raw = fileList?.[0]
+      const entry = this.files[index]
+      if (!raw || !entry) return
+
+      if (entry.id === this.activeId) {
+        this.cancelUpload(entry.id)
+      } else {
+        this.queue = this.queue.filter((queuedId) => queuedId !== entry.id)
+      }
+
+      this.detachFromWire(entry, this.files.filter((file) => file.id !== entry.id))
+      this.revoke(entry)
+
+      const next = this.createFileEntry(raw)
+      this.files.splice(index, 1, next)
+
+      if (!next.error) {
+        this.queue.push(next.id)
+        this.processQueue()
+      }
+
+      this.syncFieldError()
+    },
+
+    detachFromWire(entry, remainingFiles) {
+      if (!this.$wire || !wireModel) return
+
+      if (entry.tmpFilename) {
+        this.$wire.removeUpload(wireModel, entry.tmpFilename)
+      } else if (entry.value !== null) {
+        if (this.multiple) {
+          if (!this.hasPendingUploads) {
+            this.$wire.set(wireModel, remainingFiles
+              .filter((file) => file.value !== null)
+              .map((file) => file.value))
+          }
+        } else {
+          this.$wire.set(wireModel, null)
+        }
+      }
+    },
+
+    syncFieldError() {
+      if (this.isInvalid) return
+
+      this.$root.closest('[data-tallkit-field]')?.querySelector('[data-tallkit-error]')?.remove()
+    },
+
+    revoke(entry) {
       if (entry.raw && entry.url) {
         URL.revokeObjectURL(entry.url)
       }
     },
 
-    find(id: string | undefined): UploadFile | null {
-      return this.files.find((file: UploadFile) => file.id === id) ?? null
+    find(id) {
+      return this.files.find((file) => file.id === id) ?? null
     },
 
-    dragStart(index: number, event: DragEvent) {
+    dragStart(index, e) {
       this.dragIndex = index
-      event.dataTransfer?.setData('text/plain', String(index))
+      e.dataTransfer?.setData('text/plain', String(index))
     },
 
-    drop(index: number) {
+    dragOverTile(index) {
+      if (this.dragIndex === index) return
+
+      this.dragOverIndex = index
+    },
+
+    dragLeaveTile(index, e) {
+      if (this.dragOverIndex !== index) return
+      if (e.currentTarget.contains(e.relatedTarget)) return
+
+      this.dragOverIndex = null
+    },
+
+    dropOnTile(index, e) {
+      this.dragOverIndex = null
+      this.dragOver = false
+
+      const fileList = e.dataTransfer?.files
+
+      if (fileList?.length) {
+        this.replaceFile(index, fileList)
+        return
+      }
+
+      this.drop(index)
+    },
+
+    drop(index) {
       if (this.dragIndex === null || this.dragIndex === index) return
 
       const [moved] = this.files.splice(this.dragIndex, 1)
@@ -346,46 +433,18 @@ export function upload({
 
       if (this.multiple && this.$wire && wireModel && !this.hasPendingUploads) {
         this.$wire.set(wireModel, this.files
-          .filter((file: UploadFile) => file.value !== null)
-          .map((file: UploadFile) => file.value))
+          .filter((file) => file.value !== null)
+          .map((file) => file.value))
       }
     },
 
     dragEnd() {
       this.dragIndex = null
+      this.dragOverIndex = null
     },
 
-    formatSize(bytes: number) {
+    formatSize(bytes) {
       return formatBytes(bytes)
-    },
-
-    get activeFiles() {
-      return this.files.filter((file: UploadFile) => file.status === 'uploading' || file.status === 'queued')
-    },
-
-    get hasPendingUploads() {
-      return this.files.some((file: UploadFile) =>
-        file.status === 'uploading' || file.status === 'queued')
-    },
-
-    get aggregateProgress() {
-      const active = this.activeFiles
-
-      if (!active.length) return 100
-
-      return Math.round(active.reduce((sum: number, file: UploadFile) => sum + file.progress, 0) / active.length)
-    },
-
-    get isUploading() {
-      return this.activeFiles.length > 0
-    },
-
-    get hasError() {
-      return this.files.some((file: UploadFile) => file.status === 'error')
-    },
-
-    get isInvalid() {
-      return invalid || this.hasError
     },
   }
 }

@@ -7,7 +7,7 @@
         {{
             $attributes
                 ->dataKey('list')
-                ->whereDoesntStartWith(['item:'])
+                ->whereDoesntStartWith(['li:', 'item:'])
                 ->classes(
                     'list-inside',
                     match ($mode) {
@@ -18,8 +18,15 @@
                 )
         }}
     >
+        {{ $slot }}
+
         @foreach (collect($items) as $index => $item)
-            <li @if (in_livewire()) wire:key="{{ TALLKit::generateId('list-item', (string) $index) }}" @endif>
+            <li
+                {{
+                    TALLKit::attributesAfter($attributes, 'li:')
+                        ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId('list-item', (string) $index)] : [], false)
+                }}
+            >
                 <tk:text
                     :attributes="TALLKit::attributesAfter($attributes, 'item:')"
                     :label="$item"

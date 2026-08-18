@@ -1,59 +1,132 @@
-<tk:dropdown>
-    <tk:button
-        icon="bell-outline"
-        variant="subtle"
-        iconDot="13"
-        icon-dot:class="bg-blue-500!"
-        class="[&[data-active]]:border [&[data-active]]:border-blue-500"
-        ::data-active="opened"
-    />
+@props([
+    'items' => null,
+    'size' => null,
+    'interval' => null,
+])
+@php
 
-    <tk:popover class="max-w-md w-full p-0">
-        <tk:section
-            title="Notificações"
-            size="sm"
-            class="space-y-0"
-            header:class="p-3"
-            content:class="max-h-120 overflow-y-auto"
+$isRead = fn ($notification) => ! is_null(data_get($notification, 'data.read_at') ?? data_get($notification, 'read_at'));
+
+if ($items !== null) {
+    $all = collect($items);
+    $unread = $all->reject($isRead)->values();
+    $read = $all->filter($isRead)->values();
+} else {
+    $unread = collect(auth()->user()?->unreadNotifications ?? []);
+    $read = collect(auth()->user()?->readNotifications ?? []);
+}
+
+$unreadCount = $unread->count();
+$broadcasting = config('broadcasting.default') && config('broadcasting.default') !== 'null';
+
+@endphp
+<div
+    x-data="notification({ channel: @js($broadcasting ? auth()->user()?->receivesBroadcastNotificationsOn() : null) })"
+    @unless($broadcasting)
+        wire:poll.{{ $interval ?? 30 }}s
+    @endunless
+    {{
+        $attributes
+            ->whereDoesntStartWith([
+                'dropdown:', 'button:', 'popover:',
+                'tab-', 'section:', 'list-unread:', 'list-read:',
+                'mark-all:'
+            ])
+            ->classes('contents')
+    }}
+>
+    <tk:dropdown :attributes="TALLKit::attributesAfter($attributes, 'dropdown:')">
+        <tk:button
+            :attributes="TALLKit::attributesAfter($attributes, 'button:')"
+            :$size
+            variant="subtle"
+            icon="bell-outline"
+            :iconDot="$unreadCount ? (string) min($unreadCount, 99) : null"
+            icon-dot:class="bg-blue-500!"
+            ::data-active="opened"
+        />
+
+        <tk:popover
+            :attributes="TALLKit::attributesAfter($attributes, 'popover:')
+                ->classes('w-full p-0 [:where(&)]:max-w-sm [:where(&)]:max-h-120')
+            "
+            :$size
+            keep-open
         >
-            <x-slot:actions>
-                <tk:button
-                    variant="none"
-                    label="Mark all as read"
-                />
-            </x-slot:actions>
+            <tk:tab.group
+                :attributes="TALLKit::attributesAfter($attributes, 'tab-group:')"
+                :$size
+            >
+                <tk:section
+                    :attributes="TALLKit::attributesAfter($attributes, 'section:')"
+                    :size="TALLKit::adjustSize($size)"
+                    title="Notifications"
+                    header:class="p-3 pb-0 items-center"
+                >
+                    <x-slot:actions>
+                        <tk:tab.items
+                            :attributes="TALLKit::attributesAfter($attributes, 'tab-items:')"
+                            :size="TALLKit::adjustSize($size)"
+                            variant="segmented"
+                        >
+                            <tk:tab
+                                :attributes="TALLKit::attributesAfter($attributes, 'tab-unread:')"
+                                :size="TALLKit::adjustSize($size)"
+                                name="unread"
+                                label="Unread"
+                                :badge="$unreadCount ? (string) min($unreadCount, 99) : null"
+                                :badge:size="TALLKit::adjustSize($size)"
+                            />
+                            <tk:tab
+                                :attributes="TALLKit::attributesAfter($attributes, 'tab-read:')"
+                                :size="TALLKit::adjustSize($size)"
+                                name="read"
+                                label="Read"
+                            />
+                        </tk:tab.items>
+                    </x-slot:actions>
 
-            <div class="m-1">
-                @foreach (range(1, 5) as $x)
-                    <div>
-                        <tk:heading
-                            label="Hoje"
-                            size="xs"
-                            class="px-3 text-zinc-500 dark:text-zinc-400"
-                        />
+                    <tk:tab.panels
+                        :attributes="TALLKit::attributesAfter($attributes, 'tab-panels:')"
+                    >
+                        <tk:tab.panel
+                            :attributes="TALLKit::attributesAfter($attributes, 'tab-panel-unread:')"
+                            name="unread"
+                        >
+                            @if ($unreadCount)
+                                <div class="flex justify-end px-2 pb-1 -mt-1">
+                                    <tk:button
+                                        :attributes="TALLKit::attributesAfter($attributes, 'mark-all:')->dataKey('notification-mark-all')"
+                                        :size="TALLKit::adjustSize($size)"
+                                        action="markAllNotificationsAsRead()"
+                                        variant="none"
+                                        label="Mark all as read"
+                                    />
+                                </div>
+                            @endif
 
-                        @foreach (range(1, 5) as $i)
-                            <a href="#" class="flex gap-4 p-3 rounded-lg hover:bg-zinc-800/5 dark:hover:bg-zinc-800/80 transition group">
-                                <div class="shrink-0">
-                                    <tk:avatar :user="false" square icon="plus" />
-                                </div>
-                                <div class="space-y-2 flex-1">
-                                    <tk:text>Deployment 2f581d6 finished on Da sa dtds adjslk fdsj lk fslkalogix / aemc.on-forge.com</tk:text>
-                                    <tk:text variant="subtle">1 day ago</tk:text>
-                                </div>
-                                <div class="shrink-0 w-20 ms-auto flex justify-end">
-                                    <div class="size-3 bg-green-500 rounded-full block group-hover:hidden"></div>
-                                    <tk:button.group class="hidden group-hover:flex">
-                                        <tk:button icon="trash-outline" tooltip="Delete notification" />
-                                        <tk:button icon="check-circle-outline" tooltip="Mark as read" />
-                                        <tk:button icon="message-badge-outline" tooltip="Mark as unread" />
-                                    </tk:button.group>
-                                </div>
-                            </a>
-                        @endforeach
-                    </div>
-                @endforeach
-            </div>
-         </tk:section>
-    </tk:popover>
-</tk:dropdown>
+                            <tk:notification.list
+                                :attributes="TALLKit::attributesAfter($attributes, 'list-unread:')"
+                                :$size
+                                :items="$unread"
+                                empty="No new notifications"
+                            />
+                        </tk:tab.panel>
+
+                        <tk:tab.panel
+                            :attributes="TALLKit::attributesAfter($attributes, 'tab-panel-read:')"
+                            name="read"
+                        >
+                            <tk:notification.list
+                                :attributes="TALLKit::attributesAfter($attributes, 'list-read:')"
+                                :$size
+                                :items="$read"
+                                empty="No read notifications yet"
+                            />
+                        </tk:tab.panel>
+                    </tk:tab.panels>
+                </tk:section>
+            </tk:tab.group>
+        </tk:popover>
+    </tk:dropdown>
+</div>

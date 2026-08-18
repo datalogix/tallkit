@@ -58,17 +58,14 @@
 
         {{ $append ?? '' }}
         {{ $search ?? '' }}
+        {{ $notification ?? '' }}
 
         <tk:appearance.menu
             :attributes="TALLKit::attributesAfter($attributes, 'appearance:')"
             :mode="$appearance"
             :items="$userMenu"
         >
-            @isset ($avatarMenu)
-                <x-slot:menu>{{ $avatarMenu }}</x-slot:menu>
-            @endisset
-
-            {{ $notification ?? '' }}
+            {{ $avatarMenu ?? '' }}
         </tk:appearance.menu>
     </tk:header>
 

@@ -2,20 +2,18 @@
     'mode' => null,
     'items' => null,
 ])
-@if ($mode === 'toggle' || (($mode === null || $mode === true) && !($items || isset($menu))))
+@if ($mode === 'toggle' || (($mode === null || $mode === true) && !($items || $slot->isNotEmpty())))
     <tk:appearance.toggle
         :attributes="TALLKit::attributesAfter($attributes, 'toggle:')"
     />
 @endif
 
-{{ $slot }}
-
-@if ($items || isset($menu))
+@if ($items || $slot->isNotEmpty())
     <tk:avatar.menu
         :attributes="$attributes->whereDoesntStartWith(['toggle:', 'menu-item:'])"
         :$items
     >
-        {{ $menu ?? '' }}
+        {{ $slot ?? '' }}
 
         @if ($mode === 'selector' || $mode === null || $mode === true)
             <x-slot:prepend>

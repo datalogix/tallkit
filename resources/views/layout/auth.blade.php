@@ -30,7 +30,7 @@ $hasHero = $bg || isset($hero) || TALLKit::attributesAfter($attributes, 'hero:')
         @endif
 
         <tk:container :attributes="TALLKit::attributesAfter($attributes, 'container:')
-            ->classes('max-w-xl px-0 flex flex-col justify-center space-y-8 h-full')"
+            ->classes('[:where(&)]:max-w-xl px-0 flex flex-col justify-center space-y-8 h-full')"
         >
             @isset ($brand)
                 {{ $brand }}

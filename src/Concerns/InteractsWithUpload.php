@@ -6,6 +6,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Livewire\Features\SupportFileUploads\FileNotPreviewableException;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 trait InteractsWithUpload
@@ -17,7 +18,7 @@ trait InteractsWithUpload
                 && $file instanceof TemporaryUploadedFile) {
                 return [
                     'name' => $file->getClientOriginalName(),
-                    'url' => $file->temporaryUrl(),
+                    'url' => $this->temporaryUploadUrl($file),
                     'size' => $file->getSize(),
                     'type' => $this->getUploadFileType($file->getClientOriginalExtension()),
                     'status' => 'done',
@@ -48,6 +49,15 @@ trait InteractsWithUpload
 
             return null;
         })->filter()->values();
+    }
+
+    protected function temporaryUploadUrl(TemporaryUploadedFile $file): ?string
+    {
+        try {
+            return $file->temporaryUrl();
+        } catch (FileNotPreviewableException) {
+            return null;
+        }
     }
 
     public function getUploadFileType(?string $extension)

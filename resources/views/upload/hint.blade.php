@@ -1,4 +1,5 @@
 @props([
+    'size' => null,
     'accept' => null,
     'maxSize' => null,
     'maxFiles' => null,
@@ -13,5 +14,10 @@ $hint = collect([
 
 @endphp
 @if ($hint)
-    <tk:text :label="$hint" variant="subtle" size="xs" />
+    <tk:text
+        :$attributes
+        :size="TALLKit::adjustSize(size: $size)"
+        :label="$hint"
+        variant="subtle"
+    />
 @endif
