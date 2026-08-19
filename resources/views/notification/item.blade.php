@@ -1,6 +1,7 @@
 @props([
     'notification' => null,
     'size' => null,
+    'compact' => null,
 ])
 @php
 
@@ -22,7 +23,7 @@ $read_at = data_get($data, 'read_at') ?? data_get($notification, 'read_at');
     {{
         $attributes
             ->whereDoesntStartWith([
-                'avatar-container:', 'avatar:',
+                'icon-container:', 'icon:',
                 'content:', 'message:', 'time:',
                 'actions:', 'bullet:', 'read:', 'remove:',
             ])
@@ -31,23 +32,38 @@ $read_at = data_get($data, 'read_at') ?? data_get($notification, 'read_at');
                     flex transition group
                     hover:bg-zinc-800/5 dark:hover:bg-zinc-800/80
                 ',
-                TALLKit::padding(size: $size),
-                TALLKit::gap(size: $size, mode: 'largest'),
+                TALLKit::padding(size: $size, mode: $compact ? 'small' : null),
+                TALLKit::gap(size: $size, mode: $compact ? null : 'largest'),
                 TALLKit::roundedSize(size: $size, mode: 'large'),
             )
             ->dataKey('notification-item')
             ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId('notification-item', (string) $id)] : [], false)
     }}
 >
-    <div {{ TALLKit::attributesAfter($attributes, 'avatar-container:')->classes('shrink-0') }}>
-        <tk:avatar
-            :attributes="TALLKit::attributesAfter($attributes, 'avatar:')"
-            :$size
-            :icon="$icon ?? 'bell-outline'"
-            :user="false"
-            square
-        />
-    </div>
+    @if (!$compact && $icon !== false)
+        <div {{ TALLKit::attributesAfter($attributes, 'icon-container:')->classes('shrink-0') }}>
+            <tk:avatar
+                :attributes="TALLKit::attributesAfter($attributes, 'icon:')"
+                :size="TALLKit::adjustSize($size)"
+                :icon="$icon ?? match ($type) {
+                    'success' => 'check-circle-outline',
+                    'error' => 'cancel-outline',
+                    'warning' => 'warning-outline',
+                    'info' => 'info-outline',
+                    default => 'bell-outline',
+                }"
+                :color="match ($type) {
+                    'success' => 'green',
+                    'error' => 'red',
+                    'warning' => 'amber',
+                    'info' => 'blue',
+                    default => 'filled',
+                }"
+                :user="false"
+                square
+            />
+        </div>
+    @endif
 
     <div
         {{
@@ -57,13 +73,13 @@ $read_at = data_get($data, 'read_at') ?? data_get($notification, 'read_at');
     >
         <tk:text
             :attributes="TALLKit::attributesAfter($attributes, 'message:')"
-            :$size
+            :size="$compact ? TALLKit::adjustSize($size) : $size"
         >
             {{ $message ?? $title ?? class_basename($type) }}
         </tk:text>
         <tk:text
             :attributes="TALLKit::attributesAfter($attributes, 'time:')"
-            :size="TALLKit::adjustSize($size)"
+            :size="TALLKit::adjustSize($size, move: $compact ? -2 : -1)"
             variant="subtle"
         >
             {{ $created_at->diffForHumans() }}
@@ -82,7 +98,14 @@ $read_at = data_get($data, 'read_at') ?? data_get($notification, 'read_at');
                     {{
                         TALLKit::attributesAfter($attributes, 'bullet:')
                             ->classes(
-                                'bg-green-500 rounded-full block group-hover:hidden',
+                                match ($type) {
+                                    'success' => 'bg-green-500',
+                                    'error' => 'bg-red-500',
+                                    'warning' => 'bg-amber-500',
+                                    'info' => 'bg-blue-500',
+                                    default => 'bg-green-500',
+                                },
+                                'rounded-full block group-hover:hidden',
                                 TALLKit::widthHeight(size: $size, mode: 'smallest'),
                             )
                     }}
@@ -94,7 +117,7 @@ $read_at = data_get($data, 'read_at') ?? data_get($notification, 'read_at');
                 >
                     <tk:button
                         :attributes="TALLKit::attributesAfter($attributes, 'read:')->dataKey('dismissible')"
-                        :size="TALLKit::adjustSize($size)"
+                        :size="TALLKit::adjustSize($size, move: $compact ? -2 : -1)"
                         action="markNotificationAsRead('{{ $id }}')"
                         icon="check-circle-outline"
                         tooltip="Mark as read"
@@ -104,7 +127,7 @@ $read_at = data_get($data, 'read_at') ?? data_get($notification, 'read_at');
                 <tk:button.group :$size>
                     <tk:button
                         :attributes="TALLKit::attributesAfter($attributes, 'remove:')->dataKey('dismissible')"
-                        :size="TALLKit::adjustSize($size)"
+                        :size="TALLKit::adjustSize($size, move: $compact ? -2 : -1)"
                         action="deleteNotification('{{ $id }}')"
                         icon="trash-outline"
                         tooltip="Remove notification"
