@@ -117,6 +117,23 @@
     dark:has-[[data-tallkit-control]:focus-visible]:ring-blue-300/20;
 }
 
+@utility tk-control-focus-ring-self {
+  @apply
+    has-[input:focus-visible]:outline-2
+    has-[input:focus-visible]:outline-blue-700
+    dark:has-[input:focus-visible]:outline-blue-300
+    has-[input:focus-visible]:outline-offset-0
+    has-[input:focus-visible]:ring-2
+    has-[input:focus-visible]:ring-blue-700/20
+    dark:has-[input:focus-visible]:ring-blue-300/20;
+}
+
+@utility tk-control-invalid-ring-self {
+  @apply
+    has-[input[data-invalid]]:ring-red-500
+    dark:has-[input[data-invalid]]:ring-red-400;
+}
+
 @utility tk-control-focus-ring-expanded {
   @apply
     [&:is(:focus-visible,[aria-expanded=true])]:outline-2
@@ -226,3 +243,4 @@
     tk-control-invalid-border
     tk-control-focus-ring;
 }
+

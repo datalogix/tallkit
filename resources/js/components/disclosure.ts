@@ -1,5 +1,5 @@
 import { bind, generateId } from '../utils'
-import { toggleable } from './toggleable'
+import { toggleable } from '../mixins/toggleable'
 
 export function disclosure() {
   const _toggleable = toggleable()

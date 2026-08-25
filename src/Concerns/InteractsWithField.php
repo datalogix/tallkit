@@ -24,6 +24,7 @@ trait InteractsWithField
             'prefix' => null,
             'suffix' => null,
             'showError' => null,
+            'color' => null,
         ];
     }
 
@@ -132,12 +133,31 @@ trait InteractsWithField
         ];
 
         foreach ($types as $type => $names) {
-            if (Str::contains($name, $names, true)) {
+            if ($this->fieldNameMatches($name, $names)) {
                 return $type;
             }
         }
 
         return 'text';
+    }
+
+    protected function fieldNameMatches(?string $name, array $needles): bool
+    {
+        if (blank($name)) {
+            return false;
+        }
+
+        foreach ($needles as $needle) {
+            $matches = Str::startsWith($needle, '_')
+                ? Str::endsWith(Str::lower($name), Str::lower($needle))
+                : Str::contains($name, $needle, true);
+
+            if ($matches) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function detectInputMask(
@@ -161,7 +181,7 @@ trait InteractsWithField
 
         if (is_string($mask)) {
             foreach ($masks as $maskValue => $names) {
-                if (Str::contains($mask, $names, true)) {
+                if ($this->fieldNameMatches($mask, $names)) {
                     return $maskValue;
                 }
             }
@@ -174,7 +194,7 @@ trait InteractsWithField
         }
 
         foreach ($masks as $maskValue => $names) {
-            if (Str::contains($name, $names, true) || Str::contains($type, $names, true)) {
+            if ($this->fieldNameMatches($name, $names) || $this->fieldNameMatches($type, $names)) {
                 return $maskValue;
             }
         }

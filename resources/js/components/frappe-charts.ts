@@ -1,5 +1,5 @@
 import { loadRemoteAssets } from '../utils'
-import { dataOptions } from './data-options'
+import { dataOptions } from '../mixins/data-options'
 import { loadable } from './loadable'
 
 export function frappeCharts() {
@@ -16,9 +16,13 @@ export function frappeCharts() {
     },
 
     render(options = {}) {
-      this.chart?.destroy?.()
-      this.chart = new window.frappe.Chart(this.$el, { ...options, ...this.getDataOptions() })
-      this.$dispatch('rendered', { chart: this.chart })
+      try {
+        this.chart?.destroy?.()
+        this.chart = new window.frappe.Chart(this.$refs.target, { ...options, ...this.getDataOptions() })
+        this.$dispatch('rendered', { chart: this.chart })
+      } catch (e) {
+        this.fail(e)
+      }
     },
 
     destroy() {

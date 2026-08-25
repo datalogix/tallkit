@@ -4,7 +4,14 @@
     'size' => null,
     'iconCompleted' => null,
     'iconActive' => null,
+    'color' => null,
 ])
+@php
+
+$currentStep = (int) $current;
+$totalSteps = collect($steps)->filter()->count();
+
+@endphp
 <div
     {{
         $attributes
@@ -21,10 +28,12 @@
                     ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId('stepper-step', (string) $index)] : [], false)
                 "
                 :index="$index + 1"
-                :status="$current == $index + 1 ? 'active' : ($current > $index + 1 ? 'completed' : 'pending')"
+                :total="$totalSteps"
+                :status="$currentStep === $index + 1 ? 'active' : ($currentStep > $index + 1 ? 'completed' : 'pending')"
                 :$iconCompleted
                 :$iconActive
                 :$size
+                :$color
             />
         @endif
 

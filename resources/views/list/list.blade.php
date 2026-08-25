@@ -2,12 +2,13 @@
     'mode' => null,
     'items' => null,
 ])
-@if (collect($items)->isNotEmpty())
+@if (collect($items)->isNotEmpty() || $slot->isNotEmpty())
     <ul
         {{
             $attributes
                 ->dataKey('list')
                 ->whereDoesntStartWith(['li:', 'item:'])
+                ->when($mode === 'none', fn ($attrs) => $attrs->merge(['role' => 'list']))
                 ->classes(
                     'list-inside',
                     match ($mode) {
@@ -30,7 +31,6 @@
                 <tk:text
                     :attributes="TALLKit::attributesAfter($attributes, 'item:')"
                     :label="$item"
-                    as="span"
                 />
             </li>
         @endforeach

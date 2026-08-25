@@ -1,8 +1,9 @@
-@aware(['mode', 'private', 'size'])
-@props(['mode', 'private', 'size'])
+@aware(['mode', 'private', 'size', 'color'])
+@props(['mode', 'private', 'size', 'color'])
 <tk:input
     :attributes="$attributes->except('input:class')"
     :$size
+    :$color
     :input:class="TALLKit::classes(
         $attributes->get('input:class'),
         'px-0! text-center uppercase',

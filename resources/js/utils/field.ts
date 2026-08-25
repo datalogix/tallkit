@@ -22,8 +22,20 @@ export function setFieldChecked(
   el.dispatchEvent(new Event('change', { bubbles: true }))
 }
 
-export function findFieldInput(el: Element | null | undefined): HTMLInputElement | null {
+export function findInField(
+  el: Element | null | undefined,
+  childKey: string,
+  ancestorKey: string = 'field'
+): HTMLElement | null {
   return el
-    ?.closest(dataKey('field-control'))
-    ?.querySelector(dataKey('input')) ?? null
+    ?.closest(dataKey(ancestorKey))
+    ?.querySelector(dataKey(childKey)) ?? null
+}
+
+export function findFieldInput(el: Element | null | undefined): HTMLInputElement | null {
+  return findInField(el, 'input', 'field-control') as HTMLInputElement | null
+}
+
+export function allChecked<T>(items: T[], getChecked: (item: T) => boolean): boolean {
+  return items.length > 0 && items.every(getChecked)
 }

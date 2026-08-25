@@ -1,4 +1,4 @@
-import { dataKey, bind, setFieldChecked } from '../utils'
+import { bind, setFieldChecked, findInField } from '../utils'
 
 export function label() {
   return {
@@ -11,9 +11,7 @@ export function label() {
         return
       }
 
-      let control = this.$el.parentElement
-        ?.closest(dataKey('field'))
-        ?.querySelector(dataKey('control'))
+      let control = findInField(this.$el.parentElement, 'control')
 
       if (control && !control.matches('input, select, textarea, [contenteditable=""], [contenteditable="true"], [role="textbox"]')) {
         control = control.querySelector('input, select, textarea, [contenteditable=""], [contenteditable="true"], [role="textbox"]')

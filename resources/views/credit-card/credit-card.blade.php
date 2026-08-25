@@ -77,7 +77,7 @@ $types = [
 
 @endphp
 <div
-    x-data="creditCard(@js(array_replace_recursive(['types' => $types], Arr::wrap($options))))"
+    x-data="creditCard(@js($types), @js($options))"
     tabindex="0"
     role="button"
     aria-label="{{ __('Flip card') }}"
@@ -154,12 +154,12 @@ $types = [
                         <text
                             transform="matrix(1 0 0 1 479.3848 417.0097)"
                             class="fill-white font-mono font-light text-base"
-                        >VALID</text>
+                        >{{ __('VALID') }}</text>
 
                         <text
                             transform="matrix(1 0 0 1 479.3848 435.6762)"
                             class="fill-white font-mono font-light text-base"
-                        >THRU</text>
+                        >{{ __('THRU') }}</text>
 
                         <polygon
                             class="fill-white"

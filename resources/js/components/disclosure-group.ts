@@ -5,15 +5,17 @@ export function disclosureGroup({ exclusive = false } = {}) {
     observer: null,
 
     init () {
-      const items = this.$root.querySelectorAll(dataKey('disclosure-item'))
+      const getItems = () => this.$root.querySelectorAll(dataKey('disclosure-item'))
 
       const observe = () => {
-        items.forEach((item) => {
+        getItems().forEach((item) => {
           this.observer.observe(item, { attributeFilter: ['data-open'] })
         })
       }
 
       this.observer = new MutationObserver((records) => {
+        const items = getItems()
+
         if (exclusive) {
           const opened = new Set(
             records

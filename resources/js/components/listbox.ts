@@ -1,5 +1,5 @@
 import Fuse from 'fuse.js'
-import { dataKey, bind, debounce, normalize, setFieldValue } from '../utils'
+import { dataKey, bind, debounce, normalize, setFieldValue, onLivewireCommit } from '../utils'
 
 export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptions } = {}) {
   return {
@@ -14,6 +14,7 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
     fuse: null,
     lastInteraction: null,
     debouncedSearch: null,
+    livewireCommitCleanup: null,
 
     init() {
       this.input = this.$root.querySelector(dataKey('input'))
@@ -21,6 +22,15 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
       this.noRecords = this.$root.querySelector('[role=status]')
 
       this.refreshItems()
+
+      this.livewireCommitCleanup = onLivewireCommit(({ succeed }) => {
+        succeed(() => {
+          if (!this.$root?.isConnected) return
+
+          this.refreshItems()
+          this.search()
+        })
+      })
 
       this.$watch(() => this.index, (index) => {
         this.setActive(index)
@@ -153,6 +163,10 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
       })
     },
 
+    destroy() {
+      this.livewireCommitCleanup?.()
+    },
+
     refreshItems() {
       this.items = Array.from(
         this.list.querySelectorAll('[role=option]')
@@ -161,6 +175,8 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
 
         if (item?.firstElementChild?.disabled) {
           item.setAttribute('aria-disabled', 'true')
+        } else {
+          item.removeAttribute('aria-disabled')
         }
 
         return {

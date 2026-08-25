@@ -12,6 +12,8 @@
 $format ??= '999999';
 $groups = explode('-', $format);
 $describedBy = TALLKit::ariaDescribedBy($id, $description, $help, $invalid, $showError);
+$digitCount = strlen(str_replace('-', '', $format));
+$digitIndex = 0;
 
 @endphp
 <tk:field.wrapper
@@ -24,7 +26,7 @@ $describedBy = TALLKit::ariaDescribedBy($id, $description, $help, $invalid, $sho
         x-modelable="value"
         role="group"
         id="{{ $id }}"
-        @if ($label) aria-label="{{ __($label) }}" @endif
+        aria-label="{{ $label ? __($label) : __('One-time passcode') }}"
         @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif
         {{ $attributes->whereStartsWith('wire:')->merge(['wire:model' => $wireModel]) }}
     >
@@ -50,6 +52,7 @@ $describedBy = TALLKit::ariaDescribedBy($id, $description, $help, $invalid, $sho
                             <tk:otp.input
                                 :attributes="$attributes->whereDoesntStartWith('wire:')"
                                 :$invalid
+                                :aria-label="__('Digit :n of :total', ['n' => ++$digitIndex, 'total' => $digitCount])"
                                 :mode="match (strtoupper($group[$i])) {
                                     'A' => 'alpha',
                                     '9' => 'numeric',
@@ -68,6 +71,7 @@ $describedBy = TALLKit::ariaDescribedBy($id, $description, $help, $invalid, $sho
                     <tk:otp.input
                         :attributes="$attributes->whereDoesntStartWith('wire:')"
                         :$invalid
+                        :aria-label="__('Digit :n of :total', ['n' => ++$digitIndex, 'total' => $digitCount])"
                         :mode="match (strtoupper($format[$i])) {
                             'A' => 'alpha',
                             '9' => 'numeric',

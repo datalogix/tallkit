@@ -7,6 +7,7 @@
 >
     <canvas
         {{ $attributes->whereDoesntStartWith(['loadable:']) }}
-        x-init="render(@js($options))"
+        x-ref="target"
+        @if ($options) x-init="render(@js($options))" @endif
     ></canvas>
 </tk:loadable>

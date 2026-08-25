@@ -7,6 +7,7 @@ use Illuminate\View\ComponentSlot;
 use TALLKit\Assets\AssetManager;
 use TALLKit\Concerns\InteractsWithAttributes;
 use TALLKit\Concerns\InteractsWithAvatar;
+use TALLKit\Concerns\InteractsWithColor;
 use TALLKit\Concerns\InteractsWithComponents;
 use TALLKit\Concerns\InteractsWithElement;
 use TALLKit\Concerns\InteractsWithErrorBags;
@@ -23,6 +24,7 @@ class TALLKit
 {
     use InteractsWithAttributes;
     use InteractsWithAvatar;
+    use InteractsWithColor;
     use InteractsWithComponents;
     use InteractsWithElement;
     use InteractsWithErrorBags;

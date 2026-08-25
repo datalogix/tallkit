@@ -4,7 +4,6 @@
     x-data="inputViewable()"
     :$attributes
     :variant="$attributes->pluck('variant', 'none')"
-    tabindex="-1"
     tooltip="Toggle password visibility"
     icon="eye"
     icon:class="hidden"

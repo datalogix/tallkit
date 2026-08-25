@@ -2,10 +2,17 @@
 @props([
     'size' => null,
     'items' => null,
+    'animate' => null,
 ])
 <tk:dropdown :attributes="TALLKit::attributesAfter($attributes, 'dropdown:')">
     <tk:nav.item
-        :attributes="$attributes->except(['href'])->whereDoesntStartWith(['dropdown:', 'menu:'])"
+        :attributes="$attributes->except(['href'])
+            ->whereDoesntStartWith(['dropdown:', 'menu:'])
+            ->when($animate !== false, fn ($attrs) => $attrs->merge([
+                'icon-trailing:class' => 'transition-transform',
+                'icon-trailing::class' => '{ \'rotate-180\': opened }',
+            ]))
+        "
         :$size
         iconTrailing="chevron-down"
     >

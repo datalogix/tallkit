@@ -7,6 +7,8 @@
 
 $data = data_get($notification, 'data', []);
 $url = data_get($data, 'url');
+$urlScheme = $url ? parse_url($url, PHP_URL_SCHEME) : null;
+$url = ($url && ($urlScheme === null || in_array(strtolower($urlScheme), ['http', 'https']))) ? $url : null;
 $as = $url ? 'a' : 'div';
 $id = data_get($data, 'id') ?? data_get($notification, 'id');
 $icon = data_get($data, 'icon') ?? data_get($notification, 'icon');
@@ -118,7 +120,7 @@ $read_at = data_get($data, 'read_at') ?? data_get($notification, 'read_at');
                     <tk:button
                         :attributes="TALLKit::attributesAfter($attributes, 'read:')->dataKey('dismissible')"
                         :size="TALLKit::adjustSize($size, move: $compact ? -2 : -1)"
-                        action="markNotificationAsRead('{{ $id }}')"
+                        action="markNotificationAsRead({{ Js::from($id) }})"
                         icon="check-circle-outline"
                         tooltip="Mark as read"
                     />
@@ -128,7 +130,7 @@ $read_at = data_get($data, 'read_at') ?? data_get($notification, 'read_at');
                     <tk:button
                         :attributes="TALLKit::attributesAfter($attributes, 'remove:')->dataKey('dismissible')"
                         :size="TALLKit::adjustSize($size, move: $compact ? -2 : -1)"
-                        action="deleteNotification('{{ $id }}')"
+                        action="deleteNotification({{ Js::from($id) }})"
                         icon="trash-outline"
                         tooltip="Remove notification"
                     />

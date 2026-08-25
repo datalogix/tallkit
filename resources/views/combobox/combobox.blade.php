@@ -3,6 +3,7 @@
     ...TALLKit::fieldControlProps(),
     'multiple' => null,
     'searchable' => true,
+    'animation' => null,
 ])
 @php
 
@@ -36,6 +37,7 @@ foreach ($options as $optionItemValue => $optionItemLabel) {
                 fn ($attrs) => $attrs->classes(
                     'tk-control-wrapper-expanded',
                     TALLKit::roundedSize(size: $size, mode: 'large'),
+                    TALLKit::controlFocusRingNested($color, expanded: true),
                 ),
             )
         "
@@ -103,6 +105,7 @@ foreach ($options as $optionItemValue => $optionItemLabel) {
                             fn ($attrs) => $attrs->classes(
                                 'tk-control-standalone-expanded',
                                 TALLKit::roundedSize(size: $size, mode: 'large'),
+                                TALLKit::controlFocusRing($color, expanded: true),
                             ),
                         )
                 }}
@@ -149,7 +152,6 @@ foreach ($options as $optionItemValue => $optionItemLabel) {
                             tooltip="Clear"
                             variant="none"
                             icon="close"
-                            tabindex="-1"
                             @click.stop="clearValue()"
                         />
                     </div>
@@ -160,6 +162,7 @@ foreach ($options as $optionItemValue => $optionItemLabel) {
                 :attributes="TALLKit::attributesAfter($attributes, 'popover:')
                     ->classes(TALLKit::spaceBlock(size: $size), 'max-h-full')"
                 :$size
+                :$animation
             >
                 <tk:listbox
                     :attributes="TALLKit::attributesAfter($attributes, 'listbox:')"
@@ -167,6 +170,7 @@ foreach ($options as $optionItemValue => $optionItemLabel) {
                     :$size
                     :$multiple
                     :standalone="false"
+                    :search:color="$color"
                     items:class="focus-visible:ring-0!"
                     items:id="{{ $id.'-listbox' }}"
                 >

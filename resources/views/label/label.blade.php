@@ -10,6 +10,7 @@
 @php
 
 $hasPrependOrAppend = $labelPrepend || $labelAppend;
+$tag = $as ?? ($for ? 'label' : 'span');
 
 @endphp
 @if ($slot->hasActualContent() || $label)
@@ -22,18 +23,19 @@ $hasPrependOrAppend = $labelPrepend || $labelAppend;
                         'flex items-center gap-4',
                         '[:where(&)]:text-zinc-800 dark:[:where(&)]:text-white',
                         TALLKit::fontSize(size: $size, weight: true),
+                        ['sr-only' => $srOnly],
                     )
             }}
         >
     @endif
 
     @if ($labelPrepend)
-        <div {{ TALLKit::attributesAfter($attributes, 'label-prepend:')->classes('mr-auto') }}>
+        <div {{ TALLKit::attributesAfter($attributes, 'label-prepend:')->classes('me-auto') }}>
             {{ $labelPrepend }}
         </div>
     @endif
 
-    <{{ $as ?? ($for ? 'label' : 'span') }}
+    <{{ $tag }}
         x-data="label"
         {{
             TALLKit::attributesAfter($attributes, 'container:')
@@ -41,10 +43,10 @@ $hasPrependOrAppend = $labelPrepend || $labelAppend;
                 ->classes([
                     'cursor-default inline-flex',
                     'flex-1' => $hasPrependOrAppend,
-                    'sr-only' => $srOnly
+                    'sr-only' => $srOnly && !$hasPrependOrAppend,
                 ])
         }}
-        @if ($for) for="{{ $for }}" @endif
+        @if ($for && $tag === 'label') for="{{ $for }}" @endif
     >
         <tk:element
             :$label
@@ -61,10 +63,10 @@ $hasPrependOrAppend = $labelPrepend || $labelAppend;
         >
             {{ $slot }}
         </tk:element>
-    </{{ $as ?? ($for ? 'label' : 'span') }}>
+    </{{ $tag }}>
 
     @if ($labelAppend)
-        <div {{ TALLKit::attributesAfter($attributes, 'label-append:')->classes('ml-auto') }}>
+        <div {{ TALLKit::attributesAfter($attributes, 'label-append:')->classes('ms-auto') }}>
             {{ $labelAppend }}
         </div>
     @endif

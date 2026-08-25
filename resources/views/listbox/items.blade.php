@@ -2,6 +2,7 @@
     'items' => null,
     'size' => null,
     'multiple' => null,
+    'color' => null,
 ])
 <ul
     {{
@@ -15,20 +16,16 @@
 
                     outline-none
                     focus-visible:outline-2
-                    focus-visible:outline-blue-700
-                    dark:focus-visible:outline-blue-300
                     focus-visible:outline-offset-0
-
                     focus-visible:ring-2
-                    focus-visible:ring-blue-700/20
-                    dark:focus-visible:ring-blue-300/20
                 ',
+                TALLKit::controlFocusRing($color) ?? 'tk-control-focus-ring',
                 TALLKit::roundedSize(size: $size),
                 TALLKit::spaceBlock(size: $size, mode: 'smallest')
             )
+            ->when($multiple, fn ($attrs) => $attrs->merge(['aria-multiselectable' => 'true']))
     }}
     role="listbox"
-    @if ($multiple) aria-multiselectable="true" @endif
     x-bind:tabindex="filteredItems.length > 0 ? 0 : -1"
 >
     {{ $slot }}

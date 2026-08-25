@@ -15,7 +15,7 @@
         <x-dynamic-component
             :component="'tallkit::chart.'.$chart"
             :attributes="TALLKit::attributesAfter($attributes, 'chart:')"
-            x-init="render(data)"
+            x-effect="render(data)"
         />
     @else
         <tk:pretty-print-json

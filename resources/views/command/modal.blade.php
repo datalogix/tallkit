@@ -12,6 +12,7 @@
     variant="bare"
     :$size
     :$shortcut
+    aria-label="{{ __('Search') }}"
 >
     <x-slot:trigger>
         @if ($slot->isEmpty())

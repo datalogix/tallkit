@@ -41,6 +41,7 @@ $hasControl = $clearable || $copyable || $viewable || $prepend || $icon || $appe
                     fn ($attrs) => $attrs->classes(
                         'tk-control-wrapper',
                         TALLKit::roundedSize(size: $size, mode: 'large'),
+                        TALLKit::controlFocusRingNested($color),
                     ),
                 )
             "
@@ -89,6 +90,7 @@ $hasControl = $clearable || $copyable || $viewable || $prepend || $icon || $appe
                             fn ($attrs) => $attrs->classes(
                                 'tk-control-standalone',
                                 TALLKit::roundedSize(size: $size, mode: 'large'),
+                                TALLKit::controlFocusRing($color),
                             ),
                         )
                 }}

@@ -54,6 +54,7 @@ $currencies = [
 
 $currency ??= match (app()->getLocale()) {
     'pt_BR' => 'BRL',
+    'pt_PT' => 'EUR',
     'en_US', 'en' => 'USD',
     'en_GB' => 'GBP',
     'ja_JP' => 'JPY',
@@ -79,5 +80,5 @@ if ($config = data_get($currencies, Str::upper($currency))) {
     :$placeholder
     :prefix="$prefix ?? ($position === 'prefix' ? $symbol : null)"
     :suffix="$suffix ?? ($position === 'suffix' ? $symbol : null)"
-    x-mask:dynamic="$money($input, '{{ $delimiter }}', '{{ $thousands }}')"
+    x-mask:dynamic="$money($input, {{ Js::from($delimiter) }}, {{ Js::from($thousands) }})"
 />

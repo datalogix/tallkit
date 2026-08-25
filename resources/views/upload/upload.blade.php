@@ -6,11 +6,17 @@
     'maxSize' => null,
     'maxFiles' => null,
     'sortable' => null,
+    'variant' => null,
 ])
 @php
 
 [$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext($attributes, $label, $id);
-$sortable ??= (bool) $multiple;
+$variant ??= 'dropzone';
+if ($variant === 'avatar') {
+    $multiple = false;
+    $maxFiles = null;
+}
+$sortable ??= (bool) $multiple && ! in_array($variant, ['avatar', 'button']);
 $files = TALLKit::getUploadedFiles($value ?? ((in_livewire() && property_exists($this, $fieldName)) ? data_get($this, $fieldName) : null));
 $previewName = TALLKit::generateId('upload-preview');
 
@@ -70,21 +76,56 @@ $previewName = TALLKit::generateId('upload-preview');
             :attributes="TALLKit::attributesAfter($attributes, 'dropzone:')"
             :$size
             :$multiple
+            :$variant
+            :$color
         >
-            <template x-if="multiple && activeFiles.length > 1">
-                <tk:progress
-                    :attributes="TALLKit::attributesAfter($attributes, 'progress:')"
-                    variable="aggregateProgress"
-                />
-            </template>
+            @if ($variant === 'avatar')
+                <template x-if="files.length">
+                    <tk:upload.preview
+                        :attributes="TALLKit::attributesAfter($attributes, 'preview:')->classes('size-full rounded-full border-2 border-dashed')"
+                        :$size
+                        image:class="object-cover"
+                        variable="files[0]"
+                    />
+                </template>
+            @else
+                <template x-if="multiple && activeFiles.length > 1">
+                    <tk:progress
+                        :attributes="TALLKit::attributesAfter($attributes, 'progress:')"
+                        variable="aggregateProgress"
+                    />
+                </template>
 
-            <template x-for="(file, index) in files" :key="file.id">
-                <tk:upload.tile
-                    :attributes="TALLKit::attributesAfter($attributes, 'tile:')"
-                    :$size
-                    :$multiple
-                />
-            </template>
+                @if ($variant === 'button')
+                    <template x-for="(file, index) in files" :key="file.id">
+                        <tk:upload.chip
+                            :attributes="TALLKit::attributesAfter($attributes, 'tile:')"
+                            :$size
+                            :$multiple
+                            :$color
+                        />
+                    </template>
+                @elseif ($variant === 'list')
+                    <template x-for="(file, index) in files" :key="file.id">
+                        <tk:upload.list-item
+                            :attributes="TALLKit::attributesAfter($attributes, 'tile:')"
+                            :$size
+                            :$multiple
+                            :$color
+                        />
+                    </template>
+                @else
+                    <template x-for="(file, index) in files" :key="file.id">
+                        <tk:upload.tile
+                            :attributes="TALLKit::attributesAfter($attributes, 'tile:')"
+                            :$size
+                            :$multiple
+                            :$variant
+                            :$color
+                        />
+                    </template>
+                @endif
+            @endif
         </tk:upload.dropzone>
 
         <tk:upload.hint

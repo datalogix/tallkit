@@ -1,11 +1,13 @@
 @props([
     'items' => null,
     'size' => null,
+    'animation' => null,
 ])
 <tk:popover
     x-data="menu"
     role="menu"
     :$size
+    :$animation
     {{
         $attributes
             ->dataKey('menu')

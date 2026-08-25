@@ -2,14 +2,17 @@
     ...TALLKit::fieldProps(),
     'align' => null,
     'checked' => null,
-    'variant' => null,
     'iconOn' => null,
     'iconOff' => null,
+    'labelOn' => null,
+    'labelOff' => null,
+    'group' => null,
 ])
 @php
 
 [$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext($attributes, $label, $id);
 $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
+$hasStateLabel = $labelOn || $labelOff;
 
 @endphp
 <tk:field.wrapper
@@ -19,6 +22,18 @@ $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
     :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
     :label="$slot->isEmpty() ? $label : $slot"
 >
+    @if ($hasStateLabel)
+        <div
+            {{
+                TALLKit::attributesAfter($attributes, 'state-group:')
+                    ->classes(
+                        'inline-flex items-center has-[input:disabled]:cursor-not-allowed',
+                        '[&_.label-checked]:hidden [&_.label-unchecked]:inline has-[input:checked]:[&_.label-checked]:inline has-[input:checked]:[&_.label-unchecked]:hidden',
+                        TALLKit::gap(size: $size, mode: 'small'),
+                    )
+            }}
+        >
+    @endif
     <label
         {{ $attributes->only('disabled')->dataKey('control') }}
         {{
@@ -26,6 +41,8 @@ $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
                 ->classes(
                     '
                         tk-control-transition
+                        tk-control-focus-ring-self
+                        tk-control-invalid-ring-self
 
                         rounded-full
                         inline-flex
@@ -48,49 +65,19 @@ $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
                         dark:has-[input:disabled]:opacity-30
                         dark:has-[input:disabled:checked]:opacity-20
 
-                        has-[input[data-invalid]:disabled]:ring-red-500
-                        dark:has-[input[data-invalid]:disabled]:ring-red-400
-                        has-[input[data-invalid]]:ring-red-500
-                        dark:has-[input[data-invalid]]:ring-red-400
-
                         has-[input:disabled]:cursor-not-allowed
-
-                        has-[input:focus-visible]:outline-2
-                        has-[input:focus-visible]:outline-blue-700
-                        dark:has-[input:focus-visible]:outline-blue-300
-                        has-[input:focus-visible]:outline-offset-0
-
-                        has-[input:focus-visible]:ring-2
-                        has-[input:focus-visible]:ring-blue-700/20
-                        dark:has-[input:focus-visible]:ring-blue-300/20
                     ',
                     TALLKit::generateClassBySize(size: $size, name: 'w', values: ['8', '10', '12', '14', '16', '18', '22']),
                     TALLKit::generateClassBySize(size: $size, name: 'h', values: ['5', '6', '7', '8', '9', '10', '12']),
                     TALLKit::iconSize(size: $size),
-                    match ($variant) {
+                    match ($color) {
                         'accent' => '
                             has-[input:checked]:bg-[var(--color-accent)]
                             has-[input:checked]:[&_span]:bg-[var(--color-accent-foreground)]
                             has-[input:checked]:[&_span]:text-[var(--color-accent-content)]
                         ',
-                        'red' => 'has-[input:checked]:bg-red-600 dark:has-[input:checked]:bg-red-500',
-                        'orange' => 'has-[input:checked]:bg-orange-600 dark:has-[input:checked]:bg-orange-500',
-                        'amber' => 'has-[input:checked]:bg-amber-600 dark:has-[input:checked]:bg-amber-500',
-                        'yellow' => 'has-[input:checked]:bg-yellow-600 dark:has-[input:checked]:bg-yellow-500',
-                        'lime' => 'has-[input:checked]:bg-lime-600 dark:has-[input:checked]:bg-lime-500',
-                        'green' => 'has-[input:checked]:bg-green-600 dark:has-[input:checked]:bg-green-500',
-                        'emerald' => 'has-[input:checked]:bg-emerald-600 dark:has-[input:checked]:bg-emerald-500',
-                        'teal' => 'has-[input:checked]:bg-teal-600 dark:has-[input:checked]:bg-teal-500',
-                        'cyan' => 'has-[input:checked]:bg-cyan-600 dark:has-[input:checked]:bg-cyan-500',
-                        'sky' => 'has-[input:checked]:bg-sky-600 dark:has-[input:checked]:bg-sky-500',
-                        'blue' => 'has-[input:checked]:bg-blue-600 dark:has-[input:checked]:bg-blue-500',
-                        'indigo' => 'has-[input:checked]:bg-indigo-600 dark:has-[input:checked]:bg-indigo-500',
-                        'violet' => 'has-[input:checked]:bg-violet-600 dark:has-[input:checked]:bg-violet-500',
-                        'purple' => 'has-[input:checked]:bg-purple-600 dark:has-[input:checked]:bg-purple-500',
-                        'fuchsia' => 'has-[input:checked]:bg-fuchsia-600 dark:has-[input:checked]:bg-fuchsia-500',
-                        'pink' => 'has-[input:checked]:bg-pink-600 dark:has-[input:checked]:bg-pink-500',
-                        'rose' => 'has-[input:checked]:bg-rose-600 dark:has-[input:checked]:bg-rose-500',
-                        default => 'has-[input:checked]:bg-zinc-800 dark:has-[input:checked]:bg-white dark:has-[input:checked]:[&_span]:bg-zinc-800',
+                        default => TALLKit::checkedBackground($color, wrapped: true)
+                            ?? 'has-[input:checked]:bg-zinc-800 dark:has-[input:checked]:bg-white dark:has-[input:checked]:[&_span]:bg-zinc-800',
                     },
                 )
         }}
@@ -107,13 +94,14 @@ $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
                         'id' => $id,
                         'value' => $value,
                         'wire:model' => $wireModel,
-                        'aria-label' => $label ? null : __('Toggle'),
+                        TALLKit::dataKey('toggle-group') => $group,
+                        'aria-label' => ($label || $hasStateLabel) ? null : __('Toggle'),
                         'aria-describedby' => TALLKit::ariaDescribedBy($id, $description, $help, $invalid, $showError),
                         'aria-invalid' => $invalid ? 'true' : null,
                         'data-invalid' => $invalid ? true : null,
                     ])
                     ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes([
-                        'icon:', 'icon-on:', 'icon-off:',
+                        'icon:', 'icon-on:', 'icon-off:', 'state:', 'state-group:',
                     ]))
                     ->classes('sr-only peer')
             }}
@@ -169,4 +157,17 @@ $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
             @endif
         </span>
     </label>
+    @if ($hasStateLabel)
+        <label
+            for="{{ $id }}"
+            {{
+                TALLKit::attributesAfter($attributes, 'state:')
+                    ->classes('cursor-pointer select-none', TALLKit::fontSize(size: $size))
+            }}
+        >
+            <span class="label-checked">{{ $labelOn }}</span>
+            <span class="label-unchecked">{{ $labelOff }}</span>
+        </label>
+        </div>
+    @endif
 </tk:field.wrapper>

@@ -1,16 +1,38 @@
 @props([
     'size' => null,
+    'token' => null,
+    'email' => null,
 ])
+@php
+
+$token ??= request()->route('token') ?? request('token');
+$email ??= old('email', request('email'));
+
+@endphp
 <tk:form.section
-    :attributes="$attributes->whereDoesntStartWith(['email:', 'new-password:', 'new-password-confirmation:', 'submit:'])"
+    :attributes="$attributes->whereDoesntStartWith(['token:', 'email:', 'new-password:', 'new-password-confirmation:', 'submit:'])"
     :$size
     title="Reset password"
     subtitle="Please enter your new password below:"
 >
+    <input
+        type="hidden"
+        name="token"
+        {{
+            TALLKit::attributesAfter($attributes, 'token:')
+                ->when(
+                    in_livewire(),
+                    fn ($attrs) => $attrs->merge(['wire:model' => 'token']),
+                    fn ($attrs) => $attrs->merge(['value' => $token]),
+                )
+        }}
+    />
+
     <tk:input
         :attributes="TALLKit::attributesAfter($attributes, 'email:')"
         :$size
         name="email"
+        :value="$email"
         required
         autocomplete="email"
     />

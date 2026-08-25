@@ -49,12 +49,8 @@
                         appearance-none
                         [print-color-adjust:exact]
 
-                        bg-white
-                        dark:bg-white/10
-
-                        border
-                        border-zinc-300
-                        dark:border-white/10
+                        tk-control-surface
+                        tk-control-focus-ring-nested
 
                         [&[disabled]]:border-zinc-200
                         dark:[&[disabled]]:border-white/5
@@ -65,21 +61,11 @@
                         disabled:[&[data-invalid]:not(:has([data-tallkit-control]:focus-visible))]:border-red-500
                         dark:disabled:[&[data-invalid]:not(:has([data-tallkit-control]:focus-visible))]:border-red-400
 
-                        shadow-xs
                         [&[disabled]]:shadow-none
                         [&[disabled]]:[&[data-invalid]]:shadow-none
 
                         [&[disabled]]:opacity-75
                         dark:[&[disabled]]:opacity-50
-
-                        has-[[data-tallkit-control]:focus-visible]:outline-2
-                        has-[[data-tallkit-control]:focus-visible]:outline-blue-700
-                        dark:has-[[data-tallkit-control]:focus-visible]:outline-blue-300
-                        has-[[data-tallkit-control]:focus-visible]:outline-offset-0
-
-                        has-[[data-tallkit-control]:focus-visible]:ring-2
-                        has-[[data-tallkit-control]:focus-visible]:ring-blue-700/20
-                        dark:has-[[data-tallkit-control]:focus-visible]:ring-blue-300/20
 
                         [&[disabled]]:cursor-not-allowed
                         [&[disabled]]:pointer-events-none
@@ -87,6 +73,7 @@
                     TALLKit::fontSize(size: $size),
                     TALLKit::roundedSize(size: $size, mode: 'large'),
                     TALLKit::padding(size: $size),
+                    TALLKit::controlFocusRingNested($color),
                 )
         }}
     >
@@ -132,7 +119,7 @@
                     :$maxRows
                     :$value
                     :label="false"
-                    :rows="$inline ? 1 : ($rows ?? 2)"
+                    :rows="$rows ?? ($inline ? 1 : 2)"
                 >{{ $slot }}</tk:textarea>
             @endisset
         </tk:field.control>

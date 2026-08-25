@@ -1,8 +1,12 @@
 import { popover } from './popover'
-import { bind } from '../utils'
+import { bind, isRtl } from '../utils'
 
 export function submenu() {
-  const _popover = popover({ mode: 'manual', position: 'right', align: 'start' })
+  const _popover = popover({
+    mode: 'manual',
+    position: isRtl() ? 'left' : 'right',
+    align: 'start'
+  })
 
   return {
     ..._popover,

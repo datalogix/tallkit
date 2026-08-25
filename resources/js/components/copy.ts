@@ -51,9 +51,10 @@ export function copy(
           this.copied = true
           this.$el.dispatchEvent(new CustomEvent('open'))
 
-          const text = content ?? ('value' in target ? target.value : target.innerText)
+          const currentTarget = content ? null : this.findTarget()
+          const text = content ?? ('value' in currentTarget ? currentTarget.value : currentTarget.innerText)
           await navigator.clipboard.writeText(text)
-          target?.dispatchEvent(new Event('copied', { bubbles: true }))
+          currentTarget?.dispatchEvent(new Event('copied', { bubbles: true }))
 
           this.timeout = setTimeout(() => {
             this.$el.dispatchEvent(new CustomEvent('close'))

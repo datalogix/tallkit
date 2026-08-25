@@ -14,6 +14,8 @@ export function autocomplete(options = {}) {
       _popover.init.call(this)
       _listbox.init.call(this)
 
+      this.trigger = this.input
+
       bind(this.input, {
         ['@blur']() {
           this.close()

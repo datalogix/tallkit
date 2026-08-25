@@ -12,42 +12,55 @@
             ->classes('fixed inset-0 overflow-hidden pointer-events-none z-9999999')
     }}
 >
-    <template x-for="position in positions" :key="position">
+    @foreach (['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right'] as $position)
         <div
-            {{ TALLKit::attributesAfter($attributes, 'position:')->classes('absolute flex flex-col') }}
-            :class="{
-                'flex-col-reverse': position.includes('top'),
-                'top-2 left-2 items-start': position === 'top-left',
-                'top-2 left-1/2 -translate-x-1/2 items-center': position === 'top-center',
-                'top-2 right-2 items-end': position === 'top-right',
-                'bottom-2 left-2 items-start': position === 'bottom-left',
-                'bottom-2 left-1/2 -translate-x-1/2 items-center': position === 'bottom-center',
-                'bottom-2 right-2 items-end': position === 'bottom-right',
-            }"
+            {{
+                TALLKit::attributesAfter($attributes, 'position:')->classes(
+                    'absolute flex flex-col',
+                    str_contains($position, 'top') ? 'flex-col-reverse' : null,
+                    match ($position) {
+                        'top-left' => 'top-2 left-2 items-start',
+                        'top-center' => 'top-2 left-1/2 -translate-x-1/2 items-center',
+                        'top-right' => 'top-2 right-2 items-end',
+                        'bottom-left' => 'bottom-2 left-2 items-start',
+                        'bottom-center' => 'bottom-2 left-1/2 -translate-x-1/2 items-center',
+                        'bottom-right' => 'bottom-2 right-2 items-end',
+                    },
+                )
+            }}
         >
             <template
-                x-for="toast in getToastsByPosition(position)"
+                x-for="toast in getToastsByPosition('{{ $position }}')"
                 :key="toast.id"
             >
-                <div
-                    :role="toast.type === 'error' ? 'alert' : 'status'"
-                    :aria-live="toast.type === 'error' ? 'assertive' : 'polite'"
+                <tk:transition
                     aria-atomic="true"
-                    {{ TALLKit::attributesAfter($attributes, 'container:')->classes(
-                        '
-                            m-1 shadow-lg rounded-xl
-                            bg-white dark:bg-zinc-700
-                            border border-zinc-200 dark:border-white/10
-                            relative overflow-hidden
-                            flex items-start pointer-events-auto
-                            touch-pan-y
-                        '
-                    ) }}
-                    :style="toast.swipeEnabled ? {
+                    ::role="toast.type === 'error' ? 'alert' : 'status'"
+                    ::aria-live="toast.type === 'error' ? 'assertive' : 'polite'"
+                    :animation="match ($position) {
+                        'top-left', 'bottom-left' => 'slide-right-full',
+                        'top-right', 'bottom-right' => 'slide-left-full',
+                        'top-center' => 'slide-down-full',
+                        'bottom-center' => 'slide-up-full',
+                        default => 'none',
+                    }"
+                    :attributes="
+                        TALLKit::attributesAfter($attributes, 'container:')->classes(
+                            '
+                                m-1 shadow-lg rounded-xl
+                                bg-white dark:bg-zinc-700
+                                border border-zinc-200 dark:border-white/10
+                                relative overflow-hidden
+                                flex items-start pointer-events-auto
+                                touch-pan-y
+                            '
+                        )
+                    "
+                    ::style="toast.swipeEnabled ? {
                         transform: `translateX(${toast.currentX}px)`,
                         opacity: 1 - Math.min(Math.abs(toast.currentX) / 150, 1)
                     } : {}"
-                    :class="{
+                    ::class="{
                         'gap-3 max-w-xs p-3 text-[11px] **:data-tallkit-icon:mt-0.5 **:data-tallkit-icon:size-3': toast.size === 'xs',
                         'gap-3 max-w-xs p-3 text-xs **:data-tallkit-icon:mt-px **:data-tallkit-icon:size-3.5': toast.size === 'sm',
                         'gap-4 max-w-sm p-4 text-sm **:data-tallkit-icon:mt-0.5 **:data-tallkit-icon:size-4': !toast.size || toast.size === 'md',
@@ -57,14 +70,6 @@
                         'gap-6 max-w-lg p-6 text-2xl **:data-tallkit-icon:mt-1 **:data-tallkit-icon:size-6': toast.size === '3xl',
                     }"
                     x-show="toast.visible"
-                    x-bind="{
-                        'x-transition:enter': 'transition ease-out duration-350',
-                        'x-transition:enter-start': positionTransform(position),
-                        'x-transition:enter-end': 'translate-0 opacity-100',
-                        'x-transition:leave': 'transition ease-in duration-200',
-                        'x-transition:leave-start': 'translate-0 opacity-100',
-                        'x-transition:leave-end': positionTransform(position),
-                    }"
                     @click.stop="toast.swiping && $event.preventDefault()"
                     @mouseenter="toast.pauseOnHover && toast.pause('hover')"
                     @mouseleave="toast.pauseOnHover && toast.resume('hover')"
@@ -119,8 +124,8 @@
                         {{ TALLKit::attributesAfter($attributes, 'progress:')->classes('bg-black/5 dark:bg-black/10 h-full absolute inset-0 pointer-events-none origin-left') }}
                         :style="toast.progress ? { transform: `scaleX(${toast.progressValue})` } : {}"
                     ></div>
-                </div>
+                </tk:transition>
             </template>
         </div>
-    </template>
+    @endforeach
 </div>

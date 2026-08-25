@@ -7,6 +7,7 @@
 >
     <div
         {{ $attributes->whereDoesntStartWith(['loadable:'])->classes('[:where(&)]:w-full [:where(&)]:h-100') }}
-        x-init="render(@js($options))"
+        x-ref="target"
+        @if ($options) x-init="render(@js($options))" @endif
     ></div>
 </tk:loadable>

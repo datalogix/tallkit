@@ -3,6 +3,7 @@ import { dataKey, bind, getWireModelInfo, setFieldValue } from '../utils'
 export function slider() {
   return {
     input: null,
+    value: null,
 
     init() {
       this.input = this.$root.querySelector(dataKey('control'))
@@ -66,6 +67,7 @@ export function slider() {
       const val = Number(this.input.value)
       const p = max === min ? 0 : ((val - min) * 100) / (max - min)
 
+      this.value = this.input.value
       this.input.style.setProperty('--range-percent', `${p}%`)
       this.input.classList.toggle('before:rounded-r-none', p < 50)
     }

@@ -19,10 +19,26 @@ export function navIndicator({ mode = null } = {}) {
       clearTimeout(this._visibilityTimeout)
     },
 
+    findNav (el: Element): Element | null {
+      let node: Element | null = el
+
+      while (node) {
+        const sibling = node.previousElementSibling
+
+        if (sibling?.matches(dataKey('nav'))) {
+          return sibling
+        }
+
+        node = node.parentElement
+      }
+
+      return null
+    },
+
     move () {
       requestAnimationFrame(() => {
         const indicator = this.$el
-        const nav = indicator.closest(dataKey('nav')) ?? indicator.parentElement.previousElementSibling
+        const nav = this.findNav(indicator)
         const link = nav?.querySelector('a[data-current]')
 
         if (!link) return
@@ -33,7 +49,7 @@ export function navIndicator({ mode = null } = {}) {
         const x = link.offsetLeft + nav.offsetLeft
         const y = link.offsetTop + nav.offsetTop
 
-        if (linkRect.width <= 0 || linkRect.height <= 0 || linkRect.top <= 0 || linkRect.left <= 0) {
+        if (linkRect.width <= 0 || linkRect.height <= 0) {
           indicator.style.opacity = '0'
           return
         }

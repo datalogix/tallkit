@@ -1,7 +1,7 @@
 @props([
     ...TALLKit::elementProps(),
 ])
-@if ($slot->hasActualContent() || $label)
+@if ($slot->hasActualContent() || $label || $icon || $prefix || $suffix || $iconTrailing || $info || $badge || $prepend || $append || $kbd)
     <tk:element
         :$attributes
         :$label

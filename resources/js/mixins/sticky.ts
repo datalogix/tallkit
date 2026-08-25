@@ -2,8 +2,12 @@ export function sticky() {
   return {
     init() {
       this.updateOffset()
+
       this._onResize = () => this.updateOffset()
       window.addEventListener('resize', this._onResize)
+
+      this._resizeObserver = new ResizeObserver(() => this.updateOffset())
+      this._resizeObserver.observe(document.body)
     },
 
     updateOffset() {
@@ -15,6 +19,7 @@ export function sticky() {
 
     destroy() {
       window.removeEventListener('resize', this._onResize)
+      this._resizeObserver?.disconnect()
     }
   }
 }

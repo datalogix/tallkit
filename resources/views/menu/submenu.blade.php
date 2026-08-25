@@ -1,5 +1,5 @@
-@aware(['size'])
-@props(['size' => null])
+@aware(['size', 'animation'])
+@props(['size' => null, 'animation' => null])
 <div
     wire:ignore.self
     x-data="submenu"
@@ -16,6 +16,7 @@
     <tk:menu
         :attributes="TALLKit::attributesAfter($attributes, 'menu:')->classes('-ml-2')"
         :$size
+        :$animation
     >
         {{ $slot }}
     </tk:menu>

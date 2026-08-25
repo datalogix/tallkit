@@ -3,6 +3,8 @@
     'title' => null,
     'charset' => 'utf-8',
     'viewport' => 'width=device-width, initial-scale=1',
+    'favicon' => true,
+    'themeColor' => null,
     'csrfToken' => true,
     'metaTags' => [],
     'meta' => false,
@@ -30,21 +32,31 @@
 @php
 
 $lang ??= app()->getLocale();
+$lang = Str::replace($lang, '_', '-');
+$dir = in_array(Str::before($lang, '-'), config('app.rtl_locales', ['ar', 'fa', 'he', 'ur'])) ? 'rtl' : 'ltr';
 $title ??= config('app.name');
+$favicon = $favicon === true ? find_asset(['favicon.ico', 'favicon.svg', 'favicon.png']) : $favicon;
 $vite = collect($vite)->unique()->filter(fn ($path) => file_exists(base_path($path)))->toArray();
 $googleFonts = is_string($googleFonts) ? ['families' => $googleFonts] : $googleFonts;
 $livewire ??= class_exists(\Livewire\Livewire::class);
 
 @endphp
 <!DOCTYPE html>
-<html {{ TALLKit::attributesAfter($attributes, 'html:')->merge([
-    'lang' => Str::replace($lang, '_', '-'),
-    'dir' => in_array(Str::before($lang, '_'), config('app.rtl_locales', ['ar', 'fa', 'he', 'ur'])) ? 'rtl' : 'ltr',
-]) }}>
+<html
+    {{
+        TALLKit::attributesAfter($attributes, 'html:')
+            ->merge([
+                'lang' => $lang,
+                'dir' => $dir,
+            ])
+    }}
+>
 <head {{ TALLKit::attributesAfter($attributes, 'head:') }}>
     @if ($charset) <meta charset="{{ $charset }}"> @endif
     @if ($viewport) <meta name="viewport" content="{{ $viewport }}"> @endif
-    @if ($csrfToken) <meta name="csrf-token" content="{{ csrf_token() }}"> @endif
+    @if ($favicon) <link rel="icon" href="{{ $favicon }}"> @endif
+    @if ($themeColor) <meta name="theme-color" content="{{ $themeColor }}"> @endif
+    @if ($csrfToken && session()->isStarted()) <meta name="csrf-token" content="{{ csrf_token() }}"> @endif
     @foreach ($metaTags as $metaName => $metaContent) <meta name="{{ $metaName }}" content="{{ $metaContent }}"> @endforeach
     @if ($meta) <tk:html.meta :attributes="TALLKit::attributesAfter($attributes, 'meta:')->merge(is_array($meta) ? $meta : [])" /> @endif
     @if ($googleFonts) <tk:google.fonts :attributes="TALLKit::attributesAfter($attributes, 'google-fonts:')->merge($googleFonts)->merge(['noscript' => false])" /> @endif

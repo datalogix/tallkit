@@ -8,7 +8,7 @@
         $attributes
             ->whereDoesntStartWith([
                 'header:', 'area:', 'brand:', 'menu:', 'spacer:',
-                'appearance:', 'sidebar', 'main:',
+                'appearance:', 'sidebar', 'main:', 'aside:',
             ])
             ->classes('min-h-screen')
     }}
@@ -75,4 +75,13 @@
     >
         {{ $slot }}
     </tk:main>
+
+    @isset ($aside)
+        <tk:aside
+            :attributes="TALLKit::attributesAfter($attributes, 'aside:')"
+            sticky
+        >
+            {{ $aside }}
+        </tk:aside>
+    @endisset
 </div>

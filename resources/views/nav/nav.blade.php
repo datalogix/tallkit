@@ -6,6 +6,11 @@
     'items' => null,
     'indicator' => null,
 ])
+@php
+
+$list = (bool) $list;
+
+@endphp
 @if ($slot->hasActualContent() || collect($items)->isNotEmpty())
     @if (Str::of($slot)->trim()->startsWith('<nav'))
         {{ $slot }}

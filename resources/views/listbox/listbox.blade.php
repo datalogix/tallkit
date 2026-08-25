@@ -8,6 +8,7 @@
     'fuseOptions' => null,
     'standalone' => null,
     'multiple' => null,
+    'color' => null,
 ])
 <div
     wire:ignore.self
@@ -39,6 +40,7 @@
         :$items
         :$size
         :$multiple
+        :$color
     >
         {{ $slot}}
     </tk:listbox.items>

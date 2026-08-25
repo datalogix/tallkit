@@ -1,4 +1,4 @@
-import { dataKey, bind } from '../utils'
+import { dataKey, bind, findInField } from '../utils'
 
 export function composer({ submit = false, placeholder = false } = {}) {
   return {
@@ -11,10 +11,7 @@ export function composer({ submit = false, placeholder = false } = {}) {
 
       const modes = !submit ? [] : (Array.isArray(submit) ? submit : [submit])
 
-      const labelFor = this.$el.parentElement
-        ?.closest(dataKey('field'))
-        ?.querySelector(dataKey('label'))
-        ?.getAttribute('for') ?? null
+      const labelFor = findInField(this.$el.parentElement, 'label')?.getAttribute('for') ?? null
 
       bind(this.$el.querySelector(dataKey('control')), {
         'x-model': 'value',

@@ -64,7 +64,6 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
                         ',
                         TALLKit::fontSize(size: $size, mode: 'large'),
                         TALLKit::paddingBlock(size: $size, mode: 'large'),
-                        TALLKit::paddingInline(size: $size, mode: 'large'),
                         TALLKit::paddingStart(size: $size, mode: 'large'),
                         TALLKit::paddingEnd(size: $size, mode: 'large'),
                         TALLKit::generateClassBySize(size: $size, name: 'min-h', values: ['8', '9', '10', '12', '14', '16', '18']),

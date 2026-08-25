@@ -16,11 +16,15 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
     :prefix="false"
     :suffix="false"
 >
-    @if ($displayValue && in_livewire())
+    @if ($displayValue)
         <x-slot:labelAppend>
             {{ $labelAppend ?? '' }}
 
-            <span wire:text="{{ $name }}"></span>
+            <tk:text
+                x-text="value"
+                :size="TALLKit::adjustSize($size)"
+                variant="subtle"
+            >{{ $value }}</tk:text>
         </x-slot:labelAppend>
     @endif
 
@@ -102,22 +106,12 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
                                 outline-none
 
                                 focus-visible:[&::-webkit-slider-thumb]:outline-2
-                                focus-visible:[&::-webkit-slider-thumb]:outline-blue-700
-                                dark:focus-visible:[&::-webkit-slider-thumb]:outline-blue-300
                                 focus-visible:[&::-webkit-slider-thumb]:outline-offset-0
-
                                 focus-visible:[&::-webkit-slider-thumb]:ring-2
-                                focus-visible:[&::-webkit-slider-thumb]:ring-blue-700/20
-                                dark:focus-visible:[&::-webkit-slider-thumb]:ring-blue-300/20
 
                                 focus-visible:[&::-moz-range-thumb]:outline-2
-                                focus-visible:[&::-moz-range-thumb]:outline-blue-700
-                                dark:focus-visible:[&::-moz-range-thumb]:outline-blue-300
                                 focus-visible:[&::-moz-range-thumb]:outline-offset-0
-
                                 focus-visible:[&::-moz-range-thumb]:ring-2
-                                focus-visible:[&::-moz-range-thumb]:ring-blue-700/20
-                                dark:focus-visible:[&::-moz-range-thumb]:ring-blue-300/20
 
                                 before:absolute
                                 before:inset-y-0
@@ -167,6 +161,20 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
                                 'xl' => '[&::-webkit-slider-thumb]:size-5.5 [&::-moz-range-thumb]:size-5.5',
                                 '2xl' => '[&::-webkit-slider-thumb]:size-6 [&::-moz-range-thumb]:size-6',
                                 '3xl' => '[&::-webkit-slider-thumb]:size-6.5 [&::-moz-range-thumb]:size-6.5',
+                            },
+                            match ($color) {
+                                'accent' => '
+                                    focus-visible:[&::-webkit-slider-thumb]:outline-[var(--color-accent)]
+                                    focus-visible:[&::-webkit-slider-thumb]:ring-[var(--color-accent)]/20
+                                    focus-visible:[&::-moz-range-thumb]:outline-[var(--color-accent)]
+                                    focus-visible:[&::-moz-range-thumb]:ring-[var(--color-accent)]/20
+                                ',
+                                default => TALLKit::sliderFocusRing($color) ?? '
+                                    focus-visible:[&::-webkit-slider-thumb]:outline-blue-700 dark:focus-visible:[&::-webkit-slider-thumb]:outline-blue-300
+                                    focus-visible:[&::-webkit-slider-thumb]:ring-blue-700/20 dark:focus-visible:[&::-webkit-slider-thumb]:ring-blue-300/20
+                                    focus-visible:[&::-moz-range-thumb]:outline-blue-700 dark:focus-visible:[&::-moz-range-thumb]:outline-blue-300
+                                    focus-visible:[&::-moz-range-thumb]:ring-blue-700/20 dark:focus-visible:[&::-moz-range-thumb]:ring-blue-300/20
+                                ',
                             },
                         )
                 }}

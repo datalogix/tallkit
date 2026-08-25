@@ -1,4 +1,4 @@
-import { bind, setFieldValue } from '../utils'
+import { bind, setFieldValue, hasLivewire } from '../utils'
 
 type Mode = 'numeric' | 'alpha' | 'alphanumeric'
 
@@ -135,7 +135,7 @@ export function otp(submit?: string) {
 
         if (submit === 'auto') {
           this.$root.closest('form')?.requestSubmit()
-        } else if (submit && window.Livewire) {
+        } else if (submit && hasLivewire()) {
           window.Livewire.dispatch(submit, this.value)
         }
       } else {

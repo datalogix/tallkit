@@ -5,7 +5,14 @@
 ])
 @php
 
-$bgs = collect($bg ?? File::glob(public_path('{imgs,images}/{hero/*,heros/*,hero}.{png,jpg,jpeg}'), GLOB_BRACE))
+$bgs = collect(
+        $bg ??
+        Cache::rememberForever('tallkit-auth-hero-images', fn () => collect(['imgs', 'images'])
+            ->crossJoin(['hero/*', 'heros/*', 'hero'], ['png', 'jpg', 'jpeg'])
+            ->flatMap(fn ($combo) => File::glob(public_path("{$combo[0]}/{$combo[1]}.{$combo[2]}")))
+            ->all()
+        )
+    )
     ->filter()
     ->map(fn ($hero) => asset(str_replace(public_path(), '', $hero)))
     ->unique();
@@ -62,7 +69,7 @@ $hasHero = $bg || isset($hero) || TALLKit::attributesAfter($attributes, 'hero:')
     @if ($hasHero)
         <div {{ TALLKit::attributesAfter($attributes, 'hero:')
             ->classes('hidden lg:flex bg-cover bg-center text-white flex-col')
-            ->when($bg, fn ($attr, $value) => $attr->style("background-image: url($value)"))
+            ->when($bg, fn ($attrs, $value) => $attrs->style("background-image: url('{$value}')"))
         }}>
             {{ $hero ?? '' }}
         </div>

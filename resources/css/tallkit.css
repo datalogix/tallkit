@@ -2,9 +2,10 @@
 @import './animation.css';
 @import './alpine.css';
 @import './appearance.css';
+@import './colors.css';
 @import './fields.css';
 @import './layout.css';
-@import './safelist.css';
+@import './sizes.css';
 @import './table.css';
 
 @source '../views';

@@ -1,5 +1,5 @@
 import { dataKey, timeout as _timeout, bind } from '../utils'
-import { dismissible } from './dismissible'
+import { dismissible } from '../mixins/dismissible'
 
 export function alertComponent({ timeout = 0, pauseOnHover = false } = {}) {
   const _dismissible = dismissible('collapse')

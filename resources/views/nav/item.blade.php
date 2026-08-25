@@ -6,6 +6,7 @@
 ])
 @php
 
+$list = (bool) $list;
 $square ??= $slot->isEmpty() && !$attributes->get('label');
 
 @endphp

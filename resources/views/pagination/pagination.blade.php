@@ -12,7 +12,7 @@
 ])
 @php
 
-$scrollIntoViewJsSnippet = ($scrollTo !== false) ? "(\$el.closest('{$scrollTo}') || document.querySelector('{$scrollTo}')).scrollIntoView()" : false;
+$scrollIntoViewJsSnippet = ($scrollTo !== false) ? '($el.closest('.Js::from($scrollTo).') || document.querySelector('.Js::from($scrollTo).')).scrollIntoView()' : false;
 $isPaginator = $paginator instanceof \Illuminate\Contracts\Pagination\Paginator || $paginator instanceof \Illuminate\Contracts\Pagination\CursorPaginator;
 $isArrayable = Arr::arrayable($paginator);
 $textColors = TALLKit::classes('text-zinc-700 dark:text-zinc-300');

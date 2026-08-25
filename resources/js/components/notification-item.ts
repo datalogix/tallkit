@@ -1,4 +1,4 @@
-import { dismissible } from './dismissible'
+import { dismissible } from '../mixins/dismissible'
 
 export function notificationItem() {
   return {

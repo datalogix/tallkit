@@ -30,7 +30,6 @@ $closable ??= $variant === 'bare' ? false : true;
     <tk:modal.trigger
         :attributes="TALLKit::attributesAfter($attributes, 'trigger:')"
         :$name
-        :$shortcut
     >
         {{ $trigger }}
     </tk:modal.trigger>
@@ -92,29 +91,29 @@ $closable ??= $variant === 'bare' ? false : true;
                     'top' => '
                         overflow-y-auto
                         mb-auto
-                        [&:open]:starting:-translate-y-[50px]
+                        [&:open]:starting:-translate-y-1/2
                     ',
                     'bottom' => '
                         overflow-y-auto
                         mt-auto
-                        [&:open]:starting:translate-y-[50px]
+                        [&:open]:starting:translate-y-1/2
                     ',
                     'left' => '
                         md:[:where(&)]:min-w-[25rem]
                         overflow-y-auto
                         mr-auto
-                        [&:open]:starting:translate-x-[-50px]
+                        [&:open]:starting:translate-x-1/2
                         rtl:mr-0
                         rtl:ml-auto
-                        rtl:[&:open]:starting:translate-x-[50px]
+                        rtl:[&:open]:starting:translate-x-1/2
                     ',
                     default => '
                         md:[:where(&)]:min-w-[25rem]
                         overflow-y-auto ml-auto
-                        [&:open]:starting:translate-x-[50px]
+                        [&:open]:starting:translate-x-1/2
                         rtl:ml-0
                         rtl:mr-auto
-                        rtl:[&:open]:starting:translate-x-[-50px]
+                        rtl:[&:open]:starting:translate-x-1/2
                     ',
                 },
             },

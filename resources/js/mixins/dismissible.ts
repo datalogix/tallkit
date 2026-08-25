@@ -8,14 +8,13 @@ export function dismissible(animation?: 'fade' | 'collapse') {
 
     init() {
       bind(this.$root.querySelectorAll(dataKey('dismissible')), {
-        ['@click.stop']: (e) => {
-          e.currentTarget.dispatchEvent(new CustomEvent('close'))
+        ['@click.stop']: () => {
           this.dismiss('manual')
         }
       })
 
       bind(this.$root, {
-        ['@dismiss']: (e: Event) => {
+        ['@dismiss']: (e) => {
           const detail = (e as CustomEvent).detail || {}
           this.dismiss(detail.reason || 'programmatic')
         },

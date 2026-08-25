@@ -10,7 +10,6 @@
     :$attributes
     :$variant
     label="Copy to clipboard"
-    aria-label="Copy to clipboard"
     tooltip="Copied"
     tooltip:mode="manual"
     icon="clipboard-multiple"

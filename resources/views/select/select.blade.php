@@ -10,6 +10,10 @@
 $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd || $attributes->has('class');
 $options = TALLKit::parseOptions($attributes);
 
+$valueStrings = array_map('strval', Arr::wrap($value));
+$optionValues = collect($options)->flatMap(fn ($item, $key) => is_array($item) ? array_keys($item) : [$key])->all();
+$hasMatchingOption = (bool) array_intersect($valueStrings, array_map('strval', $optionValues));
+
 @endphp
 <tk:field.wrapper
     :$name
@@ -23,6 +27,7 @@ $options = TALLKit::parseOptions($attributes);
                 fn ($attrs) => $attrs->classes(
                     'tk-control-wrapper',
                     TALLKit::roundedSize(size: $size, mode: 'large'),
+                    TALLKit::controlFocusRingNested($color),
                 ),
             )
         "
@@ -92,6 +97,7 @@ $options = TALLKit::parseOptions($attributes);
                         fn ($attrs) => $attrs->classes(
                             'tk-control-standalone',
                             TALLKit::roundedSize(size: $size, mode: 'large'),
+                            TALLKit::controlFocusRing($color),
                         ),
                     )
             }}
@@ -100,7 +106,7 @@ $options = TALLKit::parseOptions($attributes);
                 <tk:select.option
                     :attributes="TALLKit::attributesAfter($attributes, 'placeholder:')->classes('placeholder')"
                     :label="is_string($placeholder) ? $placeholder : '---'"
-                    :selected="true"
+                    :selected="! $hasMatchingOption"
                     :value="''"
                 />
             @endif
@@ -120,7 +126,7 @@ $options = TALLKit::parseOptions($attributes);
                                         ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId('select-option', (string) $optionItemGroupValue)] : [], false)
                                     "
                                     :label="$optionItemGroupLabel"
-                                    :selected="in_array($optionItemGroupValue, Arr::wrap($value))"
+                                    :selected="in_array((string) $optionItemGroupValue, $valueStrings, true)"
                                     :value="$optionItemGroupValue"
                                 />
                             @endforeach
@@ -131,7 +137,7 @@ $options = TALLKit::parseOptions($attributes);
                                 ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId('select-option', (string) $optionItemValue)] : [], false)
                             "
                             :label="$optionItemLabel"
-                            :selected="in_array($optionItemValue, Arr::wrap($value))"
+                            :selected="in_array((string) $optionItemValue, $valueStrings, true)"
                             :value="$optionItemValue"
                         />
                     @endif

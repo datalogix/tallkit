@@ -1,0 +1,26 @@
+/*
+ * InteractsWithSize: every method concatenates `$size`/`$mode` into a Tailwind class instead of
+ * one `match()` arm per size, so Tailwind's scanner never sees the literal result. Each line
+ * covers exactly the values that property's scale (in InteractsWithSize.php) or its
+ * generateClassBySize() callers (grep `generateClassBySize` across resources/views) can produce
+ * — not a broad shared value range — to keep the compiled CSS lean. Extending a scale in the PHP
+ * (adding a size, raising a max) needs the matching value added here too.
+ */
+@source inline('[:where(&)]:w-{0,2,2.5,3,3.5,4,4.5,5,6,7,8,9,10,12,14,16,18,20,22,26,30,36,40,full}{!,}');
+@source inline('[:where(&)]:h-{0,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,6,7,8,9,10,12,14,16,18,20,22,26,30,36,40,px,full}');
+@source inline('[:where(&)]:size-{0,2,2.5,3,3.5,4,4.5,5,5.5,6,7,8,9,10,12,14,16,20,24,28,full}');
+@source inline('[:where(&)]:min-h-{8,9,10,12,14,16,18}');
+@source inline('[:where(&)]:max-h-{48,56,64,72,80,88,96}');
+@source inline('[:where(&)]:min-w-{4,4.5,5,5.5,6,7,8,32,40,48,56,64,72,80}');
+@source inline('[:where(&)]:p-{0,1,1.5,2,2.5,3,3.5,4,5,6,7,8}');
+@source inline('[:where(&)]:px-{0,px,0.5,1,1.5,2,2.5,3,3.5,4,5,6,7}');
+@source inline('[:where(&)]:{py,pe,mb}-{0,px,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5}');
+@source inline('[:where(&)]:ps-{0,px,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,8,9,10,11,12,13,14}');
+@source inline('[:where(&)]:mt-{0,px,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,6,8}');
+@source inline('[:where(&)]:ms-{4,4.5,5,5.5,6,6.5,7}');
+@source inline('[:where(&)]:{gap,gap-x,gap-y,space-x}-{0,px,0.5,1,1.5,2,2.5,3,3.5,4,5,6}');
+@source inline('[:where(&)]:space-y-{0,px,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6}');
+@source inline('[&_[data-tallkit-icon]]:size-{0,2,2.5,3,3.5,4,4.5,5,5.5,6,7,8,full}');
+@source inline('{[:where(&)],after,before}:rounded-{none,xs,sm,md,lg,xl,2xl,3xl,full}');
+@source inline('[:where(&)]:text-{[0.5rem],[0.625rem],[0.6875rem],xs,sm,base,lg,xl,2xl,3xl,4xl}');
+@source inline('[:where(&)]:font-{extralight,light,normal,medium,semibold,bold,extrabold}');

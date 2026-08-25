@@ -1,6 +1,8 @@
 @props([
     'size' => null,
     'multiple' => null,
+    'variant' => null,
+    'color' => null,
 ])
 <div
     {{
@@ -11,23 +13,37 @@
             'file-name:', 'file-info:', 'file-size:',
         ])->classes([
             '
-                relative flex flex-col rounded-lg overflow-hidden
-                border border-zinc-300 dark:border-white/10
+                group/tile relative flex flex-col rounded-lg overflow-hidden
                 transition-all duration-200
             ',
+            'border border-zinc-300 dark:border-white/10' => $variant !== 'gallery',
             'size-full' => !$multiple,
-            match ($size) {
-                'xs' => 'h-40 w-46',
-                'sm' => 'h-44 w-50',
-                'lg' => 'h-52 w-58',
-                'xl' => 'h-56 w-62',
-                '2xl' => 'h-60 w-66',
-                '3xl' => 'h-64 w-70',
-                default => 'h-48 w-54',
+            match ($variant) {
+                'gallery' => match ($size) {
+                    'xs' => 'h-44 w-44',
+                    'sm' => 'h-48 w-48',
+                    'lg' => 'h-56 w-56',
+                    'xl' => 'h-60 w-60',
+                    '2xl' => 'h-64 w-64',
+                    '3xl' => 'h-68 w-68',
+                    default => 'h-52 w-52',
+                },
+                default => match ($size) {
+                    'xs' => 'h-40 w-46',
+                    'sm' => 'h-44 w-50',
+                    'lg' => 'h-52 w-58',
+                    'xl' => 'h-56 w-62',
+                    '2xl' => 'h-60 w-66',
+                    '3xl' => 'h-64 w-70',
+                    default => 'h-48 w-54',
+                },
             } => $multiple,
         ])
     }}
-    :class="{ 'ring-2 ring-blue-700 dark:ring-blue-300': dragOverIndex === index }"
+    :class="{
+        'ring-2': dragOverIndex === index,
+        '{{ TALLKit::uploadRing($color ?: 'blue') }}': dragOverIndex === index,
+    }"
     :draggable="sortable"
     @dragstart="dragStart(index, $event)"
     @dragover.prevent="dragOverTile(index)"
@@ -38,7 +54,10 @@
     <div
         {{
             TALLKit::attributesAfter($attributes, 'actions:')
-                ->classes('flex items-center justify-end gap-1 bg-black/50 px-2 py-1')
+                ->classes([
+                    'flex items-center justify-end gap-1 bg-black/50 px-2 py-1',
+                    'absolute inset-x-0 top-0 z-10 opacity-0 transition-opacity group-hover/tile:opacity-100 group-focus-within/tile:opacity-100' => $variant === 'gallery',
+                ])
         }}
     >
         <tk:button
@@ -99,7 +118,10 @@
     <div
         {{
             TALLKit::attributesAfter($attributes, 'info:')
-                ->classes('flex flex-col')
+                ->classes([
+                    'flex flex-col',
+                    'absolute inset-x-0 bottom-0 z-10' => $variant === 'gallery',
+                ])
         }}
     >
         <tk:progress
@@ -115,7 +137,10 @@
         <div
             {{
                 TALLKit::attributesAfter($attributes, 'file-info:')
-                    ->classes('flex items-center justify-between gap-2 bg-black/50 px-2 py-1')
+                    ->classes([
+                        'flex items-center justify-between gap-2 bg-black/50 px-2 py-1',
+                        'opacity-0 transition-opacity group-hover/tile:opacity-100 group-focus-within/tile:opacity-100' => $variant === 'gallery',
+                    ])
             }}
         >
             <span

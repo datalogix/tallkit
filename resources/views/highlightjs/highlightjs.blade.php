@@ -8,6 +8,6 @@
 >
     <pre><code
         {{ $attributes->whereDoesntStartWith(['loadable:']) }}
-        x-html="render(@js($slot ?? $code), @js($language))"
+        x-html="render(@js($code ?? $slot), @js($language))"
     ></code></pre>
 </tk:loadable>

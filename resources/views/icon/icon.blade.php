@@ -44,7 +44,6 @@ if (Str::isUrl($iconName)) {
 }
 
 $isDecorative = ! $tooltip && ! $attributes->has('aria-label') && ! $attributes->has('aria-labelledby');
-
 $ariaLabel = ! $attributes->has('aria-label') && ! $attributes->has('aria-labelledby') ? $tooltip : null;
 
 @endphp
@@ -61,8 +60,8 @@ $ariaLabel = ! $attributes->has('aria-label') && ! $attributes->has('aria-labell
             }}
         />
     @else
-        {!! Str::of($svg)->replace('<svg', '<svg '
-            .($isDecorative ? 'aria-hidden="true" focusable="false" ' : '')
+        {!! Str::of($svg)->replaceFirst('<svg', '<svg '
+            .($isDecorative ? 'aria-hidden="true" focusable="false" ' : 'role="img" ')
             .$attributes->dataKey('icon')->classes('text-current', TALLKit::widthHeight($size))
                 ->when($ariaLabel, fn ($attrs, $value) => $attrs->merge(['aria-label' => __($value)]))) !!}
     @endif

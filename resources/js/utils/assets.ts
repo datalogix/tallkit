@@ -45,6 +45,26 @@ export async function loadRemoteAssets(check: () => boolean, scriptSrc: string |
   }
 }
 
+const modules = new Map<string, Promise<any>>()
+
+export async function loadRemoteModule(src: string | string[]): Promise<any> {
+  if (Array.isArray(src)) {
+    return Promise.all(src.map((s) => loadRemoteModule(s)))
+  }
+
+  if (modules.has(src)) {
+    return modules.get(src)!
+  }
+
+  const promise = import(/* @vite-ignore */ src).catch((e) => {
+    modules.delete(src)
+    throw e
+  })
+
+  modules.set(src, promise)
+  return promise
+}
+
 const styles = new Map<string, Promise<Event>>()
 
 export function loadStyle(href: string | string[]): Promise<Event | Event[]> {

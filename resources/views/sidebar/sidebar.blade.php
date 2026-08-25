@@ -2,6 +2,7 @@
     'name' => null,
     'sticky' => null,
     'stashable' => null,
+    'ariaLabel' => null,
 ])
 @if ($stashable)
     <tk:sidebar.backdrop
@@ -9,13 +10,17 @@
         :$name
     />
 @endif
-<div
+<nav
     x-data="sidebar(@js($name), @js($sticky), @js($stashable))"
     data-mobile-cloak
     {{
         $attributes
             ->dataKey('sidebar')
             ->whereDoesntStartWith(['backdrop:'])
+            ->merge([
+                'id' => TALLKit::generateId('sidebar', $name),
+                'aria-label' => __($ariaLabel ?? 'Sidebar'),
+            ])
             ->classes(
                 '
                     [grid-area:sidebar]
@@ -25,7 +30,7 @@
                     border-r rtl:border-r-0 rtl:border-l border-zinc-300 dark:border-zinc-700
                 '
             )
-            ->when($sticky, fn ($attrs) => $attrs->classes('max-h-dvh overflow-y-auto overscroll-contain'))
+            ->when($sticky, fn ($attrs) => $attrs->classes('overflow-y-auto overscroll-contain'))
             ->when($stashable, fn ($attrs) => $attrs->classes(
                 '
                     max-lg:data-mobile-cloak:hidden
@@ -37,4 +42,4 @@
     }}
 >
     {{ $slot }}
-</div>
+</nav>

@@ -5,6 +5,8 @@ export function highlightjs () {
   return {
     ...loadable(),
 
+    language: null,
+
     init () {
       this.load(() => loadRemoteAssets(
         () => !!window.hljs,
@@ -15,12 +17,14 @@ export function highlightjs () {
 
     render(code, language = null) {
       try {
-        return language
-          ? window.hljs.highlight(code, { language }).value
-          : window.hljs.highlightAuto(code).value
-      } catch(e) {
-        this.fail(e)
+        const result = language
+          ? window.hljs.highlight(code, { language })
+          : window.hljs.highlightAuto(code)
 
+        this.language = result.language ?? null
+
+        return result.value
+      } catch(e) {
         return escapeHtml(code) ?? ''
       }
     },

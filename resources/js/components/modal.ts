@@ -5,12 +5,6 @@ export function modal({ name = null, dismissible = null, persist = null, shortcu
     init() {
       const dialog = this.$el
 
-      bind(dialog.querySelectorAll(`${dataKey('modal-close')},${dataKey('modal-auto-close')}`), {
-        ['@click']() {
-          dialog.close()
-        },
-      })
-
       bind(dialog, {
         ['@modal-show.document'](event) {
           if (event.detail.name === name && !event.detail.scope) {
@@ -37,7 +31,7 @@ export function modal({ name = null, dismissible = null, persist = null, shortcu
         },
       })
 
-      const handleCloseAttempt = (event) => {
+      const handleCloseAttempt = (event, checkTarget = true) => {
         event.preventDefault()
 
         if (persist) {
@@ -50,9 +44,15 @@ export function modal({ name = null, dismissible = null, persist = null, shortcu
           return
         }
 
-        if (dismissible !== false && (event.target === dialog || event.target.getAttribute('tabindex') === '0')) {
-          dialog.close()
+        if (dismissible === false) {
+          return
         }
+
+        if (checkTarget && event.target !== dialog && event.target.getAttribute('tabindex') !== '0') {
+          return
+        }
+
+        dialog.close()
       }
 
       bind(dialog, {
@@ -68,11 +68,16 @@ export function modal({ name = null, dismissible = null, persist = null, shortcu
         },
 
         ['@click'](event) {
+          if (event.target.closest(`${dataKey('modal-close')},${dataKey('modal-auto-close')}`)) {
+            dialog.close()
+            return
+          }
+
           handleCloseAttempt(event)
         },
 
         ['@keydown.escape.prevent'](event) {
-          handleCloseAttempt(event)
+          handleCloseAttempt(event, false)
         },
       })
 

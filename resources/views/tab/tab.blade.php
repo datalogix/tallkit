@@ -5,6 +5,11 @@
     'name' => null,
     'selected' => null,
 ])
+@php
+
+$name ??= TALLKit::generateId('tab');
+
+@endphp
 <tk:button
     :attributes="$attributes
         ->classes(
@@ -36,8 +41,8 @@
                 '
             }
         )
-        ->merge(['data-selected' => $selected ? '' : false])
-        ->merge($name ? [
+        ->merge([
+            'data-selected' => $selected ? '' : false,
             'wire:key' => $name,
             'data-name' => $name,
             'id' => TALLKit::generateId('tab', $name),
@@ -48,7 +53,7 @@
             ':data-selected' => 'isSelected(' . Js::from($name) . ')',
             ':data-active' => 'isSelected(' . Js::from($name) . ')',
             'x-on:click' => 'select(' . Js::from($name) . ')',
-        ] : [])
+        ])
     "
     :$size
     variant="none"

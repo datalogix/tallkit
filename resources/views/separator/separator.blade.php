@@ -4,18 +4,22 @@
 ])
 @php
 
+$vertical = (bool) $vertical;
+
 $contentClasses = TALLKit::classes(
     'bg-zinc-800/20 dark:bg-white/20',
     'border-0 [print-color-adjust:exact]',
-    match ($vertical) {
-        true => 'self-stretch self-center w-px h-full',
-        default => 'h-px w-full',
-    },
+    $vertical ? 'self-stretch self-center w-px h-full' : 'h-px w-full',
 );
 
 @endphp
 @if ($slot->hasActualContent() || $label)
-    <div role="none" {{ TALLKit::dataKey('separator') }} class="flex items-center w-full">
+    <div
+        role="separator"
+        @if ($vertical) aria-orientation="vertical" @endif
+        {{ TALLKit::dataKey('separator') }}
+        class="flex items-center w-full"
+    >
         <div {{ $attributes->whereDoesntStartWith(['content:'])->classes($contentClasses->add('grow')) }}></div>
 
         <span {{ TALLKit::attributesAfter($attributes, 'content:')->classes(
@@ -29,5 +33,9 @@ $contentClasses = TALLKit::classes(
         <div {{ $attributes->whereDoesntStartWith(['content:'])->classes($contentClasses->add('grow')) }}></div>
     </div>
 @else
-    <div role="none" {{ $attributes->dataKey('separator')->whereDoesntStartWith(['content:'])->classes($contentClasses->add('shrink-0')) }}></div>
+    <div
+        role="separator"
+        @if ($vertical) aria-orientation="vertical" @endif
+        {{ $attributes->dataKey('separator')->whereDoesntStartWith(['content:'])->classes($contentClasses->add('shrink-0')) }}
+    ></div>
 @endif

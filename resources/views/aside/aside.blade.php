@@ -6,7 +6,7 @@
         ->dataKey('aside')
         ->classes([
             '[grid-area:aside]',
-            'max-h-[100dvh] overflow-y-auto' => $sticky
+            'overflow-y-auto' => $sticky
         ])
         ->merge($sticky ? ['x-data' => 'aside'] : [])
 }}>

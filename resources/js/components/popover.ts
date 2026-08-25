@@ -1,5 +1,5 @@
-import { dataKey,bind, generateId } from '../utils'
-import { toggleable } from './toggleable'
+import { dataKey, bind, generateId, isRtl, onLivewireCommit, getTransitionTimeout } from '../utils'
+import { toggleable } from '../mixins/toggleable'
 
 export function popover ({ mode = 'hover', position = 'bottom', align = 'end' } = {}) {
   const _toggleable = toggleable()
@@ -14,9 +14,11 @@ export function popover ({ mode = 'hover', position = 'bottom', align = 'end' } 
     mutationObserver: null,
     livewireCommitCleanup: null,
     _rAF: null,
+    _cancelPendingClose: null,
 
     mouseX: 0,
     mouseY: 0,
+    _hasPointerPosition: false,
 
     init() {
       _toggleable.init.call(this)
@@ -65,7 +67,7 @@ export function popover ({ mode = 'hover', position = 'bottom', align = 'end' } 
         })
       })
 
-      const offCommit = window.Livewire?.hook('commit', ({ succeed }) => {
+      this.livewireCommitCleanup = onLivewireCommit(({ succeed }) => {
         succeed(() => {
           if (!this.popoverElement?.matches(':popover-open')) return
           if (!this.$root?.isConnected) return
@@ -73,10 +75,6 @@ export function popover ({ mode = 'hover', position = 'bottom', align = 'end' } 
           this.boundSetPosition()
         })
       })
-
-      this.livewireCommitCleanup = typeof offCommit === 'function'
-        ? offCommit
-        : () => {}
 
       if (mode !== 'manual' && (window.matchMedia('(hover: none)').matches || mode === 'dropdown')) {
         bind(this.trigger, {
@@ -115,11 +113,25 @@ export function popover ({ mode = 'hover', position = 'bottom', align = 'end' } 
           },
         })
       } else if (mode === 'context') {
+        if (!this.trigger.hasAttribute('tabindex') && !['A', 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'].includes(this.trigger.tagName)) {
+          this.trigger.setAttribute('tabindex', '0')
+        }
+
         bind(this.trigger, {
           ['@contextmenu.prevent'](event) {
             this.close()
             this.mouseX = event.clientX
             this.mouseY = event.clientY
+            this._hasPointerPosition = true
+            this.open()
+          },
+
+          ['@keydown'](event) {
+            if (event.key !== 'ContextMenu' && !(event.shiftKey && event.key === 'F10')) return
+
+            event.preventDefault()
+            this.close()
+            this._hasPointerPosition = false
             this.open()
           },
         })
@@ -154,9 +166,15 @@ export function popover ({ mode = 'hover', position = 'bottom', align = 'end' } 
     open(focus = true) {
       requestAnimationFrame(() => {
         if (!this.popoverElement?.isConnected) return
-        if (this.popoverElement.matches(':popover-open')) return
 
-        this.popoverElement.showPopover()
+        if (this._cancelPendingClose) {
+          this._cancelPendingClose()
+          this._cancelPendingClose = null
+          this.onOpen()
+        } else {
+          if (this.popoverElement.matches(':popover-open')) return
+          this.popoverElement.showPopover()
+        }
 
         if (focus) {
           const firstItem = this.popoverElement.querySelector('[role=menuitem], [role=option], [role=tab]')
@@ -169,8 +187,41 @@ export function popover ({ mode = 'hover', position = 'bottom', align = 'end' } 
       requestAnimationFrame(() => {
         if (!this.popoverElement?.isConnected) return
         if (!this.popoverElement.matches(':popover-open')) return
+        if (this._cancelPendingClose) return
 
-        this.popoverElement.hidePopover()
+        this.onClose()
+
+        const target = this.popoverElement.firstElementChild ?? this.popoverElement
+
+        let fallback
+
+        const hide = () => {
+          target.removeEventListener('transitionend', hide)
+          clearTimeout(fallback)
+          this._cancelPendingClose = null
+
+          if (this.popoverElement?.isConnected && this.popoverElement.matches(':popover-open')) {
+            this.popoverElement.hidePopover()
+          }
+        }
+
+        this._cancelPendingClose = () => {
+          target.removeEventListener('transitionend', hide)
+          clearTimeout(fallback)
+          this._cancelPendingClose = null
+        }
+
+        requestAnimationFrame(() => {
+          const timeout = getTransitionTimeout(target)
+
+          if (timeout === 0) {
+            hide()
+            return
+          }
+
+          target.addEventListener('transitionend', hide, { once: true })
+          fallback = setTimeout(hide, timeout + 50)
+        })
       })
     },
 
@@ -201,6 +252,8 @@ export function popover ({ mode = 'hover', position = 'bottom', align = 'end' } 
     },
 
     onClose() {
+      if (this.isClosed()) return
+
       _toggleable.close.call(this)
       this.trigger.setAttribute('aria-expanded', 'false')
 
@@ -221,12 +274,14 @@ export function popover ({ mode = 'hover', position = 'bottom', align = 'end' } 
 
     setPosition() {
       if (!this.popoverElement?.isConnected) return
-      if (!this.trigger?.isConnected && mode !== 'context') return
       if (!this.popoverElement.matches(':popover-open')) return
+
+      const usesTriggerRect = mode !== 'context' || !this._hasPointerPosition
+      if (usesTriggerRect && !this.trigger?.isConnected) return
 
       let triggerRect
 
-      if (mode === 'context') {
+      if (mode === 'context' && this._hasPointerPosition) {
         triggerRect = {
           top: this.mouseY,
           bottom: this.mouseY,
@@ -246,11 +301,20 @@ export function popover ({ mode = 'hover', position = 'bottom', align = 'end' } 
 
       const tooltipHeight = this.popoverElement.offsetHeight
       const tooltipWidth = this.popoverElement.offsetWidth
+      const isRTL = isRtl(this.trigger)
       const margin = 4
 
+      const resolveAlign = (align: string) => {
+        if (align === 'start') return isRTL ? 'right' : 'left'
+        if (align === 'end') return isRTL ? 'left' : 'right'
+        return align
+      }
+
       const getCenterOffset = (pos: string, align: string) => {
-        if (align === 'start' || align === 'left') return 0
-        if (align === 'end' || align === 'right') {
+        align = resolveAlign(align)
+
+        if (align === 'left') return 0
+        if (align === 'right') {
           return pos === 'left' || pos === 'right'
             ? triggerHeight - tooltipHeight
             : triggerWidth - tooltipWidth
@@ -328,7 +392,7 @@ export function popover ({ mode = 'hover', position = 'bottom', align = 'end' } 
       this.popoverElement.style.top = `${coords.top}px`
       this.popoverElement.style.left = `${coords.left}px`
       this.popoverElement.dataset.position = computedPosition
-      this.popoverElement.dataset.align = computedAlign
+      this.popoverElement.dataset.align = computedAlign === 'center' ? 'center' : resolveAlign(computedAlign)
     },
 
     boundSetPosition() {

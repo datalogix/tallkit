@@ -1,6 +1,6 @@
 import { bind } from '../utils'
 
-export function tab({ selectFirst = null } = {}) {
+export function tab({ selectFirst = null, orientation = null } = {}) {
   return {
     selected: null,
 
@@ -17,12 +17,15 @@ export function tab({ selectFirst = null } = {}) {
         })
       }
 
+      const nextKey = orientation === 'vertical' ? 'arrow-down' : 'arrow-right'
+      const previousKey = orientation === 'vertical' ? 'arrow-up' : 'arrow-left'
+
       bind(this.$root, {
-        ['@keydown.arrow-right.prevent'](event) {
+        [`@keydown.${nextKey}.prevent`](event) {
           this.focusTab(1, event.target)
         },
 
-        ['@keydown.arrow-left.prevent'](event) {
+        [`@keydown.${previousKey}.prevent`](event) {
           this.focusTab(-1, event.target)
         },
 

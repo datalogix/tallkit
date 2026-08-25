@@ -2,7 +2,6 @@
     ...TALLKit::fieldProps(),
     'align' => null,
     'checked' => null,
-    'variant' => null,
     'indeterminate' => null,
     'iconOn' => null,
     'iconOff' => null,
@@ -77,26 +76,9 @@ $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
                             enabled:hover:border-zinc-300
                             dark:enabled:hover:border-white/20
                         ',
-                        match ($variant) {
+                        match ($color) {
                             'accent' => 'checked:bg-[var(--color-accent)]',
-                            'red' => 'checked:bg-red-600 dark:checked:bg-red-500',
-                            'orange' => 'checked:bg-orange-600 dark:checked:bg-orange-500',
-                            'amber' => 'checked:bg-amber-600 dark:checked:bg-amber-500',
-                            'yellow' => 'checked:bg-yellow-600 dark:checked:bg-yellow-500',
-                            'lime' => 'checked:bg-lime-600 dark:checked:bg-lime-500',
-                            'green' => 'checked:bg-green-600 dark:checked:bg-green-500',
-                            'emerald' => 'checked:bg-emerald-600 dark:checked:bg-emerald-500',
-                            'teal' => 'checked:bg-teal-600 dark:checked:bg-teal-500',
-                            'cyan' => 'checked:bg-cyan-600 dark:checked:bg-cyan-500',
-                            'sky' => 'checked:bg-sky-600 dark:checked:bg-sky-500',
-                            'blue' => 'checked:bg-blue-600 dark:checked:bg-blue-500',
-                            'indigo' => 'checked:bg-indigo-600 dark:checked:bg-indigo-500',
-                            'violet' => 'checked:bg-violet-600 dark:checked:bg-violet-500',
-                            'purple' => 'checked:bg-purple-600 dark:checked:bg-purple-500',
-                            'fuchsia' => 'checked:bg-fuchsia-600 dark:checked:bg-fuchsia-500',
-                            'pink' => 'checked:bg-pink-600 dark:checked:bg-pink-500',
-                            'rose' => 'checked:bg-rose-600 dark:checked:bg-rose-500',
-                            default => 'checked:bg-zinc-800 dark:checked:bg-white',
+                            default => TALLKit::checkedBackground($color) ?? 'checked:bg-zinc-800 dark:checked:bg-white',
                         },
                     )
             }}
@@ -139,9 +121,9 @@ $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
                 :icon="$iconOn ?? 'check'"
                 :attributes="TALLKit::attributesAfter($attributes, 'icon-on:')->classes(
                     'size-full m-px checked scale-90',
-                    match ($variant) {
-                        'accent' => 'text-[var(--color-accent-foreground)]',
-                        'red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose' => 'text-white',
+                    match (true) {
+                        $color === 'accent' => 'text-[var(--color-accent-foreground)]',
+                        TALLKit::isColor($color) => 'text-white',
                         default => 'text-white dark:text-zinc-700',
                     },
                 )"

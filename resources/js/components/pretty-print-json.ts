@@ -1,4 +1,4 @@
-import { loadRemoteAssets } from '../utils'
+import { loadRemoteAssets, escapeHtml } from '../utils'
 import { loadable } from './loadable'
 
 export function prettyPrintJson () {
@@ -13,13 +13,15 @@ export function prettyPrintJson () {
       ))
     },
 
-    render (data = null, options = {}) {
+    render (data = null, options = null) {
       try {
-        return window.prettyPrintJson.toHtml(data, options)
-      } catch(e) {
-        this.fail(e)
+        if (typeof data === 'string') {
+          data = JSON.parse(data)
+        }
 
-        return ''
+        return window.prettyPrintJson.toHtml(data, options || {})
+      } catch(e) {
+        return escapeHtml(typeof data === 'string' ? data : JSON.stringify(data, null, 2)) ?? ''
       }
     },
   }

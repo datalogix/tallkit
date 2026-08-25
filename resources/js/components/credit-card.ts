@@ -1,27 +1,26 @@
 import { bind } from '../utils'
-import { toggleable } from './toggleable'
+import { toggleable } from '../mixins/toggleable'
 
-export function creditCard(options = {}) {
+export function creditCard(types = {}, options = {}) {
   const _toggleable = toggleable()
 
   return {
     ..._toggleable,
 
-    options: null,
+    types,
+    options: {
+      opened: true,
+      holderName: null,
+      number: null,
+      type: null,
+      expirationDate: null,
+      cvv: null,
+      ...options,
+    },
 
     init() {
       _toggleable.init.call(this)
 
-      this.options = {
-        opened: true,
-        types: {},
-        holderName: null,
-        number: null,
-        type: null,
-        expirationDate: null,
-        cvv: null,
-        ...options
-      }
       this.opened = this.options.opened
 
       bind(this.$el, {
@@ -43,9 +42,9 @@ export function creditCard(options = {}) {
     },
 
     get typeOptions() {
-      return this.options.types[this.options.type]
-        ? this.options.types[this.options.type]
-        : this.options.types.unknown
+      return this.types[this.options.type]
+        ? this.types[this.options.type]
+        : this.types.unknown
     },
 
     update(options = {}) {

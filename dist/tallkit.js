@@ -164,6 +164,24 @@
       await loadStyle(styleHref);
     }
   }
+  const modules = /* @__PURE__ */ new Map();
+  async function loadRemoteModule(src) {
+    if (Array.isArray(src)) {
+      return Promise.all(src.map((s) => loadRemoteModule(s)));
+    }
+    if (modules.has(src)) {
+      return modules.get(src);
+    }
+    const promise = import(
+      /* @vite-ignore */
+      src
+    ).catch((e) => {
+      modules.delete(src);
+      throw e;
+    });
+    modules.set(src, promise);
+    return promise;
+  }
   const styles = /* @__PURE__ */ new Map();
   function loadStyle(href) {
     if (Array.isArray(href)) {
@@ -237,7 +255,6 @@
             memory.set(key, parsed);
             return parsed.data;
           } catch (e) {
-            console.warn("[tallkit] cache read failed", e);
             return null;
           }
         }
@@ -253,17 +270,19 @@
           try {
             localStorage.setItem(this.getStorageKey(key), JSON.stringify(entry));
           } catch (e) {
-            console.warn("[tallkit] cache write failed", e);
           }
         }
       }
     };
   }
+  function isRtl(el = document.documentElement) {
+    return el.dir === "rtl" || getComputedStyle(el).direction === "rtl";
+  }
   async function fetchWithRetry(fn, retries = 2) {
     try {
       return await fn();
     } catch (e) {
-      if (retries <= 0 || e.name === "AbortError") throw e;
+      if (retries <= 0 || e.name === "AbortError" || e.name === "NotFoundError") throw e;
       return fetchWithRetry(fn, retries - 1);
     }
   }
@@ -398,8 +417,22 @@
     el.dispatchEvent(new Event("input", { bubbles: true }));
     el.dispatchEvent(new Event("change", { bubbles: true }));
   }
+  function findInField(el, childKey, ancestorKey = "field") {
+    return el?.closest(dataKey(ancestorKey))?.querySelector(dataKey(childKey)) ?? null;
+  }
   function findFieldInput(el) {
-    return el?.closest(dataKey("field-control"))?.querySelector(dataKey("input")) ?? null;
+    return findInField(el, "input", "field-control");
+  }
+  function allChecked(items, getChecked) {
+    return items.length > 0 && items.every(getChecked);
+  }
+  function hasLivewire() {
+    return !!window.Livewire;
+  }
+  function onLivewireCommit(handler) {
+    const off = window.Livewire?.hook("commit", handler);
+    return typeof off === "function" ? off : () => {
+    };
   }
   function getWireModelInfo(element) {
     for (const attr of element.attributes) {
@@ -466,12 +499,20 @@
       async viaCep(zipcode, signal) {
         const res = await fetch(`https://viacep.com.br/ws/${zipcode}/json/`, { signal });
         const data = await res.json();
-        if (data.erro) throw new Error("ViaCEP not found");
+        if (data.erro) {
+          const error = new Error("ViaCEP not found");
+          error.name = "NotFoundError";
+          throw error;
+        }
         return data;
       },
       async brasilApi(zipcode, signal) {
         const res = await fetch(`https://brasilapi.com.br/api/cep/v1/${zipcode}`, { signal });
-        if (!res.ok) throw new Error("BrasilAPI error");
+        if (!res.ok) {
+          const error = new Error("BrasilAPI error");
+          if (res.status === 404) error.name = "NotFoundError";
+          throw error;
+        }
         const data = await res.json();
         return {
           logradouro: data.street,
@@ -550,8 +591,7 @@
       _dismissTimeout: null,
       init() {
         bind(this.$root.querySelectorAll(dataKey("dismissible")), {
-          ["@click.stop"]: (e) => {
-            e.currentTarget.dispatchEvent(new CustomEvent("close"));
+          ["@click.stop"]: () => {
             this.dismiss("manual");
           }
         });
@@ -612,10 +652,6 @@
       }
     };
   }
-  const __vite_glob_0_15 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
-    __proto__: null,
-    dismissible
-  }, Symbol.toStringTag, { value: "Module" }));
   function alertComponent({ timeout: timeout$1 = 0, pauseOnHover = false } = {}) {
     const _dismissible = dismissible("collapse");
     return {
@@ -743,10 +779,6 @@
       }
     };
   }
-  const __vite_glob_0_12 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
-    __proto__: null,
-    dataOptions
-  }, Symbol.toStringTag, { value: "Module" }));
   function loadable() {
     return {
       empty: null,
@@ -834,7 +866,7 @@
       }
     };
   }
-  const __vite_glob_0_27 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_26 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     loadable
   }, Symbol.toStringTag, { value: "Module" }));
@@ -848,14 +880,18 @@
         this.load(() => loadRemoteAssets(() => !!window.ApexCharts, "https://cdn.jsdelivr.net/npm/apexcharts@5"));
       },
       render(options = {}) {
-        const merged = { ...options, ...this.getDataOptions() };
-        if (this.chart) {
-          this.chart.updateOptions(merged);
-        } else {
-          this.chart = new window.ApexCharts(this.$el, merged);
-          this.chart.render();
+        try {
+          const merged = { ...options, ...this.getDataOptions() };
+          if (this.chart) {
+            this.chart.updateOptions(merged);
+          } else {
+            this.chart = new window.ApexCharts(this.$refs.target, merged);
+            this.chart.render();
+          }
+          this.$dispatch("rendered", { chart: this.chart });
+        } catch (e) {
+          this.fail(e);
         }
-        this.$dispatch("rendered", { chart: this.chart });
       },
       destroy() {
         _loadable.destroy.call(this);
@@ -874,6 +910,8 @@
         this.updateOffset();
         this._onResize = () => this.updateOffset();
         window.addEventListener("resize", this._onResize);
+        this._resizeObserver = new ResizeObserver(() => this.updateOffset());
+        this._resizeObserver.observe(document.body);
       },
       updateOffset() {
         const top = this.$el.offsetTop;
@@ -883,13 +921,10 @@
       },
       destroy() {
         window.removeEventListener("resize", this._onResize);
+        this._resizeObserver?.disconnect();
       }
     };
   }
-  const __vite_glob_0_42 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
-    __proto__: null,
-    sticky
-  }, Symbol.toStringTag, { value: "Module" }));
   function aside() {
     return {
       ...sticky()
@@ -932,10 +967,6 @@
       }
     };
   }
-  const __vite_glob_0_48 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
-    __proto__: null,
-    toggleable
-  }, Symbol.toStringTag, { value: "Module" }));
   function popover({ mode = "hover", position = "bottom", align = "end" } = {}) {
     const _toggleable = toggleable();
     return {
@@ -946,8 +977,10 @@
       mutationObserver: null,
       livewireCommitCleanup: null,
       _rAF: null,
+      _cancelPendingClose: null,
       mouseX: 0,
       mouseY: 0,
+      _hasPointerPosition: false,
       init() {
         _toggleable.init.call(this);
         this.popoverElement = this.$root.lastElementChild?.matches("[popover]") && this.$root.lastElementChild;
@@ -983,15 +1016,13 @@
             }
           });
         });
-        const offCommit = window.Livewire?.hook("commit", ({ succeed }) => {
+        this.livewireCommitCleanup = onLivewireCommit(({ succeed }) => {
           succeed(() => {
             if (!this.popoverElement?.matches(":popover-open")) return;
             if (!this.$root?.isConnected) return;
             this.boundSetPosition();
           });
         });
-        this.livewireCommitCleanup = typeof offCommit === "function" ? offCommit : () => {
-        };
         if (mode !== "manual" && (window.matchMedia("(hover: none)").matches || mode === "dropdown")) {
           bind(this.trigger, {
             ["@click"]() {
@@ -1020,11 +1051,22 @@
             }
           });
         } else if (mode === "context") {
+          if (!this.trigger.hasAttribute("tabindex") && !["A", "BUTTON", "INPUT", "SELECT", "TEXTAREA"].includes(this.trigger.tagName)) {
+            this.trigger.setAttribute("tabindex", "0");
+          }
           bind(this.trigger, {
             ["@contextmenu.prevent"](event) {
               this.close();
               this.mouseX = event.clientX;
               this.mouseY = event.clientY;
+              this._hasPointerPosition = true;
+              this.open();
+            },
+            ["@keydown"](event) {
+              if (event.key !== "ContextMenu" && !(event.shiftKey && event.key === "F10")) return;
+              event.preventDefault();
+              this.close();
+              this._hasPointerPosition = false;
               this.open();
             }
           });
@@ -1053,8 +1095,14 @@
       open(focus = true) {
         requestAnimationFrame(() => {
           if (!this.popoverElement?.isConnected) return;
-          if (this.popoverElement.matches(":popover-open")) return;
-          this.popoverElement.showPopover();
+          if (this._cancelPendingClose) {
+            this._cancelPendingClose();
+            this._cancelPendingClose = null;
+            this.onOpen();
+          } else {
+            if (this.popoverElement.matches(":popover-open")) return;
+            this.popoverElement.showPopover();
+          }
           if (focus) {
             const firstItem = this.popoverElement.querySelector("[role=menuitem], [role=option], [role=tab]");
             (firstItem ?? this.popoverElement).focus();
@@ -1065,7 +1113,32 @@
         requestAnimationFrame(() => {
           if (!this.popoverElement?.isConnected) return;
           if (!this.popoverElement.matches(":popover-open")) return;
-          this.popoverElement.hidePopover();
+          if (this._cancelPendingClose) return;
+          this.onClose();
+          const target = this.popoverElement.firstElementChild ?? this.popoverElement;
+          let fallback;
+          const hide = () => {
+            target.removeEventListener("transitionend", hide);
+            clearTimeout(fallback);
+            this._cancelPendingClose = null;
+            if (this.popoverElement?.isConnected && this.popoverElement.matches(":popover-open")) {
+              this.popoverElement.hidePopover();
+            }
+          };
+          this._cancelPendingClose = () => {
+            target.removeEventListener("transitionend", hide);
+            clearTimeout(fallback);
+            this._cancelPendingClose = null;
+          };
+          requestAnimationFrame(() => {
+            const timeout2 = getTransitionTimeout(target);
+            if (timeout2 === 0) {
+              hide();
+              return;
+            }
+            target.addEventListener("transitionend", hide, { once: true });
+            fallback = setTimeout(hide, timeout2 + 50);
+          });
         });
       },
       onOpen() {
@@ -1088,6 +1161,7 @@
         this.setPosition();
       },
       onClose() {
+        if (this.isClosed()) return;
         _toggleable.close.call(this);
         this.trigger.setAttribute("aria-expanded", "false");
         window.removeEventListener("scroll", this._onScroll, true);
@@ -1103,10 +1177,11 @@
       },
       setPosition() {
         if (!this.popoverElement?.isConnected) return;
-        if (!this.trigger?.isConnected && mode !== "context") return;
         if (!this.popoverElement.matches(":popover-open")) return;
+        const usesTriggerRect = mode !== "context" || !this._hasPointerPosition;
+        if (usesTriggerRect && !this.trigger?.isConnected) return;
         let triggerRect;
-        if (mode === "context") {
+        if (mode === "context" && this._hasPointerPosition) {
           triggerRect = {
             top: this.mouseY,
             bottom: this.mouseY,
@@ -1124,10 +1199,17 @@
         const scrollLeft = window.scrollX;
         const tooltipHeight = this.popoverElement.offsetHeight;
         const tooltipWidth = this.popoverElement.offsetWidth;
+        const isRTL = isRtl(this.trigger);
         const margin = 4;
+        const resolveAlign = (align2) => {
+          if (align2 === "start") return isRTL ? "right" : "left";
+          if (align2 === "end") return isRTL ? "left" : "right";
+          return align2;
+        };
         const getCenterOffset = (pos, align2) => {
-          if (align2 === "start" || align2 === "left") return 0;
-          if (align2 === "end" || align2 === "right") {
+          align2 = resolveAlign(align2);
+          if (align2 === "left") return 0;
+          if (align2 === "right") {
             return pos === "left" || pos === "right" ? triggerHeight - tooltipHeight : triggerWidth - tooltipWidth;
           }
           return pos === "left" || pos === "right" ? (triggerHeight - tooltipHeight) / 2 : (triggerWidth - tooltipWidth) / 2;
@@ -1186,7 +1268,7 @@
         this.popoverElement.style.top = `${coords.top}px`;
         this.popoverElement.style.left = `${coords.left}px`;
         this.popoverElement.dataset.position = computedPosition;
-        this.popoverElement.dataset.align = computedAlign;
+        this.popoverElement.dataset.align = computedAlign === "center" ? "center" : resolveAlign(computedAlign);
       },
       boundSetPosition() {
         if (this._rAF) return;
@@ -1197,7 +1279,7 @@
       }
     };
   }
-  const __vite_glob_0_37 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_36 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     popover
   }, Symbol.toStringTag, { value: "Module" }));
@@ -2526,11 +2608,19 @@
       fuse: null,
       lastInteraction: null,
       debouncedSearch: null,
+      livewireCommitCleanup: null,
       init() {
         this.input = this.$root.querySelector(dataKey("input"));
         this.list = this.$root.querySelector("[role=listbox]");
         this.noRecords = this.$root.querySelector("[role=status]");
         this.refreshItems();
+        this.livewireCommitCleanup = onLivewireCommit(({ succeed }) => {
+          succeed(() => {
+            if (!this.$root?.isConnected) return;
+            this.refreshItems();
+            this.search();
+          });
+        });
         this.$watch(() => this.index, (index) => {
           this.setActive(index);
         });
@@ -2628,6 +2718,9 @@
           this.$dispatch("listbox-initialized");
         });
       },
+      destroy() {
+        this.livewireCommitCleanup?.();
+      },
       refreshItems() {
         this.items = Array.from(
           this.list.querySelectorAll("[role=option]")
@@ -2635,6 +2728,8 @@
           item.hidden = true;
           if (item?.firstElementChild?.disabled) {
             item.setAttribute("aria-disabled", "true");
+          } else {
+            item.removeAttribute("aria-disabled");
           }
           return {
             title: normalize(item.querySelector("[data-item-content]")?.textContent, { removeSpaces: true }),
@@ -2781,7 +2876,7 @@
       }
     };
   }
-  const __vite_glob_0_26 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_25 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     listbox
   }, Symbol.toStringTag, { value: "Module" }));
@@ -2794,6 +2889,7 @@
       init() {
         _popover.init.call(this);
         _listbox.init.call(this);
+        this.trigger = this.input;
         bind(this.input, {
           ["@blur"]() {
             this.close();
@@ -2850,14 +2946,18 @@
         this.load(() => loadRemoteAssets(() => !!window.Chart, "https://cdn.jsdelivr.net/npm/chart.js@4"));
       },
       render(options = {}) {
-        const merged = { ...options, ...this.getDataOptions() };
-        if (this.chart) {
-          Object.assign(this.chart.config, merged);
-          this.chart.update();
-        } else {
-          this.chart = new window.Chart(this.$el, merged);
+        try {
+          const merged = { ...options, ...this.getDataOptions() };
+          if (this.chart) {
+            Object.assign(this.chart.config, merged);
+            this.chart.update();
+          } else {
+            this.chart = new window.Chart(this.$refs.target, merged);
+          }
+          this.$dispatch("rendered", { chart: this.chart });
+        } catch (e) {
+          this.fail(e);
         }
-        this.$dispatch("rendered", { chart: this.chart });
       },
       destroy() {
         _loadable.destroy.call(this);
@@ -2870,35 +2970,40 @@
     __proto__: null,
     chartjs
   }, Symbol.toStringTag, { value: "Module" }));
-  function checkboxAll({ group = "" } = {}) {
+  function groupAll(type, group) {
     return {
       all: null,
-      get checkboxes() {
-        return Array.from(document.querySelectorAll(dataKey("checkbox-group", group)));
+      get items() {
+        return Array.from(document.querySelectorAll(dataKey(`${type}-group`, group)));
       },
       init() {
-        this.all = this.$root.querySelector(dataKey("checkbox"));
+        this.all = this.$root.querySelector(dataKey(type));
         bind(this.all, {
-          ["@change"]: () => this.toggleAll()
+          ["@change"]: () => this.toggleAllItems()
         });
-        bind(this.checkboxes, {
+        bind(this.items, {
           ["@change"]: () => this.updateState()
         });
       },
-      toggleAll() {
-        this.checkboxes.forEach((checkbox) => {
-          checkbox.checked = !!this.all?.checked;
+      toggleAllItems() {
+        this.items.forEach((item) => {
+          item.checked = !!this.all?.checked;
+          item.dispatchEvent(new Event("change", { bubbles: true }));
         });
       },
       updateState() {
         if (!this.all) return;
-        const checkboxes = this.checkboxes;
-        const total = checkboxes.length;
-        const checked = checkboxes.filter((cb) => cb.checked).length;
-        this.all.checked = total > 0 && checked === total;
-        this.all.indeterminate = checked > 0 && checked < total;
+        const items = this.items;
+        this.all.checked = allChecked(items, (item) => item.checked);
+        if (type === "checkbox") {
+          const checkedCount = items.filter((item) => item.checked).length;
+          this.all.indeterminate = checkedCount > 0 && checkedCount < items.length;
+        }
       }
     };
+  }
+  function checkboxAll({ group = "" } = {}) {
+    return groupAll("checkbox", group);
   }
   const __vite_glob_0_7 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
@@ -2937,11 +3042,11 @@
             if (this.opened) return;
             this.open();
           },
-          ["@keydown.arrow-up.prevent"]: () => {
+          ["@keydown.arrow-up.prevent"]() {
             if (this.opened) return;
             this.open();
           },
-          ["@keydown.arrow-down.prevent"]: () => {
+          ["@keydown.arrow-down.prevent"]() {
             if (this.opened) return;
             this.open();
           }
@@ -3032,7 +3137,7 @@
           "x-modelable": "value"
         });
         const modes = !submit ? [] : Array.isArray(submit) ? submit : [submit];
-        const labelFor = this.$el.parentElement?.closest(dataKey("field"))?.querySelector(dataKey("label"))?.getAttribute("for") ?? null;
+        const labelFor = findInField(this.$el.parentElement, "label")?.getAttribute("for") ?? null;
         bind(this.$el.querySelector(dataKey("control")), {
           "x-model": "value",
           ...labelFor && { id: labelFor },
@@ -3094,9 +3199,10 @@
             clearTimeout(this.timeout);
             this.copied = true;
             this.$el.dispatchEvent(new CustomEvent("open"));
-            const text = content ?? ("value" in target ? target.value : target.innerText);
+            const currentTarget = content ? null : this.findTarget();
+            const text = content ?? ("value" in currentTarget ? currentTarget.value : currentTarget.innerText);
             await navigator.clipboard.writeText(text);
-            target?.dispatchEvent(new Event("copied", { bubbles: true }));
+            currentTarget?.dispatchEvent(new Event("copied", { bubbles: true }));
             this.timeout = setTimeout(() => {
               this.$el.dispatchEvent(new CustomEvent("close"));
               this.copied = false;
@@ -3114,23 +3220,22 @@
     __proto__: null,
     copy
   }, Symbol.toStringTag, { value: "Module" }));
-  function creditCard(options = {}) {
+  function creditCard(types = {}, options = {}) {
     const _toggleable = toggleable();
     return {
       ..._toggleable,
-      options: null,
+      types,
+      options: {
+        opened: true,
+        holderName: null,
+        number: null,
+        type: null,
+        expirationDate: null,
+        cvv: null,
+        ...options
+      },
       init() {
         _toggleable.init.call(this);
-        this.options = {
-          opened: true,
-          types: {},
-          holderName: null,
-          number: null,
-          type: null,
-          expirationDate: null,
-          cvv: null,
-          ...options
-        };
         this.opened = this.options.opened;
         bind(this.$el, {
           ["@click"]() {
@@ -3150,7 +3255,7 @@
         });
       },
       get typeOptions() {
-        return this.options.types[this.options.type] ? this.options.types[this.options.type] : this.options.types.unknown;
+        return this.types[this.options.type] ? this.types[this.options.type] : this.types.unknown;
       },
       update(options2 = {}) {
         this.options = { ...this.options, ...options2 };
@@ -3175,13 +3280,14 @@
     return {
       observer: null,
       init() {
-        const items = this.$root.querySelectorAll(dataKey("disclosure-item"));
+        const getItems = () => this.$root.querySelectorAll(dataKey("disclosure-item"));
         const observe = () => {
-          items.forEach((item) => {
+          getItems().forEach((item) => {
             this.observer.observe(item, { attributeFilter: ["data-open"] });
           });
         };
         this.observer = new MutationObserver((records) => {
+          const items = getItems();
           if (exclusive) {
             const opened = new Set(
               records.filter((record) => record.target.hasAttribute("data-open")).map((record) => record.target)
@@ -3202,7 +3308,7 @@
       }
     };
   }
-  const __vite_glob_0_13 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_12 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     disclosureGroup
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3246,7 +3352,7 @@
       }
     };
   }
-  const __vite_glob_0_14 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_13 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     disclosure
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3260,9 +3366,13 @@
         this.load(() => loadRemoteAssets(() => !!window.echarts, "https://cdn.jsdelivr.net/npm/echarts@6"));
       },
       render(options = {}) {
-        this.chart ??= window.echarts.init(this.$el);
-        this.chart.setOption({ ...options, ...this.getDataOptions() });
-        this.$dispatch("rendered", { chart: this.chart });
+        try {
+          this.chart ??= window.echarts.init(this.$refs.target);
+          this.chart.setOption({ ...options, ...this.getDataOptions() });
+          this.$dispatch("rendered", { chart: this.chart });
+        } catch (e) {
+          this.fail(e);
+        }
       },
       destroy() {
         _loadable.destroy.call(this);
@@ -3271,9 +3381,194 @@
       }
     };
   }
-  const __vite_glob_0_16 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_14 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     echarts
+  }, Symbol.toStringTag, { value: "Module" }));
+  const EDITOR_GROUP_ORDER = [
+    "text",
+    "heading",
+    "color",
+    "size",
+    "script",
+    "align",
+    "link",
+    "list",
+    "media",
+    "table",
+    "quote",
+    "code"
+  ];
+  function warnUnsupportedGroups(library, groups, supported) {
+    groups.filter((group) => !(group in supported)).forEach((group) => console.warn(`[tallkit] "${library}" has no "${group}" tools — the "${group}" mode group has no effect here.`));
+  }
+  function parseMode(mode, groupOrder) {
+    const tokens = (mode ?? "").trim().split(/\s+/).filter(Boolean);
+    if (!tokens.length) {
+      return null;
+    }
+    if (tokens.includes("none")) {
+      return [];
+    }
+    tokens.filter((token) => token !== "full" && !groupOrder.includes(token)).forEach((token) => console.warn(`[tallkit] Unknown editor mode group "${token}"`));
+    if (tokens.includes("full")) {
+      return groupOrder;
+    }
+    return groupOrder.filter((group) => tokens.includes(group));
+  }
+  function editorField() {
+    return {
+      input: null,
+      _lastSynced: null,
+      initField() {
+        this.input = this.$root.querySelector(dataKey("control"));
+        if (this.$wire) {
+          const prop = getWireModelInfo(this.input);
+          if (prop) {
+            this.$wire.$watch(prop.name, (value) => {
+              if (value === this._lastSynced || !this.isCompleted()) return;
+              this.applyExternalValue(value);
+            });
+          }
+        }
+      },
+      sync(value) {
+        this._lastSynced = value;
+        setFieldValue(this.input, value);
+      }
+    };
+  }
+  const GROUPS$3 = {
+    text: {
+      scripts: [
+        "https://cdn.jsdelivr.net/npm/@editorjs/inline-code@1",
+        "https://cdn.jsdelivr.net/npm/@editorjs/underline@1"
+      ],
+      inline: ["bold", "italic", "underline", "inlineCode"],
+      tools: () => ({
+        inlineCode: window.InlineCode,
+        underline: window.Underline
+      })
+    },
+    heading: {
+      scripts: ["https://cdn.jsdelivr.net/npm/@editorjs/header@2"],
+      tools: () => ({
+        header: window.Header
+      })
+    },
+    color: {
+      scripts: ["https://cdn.jsdelivr.net/npm/@editorjs/marker@1"],
+      inline: ["marker"],
+      tools: () => ({
+        marker: window.Marker
+      })
+    },
+    link: {
+      scripts: [],
+      inline: ["link"],
+      tools: () => ({})
+    },
+    list: {
+      scripts: ["https://cdn.jsdelivr.net/npm/@editorjs/list@2"],
+      tools: () => ({
+        list: { class: window.EditorjsList, inlineToolbar: true }
+      })
+    },
+    media: {
+      scripts: [
+        "https://cdn.jsdelivr.net/npm/@editorjs/simple-image@1",
+        "https://cdn.jsdelivr.net/npm/@editorjs/embed@2"
+      ],
+      tools: () => ({
+        simpleImage: window.SimpleImage,
+        embed: window.Embed
+      })
+    },
+    table: {
+      scripts: ["https://cdn.jsdelivr.net/npm/@editorjs/table@2"],
+      tools: () => ({
+        table: window.Table
+      })
+    },
+    quote: {
+      scripts: [
+        "https://cdn.jsdelivr.net/npm/@editorjs/quote@2",
+        "https://cdn.jsdelivr.net/npm/@editorjs/warning@1",
+        "https://cdn.jsdelivr.net/npm/@editorjs/delimiter@1"
+      ],
+      tools: () => ({
+        quote: { class: window.Quote, inlineToolbar: true },
+        warning: window.Warning,
+        delimiter: window.Delimiter
+      })
+    },
+    code: {
+      scripts: [
+        "https://cdn.jsdelivr.net/npm/@editorjs/code@2",
+        "https://cdn.jsdelivr.net/npm/@editorjs/raw@2"
+      ],
+      tools: () => ({
+        code: window.CodeTool,
+        raw: window.RawTool
+      })
+    }
+  };
+  function resolveGroups(mode) {
+    const groups = parseMode(mode, EDITOR_GROUP_ORDER) ?? EDITOR_GROUP_ORDER;
+    warnUnsupportedGroups("editorjs", groups, GROUPS$3);
+    return groups;
+  }
+  function editorjs({ options = {}, scripts: scripts2 = [], styles: styles2 = [], mode = null } = {}) {
+    const _loadable = loadable();
+    return {
+      ..._loadable,
+      ...dataOptions(),
+      ...editorField(),
+      editor: null,
+      _saveToken: 0,
+      init() {
+        this.initField();
+        const groups = resolveGroups(mode);
+        this.load(() => loadRemoteAssets(() => !!window.EditorJS, [
+          "https://cdn.jsdelivr.net/npm/@editorjs/editorjs@2",
+          ...groups.flatMap((group) => GROUPS$3[group]?.scripts ?? []),
+          ...scripts2
+        ], styles2).then(() => this.mount(groups)));
+      },
+      applyExternalValue(value) {
+        this.editor.render(value ? JSON.parse(value) : { blocks: [] });
+      },
+      mount(groups) {
+        try {
+          this.editor = new window.EditorJS({
+            holder: this.$refs.root,
+            tools: groups.reduce((tools, group) => ({ ...tools, ...GROUPS$3[group]?.tools() }), {}),
+            inlineToolbar: groups.flatMap((group) => GROUPS$3[group]?.inline ?? []),
+            data: this.input.value ? JSON.parse(this.input.value) : void 0,
+            onChange: async (api) => {
+              const token = ++this._saveToken;
+              const output = await api.saver.save();
+              if (token !== this._saveToken) return;
+              this.sync(JSON.stringify(output));
+            },
+            ...options,
+            ...this.getDataOptions()
+          });
+          this.editor.isReady.then(() => this.$dispatch("rendered", { editor: this.editor }));
+        } catch (e) {
+          this.fail(e);
+        }
+      },
+      async destroy() {
+        _loadable.destroy.call(this);
+        await this.editor?.destroy();
+        this.editor = null;
+      }
+    };
+  }
+  const __vite_glob_0_15 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    editorjs
   }, Symbol.toStringTag, { value: "Module" }));
   function fetchable({ url = null, data = null, auto = null, options = {} } = {}) {
     const _loadable = loadable();
@@ -3337,11 +3632,12 @@
       }
     };
   }
-  const __vite_glob_0_17 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_16 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     fetchable
   }, Symbol.toStringTag, { value: "Module" }));
   function form({
+    action = null,
     focusError = null,
     toast: toast2 = null,
     errorMessage = null,
@@ -3350,14 +3646,15 @@
     return {
       livewireCommitCleanup: null,
       init() {
-        if (window.Livewire) {
+        if (hasLivewire()) {
           this.watchLivewireCommits();
         } else if (focusError) {
           this.focusFirstInvalidField();
         }
       },
       watchLivewireCommits() {
-        const offCommit = window.Livewire.hook("commit", ({ component, succeed }) => {
+        this.livewireCommitCleanup = onLivewireCommit(({ component, commit, succeed }) => {
+          if (action && !commit?.calls?.some((call) => call.method === action)) return;
           succeed(({ snapshot }) => {
             if (!this.$el?.isConnected) return;
             if (component?.el !== this.$el && !component?.el?.contains(this.$el)) return;
@@ -3378,8 +3675,6 @@
             }
           });
         });
-        this.livewireCommitCleanup = typeof offCommit === "function" ? offCommit : () => {
-        };
       },
       focusFirstInvalidField() {
         const field = this.$el.querySelector('[data-invalid], [aria-invalid="true"]');
@@ -3392,7 +3687,7 @@
       }
     };
   }
-  const __vite_glob_0_18 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_17 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     form
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3406,9 +3701,13 @@
         this.load(() => loadRemoteAssets(() => !!window.frappe?.Chart, "https://cdn.jsdelivr.net/npm/frappe-charts@1"));
       },
       render(options = {}) {
-        this.chart?.destroy?.();
-        this.chart = new window.frappe.Chart(this.$el, { ...options, ...this.getDataOptions() });
-        this.$dispatch("rendered", { chart: this.chart });
+        try {
+          this.chart?.destroy?.();
+          this.chart = new window.frappe.Chart(this.$refs.target, { ...options, ...this.getDataOptions() });
+          this.$dispatch("rendered", { chart: this.chart });
+        } catch (e) {
+          this.fail(e);
+        }
       },
       destroy() {
         _loadable.destroy.call(this);
@@ -3417,7 +3716,7 @@
       }
     };
   }
-  const __vite_glob_0_19 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_18 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     frappeCharts
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3429,25 +3728,30 @@
       fullCalendar: null,
       init() {
         const baseUrl = "https://cdn.jsdelivr.net/npm/fullcalendar@7";
-        this.load(() => loadRemoteAssets(() => !!window.FullCalendar, [
-          `${baseUrl}/all/global.min.js`,
-          locale && locale !== "en" ? `${baseUrl}/locales/${String(locale).replace("_", "-").toLowerCase()}/global.min.js` : `${baseUrl}/locales-all/global.min.js`,
-          `${baseUrl}/themes/${theme ?? "monarch"}/global.js`
-        ], [
+        const scripts2 = [`${baseUrl}/all/global.min.js`];
+        if (locale && locale !== "en") {
+          scripts2.push(`${baseUrl}/locales/${String(locale).replace("_", "-").toLowerCase()}/global.min.js`);
+        }
+        scripts2.push(`${baseUrl}/themes/${theme ?? "monarch"}/global.js`);
+        this.load(() => loadRemoteAssets(() => !!window.FullCalendar, scripts2, [
           `${baseUrl}/skeleton.css`,
           `${baseUrl}/themes/${theme ?? "monarch"}/theme.css`,
           `${baseUrl}/themes/${theme ?? "monarch"}/palettes/${palette ?? "blue"}.css`
         ]));
       },
       render() {
-        this.fullCalendar?.destroy();
-        this.fullCalendar = new window.FullCalendar.Calendar(this.$el, {
-          locale,
-          ...options,
-          ...this.getDataOptions()
-        });
-        this.fullCalendar.render();
-        this.$dispatch("rendered", { fullCalendar: this.fullCalendar });
+        try {
+          this.fullCalendar?.destroy();
+          this.fullCalendar = new window.FullCalendar.Calendar(this.$el, {
+            locale,
+            ...options,
+            ...this.getDataOptions()
+          });
+          this.fullCalendar.render();
+          this.$dispatch("rendered", { fullCalendar: this.fullCalendar });
+        } catch (e) {
+          this.fail(e);
+        }
       },
       destroy() {
         _loadable.destroy.call(this);
@@ -3456,7 +3760,7 @@
       }
     };
   }
-  const __vite_glob_0_20 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_19 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     fullCalendar
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3465,13 +3769,14 @@
       ...sticky()
     };
   }
-  const __vite_glob_0_21 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_20 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     header
   }, Symbol.toStringTag, { value: "Module" }));
   function highlightjs() {
     return {
       ...loadable(),
+      language: null,
       init() {
         this.load(() => loadRemoteAssets(
           () => !!window.hljs,
@@ -3481,15 +3786,16 @@
       },
       render(code, language = null) {
         try {
-          return language ? window.hljs.highlight(code, { language }).value : window.hljs.highlightAuto(code).value;
+          const result = language ? window.hljs.highlight(code, { language }) : window.hljs.highlightAuto(code);
+          this.language = result.language ?? null;
+          return result.value;
         } catch (e) {
-          this.fail(e);
           return escapeHtml(code) ?? "";
         }
       }
     };
   }
-  const __vite_glob_0_22 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_21 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     highlightjs
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3520,7 +3826,7 @@
       }
     };
   }
-  const __vite_glob_0_23 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_22 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     inputClearable
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3561,7 +3867,7 @@
       }
     };
   }
-  const __vite_glob_0_24 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_23 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     inputViewable
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3571,7 +3877,7 @@
         if (this.$el.tagName.toLowerCase() === "label" && this.$el.hasAttribute("for") && !!document.getElementById(this.$el.getAttribute("for"))) {
           return;
         }
-        let control = this.$el.parentElement?.closest(dataKey("field"))?.querySelector(dataKey("control"));
+        let control = findInField(this.$el.parentElement, "control");
         if (control && !control.matches('input, select, textarea, [contenteditable=""], [contenteditable="true"], [role="textbox"]')) {
           control = control.querySelector('input, select, textarea, [contenteditable=""], [contenteditable="true"], [role="textbox"]');
         }
@@ -3605,18 +3911,18 @@
       }
     };
   }
-  const __vite_glob_0_25 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_24 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     label
   }, Symbol.toStringTag, { value: "Module" }));
-  function menuCheckbox(checked) {
+  function menuItem(checked, type) {
     return {
       checked,
       get isControlled() {
         return this.value !== void 0;
       },
       get isArray() {
-        return Array.isArray(this.value);
+        return type === "checkbox" && Array.isArray(this.value);
       },
       get isChecked() {
         if (!this.isControlled) {
@@ -3643,40 +3949,25 @@
           this.value = this.isChecked ? this.value.filter((v) => v != this.$root.value) : [...this.value, this.$root.value];
           return;
         }
+        if (type === "radio") {
+          this.value = this.$root.value;
+          return;
+        }
         this.value = this.isChecked ? null : this.$root.value;
       }
     };
   }
-  const __vite_glob_0_28 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  function menuCheckbox(checked) {
+    return menuItem(checked, "checkbox");
+  }
+  const __vite_glob_0_27 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     menuCheckbox
   }, Symbol.toStringTag, { value: "Module" }));
   function menuRadio(checked) {
-    return {
-      checked,
-      get isControlled() {
-        return this.value !== void 0;
-      },
-      get isChecked() {
-        return this.isControlled ? this.value == this.$root.value : this.checked;
-      },
-      init() {
-        bind(this.$el, {
-          ["@click"]: () => this.toggle(),
-          [":data-checked"]: () => this.isChecked,
-          [":aria-checked"]: () => this.isChecked
-        });
-      },
-      toggle() {
-        if (this.isControlled) {
-          this.value = this.$root.value;
-        } else {
-          this.checked = !this.checked;
-        }
-      }
-    };
+    return menuItem(checked, "radio");
   }
-  const __vite_glob_0_29 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_28 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     menuRadio
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3740,7 +4031,7 @@
       }
     };
   }
-  const __vite_glob_0_30 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_29 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     menu
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3761,7 +4052,7 @@
       }
     };
   }
-  const __vite_glob_0_31 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_30 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     modalTrigger
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3769,11 +4060,6 @@
     return {
       init() {
         const dialog = this.$el;
-        bind(dialog.querySelectorAll(`${dataKey("modal-close")},${dataKey("modal-auto-close")}`), {
-          ["@click"]() {
-            dialog.close();
-          }
-        });
         bind(dialog, {
           ["@modal-show.document"](event) {
             if (event.detail.name === name && !event.detail.scope) {
@@ -3796,7 +4082,7 @@
             }
           }
         });
-        const handleCloseAttempt = (event) => {
+        const handleCloseAttempt = (event, checkTarget = true) => {
           event.preventDefault();
           if (persist) {
             const persistAnimation = typeof persist === "string" ? persist : "tilt-shaking";
@@ -3805,9 +4091,13 @@
             this.$nextTick(() => dialog.classList.add(persistAnimation));
             return;
           }
-          if (dismissible2 !== false && (event.target === dialog || event.target.getAttribute("tabindex") === "0")) {
-            dialog.close();
+          if (dismissible2 === false) {
+            return;
           }
+          if (checkTarget && event.target !== dialog && event.target.getAttribute("tabindex") !== "0") {
+            return;
+          }
+          dialog.close();
         };
         bind(dialog, {
           ["@toggle"](event) {
@@ -3820,10 +4110,14 @@
             }
           },
           ["@click"](event) {
+            if (event.target.closest(`${dataKey("modal-close")},${dataKey("modal-auto-close")}`)) {
+              dialog.close();
+              return;
+            }
             handleCloseAttempt(event);
           },
           ["@keydown.escape.prevent"](event) {
-            handleCloseAttempt(event);
+            handleCloseAttempt(event, false);
           }
         });
         if (shortcut) {
@@ -3838,7 +4132,7 @@
       }
     };
   }
-  const __vite_glob_0_32 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_31 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     modal
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3856,17 +4150,28 @@
         window.removeEventListener("resize", this._onMove);
         clearTimeout(this._visibilityTimeout);
       },
+      findNav(el) {
+        let node = el;
+        while (node) {
+          const sibling = node.previousElementSibling;
+          if (sibling?.matches(dataKey("nav"))) {
+            return sibling;
+          }
+          node = node.parentElement;
+        }
+        return null;
+      },
       move() {
         requestAnimationFrame(() => {
           const indicator = this.$el;
-          const nav = indicator.closest(dataKey("nav")) ?? indicator.parentElement.previousElementSibling;
+          const nav = this.findNav(indicator);
           const link = nav?.querySelector("a[data-current]");
           if (!link) return;
           const indicatorRect = indicator.getBoundingClientRect();
           const linkRect = link.getBoundingClientRect();
           const x = link.offsetLeft + nav.offsetLeft;
           const y = link.offsetTop + nav.offsetTop;
-          if (linkRect.width <= 0 || linkRect.height <= 0 || linkRect.top <= 0 || linkRect.left <= 0) {
+          if (linkRect.width <= 0 || linkRect.height <= 0) {
             indicator.style.opacity = "0";
             return;
           }
@@ -3898,7 +4203,7 @@
       }
     };
   }
-  const __vite_glob_0_33 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_32 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     navIndicator
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3907,7 +4212,7 @@
       ...dismissible("collapse")
     };
   }
-  const __vite_glob_0_34 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_33 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     notificationItem
   }, Symbol.toStringTag, { value: "Module" }));
@@ -3915,8 +4220,10 @@
     return {
       init() {
         bind(this.$el.querySelectorAll(dataKey("notification-mark-all")), {
-          ["@click"]() {
-            this.$el.closest("[role=tabpanel]").querySelectorAll(dataKey("notification-item")).forEach((el) => el.dispatchEvent(new CustomEvent("dismiss")));
+          ["@click"](e) {
+            const button = e.currentTarget;
+            const scope = button.closest("[role=tabpanel]") ?? this.$el;
+            scope.querySelectorAll(dataKey("notification-item")).forEach((el) => el.dispatchEvent(new CustomEvent("dismiss")));
           }
         });
         if (!channel || !window.Echo || !this.$wire) {
@@ -3933,7 +4240,7 @@
       }
     };
   }
-  const __vite_glob_0_35 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_34 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     notification
   }, Symbol.toStringTag, { value: "Module" }));
@@ -4042,7 +4349,7 @@
           this.$dispatch("otp-complete", { value: this.value });
           if (submit === "auto") {
             this.$root.closest("form")?.requestSubmit();
-          } else if (submit && window.Livewire) {
+          } else if (submit && hasLivewire()) {
             window.Livewire.dispatch(submit, this.value);
           }
         } else {
@@ -4078,7 +4385,7 @@
     const next = inputs[Math.min(start + chars.length, inputs.length - 1)];
     next?.focus();
   }
-  const __vite_glob_0_36 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_35 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     otp
   }, Symbol.toStringTag, { value: "Module" }));
@@ -4092,17 +4399,19 @@
           "https://cdn.jsdelivr.net/npm/pretty-print-json@3/dist/css/pretty-print-json.min.css"
         ));
       },
-      render(data = null, options = {}) {
+      render(data = null, options = null) {
         try {
-          return window.prettyPrintJson.toHtml(data, options);
+          if (typeof data === "string") {
+            data = JSON.parse(data);
+          }
+          return window.prettyPrintJson.toHtml(data, options || {});
         } catch (e) {
-          this.fail(e);
-          return "";
+          return escapeHtml(typeof data === "string" ? data : JSON.stringify(data, null, 2)) ?? "";
         }
       }
     };
   }
-  const __vite_glob_0_38 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_37 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     prettyPrintJson
   }, Symbol.toStringTag, { value: "Module" }));
@@ -4121,9 +4430,104 @@
       }
     };
   }
-  const __vite_glob_0_39 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_38 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     progress
+  }, Symbol.toStringTag, { value: "Module" }));
+  const GROUPS$2 = {
+    text: [
+      ["bold", "italic", "underline", "strike"]
+    ],
+    heading: [
+      [{ header: [1, 2, 3, 4, 5, 6, false] }]
+    ],
+    color: [
+      [{ color: [] }, { background: [] }]
+    ],
+    size: [
+      [{ size: ["small", false, "large", "huge"] }]
+    ],
+    script: [
+      [{ script: "sub" }, { script: "super" }]
+    ],
+    align: [
+      [{ align: [] }],
+      [{ indent: "-1" }, { indent: "+1" }],
+      [{ direction: "rtl" }]
+    ],
+    link: [
+      ["link", "formula"]
+    ],
+    list: [
+      [{ list: "ordered" }, { list: "bullet" }, { list: "check" }]
+    ],
+    media: [
+      ["image", "video"]
+    ],
+    quote: [
+      ["blockquote"]
+    ],
+    code: [
+      ["code-block"]
+    ]
+  };
+  function resolveToolbar(mode) {
+    const groups = parseMode(mode, EDITOR_GROUP_ORDER) ?? EDITOR_GROUP_ORDER;
+    if (!groups.length) {
+      return false;
+    }
+    warnUnsupportedGroups("quill", groups, GROUPS$2);
+    return [...groups.flatMap((group) => GROUPS$2[group] ?? []), ["clean"]];
+  }
+  function quill({ options = {}, scripts: scripts2 = [], styles: styles2 = [], mode = null } = {}) {
+    const _loadable = loadable();
+    return {
+      ..._loadable,
+      ...dataOptions(),
+      ...editorField(),
+      editor: null,
+      init() {
+        this.initField();
+        this.load(() => loadRemoteAssets(
+          () => !!window.Quill,
+          ["https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js", ...scripts2],
+          ["https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css", ...styles2]
+        ).then(() => this.mount()));
+      },
+      applyExternalValue(value) {
+        this.editor.clipboard.dangerouslyPasteHTML(value ?? "");
+      },
+      mount() {
+        try {
+          this.editor = new window.Quill(this.$refs.root, {
+            theme: "snow",
+            modules: {
+              toolbar: resolveToolbar(mode)
+            },
+            ...options,
+            ...this.getDataOptions()
+          });
+          if (this.input.value) {
+            this.editor.clipboard.dangerouslyPasteHTML(this.input.value);
+          }
+          this.editor.on("text-change", () => {
+            this.sync(this.editor.root.innerHTML);
+          });
+          this.$dispatch("rendered", { editor: this.editor });
+        } catch (e) {
+          this.fail(e);
+        }
+      },
+      destroy() {
+        _loadable.destroy.call(this);
+        this.editor?.off("text-change");
+        this.editor = null;
+      }
+    };
+  }
+  const __vite_glob_0_39 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    quill
   }, Symbol.toStringTag, { value: "Module" }));
   function sidebar(name, sticky$1, stashable) {
     const _toggleable = toggleable();
@@ -4156,15 +4560,21 @@
               if (this.isOpened()) this.close();
             }
           });
+          this._dispatchState();
         }
       },
       open() {
         this.$el.setAttribute("data-show-stashed-sidebar", "");
         _toggleable.open.call(this);
+        this._dispatchState();
       },
       close() {
         this.$el.removeAttribute("data-show-stashed-sidebar");
         _toggleable.close.call(this);
+        this._dispatchState();
+      },
+      _dispatchState() {
+        window.dispatchEvent(new CustomEvent(`sidebar-${name ?? ""}-state`, { detail: { opened: this.opened } }));
       },
       destroy() {
         if (sticky$1) {
@@ -4180,6 +4590,7 @@
   function slider() {
     return {
       input: null,
+      value: null,
       init() {
         this.input = this.$root.querySelector(dataKey("control"));
         this.$nextTick(() => this.updateRange());
@@ -4228,6 +4639,7 @@
         const max = Number(this.input.max || 100);
         const val = Number(this.input.value);
         const p = max === min ? 0 : (val - min) * 100 / (max - min);
+        this.value = this.input.value;
         this.input.style.setProperty("--range-percent", `${p}%`);
         this.input.classList.toggle("before:rounded-r-none", p < 50);
       }
@@ -4238,7 +4650,11 @@
     slider
   }, Symbol.toStringTag, { value: "Module" }));
   function submenu() {
-    const _popover = popover({ mode: "manual", position: "right", align: "start" });
+    const _popover = popover({
+      mode: "manual",
+      position: isRtl() ? "left" : "right",
+      align: "start"
+    });
     return {
       ..._popover,
       _i: null,
@@ -4282,11 +4698,11 @@
       }
     };
   }
-  const __vite_glob_0_43 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_42 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     submenu
   }, Symbol.toStringTag, { value: "Module" }));
-  function tab({ selectFirst = null } = {}) {
+  function tab({ selectFirst = null, orientation = null } = {}) {
     return {
       selected: null,
       get tabs() {
@@ -4299,11 +4715,13 @@
             this.select(selected ?? this.tabs[0]?.dataset.name);
           });
         }
+        const nextKey = orientation === "vertical" ? "arrow-down" : "arrow-right";
+        const previousKey = orientation === "vertical" ? "arrow-up" : "arrow-left";
         bind(this.$root, {
-          ["@keydown.arrow-right.prevent"](event) {
+          [`@keydown.${nextKey}.prevent`](event) {
             this.focusTab(1, event.target);
           },
-          ["@keydown.arrow-left.prevent"](event) {
+          [`@keydown.${previousKey}.prevent`](event) {
             this.focusTab(-1, event.target);
           },
           ["@keydown.home.prevent"](event) {
@@ -4334,7 +4752,7 @@
       }
     };
   }
-  const __vite_glob_0_44 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_43 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     tab
   }, Symbol.toStringTag, { value: "Module" }));
@@ -4419,45 +4837,306 @@
       _syncSelect() {
         this.selected = this.rows.filter((row) => row.selection?.checked);
         this.selectedIds = this.selected.map((row) => row.id);
-        this.selectAllChecked = this.rows.length > 0 && this.rows.every((row) => row.selection?.checked);
+        this.selectAllChecked = allChecked(this.rows, (row) => !!row.selection?.checked);
+      }
+    };
+  }
+  const __vite_glob_0_44 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    table
+  }, Symbol.toStringTag, { value: "Module" }));
+  function textarea({ maxRows = null, counter = null, length = 0 } = {}) {
+    return {
+      length,
+      init() {
+        const el = this.$el.querySelector("textarea");
+        const minRows = parseInt(el.getAttribute("rows"));
+        const autoRows = minRows && minRows > 0 && maxRows && maxRows > minRows;
+        if (counter) {
+          this.length = el.value.length;
+        }
+        if (autoRows) {
+          this.resizeRows(el, minRows, maxRows);
+        }
+        bind(el, {
+          ["@input"]: () => {
+            if (counter) {
+              this.length = el.value.length;
+            }
+            if (autoRows) {
+              this.resizeRows(el, minRows, maxRows);
+            }
+          }
+        });
+      },
+      resizeRows(el, minRows, maxRows2) {
+        el.rows = minRows;
+        const style = getComputedStyle(el);
+        const padding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+        const lineHeight = parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 1.2 || 16;
+        const rows = Math.round((el.scrollHeight - padding) / lineHeight);
+        el.rows = Math.min(Math.max(rows, minRows), maxRows2);
       }
     };
   }
   const __vite_glob_0_45 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
-    table
+    textarea
   }, Symbol.toStringTag, { value: "Module" }));
-  function textarea(maxRows) {
+  const GROUPS$1 = {
+    text: {
+      toolbar: "bold italic underline strikethrough | removeformat"
+    },
+    heading: {
+      toolbar: "blocks"
+    },
+    color: {
+      toolbar: "forecolor backcolor"
+    },
+    size: {
+      toolbar: "fontsize"
+    },
+    script: {
+      toolbar: "subscript superscript"
+    },
+    align: {
+      toolbar: "alignleft aligncenter alignright alignjustify"
+    },
+    link: {
+      plugins: "link autolink",
+      toolbar: "link"
+    },
+    list: {
+      plugins: "lists",
+      toolbar: "numlist bullist"
+    },
+    media: {
+      plugins: "image media",
+      toolbar: "image media"
+    },
+    table: {
+      plugins: "table",
+      toolbar: "table"
+    },
+    quote: {
+      toolbar: "blockquote"
+    },
+    code: {
+      plugins: "code codesample",
+      toolbar: "code codesample"
+    }
+  };
+  function resolveConfig(mode) {
+    const groups = parseMode(mode, EDITOR_GROUP_ORDER) ?? EDITOR_GROUP_ORDER;
+    if (!groups.length) {
+      return { plugins: "", toolbar: false };
+    }
+    warnUnsupportedGroups("tinymce", groups, GROUPS$1);
     return {
+      plugins: groups.map((group) => GROUPS$1[group]?.plugins).filter(Boolean).join(" "),
+      toolbar: ["undo redo", ...groups.map((group) => GROUPS$1[group]?.toolbar).filter(Boolean)].join(" | ")
+    };
+  }
+  function tinymce({ options = {}, scripts: scripts2 = [], mode = null } = {}) {
+    const _loadable = loadable();
+    return {
+      ..._loadable,
+      ...dataOptions(),
+      ...editorField(),
+      editor: null,
       init() {
-        const minRows = parseInt(this.$el.getAttribute("rows"));
-        if (minRows && minRows > 0 && maxRows && maxRows > minRows) {
-          bind(this.$el, {
-            ["@input"]() {
-              this.autoRows(minRows, maxRows);
-            }
+        this.initField();
+        this.load(() => loadRemoteAssets(
+          () => !!window.tinymce,
+          ["https://cdn.jsdelivr.net/npm/tinymce@8/tinymce.min.js", ...scripts2]
+        ).then(() => this.mount()));
+      },
+      applyExternalValue(value) {
+        this.editor.setContent(value ?? "");
+      },
+      async mount() {
+        try {
+          const { plugins, toolbar } = resolveConfig(mode);
+          const [editor] = await window.tinymce.init({
+            target: this.input,
+            license_key: "gpl",
+            menubar: false,
+            plugins,
+            toolbar,
+            promotion: false,
+            branding: false,
+            setup: (editor2) => {
+              editor2.on("change input undo redo", () => {
+                this.sync(editor2.getContent());
+              });
+            },
+            ...options,
+            ...this.getDataOptions()
           });
-          this.autoRows(minRows, maxRows);
+          this.editor = editor;
+          this.$dispatch("rendered", { editor: this.editor });
+        } catch (e) {
+          this.fail(e);
         }
       },
-      autoRows(minRows, maxRows2) {
-        this.$el.rows = minRows;
-        const style = getComputedStyle(this.$el);
-        const padding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
-        const lineHeight = parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 1.2 || 16;
-        const rows = Math.round((this.$el.scrollHeight - padding) / lineHeight);
-        this.$el.rows = Math.min(Math.max(rows, minRows), maxRows2);
+      destroy() {
+        _loadable.destroy.call(this);
+        this.editor?.remove();
+        this.editor = null;
       }
     };
   }
   const __vite_glob_0_46 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
-    textarea
+    tinymce
+  }, Symbol.toStringTag, { value: "Module" }));
+  const TIPTAP_VERSION = "3.30.3";
+  const esm = (pkg) => `https://esm.sh/${pkg}@${TIPTAP_VERSION}`;
+  const GROUPS = {
+    text: {},
+    heading: {},
+    color: {
+      scripts: [esm("@tiptap/extension-text-style")],
+      extensions: ([textStyle]) => [textStyle.TextStyleKit]
+    },
+    size: {
+      scripts: [esm("@tiptap/extension-text-style")],
+      extensions: ([textStyle]) => [textStyle.TextStyleKit]
+    },
+    script: {
+      scripts: [esm("@tiptap/extension-subscript"), esm("@tiptap/extension-superscript")],
+      extensions: ([subscript, superscript]) => [subscript.default, superscript.default]
+    },
+    align: {
+      scripts: [esm("@tiptap/extension-text-align")],
+      extensions: ([textAlign]) => [textAlign.default.configure({ types: ["heading", "paragraph"] })]
+    },
+    link: {},
+    list: {},
+    media: {
+      scripts: [esm("@tiptap/extension-image")],
+      extensions: ([image]) => [image.default]
+    },
+    table: {
+      scripts: [esm("@tiptap/extension-table")],
+      extensions: ([table2]) => [table2.TableKit]
+    },
+    quote: {},
+    code: {}
+  };
+  function tiptap({ options = {}, scripts: scripts2 = [], mode = null } = {}) {
+    const _loadable = loadable();
+    let editor = null;
+    return {
+      ..._loadable,
+      ...dataOptions(),
+      ...editorField(),
+      groups: [],
+      extraModules: [],
+      tick: 0,
+      init() {
+        this.initField();
+        const groups = parseMode(mode, EDITOR_GROUP_ORDER) ?? EDITOR_GROUP_ORDER;
+        warnUnsupportedGroups("tiptap", groups, GROUPS);
+        this.groups = groups;
+        this.load(async () => {
+          const [{ Editor }, { default: StarterKit }] = await loadRemoteModule([
+            esm("@tiptap/core"),
+            esm("@tiptap/starter-kit")
+          ]);
+          const extensions = [StarterKit];
+          for (const group of groups) {
+            const config = GROUPS[group];
+            if (!config?.scripts?.length) continue;
+            const mods = await loadRemoteModule(config.scripts);
+            for (const extension of config.extensions?.(mods) ?? []) {
+              if (!extension || extensions.includes(extension)) continue;
+              extensions.push(extension);
+            }
+          }
+          if (scripts2.length) {
+            this.extraModules = await loadRemoteModule(scripts2);
+          }
+          this.mount(Editor, extensions);
+        });
+      },
+      applyExternalValue(value) {
+        editor.commands.setContent(value ?? "");
+      },
+      run(command) {
+        const chain = editor.chain().focus();
+        if (command === "heading1") chain.toggleHeading({ level: 1 });
+        else if (command === "heading2") chain.toggleHeading({ level: 2 });
+        else if (command === "heading3") chain.toggleHeading({ level: 3 });
+        else if (command.startsWith("align")) chain.setTextAlign(command.slice(5).toLowerCase());
+        else if (command === "link") {
+          const url = window.prompt("URL", editor.getAttributes("link").href ?? "");
+          url ? chain.setLink({ href: url }) : chain.unsetLink();
+        } else if (command === "image") {
+          const url = window.prompt("Image URL");
+          if (url) chain.setImage({ src: url });
+        } else if (command === "table") {
+          chain.insertTable({ rows: 3, cols: 3, withHeaderRow: true });
+        } else {
+          chain[`toggle${command.charAt(0).toUpperCase()}${command.slice(1)}`]?.();
+        }
+        chain.run();
+      },
+      isActive(command) {
+        this.tick;
+        if (!editor) return false;
+        if (command === "heading1") return editor.isActive("heading", { level: 1 });
+        if (command === "heading2") return editor.isActive("heading", { level: 2 });
+        if (command === "heading3") return editor.isActive("heading", { level: 3 });
+        if (command.startsWith("align")) return editor.isActive({ textAlign: command.slice(5).toLowerCase() });
+        return editor.isActive(command);
+      },
+      setColor(value) {
+        value ? editor.chain().focus().setColor(value).run() : editor.chain().focus().unsetColor().run();
+      },
+      setBackgroundColor(value) {
+        value ? editor.chain().focus().setBackgroundColor(value).run() : editor.chain().focus().unsetBackgroundColor().run();
+      },
+      setFontSize(value) {
+        value ? editor.chain().focus().setFontSize(value).run() : editor.chain().focus().unsetFontSize().run();
+      },
+      mount(Editor, extensions) {
+        try {
+          editor = new Editor({
+            element: this.$refs.root,
+            extensions,
+            content: this.input.value ?? "",
+            onUpdate: ({ editor: editor2 }) => {
+              this.sync(editor2.getHTML());
+            },
+            onSelectionUpdate: () => {
+              this.tick++;
+            },
+            onTransaction: () => {
+              this.tick++;
+            },
+            ...options,
+            ...this.getDataOptions()
+          });
+          this.$dispatch("rendered", { editor });
+        } catch (e) {
+          this.fail(e);
+        }
+      },
+      destroy() {
+        _loadable.destroy.call(this);
+        editor?.destroy();
+        editor = null;
+      }
+    };
+  }
+  const __vite_glob_0_47 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    tiptap
   }, Symbol.toStringTag, { value: "Module" }));
   function toast$1() {
     return {
       toasts: [],
-      positions: ["top-left", "top-center", "top-right", "bottom-left", "bottom-center", "bottom-right"],
       init() {
         bind(this.$el, {
           ["@toast.document"](e) {
@@ -4710,16 +5389,6 @@
       getToastsByPosition(position) {
         return this.toasts.filter((t) => t.position === position);
       },
-      positionTransform(position) {
-        return {
-          "top-left": "-translate-x-full opacity-0",
-          "top-center": "-translate-y-full opacity-0",
-          "top-right": "translate-x-full opacity-0",
-          "bottom-left": "-translate-x-full opacity-0",
-          "bottom-center": "translate-y-full opacity-0",
-          "bottom-right": "translate-x-full opacity-0"
-        }[String(position)];
-      },
       notify(props) {
         return this.addToast(props);
       },
@@ -4850,9 +5519,16 @@
     time += lines * 300;
     return Math.min(max, Math.max(min, time));
   }
-  const __vite_glob_0_47 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_48 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     toast: toast$1
+  }, Symbol.toStringTag, { value: "Module" }));
+  function toggleAll({ group = null } = {}) {
+    return groupAll("toggle", group ?? "");
+  }
+  const __vite_glob_0_49 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+    __proto__: null,
+    toggleAll
   }, Symbol.toStringTag, { value: "Module" }));
   const PREVIEWABLE_TYPES = ["image", "video", "audio", "pdf"];
   function upload({
@@ -5153,7 +5829,7 @@
       },
       syncFieldError() {
         if (this.isInvalid) return;
-        this.$root.closest(dataKey("field"))?.querySelector(dataKey("error"))?.remove();
+        findInField(this.$root, "error")?.remove();
       },
       revoke(entry) {
         if (entry.raw && entry.url) {
@@ -5204,7 +5880,7 @@
       }
     };
   }
-  const __vite_glob_0_49 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  const __vite_glob_0_50 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
     __proto__: null,
     upload
   }, Symbol.toStringTag, { value: "Module" }));
@@ -5236,7 +5912,7 @@
   }
   function registerAlpineComponents() {
     const components = Object.fromEntries(
-      Object.values([__vite_glob_0_0, __vite_glob_0_1, __vite_glob_0_2, __vite_glob_0_3, __vite_glob_0_4, __vite_glob_0_5, __vite_glob_0_6, __vite_glob_0_7, __vite_glob_0_8, __vite_glob_0_9, __vite_glob_0_10, __vite_glob_0_11, __vite_glob_0_12, __vite_glob_0_13, __vite_glob_0_14, __vite_glob_0_15, __vite_glob_0_16, __vite_glob_0_17, __vite_glob_0_18, __vite_glob_0_19, __vite_glob_0_20, __vite_glob_0_21, __vite_glob_0_22, __vite_glob_0_23, __vite_glob_0_24, __vite_glob_0_25, __vite_glob_0_26, __vite_glob_0_27, __vite_glob_0_28, __vite_glob_0_29, __vite_glob_0_30, __vite_glob_0_31, __vite_glob_0_32, __vite_glob_0_33, __vite_glob_0_34, __vite_glob_0_35, __vite_glob_0_36, __vite_glob_0_37, __vite_glob_0_38, __vite_glob_0_39, __vite_glob_0_40, __vite_glob_0_41, __vite_glob_0_42, __vite_glob_0_43, __vite_glob_0_44, __vite_glob_0_45, __vite_glob_0_46, __vite_glob_0_47, __vite_glob_0_48, __vite_glob_0_49]).flatMap(
+      Object.values([__vite_glob_0_0, __vite_glob_0_1, __vite_glob_0_2, __vite_glob_0_3, __vite_glob_0_4, __vite_glob_0_5, __vite_glob_0_6, __vite_glob_0_7, __vite_glob_0_8, __vite_glob_0_9, __vite_glob_0_10, __vite_glob_0_11, __vite_glob_0_12, __vite_glob_0_13, __vite_glob_0_14, __vite_glob_0_15, __vite_glob_0_16, __vite_glob_0_17, __vite_glob_0_18, __vite_glob_0_19, __vite_glob_0_20, __vite_glob_0_21, __vite_glob_0_22, __vite_glob_0_23, __vite_glob_0_24, __vite_glob_0_25, __vite_glob_0_26, __vite_glob_0_27, __vite_glob_0_28, __vite_glob_0_29, __vite_glob_0_30, __vite_glob_0_31, __vite_glob_0_32, __vite_glob_0_33, __vite_glob_0_34, __vite_glob_0_35, __vite_glob_0_36, __vite_glob_0_37, __vite_glob_0_38, __vite_glob_0_39, __vite_glob_0_40, __vite_glob_0_41, __vite_glob_0_42, __vite_glob_0_43, __vite_glob_0_44, __vite_glob_0_45, __vite_glob_0_46, __vite_glob_0_47, __vite_glob_0_48, __vite_glob_0_49, __vite_glob_0_50]).flatMap(
         (module) => Object.entries(module).filter(([, v]) => typeof v === "function")
       )
     );

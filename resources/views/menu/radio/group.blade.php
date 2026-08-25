@@ -3,12 +3,13 @@
     'size' => null,
     'keepOpen' => null,
     'items' => null,
+    'value' => null,
 ])
 <tk:menu.group
     :attributes="$attributes->whereDoesntStartWith(['item:'])->merge(['data-keep-open' => $keepOpen])"
     :$size
     wire:ignore
-    x-data="{ value: null }"
+    x-data="{ value: {{ Js::from($value) }} }"
     x-modelable="value"
 >
     @foreach (collect($items) as $item)

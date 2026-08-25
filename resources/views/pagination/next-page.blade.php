@@ -2,6 +2,8 @@
 @props(['paginator'])
 @php
 
+$disabled = ! $paginator->hasMorePages();
+
 $wireKey = method_exists($paginator, 'getCursorName') && in_livewire()
     ? 'cursor-' . $paginator->getCursorName() . '-' . optional($paginator->nextCursor())->encode()
     : false;
@@ -13,10 +15,10 @@ $action = method_exists($paginator, 'getCursorName')
 @endphp
 <tk:button
     :$attributes
-    :aria-disabled="!$paginator->hasMorePages()"
-    :disabled="!$paginator->hasMorePages()"
+    :aria-disabled="$disabled"
+    :disabled="$disabled"
     :rel="in_livewire() ? false : 'next'"
-    :href="in_livewire() ? false : $paginator->nextPageUrl()"
+    :href="(in_livewire() || $disabled) ? false : $paginator->nextPageUrl()"
     :action="$action"
     :wire:key="$wireKey"
     :wire:loading.attr="in_livewire() ? 'disabled' : false"

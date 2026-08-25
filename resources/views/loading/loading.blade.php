@@ -1,11 +1,10 @@
 @props([
     'variant' => null,
     'size' => null,
+    'label' => null,
+    'announce' => null,
 ])
 <span
-    role="status"
-    aria-live="polite"
-    aria-label="{{ __('Loading...') }}"
     {{
         $attributes
             ->dataKey('loading')
@@ -25,5 +24,13 @@
                 'ball' => "mask-image: url('data:image/svg+xml,%3Csvg viewBox=\'0 0 24 24\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cellipse cx=\'12\' cy=\'5\' rx=\'4\' ry=\'4\'%3E%3Canimate attributeName=\'cy\' values=\'5;20;20.5;20;5\' keyTimes=\'0;0.469;0.5;0.531;1\' dur=\'.8s\' repeatCount=\'indefinite\' keySplines=\'.33,0,.66,.33;.33,.66,.66,1\'/%3E%3Canimate attributeName=\'rx\' values=\'4;4;4.8;4;4\' keyTimes=\'0;0.469;0.5;0.531;1\' dur=\'.8s\' repeatCount=\'indefinite\'/%3E%3Canimate attributeName=\'ry\' values=\'4;4;3;4;4\' keyTimes=\'0;0.469;0.5;0.531;1\' dur=\'.8s\' repeatCount=\'indefinite\'/%3E%3C/ellipse%3E%3C/svg%3E');",
                 default => "mask-image: url('data:image/svg+xml,%3Csvg stroke=\'black\' viewBox=\'0 0 24 24\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg transform-origin=\'center\'%3E%3Ccircle cx=\'12\' cy=\'12\' r=\'9.5\' fill=\'none\' stroke-width=\'3\' stroke-linecap=\'round\'%3E%3CanimateTransform attributeName=\'transform\' type=\'rotate\' from=\'0 12 12\' to=\'360 12 12\' dur=\'2s\' repeatCount=\'indefinite\'/%3E%3Canimate attributeName=\'stroke-dasharray\' values=\'0,150;42,150;42,150\' keyTimes=\'0;0.475;1\' dur=\'1.5s\' repeatCount=\'indefinite\'/%3E%3Canimate attributeName=\'stroke-dashoffset\' values=\'0;-16;-59\' keyTimes=\'0;0.475;1\' dur=\'1.5s\' repeatCount=\'indefinite\'/%3E%3C/circle%3E%3C/g%3E%3C/svg%3E');",
             })
+            ->merge(['aria-label' => __($label ?? 'Loading...')])
+            ->when(
+                $announce !== false,
+                fn ($attrs) => $attrs->merge([
+                    'role' => 'status',
+                    'aria-live' => 'polite',
+                ])
+            )
     }}
 ></span>

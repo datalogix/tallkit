@@ -1,5 +1,5 @@
 import { loadRemoteAssets } from '../utils'
-import { dataOptions } from './data-options'
+import { dataOptions } from '../mixins/data-options'
 import { loadable } from './loadable'
 
 export function apexcharts() {
@@ -16,16 +16,20 @@ export function apexcharts() {
     },
 
     render(options = {}) {
-      const merged = { ...options, ...this.getDataOptions() }
+      try {
+        const merged = { ...options, ...this.getDataOptions() }
 
-      if (this.chart) {
-        this.chart.updateOptions(merged)
-      } else {
-        this.chart = new window.ApexCharts(this.$el, merged)
-        this.chart.render()
+        if (this.chart) {
+          this.chart.updateOptions(merged)
+        } else {
+          this.chart = new window.ApexCharts(this.$refs.target, merged)
+          this.chart.render()
+        }
+
+        this.$dispatch('rendered', { chart: this.chart })
+      } catch (e) {
+        this.fail(e)
       }
-
-      this.$dispatch('rendered', { chart: this.chart })
     },
 
     destroy() {

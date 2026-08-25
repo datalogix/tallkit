@@ -21,9 +21,11 @@
         'delete' => 'This action is permanent and cannot be undone. All related data will be lost.',
     }"
 >
-    <x-slot:trigger>
-        {{ $slot }}
-    </x-slot:trigger>
+    @if ($slot->isNotEmpty())
+        <x-slot:trigger>
+            {{ $slot }}
+        </x-slot:trigger>
+    @endif
 
     <div {{ TALLKit::attributesAfter($attributes, 'actions:')->classes('flex items-center gap-2 mt-10') }}>
         @isset ($actions)

@@ -7,6 +7,8 @@
     :title="$title ?? 'Danger Zone'"
     :message="$message ?? 'By deleting this record, all associated data will be permanently lost and cannot be recovered.'"
     type="danger"
+    role="group"
+    aria-live="off"
 >
     <x-slot:append>
         @if ($slot->isEmpty())

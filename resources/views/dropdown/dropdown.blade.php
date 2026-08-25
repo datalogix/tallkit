@@ -3,6 +3,7 @@
     'hover' => null,
     'position' => null,
     'align' => null,
+    'animation' => null,
 ])
 <div
     wire:ignore.self

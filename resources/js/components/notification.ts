@@ -4,8 +4,11 @@ export function notification({ channel = null } = {}) {
   return {
     init() {
       bind(this.$el.querySelectorAll(dataKey('notification-mark-all')), {
-        ['@click']() {
-          this.$el.closest('[role=tabpanel]')
+        ['@click'](e) {
+          const button = e.currentTarget as HTMLElement
+          const scope = button.closest('[role=tabpanel]') ?? this.$el
+
+          scope
             .querySelectorAll(dataKey('notification-item'))
             .forEach((el) => el.dispatchEvent(new CustomEvent('dismiss')))
         },

@@ -6,6 +6,7 @@
     'preload' => false,
     'useStylesheet' => false,
     'noscript' => false,
+    'nonce' => null,
 ])
 @php
 
@@ -40,7 +41,7 @@ if (filter_var($families, FILTER_VALIDATE_URL) !== false) {
     @if ($useStylesheet)
         <link rel="stylesheet" href="{{ $url }}" />
     @else
-        <script>
+        <script @if ($nonce) nonce="{{ $nonce }}" @endif>
             var l=document.createElement('link');
             l.rel='stylesheet';
             l.href=@js($url);

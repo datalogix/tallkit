@@ -1,7 +1,8 @@
-@aware(['size', 'variant'])
+@aware(['size', 'variant', 'orientation'])
 @props([
     'size' => null,
     'variant' => null,
+    'orientation' => null,
 ])
 <div
     {{
@@ -24,6 +25,7 @@
                         default => 'flex border-b border-zinc-800/10 dark:border-white/20'
                     },
                 )
+                ->merge(['aria-orientation' => $orientation === 'vertical' ? 'vertical' : 'horizontal'])
         }}
         role="tablist"
     >

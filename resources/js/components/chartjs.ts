@@ -1,5 +1,5 @@
 import { loadRemoteAssets } from '../utils'
-import { dataOptions } from './data-options'
+import { dataOptions } from '../mixins/data-options'
 import { loadable } from './loadable'
 
 export function chartjs() {
@@ -16,16 +16,20 @@ export function chartjs() {
     },
 
     render(options = {}) {
-      const merged = { ...options, ...this.getDataOptions() }
+      try {
+        const merged = { ...options, ...this.getDataOptions() }
 
-      if (this.chart) {
-        Object.assign(this.chart.config, merged)
-        this.chart.update()
-      } else {
-        this.chart = new window.Chart(this.$el, merged)
+        if (this.chart) {
+          Object.assign(this.chart.config, merged)
+          this.chart.update()
+        } else {
+          this.chart = new window.Chart(this.$refs.target, merged)
+        }
+
+        this.$dispatch('rendered', { chart: this.chart })
+      } catch (e) {
+        this.fail(e)
       }
-
-      this.$dispatch('rendered', { chart: this.chart })
     },
 
     destroy() {

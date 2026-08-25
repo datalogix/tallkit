@@ -11,7 +11,7 @@
 $logo ??= find_image('logo');
 $logoDark ??= find_image('logo-dark');
 $name = $name === true ? config('app.name') : $name;
-$alt ??= $name ?: config('app.name');
+$alt ??= $name ? '' : config('app.name');
 $href ??= route_detect('home');
 
 @endphp
@@ -49,7 +49,7 @@ $href ??= route_detect('home');
                         {{
                             TALLKit::attributesAfter($attributes, 'image-dark:')
                                 ->classes('hidden dark:block h-full')
-                                ->merge($alt ? ['alt' => $alt] : [])
+                                ->merge($alt !== null ? ['alt' => $alt] : [])
                         }}
                     />
                 @endif
@@ -77,7 +77,7 @@ $href ??= route_detect('home');
                     {{
                         TALLKit::attributesAfter($attributes, 'image-dark:')
                             ->classes('hidden dark:block h-full')
-                            ->merge($alt ? ['alt' => $alt] : [])
+                            ->merge($alt !== null ? ['alt' => $alt] : [])
                     }}
                 />
             @endif
@@ -88,7 +88,7 @@ $href ??= route_detect('home');
                     {{
                         TALLKit::attributesAfter($attributes, 'image:')
                             ->classes(['block dark:hidden' => !!$logoDark, 'h-full'])
-                            ->merge($alt ? ['alt' => $alt] : [])
+                            ->merge($alt !== null ? ['alt' => $alt] : [])
                     }}
                 />
             @else
@@ -99,7 +99,8 @@ $href ??= route_detect('home');
 
     <tk:heading
         :attributes="TALLKit::attributesAfter($attributes, 'name:')->classes('truncate')"
-        :label="$name"
         :$size
+        :label="$name"
+        as="span"
     />
 </tk:element>

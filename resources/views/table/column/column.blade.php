@@ -1,4 +1,4 @@
-@aware(['dense', 'rows'])
+@aware(['dense'])
 @props([
     'name' => null,
     'label' => null,
@@ -16,14 +16,11 @@ if ($sortable === true) {
     if (in_livewire()) {
         $sortableAction ??= "sort('$sortByColumn')";
     } else {
-        $sortDirection ??= request('sortBy') === $sortByColumn ? request('sortDirection') === 'asc' ? 'desc' : 'asc' : 'asc';
-        $sortable = request('sortBy') === $sortByColumn ? (request('sortDirection') === 'desc' ? 'desc' : 'asc') : $sortable;
-
-        if ($rows instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator) {
-            $sortableHref ??= $rows->withQueryString()->appends(['sortBy' => $sortByColumn, 'sortDirection' => $sortDirection])->url($rows->currentPage());
-        } else if ($rows instanceof \Illuminate\Contracts\Pagination\CursorPaginator) {
-            $sortableHref ??= $rows->withQueryString()->appends(['sortBy' => $sortByColumn, 'sortDirection' => $sortDirection])->url($rows->cursor());
-        }
+        $isCurrentColumn = request('sortBy') === $sortByColumn;
+        $requestDirection = request('sortDirection');
+        $sortDirection ??= $isCurrentColumn && $requestDirection === 'asc' ? 'desc' : 'asc';
+        $sortable = $isCurrentColumn ? ($requestDirection === 'desc' ? 'desc' : 'asc') : $sortable;
+        $sortableHref ??= request()->fullUrlWithQuery(['sortBy' => $sortByColumn, 'sortDirection' => $sortDirection]);
     }
 }
 
@@ -38,6 +35,14 @@ if ($sortable === true) {
                 'tk-table-sticky-column' => $sticky,
                 '[:where(&)]:font-medium [:where(&)]:text-sm',
                 '[:where(&)]:text-zinc-800 dark:[:where(&)]:text-white',
+            ])
+            ->merge([
+                'aria-sort' => match ($sortable) {
+                    'asc' => 'ascending',
+                    'desc' => 'descending',
+                    true => 'none',
+                    default => false,
+                }
             ])
     }}
 >

@@ -18,6 +18,7 @@ $action = in_livewire() ? ($action ?? 'submit') : route_detect(routes: [$route, 
 @endphp
 <form
     x-data="form({
+        action: @js(in_livewire() ? $action : null),
         focusError: {{ $focusError === false ? 'false' : 'true' }},
         toast: @js($toast ?? true),
         errorMessage: @js($errorMessage ?? __('There was an error submitting the form.')),

@@ -38,7 +38,6 @@ $signUp ??= route_detect([
         :$size
         name="password"
         required
-        autocomplete="current-password"
         placeholder
     >
         @if ($forgotPassword)
@@ -48,7 +47,6 @@ $signUp ??= route_detect([
                     :href="$forgotPassword"
                     :$size
                     label="Forgot your password?"
-                    tabindex="-1"
                 />
             </x-slot:labelAppend>
         @endif

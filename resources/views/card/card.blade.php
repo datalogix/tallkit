@@ -36,7 +36,7 @@
         <img
             {{ TALLKit::attributesAfter($attributes, 'image:')->classes('w-full object-cover') }}
             src="{{ $image }}"
-            alt="{{ __($alt ?? (string) $title) }}"
+            alt="{{ __($alt ?? (is_string($title) ? $title : '')) }}"
         />
     @endif
 

@@ -3,10 +3,12 @@
     'variant' => null,
     'align' => null,
     'label' => null,
+    'value' => null,
 ])
 @php
 
-[$name, $fieldName, $label] = TALLKit::resolveFieldContext($attributes, $label);
+[$name, $fieldName, $label, , , $wireModel] = TALLKit::resolveFieldContext($attributes, $label);
+$wireModel = $attributes->whereStartsWith('wire:model')->first() ?: $wireModel;
 $options = TALLKit::parseOptions($attributes);
 
 @endphp
@@ -32,9 +34,11 @@ $options = TALLKit::parseOptions($attributes);
                     <tk:radio
                         :attributes="TALLKit::attributesAfter($attributes, 'radio:')
                             ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId('field', $fieldName, (string) $optionItemGroupValue)] : [], false)
+                            ->merge(['wire:model' => $wireModel], false)
                         "
                         :label="$optionItemGroupLabel"
                         :value="$optionItemGroupValue"
+                        :checked="(string) $optionItemGroupValue === (string) $value"
                         :show-error="false"
                         :id="TALLKit::generateId('field', $fieldName, (string) $optionItemGroupValue)"
                         :$name
@@ -47,9 +51,11 @@ $options = TALLKit::parseOptions($attributes);
                 <tk:radio
                     :attributes="TALLKit::attributesAfter($attributes, 'radio:')
                         ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId('field', $fieldName, (string) $optionItemValue)] : [], false)
+                        ->merge(['wire:model' => $wireModel], false)
                     "
                     :label="$optionItemLabel"
                     :value="$optionItemValue"
+                    :checked="(string) $optionItemValue === (string) $value"
                     :show-error="false"
                     :id="TALLKit::generateId('field', $fieldName, (string) $optionItemValue)"
                     :$name

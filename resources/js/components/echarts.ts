@@ -1,5 +1,5 @@
 import { loadRemoteAssets } from '../utils'
-import { dataOptions } from './data-options'
+import { dataOptions } from '../mixins/data-options'
 import { loadable } from './loadable'
 
 export function echarts() {
@@ -16,9 +16,13 @@ export function echarts() {
     },
 
     render(options = {}) {
-      this.chart ??= window.echarts.init(this.$el)
-      this.chart.setOption({ ...options, ...this.getDataOptions() })
-      this.$dispatch('rendered', { chart: this.chart })
+      try {
+        this.chart ??= window.echarts.init(this.$refs.target)
+        this.chart.setOption({ ...options, ...this.getDataOptions() })
+        this.$dispatch('rendered', { chart: this.chart })
+      } catch (e) {
+        this.fail(e)
+      }
     },
 
     destroy() {

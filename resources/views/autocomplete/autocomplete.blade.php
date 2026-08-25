@@ -2,6 +2,7 @@
     'items' => null,
     'size' => null,
     'options' => null,
+    'animation' => null,
 ])
 @php
 
@@ -27,6 +28,7 @@ $listboxId = TALLKit::attributesAfter($attributes, 'items:')->get('id', TALLKit:
     <tk:popover
         :attributes="TALLKit::attributesAfter($attributes, 'popover:')"
         :$size
+        :$animation
     >
         <tk:listbox.items
             :attributes="TALLKit::attributesAfter($attributes, 'items:')"

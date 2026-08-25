@@ -5,14 +5,24 @@
     wire:ignore
     x-cloak
     x-data="{{ $attributes->pluck('x-data', 'loadable') }}"
-    {{ $attributes->dataKey('loadable')->whereDoesntStartWith(['loading:', 'error:']) }}
-    @if ($silent) data-silent @endif
+    {{
+        $attributes
+            ->whereDoesntStartWith(['loading:', 'error:', 'empty:'])
+            ->dataKey('loadable')
+            ->merge(['data-silent' => (bool) $silent])
+    }}
 >
-    @isset ($empty)
-        <template x-if="isEmpty()">
+    <template x-if="isEmpty()">
+        @isset ($empty)
             {{ $empty }}
-        </template>
-    @endisset
+        @else
+            <tk:text
+                :attributes="TALLKit::attributesAfter($attributes, 'empty:')"
+                variant="subtle"
+                label="Nothing to show"
+            />
+        @endisset
+    </template>
 
     <template x-if="isCompleted()">
         @isset ($completed)
@@ -35,7 +45,7 @@
             {{ $error }}
         @else
             <tk:error :attributes="TALLKit::attributesAfter($attributes, 'error:')">
-                <span x-text="error"></span>
+                <span x-text="error?.message ?? error"></span>
             </tk:error>
         @endisset
     </template>

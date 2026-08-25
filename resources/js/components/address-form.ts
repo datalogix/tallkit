@@ -57,14 +57,23 @@ export function addressForm(options = {}) {
       const res = await fetch(`https://viacep.com.br/ws/${zipcode}/json/`, { signal })
       const data = await res.json()
 
-      if (data.erro) throw new Error('ViaCEP not found')
+      if (data.erro) {
+        const error = new Error('ViaCEP not found')
+        error.name = 'NotFoundError'
+        throw error
+      }
 
       return data
     },
 
     async brasilApi(zipcode, signal) {
       const res = await fetch(`https://brasilapi.com.br/api/cep/v1/${zipcode}`, { signal })
-      if (!res.ok) throw new Error('BrasilAPI error')
+
+      if (!res.ok) {
+        const error = new Error('BrasilAPI error')
+        if (res.status === 404) error.name = 'NotFoundError'
+        throw error
+      }
 
       const data = await res.json()
 

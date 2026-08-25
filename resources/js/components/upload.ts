@@ -1,4 +1,4 @@
-import { dataKey, bind, formatBytes, detectFileType, generateId } from '../utils'
+import { dataKey, bind, formatBytes, detectFileType, generateId, findInField } from '../utils'
 
 const PREVIEWABLE_TYPES = ['image', 'video', 'audio', 'pdf']
 
@@ -379,9 +379,7 @@ export function upload({
     syncFieldError() {
       if (this.isInvalid) return
 
-      this.$root.closest(dataKey('field'))
-        ?.querySelector(dataKey('error'))
-        ?.remove()
+      findInField(this.$root, 'error')?.remove()
     },
 
     revoke(entry) {

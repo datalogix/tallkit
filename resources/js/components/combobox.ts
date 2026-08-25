@@ -47,12 +47,12 @@ export function combobox({ value = null, multiple = false } = {}) {
           this.open()
         },
 
-        ['@keydown.arrow-up.prevent']: () => {
+        ['@keydown.arrow-up.prevent']() {
           if (this.opened) return
           this.open()
         },
 
-        ['@keydown.arrow-down.prevent']: () => {
+        ['@keydown.arrow-down.prevent']() {
           if (this.opened) return
           this.open()
         },

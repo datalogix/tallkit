@@ -28,7 +28,7 @@
 
 $as ??= 'span';
 $href ??= route_detect($route, $parameters, $href);
-$ariaLabel = $ariaLabel === true || $ariaLabel === null ? $tooltip : $ariaLabel;
+$ariaLabel = $ariaLabel === true || $ariaLabel === null ? (is_string($label) && $label !== '' ? $label : $tooltip) : $ariaLabel;
 $current ??= is_current_href($href, $exact);
 
 if ($href) {
@@ -127,10 +127,12 @@ $external ??= $attributes->get('target') === '_blank';
             {{ $slot }}
         @elseif (TALLKit::isSlot($label))
             {{ $label }}
-        @elseif (is_string($label) && str_contains($label, "\n"))
-            {!! nl2br(__(e($label))) !!}
+        @elseif (is_string($label))
+            @php($translatedLabel = e(__($label)))
+
+            {!! str_contains($translatedLabel, "\n") ? nl2br($translatedLabel) : $translatedLabel !!}
         @else
-            {!! __(e($label)) !!}
+            {!! e(__($label)) !!}
         @endif
 
         @if (isset($suffix) && $suffix !== '')
@@ -164,7 +166,7 @@ $external ??= $attributes->get('target') === '_blank';
 
         @if (isset($kbd) && $kbd !== '')
             <tk:kbd
-                :attributes="TALLKit::attributesAfter($attributes, 'kbd:')"
+                :attributes="TALLKit::attributesAfter($attributes, 'kbd:')->classes('ms-auto')"
                 :label="$kbd"
             />
         @endif

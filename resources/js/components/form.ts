@@ -1,4 +1,7 @@
+import { hasLivewire, onLivewireCommit } from '../utils'
+
 export function form ({
+  action = null,
   focusError = null,
   toast = null,
   errorMessage = null,
@@ -8,7 +11,7 @@ export function form ({
     livewireCommitCleanup: null,
 
     init() {
-      if (window.Livewire) {
+      if (hasLivewire()) {
         this.watchLivewireCommits()
       } else if (focusError) {
         this.focusFirstInvalidField()
@@ -16,7 +19,9 @@ export function form ({
     },
 
     watchLivewireCommits() {
-      const offCommit = window.Livewire.hook('commit', ({ component, succeed }) => {
+      this.livewireCommitCleanup = onLivewireCommit(({ component, commit, succeed }) => {
+        if (action && !commit?.calls?.some((call) => call.method === action)) return
+
         succeed(({ snapshot }) => {
           if (!this.$el?.isConnected) return
           if (component?.el !== this.$el && !component?.el?.contains(this.$el)) return
@@ -47,10 +52,6 @@ export function form ({
           }
         })
       })
-
-      this.livewireCommitCleanup = typeof offCommit === 'function'
-        ? offCommit
-        : () => {}
     },
 
     focusFirstInvalidField() {

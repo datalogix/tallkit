@@ -3,7 +3,6 @@ import { bind } from '../utils'
 export function toast() {
   return {
     toasts: [],
-    positions: ['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right'],
 
     init() {
       bind(this.$el, {
@@ -329,17 +328,6 @@ export function toast() {
 
     getToastsByPosition(position) {
       return this.toasts.filter(t => t.position === position)
-    },
-
-    positionTransform(position) {
-      return {
-        'top-left': '-translate-x-full opacity-0',
-        'top-center': '-translate-y-full opacity-0',
-        'top-right': 'translate-x-full opacity-0',
-        'bottom-left': '-translate-x-full opacity-0',
-        'bottom-center': 'translate-y-full opacity-0',
-        'bottom-right': 'translate-x-full opacity-0',
-      }[String(position)]
     },
 
     notify(props) {

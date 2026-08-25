@@ -36,8 +36,6 @@ export function cache(name: string, {
 
           return parsed.data
         } catch (e) {
-          console.warn('[tallkit] cache read failed', e)
-
           return null
         }
       }
@@ -57,7 +55,7 @@ export function cache(name: string, {
         try {
           localStorage.setItem(this.getStorageKey(key), JSON.stringify(entry))
         } catch (e) {
-          console.warn('[tallkit] cache write failed', e)
+          //
         }
       }
     },

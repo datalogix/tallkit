@@ -1,4 +1,4 @@
-import { bind, setFieldChecked } from '../utils'
+import { bind, setFieldChecked, allChecked } from '../utils'
 
 export function table() {
   return {
@@ -101,7 +101,7 @@ export function table() {
     _syncSelect() {
       this.selected = this.rows.filter(row => row.selection?.checked)
       this.selectedIds = this.selected.map(row => row.id)
-      this.selectAllChecked = this.rows.length > 0 && this.rows.every(row => row.selection?.checked)
+      this.selectAllChecked = allChecked(this.rows, row => !!row.selection?.checked)
     },
   }
 }

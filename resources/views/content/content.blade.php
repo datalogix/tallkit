@@ -23,7 +23,13 @@ $hasContent = $slot->hasActualContent();
         )
     }}>
         @if (TALLKit::isSlot($icon))
-            <div {{ TALLKit::attributesAfter($attributes, 'icon:') }}>
+            @php($iconAttrs = TALLKit::attributesAfter($attributes, 'icon:'))
+            <div {{
+                $iconAttrs->when(
+                    !$iconAttrs->has('aria-label') && !$iconAttrs->has('aria-labelledby'),
+                    fn ($attrs) => $attrs->merge(['aria-hidden' => 'true'])
+                )
+            }}>
                 {{ $icon }}
             </div>
         @elseif ($icon)
