@@ -223,6 +223,14 @@
     [&>[data-tallkit-group-target]:not(:first-child):not(:last-child)]:border-s-0
     [&>[data-tallkit-group-target]:has(+[data-tallkit-input-group-suffix])]:border-e-0
 
+    /* Field controls borders (icon/prepend/append wrappers, time/date pickers, etc.) */
+    [&>[data-tallkit-field-control]:last-child:not(:first-child):not(:has([data-invalid]))]:border-s-0
+    [&>[data-tallkit-field-control]:not(:first-child):not(:last-child):not(:has([data-invalid]))]:border-s-0
+    [&>[data-tallkit-field-control]:has(+[data-tallkit-input-group-suffix]):not(:has([data-invalid]))]:border-e-0
+    [&>*:last-child:not(:first-child)_[data-tallkit-field-control]:not(:has([data-invalid]))]:border-s-0
+    [&>*:not(:first-child):not(:last-child)_[data-tallkit-field-control]:not(:has([data-invalid]))]:border-s-0
+    [&>*:has(+[data-tallkit-input-group-suffix])_[data-tallkit-field-control]:not(:has([data-invalid]))]:border-e-0
+
     /* "Weld" the borders of inputs together by overriding their border radiuses */
     [&>[data-tallkit-group-target]:not(:first-child):not(:last-child)]:rounded-none
     [&>[data-tallkit-group-target]:first-child:not(:last-child)]:rounded-e-none
@@ -234,7 +242,12 @@
     /* "Weld" borders for sub-children of group targets (button element inside select element, etc.) */
     [&>*:not(:first-child):not(:last-child):not(:only-child)_[data-tallkit-group-target]]:rounded-none
     [&>*:first-child:not(:last-child)_[data-tallkit-group-target]]:rounded-e-none
-    [&>*:last-child:not(:first-child)_[data-tallkit-group-target]]:rounded-s-none;
+    [&>*:last-child:not(:first-child)_[data-tallkit-group-target]]:rounded-s-none
+
+    /* "Weld" borders for sub-children of field controls (time/date picker wrapper divs, etc.) */
+    [&>*:not(:first-child):not(:last-child):not(:only-child)_[data-tallkit-field-control]]:rounded-none
+    [&>*:first-child:not(:last-child)_[data-tallkit-field-control]]:rounded-e-none
+    [&>*:last-child:not(:first-child)_[data-tallkit-field-control]]:rounded-s-none;
 }
 
 .tk-control-standalone-no-disabled {

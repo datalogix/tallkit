@@ -74,7 +74,9 @@
                 <input
                     {{
                         TALLKit::attributesAfter(attributes: $attributes, prefix: 'trigger:')
+                            ->dataKey('input')
                             ->dataKey('control')
+                            ->dataKey('group-target')
                             ->merge([
                                 'type' => 'text',
                                 'autocomplete' => 'off',
