@@ -6,13 +6,13 @@
 ])
 @php
 
-$listboxId = TALLKit::attributesAfter($attributes, 'items:')->get('id', TALLKit::generateId('listbox', $attributes->get('name')));
+$listboxId = TALLKit::attributesAfter(attributes: $attributes, prefix: 'items:')->get('id', TALLKit::generateId(prefix: 'listbox', name: $attributes->get('name')));
 
 @endphp
 <div
     wire:ignore.self
     x-data="autocomplete(@js($options))"
-    {{ TALLKit::attributesAfter($attributes, 'container:')->classes('[:where(&)]:w-full relative') }}
+    {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')->classes('[:where(&)]:w-full relative') }}
 >
     <tk:input
         :attributes="$attributes->whereDoesntStartWith(['container:', 'popover:', 'items:'])"
@@ -26,12 +26,12 @@ $listboxId = TALLKit::attributesAfter($attributes, 'items:')->get('id', TALLKit:
     />
 
     <tk:popover
-        :attributes="TALLKit::attributesAfter($attributes, 'popover:')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'popover:')"
         :$size
         :$animation
     >
         <tk:listbox.items
-            :attributes="TALLKit::attributesAfter($attributes, 'items:')"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'items:')"
             :$items
             :$size
             :id="$listboxId"

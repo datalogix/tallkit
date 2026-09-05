@@ -6,6 +6,7 @@
 ])
 <div
     {{ $attributes->classes(TALLKit::spaceBlock(size: $size, mode: 'largest')) }}
+    wire:ignore.self
     x-data="tab({ selectFirst: {{ $selectFirst !== false ? 'true' : 'false' }}, orientation: @js($orientation ?? 'horizontal') })"
     x-modelable="selected"
     x-cloak

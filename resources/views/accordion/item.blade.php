@@ -19,7 +19,7 @@
     }}
 >
     <tk:button
-        :attributes="TALLKit::attributesAfter($attributes, 'heading:')->classes(
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'heading:')->classes(
             TALLKit::paddingInline(size: $border ? $size : 'none', mode: 'largest'),
             TALLKit::paddingBlock(size: $size, mode: 'largest'),
             'w-full [&_[data-tallkit-icon]]:ml-auto',
@@ -38,7 +38,7 @@
     <div
         x-cloak
         {{
-            TALLKit::attributesAfter($attributes, 'content:')
+            TALLKit::attributesAfter(attributes: $attributes, prefix: 'content:')
                 ->classes(
                     TALLKit::fontSize(size: $size),
                     TALLKit::paddingInline(size: $border ? $size : 'none', mode: 'largest'),

@@ -6,13 +6,13 @@
         {{ $slot }}
     @else
         <tk:table.row
-            :attributes="TALLKit::attributesAfter($attributes, 'row:')"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'row:')"
             data-role="row-foot"
         >
             @if (Str::contains($slot, '<td', true))
                 {{ $slot }}
             @else
-                <tk:table.cell :attributes="TALLKit::attributesAfter($attributes, 'cell:')">
+                <tk:table.cell :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'cell:')">
                     {{ $slot }}
                 </tk:table.cell>
             @endif

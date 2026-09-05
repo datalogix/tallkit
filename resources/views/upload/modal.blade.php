@@ -8,24 +8,24 @@
 >
     <x-slot:prepend>
         <tk:button
-            :attributes="TALLKit::attributesAfter($attributes, 'button:')"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'button:')"
             :$size
             label="Open in new tab"
             @click="openFile"
         />
     </x-slot:prepend>
 
-    <template x-if="previewFile">
+    <template x-if="previewFile()">
         <div class="relative flex flex-col">
             <tk:upload.preview
-                :attributes="TALLKit::attributesAfter($attributes, 'preview:')"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'preview:')"
                 :$size
-                variable="previewFile"
+                variable="previewFile()"
             />
 
             <div class="flex items-center justify-between gap-2 px-1 py-2">
-                <span x-text="previewFile.name"></span>
-                <span x-text="formatSize(previewFile.size)"></span>
+                <span x-text="previewFile().name"></span>
+                <span x-text="formatSize(previewFile().size)"></span>
             </div>
         </div>
     </template>

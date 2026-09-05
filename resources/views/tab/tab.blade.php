@@ -7,7 +7,7 @@
 ])
 @php
 
-$name ??= TALLKit::generateId('tab');
+$name ??= TALLKit::generateId(prefix: 'tab');
 
 @endphp
 <tk:button
@@ -45,8 +45,8 @@ $name ??= TALLKit::generateId('tab');
             'data-selected' => $selected ? '' : false,
             'wire:key' => $name,
             'data-name' => $name,
-            'id' => TALLKit::generateId('tab', $name),
-            'aria-controls' => TALLKit::generateId('tabpanel', $name),
+            'id' => TALLKit::generateId(prefix: 'tab', name: $name),
+            'aria-controls' => TALLKit::generateId(prefix: 'tabpanel', name: $name),
             'role' => 'tab',
             ':tabindex' => 'isSelected(' . Js::from($name) . ') ? 0 : -1',
             ':aria-selected' => 'isSelected(' . Js::from($name) . ')',

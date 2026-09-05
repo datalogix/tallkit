@@ -39,14 +39,14 @@ $read_at = data_get($data, 'read_at') ?? data_get($notification, 'read_at');
                 TALLKit::roundedSize(size: $size, mode: 'large'),
             )
             ->dataKey('notification-item')
-            ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId('notification-item', (string) $id)] : [], false)
+            ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId(prefix: 'notification-item', name: (string) $id)] : [], false)
     }}
 >
     @if (!$compact && $icon !== false)
-        <div {{ TALLKit::attributesAfter($attributes, 'icon-container:')->classes('shrink-0') }}>
+        <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-container:')->classes('shrink-0') }}>
             <tk:avatar
-                :attributes="TALLKit::attributesAfter($attributes, 'icon:')"
-                :size="TALLKit::adjustSize($size)"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')"
+                :size="TALLKit::adjustSize(size: $size)"
                 :icon="$icon ?? match ($type) {
                     'success' => 'check-circle-outline',
                     'error' => 'cancel-outline',
@@ -69,19 +69,19 @@ $read_at = data_get($data, 'read_at') ?? data_get($notification, 'read_at');
 
     <div
         {{
-            TALLKit::attributesAfter($attributes, 'content:')
+            TALLKit::attributesAfter(attributes: $attributes, prefix: 'content:')
                 ->classes('flex-1 space-y-px')
         }}
     >
         <tk:text
-            :attributes="TALLKit::attributesAfter($attributes, 'message:')"
-            :size="$compact ? TALLKit::adjustSize($size) : $size"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'message:')"
+            :size="$compact ? TALLKit::adjustSize(size: $size) : $size"
         >
             {{ $message ?? $title ?? class_basename($type) }}
         </tk:text>
         <tk:text
-            :attributes="TALLKit::attributesAfter($attributes, 'time:')"
-            :size="TALLKit::adjustSize($size, move: $compact ? -2 : -1)"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'time:')"
+            :size="TALLKit::adjustSize(size: $size, move: $compact ? -2 : -1)"
             variant="subtle"
         >
             {{ $created_at->diffForHumans() }}
@@ -91,14 +91,14 @@ $read_at = data_get($data, 'read_at') ?? data_get($notification, 'read_at');
     @if ($id)
         <div
             {{
-                TALLKit::attributesAfter($attributes, 'actions:')
+                TALLKit::attributesAfter(attributes: $attributes, prefix: 'actions:')
                     ->classes('shrink-0 w-fit ms-auto flex justify-end')
             }}
         >
             @if (! $read_at)
                 <div
                     {{
-                        TALLKit::attributesAfter($attributes, 'bullet:')
+                        TALLKit::attributesAfter(attributes: $attributes, prefix: 'bullet:')
                             ->classes(
                                 match ($type) {
                                     'success' => 'bg-green-500',
@@ -118,8 +118,8 @@ $read_at = data_get($data, 'read_at') ?? data_get($notification, 'read_at');
                     class="hidden group-hover:flex"
                 >
                     <tk:button
-                        :attributes="TALLKit::attributesAfter($attributes, 'read:')->dataKey('dismissible')"
-                        :size="TALLKit::adjustSize($size, move: $compact ? -2 : -1)"
+                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'read:')->dataKey('dismissible')"
+                        :size="TALLKit::adjustSize(size: $size, move: $compact ? -2 : -1)"
                         action="markNotificationAsRead({{ Js::from($id) }})"
                         icon="check-circle-outline"
                         tooltip="Mark as read"
@@ -128,8 +128,8 @@ $read_at = data_get($data, 'read_at') ?? data_get($notification, 'read_at');
             @else
                 <tk:button.group :$size>
                     <tk:button
-                        :attributes="TALLKit::attributesAfter($attributes, 'remove:')->dataKey('dismissible')"
-                        :size="TALLKit::adjustSize($size, move: $compact ? -2 : -1)"
+                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'remove:')->dataKey('dismissible')"
+                        :size="TALLKit::adjustSize(size: $size, move: $compact ? -2 : -1)"
                         action="deleteNotification({{ Js::from($id) }})"
                         icon="trash-outline"
                         tooltip="Remove notification"

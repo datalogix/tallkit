@@ -22,13 +22,13 @@
 ])
 @php
 
-$name ??= TALLKit::generateId('modal');
+$name ??= TALLKit::generateId(prefix: 'modal');
 $closable ??= $variant === 'bare' ? false : true;
 
 @endphp
 @isset ($trigger)
     <tk:modal.trigger
-        :attributes="TALLKit::attributesAfter($attributes, 'trigger:')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'trigger:')"
         :$name
     >
         {{ $trigger }}
@@ -132,7 +132,7 @@ $closable ??= $variant === 'bare' ? false : true;
             },
         )
         ->merge([
-            TALLKit::dataKey('modal') => $name,
+            TALLKit::dataKey(name: 'modal') => $name,
             'aria-labelledby' => $title ? $name.'-title' : null,
             'aria-describedby' => $subtitle ? $name.'-subtitle' : null,
         ])
@@ -141,7 +141,7 @@ $closable ??= $variant === 'bare' ? false : true;
     <span tabindex="0" class="sr-only"></span>
 
     <tk:section
-        :attributes="TALLKit::attributesAfter($attributes, 'section:', prepend: [
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'section:', prepend: [
                 'icon', 'badge',
                 'container:', 'title:', 'subtitle:', 'list:', 'actions:', 'separator:', 'content:',
             ])
@@ -167,7 +167,7 @@ $closable ??= $variant === 'bare' ? false : true;
                 {{ $close }}
             @elseif ($closable !== false)
                 <tk:modal.close
-                    :attributes="TALLKit::attributesAfter($attributes, 'close:')
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'close:')
                         ->classes('absolute top-0 end-0 mt-4 me-4')
                         ->merge(['size' => TALLKit::adjustSize(size: $size)])
                     "

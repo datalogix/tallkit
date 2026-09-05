@@ -38,10 +38,10 @@ $groups = $grouped
     @forelse ($groups as $label => $group)
         @if ($label)
             <tk:text
-                :attributes="TALLKit::attributesAfter($attributes, 'group-label:')
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'group-label:')
                     ->classes('block px-2 pt-3 pb-1 first:pt-1 font-medium uppercase tracking-wide')
                 "
-                :size="TALLKit::adjustSize($size)"
+                :size="TALLKit::adjustSize(size: $size)"
                 variant="subtle"
                 :$label
             />
@@ -49,7 +49,7 @@ $groups = $grouped
 
         @foreach ($group as $notification)
             <tk:notification.item
-                :attributes="TALLKit::attributesAfter($attributes, 'item:')"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'item:')"
                 :$notification
                 :$size
                 :$compact
@@ -57,7 +57,7 @@ $groups = $grouped
         @endforeach
     @empty
         <tk:text
-            :attributes="TALLKit::attributesAfter($attributes, 'empty:')
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'empty:')
                 ->classes(
                     'block text-center',
                     TALLKit::padding(size: $size),

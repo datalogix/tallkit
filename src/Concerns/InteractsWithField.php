@@ -47,6 +47,7 @@ trait InteractsWithField
             'group:', 'prefix:', 'suffix:',
             'help:', 'error:',
             'control:',
+            'prepend:', 'icon:', 'append:', 'loading:', 'icon-trailing:', 'kbd:',
             ...$extra,
         ];
     }
@@ -72,9 +73,10 @@ trait InteractsWithField
         $xModel = $attributes->whereStartsWith('x-model')->first();
 
         $name = $attributes->pluck('name', $wireModel ?? $xModel);
-        $fieldName = Str::replace(['[', ']'], ['.', ''], Str::before($name, '[]'));
+        $basename = $name ? Str::before($name, '[]') : $name;
+        $fieldName = $basename ? Str::replace(['[', ']'], ['.', ''], $basename) : $basename;
 
-        $label = $label === true || $label === null ? Str::headline(Str::before($fieldName, '_id')) : $label;
+        $label = $label === true || $label === null ? ($fieldName ? Str::headline(Str::before($fieldName, '_id')) : $fieldName) : $label;
 
         $placeholder = $attributes->pluck('placeholder');
         $placeholder = $placeholder === true ? $label : $placeholder;

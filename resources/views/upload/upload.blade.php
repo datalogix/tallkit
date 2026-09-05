@@ -10,15 +10,15 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext($attributes, $label, $id);
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
 $variant ??= 'dropzone';
 if ($variant === 'avatar') {
     $multiple = false;
     $maxFiles = null;
 }
 $sortable ??= (bool) $multiple && ! in_array($variant, ['avatar', 'button']);
-$files = TALLKit::getUploadedFiles($value ?? ((in_livewire() && property_exists($this, $fieldName)) ? data_get($this, $fieldName) : null));
-$previewName = TALLKit::generateId('upload-preview');
+$files = TALLKit::getUploadedFiles(value: $value ?? ((in_livewire() && property_exists($this, $fieldName)) ? data_get($this, $fieldName) : null));
+$previewName = TALLKit::generateId(prefix: 'upload-preview');
 
 @endphp
 <tk:field.wrapper
@@ -42,10 +42,10 @@ $previewName = TALLKit::generateId('upload-preview');
             tooManyFilesMessage: @js(__('Too many files selected.')),
             previewName: @js($previewName),
         })"
-        :data-invalid="isInvalid || null"
-        :aria-invalid="isInvalid ? 'true' : null"
+        :data-invalid="isInvalid() || null"
+        :aria-invalid="isInvalid() ? 'true' : null"
         {{
-            TALLKit::attributesAfter($attributes, 'control:')
+            TALLKit::attributesAfter(attributes: $attributes, prefix: 'control:')
                 ->dataKey('control')
                 ->classes('flex flex-col gap-4')
                 ->merge([
@@ -57,14 +57,14 @@ $previewName = TALLKit::generateId('upload-preview');
     >
         <input
             {{
-                $attributes->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes([
+                $attributes->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: [
                     'dropzone:', 'progress:', 'tile:', 'hint:', 'modal:',
                 ]))->merge([
                     'name' => $name,
                     'id' => $id,
                     'accept' => $accept,
                     'multiple' => $multiple,
-                    'aria-describedby' => TALLKit::ariaDescribedBy($id, $description, $help, $invalid, $showError)
+                    'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError)
                 ])
                 ->classes('hidden')
             }}
@@ -73,7 +73,7 @@ $previewName = TALLKit::generateId('upload-preview');
         />
 
         <tk:upload.dropzone
-            :attributes="TALLKit::attributesAfter($attributes, 'dropzone:')"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'dropzone:')"
             :$size
             :$multiple
             :$variant
@@ -82,24 +82,24 @@ $previewName = TALLKit::generateId('upload-preview');
             @if ($variant === 'avatar')
                 <template x-if="files.length">
                     <tk:upload.preview
-                        :attributes="TALLKit::attributesAfter($attributes, 'preview:')->classes('size-full rounded-full border-2 border-dashed')"
+                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'preview:')->classes('size-full rounded-full border-2 border-dashed')"
                         :$size
                         image:class="object-cover"
                         variable="files[0]"
                     />
                 </template>
             @else
-                <template x-if="multiple && activeFiles.length > 1">
+                <template x-if="multiple() && activeFiles().length > 1">
                     <tk:progress
-                        :attributes="TALLKit::attributesAfter($attributes, 'progress:')"
-                        variable="aggregateProgress"
+                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'progress:')"
+                        variable="aggregateProgress()"
                     />
                 </template>
 
                 @if ($variant === 'button')
                     <template x-for="(file, index) in files" :key="file.id">
                         <tk:upload.chip
-                            :attributes="TALLKit::attributesAfter($attributes, 'tile:')"
+                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'tile:')"
                             :$size
                             :$multiple
                             :$color
@@ -108,7 +108,7 @@ $previewName = TALLKit::generateId('upload-preview');
                 @elseif ($variant === 'list')
                     <template x-for="(file, index) in files" :key="file.id">
                         <tk:upload.list-item
-                            :attributes="TALLKit::attributesAfter($attributes, 'tile:')"
+                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'tile:')"
                             :$size
                             :$multiple
                             :$color
@@ -117,7 +117,7 @@ $previewName = TALLKit::generateId('upload-preview');
                 @else
                     <template x-for="(file, index) in files" :key="file.id">
                         <tk:upload.tile
-                            :attributes="TALLKit::attributesAfter($attributes, 'tile:')"
+                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'tile:')"
                             :$size
                             :$multiple
                             :$variant
@@ -129,7 +129,7 @@ $previewName = TALLKit::generateId('upload-preview');
         </tk:upload.dropzone>
 
         <tk:upload.hint
-            :attributes="TALLKit::attributesAfter($attributes, 'hint:')"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'hint:')"
             :$size
             :$accept
             :$maxSize
@@ -137,7 +137,7 @@ $previewName = TALLKit::generateId('upload-preview');
         />
 
         <tk:upload.modal
-            :attributes="TALLKit::attributesAfter($attributes, 'modal:')"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'modal:')"
             :name="$previewName"
             :$size
         />

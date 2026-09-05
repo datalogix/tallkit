@@ -3,7 +3,7 @@
 ])
 @if ($tooltip)
     <tk:tooltip
-        :attributes="TALLKit::attributesAfter($attributes, 'tooltip:')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'tooltip:')"
         :content="$tooltip"
     >
         {{ $slot }}

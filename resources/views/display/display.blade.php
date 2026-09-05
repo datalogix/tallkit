@@ -4,7 +4,7 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext($attributes, $label, $id);
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
 $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd || $attributes->has('class');
 
 @endphp
@@ -35,17 +35,11 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
                         'name' => $name,
                         'id' => $id,
                         'wire:model' => $wireModel,
-                        'aria-describedby' => TALLKit::ariaDescribedBy($id, $description, $help, $invalid, $showError),
+                        'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                         'aria-invalid' => $invalid ? 'true' : null,
                         'data-invalid' => $invalid ? true : null,
                     ])
-                    ->whereDoesntStartWith([
-                        'field:', 'label:', 'info:', 'badge:', 'description:',
-                        'group:', 'prefix:', 'suffix:',
-                        'help:', 'error:',
-                        'control:', 'prepend:', 'icon:', 'append:', 'loading:', 'icon-trailing:', 'kbd:',
-                        'display:',
-                    ])
+                    ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: ['display:']))
                     ->except('class')
                     ->classes(
                         '

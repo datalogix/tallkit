@@ -27,19 +27,19 @@
         </x-slot:trigger>
     @endif
 
-    <div {{ TALLKit::attributesAfter($attributes, 'actions:')->classes('flex items-center gap-2 mt-10') }}>
+    <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'actions:')->classes('flex items-center gap-2 mt-10') }}>
         @isset ($actions)
             {{ $actions }}
         @else
             <tk:modal.close
-                :attributes="TALLKit::attributesAfter($attributes, 'cancel:')"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'cancel:')"
                 :$size
                 :action="$cancel"
                 label="Cancel"
             />
 
             <tk:button
-                :attributes="TALLKit::attributesAfter($attributes, 'confirm:')
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'confirm:')
                     ->dataKey($autoClose === false ? null : 'modal-auto-close')
                     ->classes('ms-auto')
                 "

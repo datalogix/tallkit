@@ -77,7 +77,7 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
 
 @endphp
 <div {{
-    TALLKit::attributesAfter($attributes, 'container:')
+    TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')
         ->dataKey('table-container')
         ->classes([
             'overflow-hidden',
@@ -85,7 +85,7 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
         ])
         ->merge($hasRowSelection || $hasRowExpanded ? ['x-data' => 'table'] : [])
 }}>
-    <div {{ TALLKit::attributesAfter($attributes, 'area:')->classes('overflow-x-auto') }}>
+    <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'area:')->classes('overflow-x-auto') }}>
         <table {{
             $attributes
                 ->whereDoesntStartWith([
@@ -108,14 +108,14 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
             {{ $slot }}
 
             @if (Str::doesntContain($slot, '<thead', true) && $cols->isNotEmpty())
-                <tk:table.columns :attributes="TALLKit::attributesAfter($attributes, 'columns:')->merge(TALLKit::attributesAfter($attributes, 'thead:')->toArray())">
+                <tk:table.columns :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'columns:')->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'thead:')->toArray())">
                     @if ($hasRowExpanded)
                         <tk:table.column.expanded />
                     @endif
 
                     @if ($hasRowSelection)
-                        <tk:table.column.select-all :attributes="TALLKit::attributesAfter($attributes, 'select-all:')">
-                            @if (TALLKit::isSlot($selectAll))
+                        <tk:table.column.select-all :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'select-all:')">
+                            @if (TALLKit::isSlot(slot: $selectAll))
                                 {{ $selectAll}}
                             @elseif ($selectAll === false)
                                 &nbsp;
@@ -124,10 +124,10 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                     @endif
 
                     @foreach ($cols as $key => $col)
-                        <tk:table.column :attributes="TALLKit::attributesAfter($attributes, 'column:')
-                            ->merge(TALLKit::attributesAfter($attributes, 'column-'.$key.':')->toArray())
-                            ->merge(TALLKit::attributesAfter($attributes, 'th:')->toArray())
-                            ->merge(TALLKit::attributesAfter($attributes, 'th-'.$key.':')->toArray())
+                        <tk:table.column :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'column:')
+                            ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'column-'.$key.':')->toArray())
+                            ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'th:')->toArray())
+                            ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'th-'.$key.':')->toArray())
                             ->merge(Arr::wrap(data_forget($col, '_key')))
                             ->classes(['w-0' => $key === 'actions'])
                         ">
@@ -140,35 +140,35 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
             @endif
 
             @if (Str::doesntContain($slot, '<tbody', true) && $cols->isNotEmpty())
-                <tk:table.rows :attributes="TALLKit::attributesAfter($attributes, 'rows:')->merge(TALLKit::attributesAfter($attributes, 'tbody:')->toArray())">
+                <tk:table.rows :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'rows:')->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'tbody:')->toArray())">
                     @forelse ($rows as $index => $row)
                         <tk:table.row
                             data-id="{{ data_get($row, $rowKey ?? 'id', $index) }}"
-                            :attributes="TALLKit::attributesAfter($attributes, 'row:')
+                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'row:')
                                 ->merge($hasRowSelection ? ['data-state' => 'unchecked'] : [])
                                 ->merge($hasRowExpanded ? ['data-expanded' => 'close'] : [])
-                                ->merge(in_livewire() ? ['wire:key' => data_get($row, $rowKey ?? 'id', $index)] : [], false)
+                                ->merge(in_livewire() ? ['wire:key' => data_get($row, $rowKey ?? 'id', $index)] : [])
                             "
                         >
                             @if ($hasRowExpanded)
-                                <tk:table.cell.expanded :attributes="TALLKit::attributesAfter($attributes, 'cell-expanded:')">
+                                <tk:table.cell.expanded :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'cell-expanded:')">
                                     {{ $cellExpanded ?? '' }}
                                 </tk:table.cell.expanded>
                             @endif
 
                             @if ($hasRowSelection)
-                                <tk:table.cell.selection :attributes="TALLKit::attributesAfter($attributes, 'cell-selection:')">
-                                    @if (TALLKit::isSlot($rowSelection))
+                                <tk:table.cell.selection :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'cell-selection:')">
+                                    @if (TALLKit::isSlot(slot: $rowSelection))
                                         {{ $rowSelection}}
                                     @endif
                                 </tk:table.cell.selection>
                             @endif
 
                             @foreach ($cols as $key => $col)
-                                <tk:table.cell :attributes="TALLKit::attributesAfter($attributes, 'cell:')
-                                    ->merge(TALLKit::attributesAfter($attributes, 'cell-'.$key.':')->toArray())
-                                    ->merge(TALLKit::attributesAfter($attributes, 'td:')->toArray())
-                                    ->merge(TALLKit::attributesAfter($attributes, 'td-'.$key.':')->toArray())
+                                <tk:table.cell :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'cell:')
+                                    ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'cell-'.$key.':')->toArray())
+                                    ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'td:')->toArray())
+                                    ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'td-'.$key.':')->toArray())
                                     ->merge(['align' => data_get($col, 'align', $key === 'actions' ? 'center' : null)])
                                     ->merge(['sticky' => data_get($col, 'sticky')])
                                 ">
@@ -176,7 +176,7 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                                         {{ ${'row_' . $key}(
                                             row: $row,
                                             key: $key,
-                                            value: fn () => TALLKit::getRowValue($row, $key, $col),
+                                            value: fn () => TALLKit::getRowValue(row: $row, key: $key, col: $col),
                                             col: $col,
                                             cols: $cols,
                                             rows: $rows,
@@ -186,7 +186,7 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                                         {{ $index + 1 }}
                                     @else
                                         @php
-                                        $rowValue = TALLKit::getRowValue($row, $key, $col);
+                                        $rowValue = TALLKit::getRowValue(row: $row, key: $key, col: $col);
                                         @endphp
 
                                         @if (is_bool($rowValue))
@@ -201,7 +201,7 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                         </tk:table.row>
 
                         @if ($hasRowExpanded)
-                            <tk:table.row.expanded :attributes="TALLKit::attributesAfter($attributes, 'row-expanded:')
+                            <tk:table.row.expanded :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'row-expanded:')
                                 ->merge(['colspan' => $colspan])
                             ">
                                 @if (isset($expanded))
@@ -212,7 +212,7 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                             </tk:table.row.expanded>
                         @endif
                     @empty
-                        <tk:table.row.no-records :attributes="TALLKit::attributesAfter($attributes, 'no-records:')
+                        <tk:table.row.no-records :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'no-records:')
                             ->merge(['colspan' => $colspan])
                         ">
                             {{ $noRecords }}
@@ -222,8 +222,8 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
             @endif
 
             @if (Str::doesntContain($slot, '<tfoot', true) && isset($footer))
-                <tk:table.footer :attributes="TALLKit::attributesAfter($attributes, 'footer:')
-                    ->merge(TALLKit::attributesAfter($attributes, 'tfoot:')->toArray())
+                <tk:table.footer :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'footer:')
+                    ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'tfoot:')->toArray())
                     ->merge(['cell:colspan' => $colspan])
                 ">
                     {{ $footer }}
@@ -234,7 +234,7 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
 
     @if ($pagination !== false && $rows !== null)
         <tk:pagination
-            :attributes="TALLKit::attributesAfter($attributes, 'pagination:')"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'pagination:')"
             :paginator="$rows"
         />
     @endif

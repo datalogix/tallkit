@@ -8,10 +8,10 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext($attributes, $label, $id);
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
+
 $format ??= '999999';
 $groups = explode('-', $format);
-$describedBy = TALLKit::ariaDescribedBy($id, $description, $help, $invalid, $showError);
 $digitCount = strlen(str_replace('-', '', $format));
 $digitIndex = 0;
 
@@ -23,16 +23,29 @@ $digitIndex = 0;
     <div
         wire:ignore
         x-data="otp(@js($submit))"
-        x-modelable="value"
         role="group"
         id="{{ $id }}"
         aria-label="{{ $label ? __($label) : __('One-time passcode') }}"
-        @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif
-        {{ $attributes->whereStartsWith('wire:')->merge(['wire:model' => $wireModel]) }}
+        {{
+            $attributes->whereStartsWith('wire:')
+                ->except('wire:model')
+                ->merge([
+                    'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError)
+                ])
+        }}
     >
-        @if ($name && !$wireModel)
-            <input type="hidden" name="{{ $name }}" x-model="value" />
-        @endif
+        <input
+            type="hidden"
+            {{
+                TALLKit::attributesAfter(attributes: $attributes, prefix: 'hidden:')
+                    ->dataKey('otp-field')
+                    ->merge([
+                        'name' => $name,
+                        'value' => in_livewire() ? null : $value,
+                        'wire:model' => $wireModel,
+                    ])
+            }}
+        />
 
         <tk:field.control
             :$size
@@ -50,7 +63,7 @@ $digitIndex = 0;
                     <tk:otp.group>
                         @for ($i = 0; $i < strlen($group); $i++)
                             <tk:otp.input
-                                :attributes="$attributes->whereDoesntStartWith('wire:')"
+                                :attributes="$attributes->whereDoesntStartWith(['wire:', 'hidden:'])"
                                 :$invalid
                                 :aria-label="__('Digit :n of :total', ['n' => ++$digitIndex, 'total' => $digitCount])"
                                 :mode="match (strtoupper($group[$i])) {
@@ -69,7 +82,7 @@ $digitIndex = 0;
             @else
                 @for ($i = 0; $i < strlen($format); $i++)
                     <tk:otp.input
-                        :attributes="$attributes->whereDoesntStartWith('wire:')"
+                        :attributes="$attributes->whereDoesntStartWith(['wire:', 'hidden:'])"
                         :$invalid
                         :aria-label="__('Digit :n of :total', ['n' => ++$digitIndex, 'total' => $digitCount])"
                         :mode="match (strtoupper($format[$i])) {

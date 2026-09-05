@@ -10,8 +10,8 @@
     }}
     wire:key="{{ $name }}"
     data-name="{{ $name }}"
-    id="{{ TALLKit::generateId('tabpanel', $name) }}"
-    aria-labelledby="{{ TALLKit::generateId('tab', $name) }}"
+    id="{{ TALLKit::generateId(prefix: 'tabpanel', name: $name) }}"
+    aria-labelledby="{{ TALLKit::generateId(prefix: 'tab', name: $name) }}"
     role="tabpanel"
     :tabindex="isSelected(@js($name)) ? 0 : -1"
     :data-selected="isSelected(@js($name))"

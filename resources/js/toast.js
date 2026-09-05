@@ -5,7 +5,7 @@ export function toast(...args) {
       error: (...props) => toast({ ...parseArgs(...props), type: 'error' }),
       info: (...props) => toast({ ...parseArgs(...props), type: 'info' }),
       warning: (...props) => toast({ ...parseArgs(...props), type: 'warning' }),
-    }
+    };
   }
 
   document.dispatchEvent(new CustomEvent('toast', { detail: parseArgs(...args) }))
@@ -16,6 +16,6 @@ const parseArgs = (...args) => {
     return args[0]
   }
 
-  const [message, title, type, duration, position, progress, size ] = args
+  const [message, title, type, duration, position, progress, size] = args
   return { message, title, type, duration, position, progress, size }
 }

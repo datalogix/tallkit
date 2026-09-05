@@ -1,11 +1,3 @@
-/*
- * InteractsWithSize: every method concatenates `$size`/`$mode` into a Tailwind class instead of
- * one `match()` arm per size, so Tailwind's scanner never sees the literal result. Each line
- * covers exactly the values that property's scale (in InteractsWithSize.php) or its
- * generateClassBySize() callers (grep `generateClassBySize` across resources/views) can produce
- * — not a broad shared value range — to keep the compiled CSS lean. Extending a scale in the PHP
- * (adding a size, raising a max) needs the matching value added here too.
- */
 @source inline('[:where(&)]:w-{0,2,2.5,3,3.5,4,4.5,5,6,7,8,9,10,12,14,16,18,20,22,26,30,36,40,full}{!,}');
 @source inline('[:where(&)]:h-{0,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,6,7,8,9,10,12,14,16,18,20,22,26,30,36,40,px,full}');
 @source inline('[:where(&)]:size-{0,2,2.5,3,3.5,4,4.5,5,5.5,6,7,8,9,10,12,14,16,20,24,28,full}');

@@ -20,21 +20,23 @@ export function initAlpine () {
   }
 }
 
-export function setupAlpine () {
-  if (!window.Alpine) {
+export function setupAlpine (tallkit) {
+  const Alpine = window.Alpine
+
+  if (!Alpine) {
     return
   }
 
   registerAlpineComponents()
 
-  window.Alpine.store('tallkit', tallkit)
-  window.Alpine.magic('tallkit', () => Alpine.store('tallkit'))
-  window.Alpine.magic('tk', () => Alpine.store('tallkit'))
+  Alpine.store('tallkit', tallkit)
+  Alpine.magic('tallkit', () => tallkit)
+  Alpine.magic('tk', () => tallkit)
 }
 
 export function registerAlpineComponents() {
   const components = Object.fromEntries(
-    Object.values(import.meta.glob('./components/*.{js,ts}', { eager: true }))
+    Object.values(import.meta.glob('./components/*.js', { eager: true }))
       .flatMap(module =>
         Object.entries(module).filter(([, v]) => typeof v === 'function')
       )

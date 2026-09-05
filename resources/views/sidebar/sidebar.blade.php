@@ -6,7 +6,7 @@
 ])
 @if ($stashable)
     <tk:sidebar.backdrop
-        :attributes="TALLKit::attributesAfter($attributes, 'backdrop:')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'backdrop:')"
         :$name
     />
 @endif
@@ -18,7 +18,7 @@
             ->dataKey('sidebar')
             ->whereDoesntStartWith(['backdrop:'])
             ->merge([
-                'id' => TALLKit::generateId('sidebar', $name),
+                'id' => TALLKit::generateId(prefix: 'sidebar', name: $name),
                 'aria-label' => __($ariaLabel ?? 'Sidebar'),
             ])
             ->classes(

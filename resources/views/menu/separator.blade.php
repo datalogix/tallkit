@@ -4,7 +4,7 @@
 ])
 <div
     {{
-        TALLKit::attributesAfter($attributes, 'container:')
+        TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')
             ->dataKey('menu-separator-container')
             ->classes('-mx-[.4rem] my-[.4rem] h-px')
     }}

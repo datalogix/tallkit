@@ -18,7 +18,7 @@ $separatorClasses = TALLKit::classes('group-last/breadcrumb:hidden mx-2 opacity-
         :$size
         icon="chevron-left"
     />
-@elseif (TALLKit::isSlot($icon))
+@elseif (TALLKit::isSlot(slot: $icon))
     {{ $icon }}
 @elseif ($icon === 'slash')
     <tk:icon

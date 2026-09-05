@@ -15,7 +15,7 @@
     @foreach (['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right'] as $position)
         <div
             {{
-                TALLKit::attributesAfter($attributes, 'position:')->classes(
+                TALLKit::attributesAfter(attributes: $attributes, prefix: 'position:')->classes(
                     'absolute flex flex-col',
                     str_contains($position, 'top') ? 'flex-col-reverse' : null,
                     match ($position) {
@@ -45,7 +45,7 @@
                         default => 'none',
                     }"
                     :attributes="
-                        TALLKit::attributesAfter($attributes, 'container:')->classes(
+                        TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')->classes(
                             '
                                 m-1 shadow-lg rounded-xl
                                 bg-white dark:bg-zinc-700
@@ -78,42 +78,42 @@
                     @pointerup="toast.swipe && toast.onPointerUp($event)"
                 >
                     <tk:icon
-                        :attributes="TALLKit::attributesAfter($attributes, 'icon:')->merge(TALLKit::attributesAfter($attributes, 'icon-success:')->getAttributes())->classes('shrink-0 text-green-500 dark:text-green-400')"
+                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-success:')->getAttributes())->classes('shrink-0 text-green-500 dark:text-green-400')"
                         x-show="toast.type === 'success'"
                         name="check-circle"
                     />
                     <tk:icon
-                        :attributes="TALLKit::attributesAfter($attributes, 'icon:')->merge(TALLKit::attributesAfter($attributes, 'icon-info:')->getAttributes())->classes('shrink-0 text-blue-500 dark:text-blue-400')"
+                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-info:')->getAttributes())->classes('shrink-0 text-blue-500 dark:text-blue-400')"
                         x-show="toast.type === 'info'"
                         name="info"
                     />
                     <tk:icon
-                        :attributes="TALLKit::attributesAfter($attributes, 'icon:')->merge(TALLKit::attributesAfter($attributes, 'icon-error:')->getAttributes())->classes('shrink-0 text-red-500 dark:text-red-400')"
+                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-error:')->getAttributes())->classes('shrink-0 text-red-500 dark:text-red-400')"
                         x-show="toast.type === 'error'"
                         name="cancel"
                     />
                     <tk:icon
-                        :attributes="TALLKit::attributesAfter($attributes, 'icon:')->merge(TALLKit::attributesAfter($attributes, 'icon-warning:')->getAttributes())->classes('shrink-0 text-amber-500 dark:text-amber-400')"
+                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-warning:')->getAttributes())->classes('shrink-0 text-amber-500 dark:text-amber-400')"
                         x-show="toast.type === 'warning'"
                         name="warning"
                     />
                     <tk:loading
-                        :attributes="TALLKit::attributesAfter($attributes, 'icon:')->merge(TALLKit::attributesAfter($attributes, 'icon-loading:')->getAttributes())->classes('shrink-0 text-zinc-500 dark:text-zinc-400')"
+                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-loading:')->getAttributes())->classes('shrink-0 text-zinc-500 dark:text-zinc-400')"
                         x-show="toast.type === 'loading'"
                     />
                     <div class="flex-1 flex flex-col gap-2">
                         <div
-                            {{ TALLKit::attributesAfter($attributes, 'title:')->classes('font-medium text-zinc-800 dark:text-white') }}
+                            {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'title:')->classes('font-medium text-zinc-800 dark:text-white') }}
                             x-html="toast.title || toast.message"
                         ></div>
                         <div
-                            {{ TALLKit::attributesAfter($attributes, 'message:')->classes('font-normal text-zinc-500 dark:text-zinc-300') }}
+                            {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'message:')->classes('font-normal text-zinc-500 dark:text-zinc-300') }}
                             x-show="toast.title && toast.message"
                             x-html="toast.message"
                         ></div>
                     </div>
                     <tk:button
-                        :attributes="TALLKit::attributesAfter($attributes, 'close:')"
+                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'close:')"
                         x-on:click="removeToast(toast.id)"
                         icon="close"
                         variant="none"
@@ -121,7 +121,7 @@
                     />
                     <div
                         x-show="toast.progress"
-                        {{ TALLKit::attributesAfter($attributes, 'progress:')->classes('bg-black/5 dark:bg-black/10 h-full absolute inset-0 pointer-events-none origin-left') }}
+                        {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'progress:')->classes('bg-black/5 dark:bg-black/10 h-full absolute inset-0 pointer-events-none origin-left') }}
                         :style="toast.progress ? { transform: `scaleX(${toast.progressValue})` } : {}"
                     ></div>
                 </tk:transition>

@@ -13,7 +13,7 @@
             match ($variant) {
                 'accent' => 'bg-[var(--color-accent)] text-[var(--color-accent-foreground)]',
                 'inverse' => 'bg-white text-zinc-800 border-black/10',
-                default => TALLKit::background($variant) ?? 'bg-zinc-800 dark:bg-zinc-700',
+                default => TALLKit::background(color: $variant) ?? 'bg-zinc-800 dark:bg-zinc-700',
             },
             TALLKit::fontSize(size: $size, weight: true, mode: 'small'),
             TALLKit::padding(size: $size, mode: 'smallest'),
@@ -28,7 +28,7 @@
 
         @if (isset($kbd) && $kbd !== '')
             <tk:kbd
-                :attributes="TALLKit::attributesAfter($attributes, 'kbd:')->classes('ps-1')"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'kbd:')->classes('ps-1')"
                 :$size
                 :label="$kbd"
                 variant="text"
@@ -39,7 +39,7 @@
     @if ($arrow)
         <tk:icon
             name="{{ is_string($arrow) ? $arrow : 'typcn:arrow-sorted-down' }}"
-            :attributes="TALLKit::attributesAfter($attributes, 'arrow:')->classes(
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'arrow:')->classes(
                 '
                     absolute w-5 h-5 pointer-events-none
 
@@ -70,7 +70,7 @@
                 match ($variant) {
                     'accent' => 'text-[var(--color-accent)]',
                     'inverse' => 'text-white',
-                    default => TALLKit::textStrong($variant) ?? 'text-zinc-800 dark:text-zinc-700',
+                    default => TALLKit::textStrong(color: $variant) ?? 'text-zinc-800 dark:text-zinc-700',
                 },
             )"
         />

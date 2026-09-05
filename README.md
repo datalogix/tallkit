@@ -26,30 +26,10 @@ Components are anonymous Blade views registered under the `tk:` tag namespace:
 
 The standard Laravel `<x-tallkit::*>` syntax also works if you prefer it.
 
-## Development
-
-```bash
-composer install
-pnpm install
-
-composer test   # Pint + PHPUnit
-pnpm lint       # ESLint
-pnpm build      # Bundle resources/js into dist/
-```
-
-## Roadmap
-
-- slider
-- upload
-- paginator (add select per page)
-
 ### Add
 
+- timeline https://fluxui.dev/components/timeline
+- Carousel https://fluxui.dev/components/carousel
+- Kanban https://fluxui.dev/components/kanban
+- Combobox - Pillbox https://fluxui.dev/components/pillbox
 - auth (2fa, register by google/github/)
-- Notifications
-- Editor
-- Kanban
-- Pillbox
-- Color Picker
-- Date Picker
-- Time Picker

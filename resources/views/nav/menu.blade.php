@@ -4,7 +4,7 @@
     'items' => null,
     'animate' => null,
 ])
-<tk:dropdown :attributes="TALLKit::attributesAfter($attributes, 'dropdown:')">
+<tk:dropdown :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'dropdown:')">
     <tk:nav.item
         :attributes="$attributes->except(['href'])
             ->whereDoesntStartWith(['dropdown:', 'menu:'])
@@ -20,7 +20,7 @@
     </tk:nav.item>
 
     <tk:menu
-        :attributes="TALLKit::attributesAfter($attributes, 'menu:')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'menu:')"
         :$items
         :$size
     >

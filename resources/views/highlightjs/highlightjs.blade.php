@@ -4,7 +4,7 @@
 ])
 <tk:loadable
     x-data="highlightjs"
-    :attributes="TALLKit::attributesAfter($attributes, 'loadable:')"
+    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'loadable:')"
 >
     <pre><code
         {{ $attributes->whereDoesntStartWith(['loadable:']) }}

@@ -37,8 +37,8 @@ trait InteractsWithSize
 
     public function adjustSize(
         ?string $size = null,
+        int $move = -1,
         array $sizes = ['xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl'],
-        int $move = -1
     ) {
         $default = 'md';
         $size ??= $this->size ?? $default;

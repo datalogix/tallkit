@@ -17,7 +17,7 @@
             {{ $empty }}
         @else
             <tk:text
-                :attributes="TALLKit::attributesAfter($attributes, 'empty:')"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'empty:')"
                 variant="subtle"
                 label="Nothing to show"
             />
@@ -36,7 +36,7 @@
         @isset ($loading)
             {{ $loading }}
         @else
-            <tk:loading :attributes="TALLKit::attributesAfter($attributes, 'loading:')" />
+            <tk:loading :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'loading:')" />
         @endisset
     </template>
 
@@ -44,7 +44,7 @@
         @isset ($error)
             {{ $error }}
         @else
-            <tk:error :attributes="TALLKit::attributesAfter($attributes, 'error:')">
+            <tk:error :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'error:')">
                 <span x-text="error?.message ?? error"></span>
             </tk:error>
         @endisset

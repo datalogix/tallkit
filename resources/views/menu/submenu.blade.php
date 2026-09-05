@@ -3,7 +3,7 @@
 <div
     wire:ignore.self
     x-data="submenu"
-    {{ TALLKit::attributesAfter($attributes, 'container:') }}
+    {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:') }}
 >
     <tk:menu.item
         :attributes="$attributes->whereDoesntStartWith(['container:', 'menu:'])"
@@ -14,7 +14,7 @@
     />
 
     <tk:menu
-        :attributes="TALLKit::attributesAfter($attributes, 'menu:')->classes('-ml-2')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'menu:')->classes('-ml-2')"
         :$size
         :$animation
     >

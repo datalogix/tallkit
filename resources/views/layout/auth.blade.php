@@ -18,7 +18,7 @@ $bgs = collect(
     ->unique();
 
 $bg = $bgs->isNotEmpty() ? $bgs->random() : null;
-$hasHero = $bg || isset($hero) || TALLKit::attributesAfter($attributes, 'hero:')->isNotEmpty();
+$hasHero = $bg || isset($hero) || TALLKit::attributesAfter(attributes: $attributes, prefix: 'hero:')->isNotEmpty();
 
 @endphp
 <div
@@ -29,21 +29,21 @@ $hasHero = $bg || isset($hero) || TALLKit::attributesAfter($attributes, 'hero:')
             ->classes(['lg:grid-cols-2' => $hasHero])
     }}
 >
-    <div {{ TALLKit::attributesAfter($attributes, 'area:')->classes('p-6 relative', $right ? 'order-last' : 'order-first') }}>
+    <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'area:')->classes('p-6 relative', $right ? 'order-last' : 'order-first') }}>
         @if ($appearance !== false)
-            <tk:appearance.toggle :attributes="TALLKit::attributesAfter($attributes, 'appearance:')
+            <tk:appearance.toggle :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'appearance:')
                 ->classes('absolute right-4 top-4')"
             />
         @endif
 
-        <tk:container :attributes="TALLKit::attributesAfter($attributes, 'container:')
+        <tk:container :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')
             ->classes('[:where(&)]:max-w-xl px-0 flex flex-col justify-center space-y-8 h-full')"
         >
             @isset ($brand)
                 {{ $brand }}
             @else
                 <tk:brand
-                    :attributes="TALLKit::attributesAfter($attributes, 'brand:')"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'brand:')"
                     :href="false"
                     size="xl"
                 />
@@ -53,7 +53,7 @@ $hasHero = $bg || isset($hero) || TALLKit::attributesAfter($attributes, 'hero:')
                 {{ $slot }}
             @else
                 <tk:card
-                    :attributes="TALLKit::attributesAfter($attributes, 'card:')->classes('
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'card:')->classes('
                         w-full lg:p-6
                         border-none lg:border-solid
                         bg-transparent dark:bg-transparent lg:bg-white dark:lg:bg-zinc-800
@@ -67,7 +67,7 @@ $hasHero = $bg || isset($hero) || TALLKit::attributesAfter($attributes, 'hero:')
     </div>
 
     @if ($hasHero)
-        <div {{ TALLKit::attributesAfter($attributes, 'hero:')
+        <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'hero:')
             ->classes('hidden lg:flex bg-cover bg-center text-white flex-col')
             ->when($bg, fn ($attrs, $value) => $attrs->style("background-image: url('{$value}')"))
         }}>

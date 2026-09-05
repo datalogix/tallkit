@@ -10,7 +10,7 @@
             'flex items-center justify-center pointer-events-none',
             TALLKit::generateClassBySize(size: $size, name: 'min-w', values: ['4', '4.5', '5', '5.5', '6', '7', '8']),
         )
-        ->merge(['data-value' => $value], false)
+        ->merge(['data-value' => $value])
     "
     :$label
     :$size

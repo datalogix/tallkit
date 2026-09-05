@@ -11,7 +11,7 @@
 <tk:element
     name="status"
     :$href
-    :attributes="TALLKit::attributesAfter($attributes, 'container:')
+    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')
         ->classes(
             '
                 justify-center
@@ -23,7 +23,7 @@
             ',
             TALLKit::roundedSize(size: $size, mode: 'large'),
             TALLKit::padding(size: $size, mode: 'largest'),
-            TALLKit::mutedBackground($color) ?? 'bg-zinc-400/20 dark:bg-zinc-400/40 [&:is(a)]:hover:bg-zinc-400/30 dark:[&:is(a)]:hover:bg-zinc-400/50',
+            TALLKit::mutedBackground(color: $color) ?? 'bg-zinc-400/20 dark:bg-zinc-400/40 [&:is(a)]:hover:bg-zinc-400/30 dark:[&:is(a)]:hover:bg-zinc-400/50',
         )
     "
 >
@@ -37,7 +37,7 @@
             {{ $prepend }}
 
             <tk:heading
-                :attributes="TALLKit::attributesAfter($attributes, 'value:')
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'value:')
                     ->classes(
                         'block w-full',
                         match ($size) {

@@ -6,9 +6,9 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext($attributes, $label, $id);
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
 $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd || $attributes->has('class');
-$options = TALLKit::parseOptions($attributes);
+$options = TALLKit::parseOptions(attributes: $attributes);
 
 $valueStrings = array_map('strval', Arr::wrap($value));
 $optionValues = collect($options)->flatMap(fn ($item, $key) => is_array($item) ? array_keys($item) : [$key])->all();
@@ -27,7 +27,7 @@ $hasMatchingOption = (bool) array_intersect($valueStrings, array_map('strval', $
                 fn ($attrs) => $attrs->classes(
                     'tk-control-wrapper',
                     TALLKit::roundedSize(size: $size, mode: 'large'),
-                    TALLKit::controlFocusRingNested($color),
+                    TALLKit::controlFocusRingNested(color: $color),
                 ),
             )
         "
@@ -44,14 +44,11 @@ $hasMatchingOption = (bool) array_intersect($valueStrings, array_map('strval', $
                         'multiple' => $multiple ? true : null,
                         'size' => $multiple ? ($rows ?? 5) : null,
                         'wire:model' => $wireModel,
-                        'aria-describedby' => TALLKit::ariaDescribedBy($id, $description, $help, $invalid, $showError),
+                        'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                         'aria-invalid' => $invalid ? 'true' : null,
                         'data-invalid' => $invalid ? true : null,
                     ])
-                    ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes([
-                        'prepend:', 'icon:', 'append:', 'loading:', 'icon-trailing:', 'kbd:',
-                        'select:', 'placeholder:', 'optgroup:', 'option:',
-                    ]))
+                    ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: ['select:', 'placeholder:', 'optgroup:', 'option:']))
                     ->except('class')
                     ->classes(
                         '
@@ -59,8 +56,10 @@ $hasMatchingOption = (bool) array_intersect($valueStrings, array_map('strval', $
                             peer
 
                             truncate
+
                             has-[option.placeholder:checked]:text-zinc-400
                             dark:has-[option.placeholder:checked]:text-zinc-400
+
                             dark:[&_option]:bg-zinc-700
                             dark:[&_*]:text-white
 
@@ -97,14 +96,14 @@ $hasMatchingOption = (bool) array_intersect($valueStrings, array_map('strval', $
                         fn ($attrs) => $attrs->classes(
                             'tk-control-standalone',
                             TALLKit::roundedSize(size: $size, mode: 'large'),
-                            TALLKit::controlFocusRing($color),
+                            TALLKit::controlFocusRing(color: $color),
                         ),
                     )
             }}
         >
             @if (($placeholder ?? true) && ! $multiple)
                 <tk:select.option
-                    :attributes="TALLKit::attributesAfter($attributes, 'placeholder:')->classes('placeholder')"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'placeholder:')->classes('placeholder')"
                     :label="is_string($placeholder) ? $placeholder : '---'"
                     :selected="! $hasMatchingOption"
                     :value="''"
@@ -117,13 +116,13 @@ $hasMatchingOption = (bool) array_intersect($valueStrings, array_map('strval', $
                 @foreach ($options as $optionItemValue => $optionItemLabel)
                     @if (is_array($optionItemLabel))
                         <optgroup
-                            {{ TALLKit::attributesAfter($attributes, 'optgroup:') }}
+                            {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'optgroup:') }}
                             label="{{ __($optionItemValue ?: '---') }}"
                         >
                             @foreach ($optionItemLabel as $optionItemGroupValue => $optionItemGroupLabel)
                                 <tk:select.option
-                                    :attributes="TALLKit::attributesAfter($attributes, 'option:')
-                                        ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId('select-option', (string) $optionItemGroupValue)] : [], false)
+                                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'option:')
+                                        ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId(prefix: 'select-option', name: (string) $optionItemGroupValue)] : [], false)
                                     "
                                     :label="$optionItemGroupLabel"
                                     :selected="in_array((string) $optionItemGroupValue, $valueStrings, true)"
@@ -133,8 +132,8 @@ $hasMatchingOption = (bool) array_intersect($valueStrings, array_map('strval', $
                         </optgroup>
                     @else
                         <tk:select.option
-                            :attributes="TALLKit::attributesAfter($attributes, 'option:')
-                                ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId('select-option', (string) $optionItemValue)] : [], false)
+                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'option:')
+                                ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId(prefix: 'select-option', name: (string) $optionItemValue)] : [], false)
                             "
                             :label="$optionItemLabel"
                             :selected="in_array((string) $optionItemValue, $valueStrings, true)"

@@ -7,7 +7,7 @@
 ])
 @php
 
-$id ??= TALLKit::generateId('fieldset');
+$id ??= TALLKit::generateId(prefix: 'fieldset');
 $descriptionId = "{$id}-description";
 
 @endphp
@@ -16,6 +16,8 @@ $descriptionId = "{$id}-description";
         ->classes('
             [&[disabled]_[data-tallkit-label]]:opacity-50
             [&[disabled]_[data-tallkit-legend]]:opacity-50
+            dark:[&[disabled]_[data-tallkit-label]]:opacity-40
+            dark:[&[disabled]_[data-tallkit-legend]]:opacity-40
             [&_[data-tallkit-field]]:mb-2
             [&>[data-tallkit-field]:has(>[data-tallkit-text])]:mb-4
             [&>[data-tallkit-field]:last-child]:mb-0
@@ -28,13 +30,13 @@ $descriptionId = "{$id}-description";
 }}>
     @if ($label || $legend || $description)
         <tk:legend
-            :attributes="TALLKit::attributesAfter($attributes, 'label:', prepend: ['legend:', 'badge', 'info'])"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'label:', prepend: ['legend:', 'badge', 'info'])"
             :label="$label ?: $legend"
             :$size
         />
 
         <tk:text
-            :attributes="TALLKit::attributesAfter($attributes, 'description:')
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'description:')
                 ->classes('mb-4')
                 ->when($description, fn ($attrs) => $attrs->merge(['id' => $descriptionId]))
             "

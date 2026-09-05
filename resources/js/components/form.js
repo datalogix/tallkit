@@ -1,0 +1,88 @@
+import { hasLivewire, onLivewireCommit } from '../utils'
+
+export function form(
+  {
+    action = null,
+    focusError = null,
+    clearErrorsOnSubmit = null,
+    toast = null,
+    errorMessage = null,
+    successMessage = null
+  } = {}
+) {
+  return {
+    livewireCommitCleanup: null,
+
+    init() {
+      if (hasLivewire()) {
+        this.watchLivewireCommits()
+      } else if (focusError) {
+        this.focusFirstInvalidField()
+      }
+    },
+
+    watchLivewireCommits() {
+      this.livewireCommitCleanup = onLivewireCommit(({ component, commit, succeed }) => {
+        if (component?.el !== this.$el && !component?.el?.contains(this.$el)) return
+        if (action && !commit?.calls?.some((call) => call.method === action)) return
+
+        if (clearErrorsOnSubmit) {
+          this.clearErrors()
+        }
+
+        succeed(({
+          snapshot
+        }) => {
+          if (!this.$el?.isConnected) return
+
+          const id = this.$el?.getAttribute('id')
+            ?? component?.el.getAttribute('wire:id')
+            ?? undefined
+
+          const hasErrors = Object.keys(snapshot?.memo?.errors ?? {}).length > 0
+            || !!this.$el.querySelector('[data-invalid], [aria-invalid="true"]')
+
+          if (hasErrors) {
+            if ((toast === true || toast === 'error') && errorMessage) {
+              this.$tallkit.toast().error({ message: errorMessage, id, duration: 3000 })
+            }
+
+            if (focusError) {
+              this.focusFirstInvalidField()
+            }
+
+            return
+          }
+
+          if ((toast === true || toast === 'success') && successMessage) {
+            this.$tallkit.toast().success({ message: successMessage, id, duration: 3000 })
+
+            return
+          }
+        })
+      })
+    },
+
+    clearErrors() {
+      this.$el.querySelectorAll('[data-invalid], [aria-invalid="true"]').forEach((field) => {
+        field.removeAttribute('data-invalid')
+        field.removeAttribute('aria-invalid')
+      })
+
+      this.$el.querySelectorAll('[data-tallkit-error], [data-tallkit-error-group]').forEach((el) => el.remove())
+    },
+
+    focusFirstInvalidField() {
+      const field = this.$el.querySelector('[data-invalid], [aria-invalid="true"]')
+
+      if (!(field instanceof HTMLElement)) return
+
+      field.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      field.focus({ preventScroll: true })
+    },
+
+    destroy() {
+      this.livewireCommitCleanup?.()
+    }
+  };
+}

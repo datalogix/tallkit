@@ -1,6 +1,6 @@
 @props([
     'vertical' => null,
-    'label' => null,
+    'text' => null,
 ])
 @php
 
@@ -13,21 +13,21 @@ $contentClasses = TALLKit::classes(
 );
 
 @endphp
-@if ($slot->hasActualContent() || $label)
+@if ($slot->hasActualContent() || $text)
     <div
         role="separator"
         @if ($vertical) aria-orientation="vertical" @endif
-        {{ TALLKit::dataKey('separator') }}
+        {{ TALLKit::dataKey(name: 'separator') }}
         class="flex items-center w-full"
     >
         <div {{ $attributes->whereDoesntStartWith(['content:'])->classes($contentClasses->add('grow')) }}></div>
 
-        <span {{ TALLKit::attributesAfter($attributes, 'content:')->classes(
+        <span {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'content:')->classes(
             'shrink mx-6 whitespace-nowrap',
             'text-zinc-500 dark:text-zinc-300',
             TALLKit::fontSize(weight: true),
         ) }}>
-            {{ $slot->isEmpty() ? __($label) : $slot }}
+            {{ $slot->isEmpty() ? __($text) : $slot }}
         </span>
 
         <div {{ $attributes->whereDoesntStartWith(['content:'])->classes($contentClasses->add('grow')) }}></div>

@@ -6,7 +6,7 @@
 ])
 <div
     {{
-        TALLKit::attributesAfter($attributes, 'container:')
+        TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')
             ->dataKey('upload-dropzone')
             ->classes([
                 'relative rounded-lg transition-all',
@@ -29,8 +29,8 @@
     @if ($variant === 'avatar')
         :class="{
             'ring-2': dragOver,
-            '{{ TALLKit::uploadRing($color) }}': dragOver,
-            '{{ TALLKit::uploadBg($color) }}': dragOver,
+            '{{ TALLKit::uploadRing(color: $color) }}': dragOver,
+            '{{ TALLKit::uploadBg(color: $color) }}': dragOver,
         }"
     @endif
 >
@@ -48,8 +48,8 @@
 
         <tk:button
             x-show="files.length > 0"
-            :attributes="TALLKit::attributesAfter($attributes, 'edit:')->classes('absolute inset-0 p-0! shadow')"
-            :size="TALLKit::adjustSize($size)"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'edit:')->classes('absolute inset-0 p-0! shadow')"
+            :size="TALLKit::adjustSize(size: $size)"
             variant="filled"
             circle
             icon="pencil"
@@ -62,7 +62,7 @@
             :$size
             ::class="{
                 'ring-2': dragOver && dragOverIndex === null,
-                '{{ TALLKit::uploadRing($color) }}': dragOver && dragOverIndex === null,
+                '{{ TALLKit::uploadRing(color: $color) }}': dragOver && dragOverIndex === null,
             }"
             :label="$multiple ? 'Select files' : 'Select file'"
             icon="cloud-upload-outline"
@@ -76,8 +76,8 @@
             :$size
             ::class="{
                 'ring-2': dragOver && dragOverIndex === null,
-                '{{ TALLKit::uploadRing($color) }}': dragOver && dragOverIndex === null,
-                '{{ TALLKit::uploadBorder($color) }}': dragOver && dragOverIndex === null,
+                '{{ TALLKit::uploadRing(color: $color) }}': dragOver && dragOverIndex === null,
+                '{{ TALLKit::uploadBorder(color: $color) }}': dragOver && dragOverIndex === null,
             }"
             :label="$multiple ? 'Add files' : 'Add file'"
             icon="cloud-upload-outline"
@@ -88,7 +88,7 @@
         {{ $slot }}
     @else
         <tk:button
-            x-show="multiple || files.length === 0"
+            x-show="multiple() || files.length === 0"
             :attributes="$attributes->whereDoesntStartWith(['container:'])
                 ->classes([
                     'flex-col border-2 border-dashed whitespace-normal',
@@ -108,14 +108,14 @@
             :$size
             ::class="{
                 'ring-2': dragOver && dragOverIndex === null,
-                '{{ TALLKit::uploadRing($color) }}': dragOver && dragOverIndex === null,
-                '{{ TALLKit::uploadBg($color) }}': dragOver && dragOverIndex === null,
-                '{{ TALLKit::uploadBorder($color) }}': dragOver && dragOverIndex === null,
-                '{{ TALLKit::uploadText($color) }}': dragOver && dragOverIndex === null,
+                '{{ TALLKit::uploadRing(color: $color) }}': dragOver && dragOverIndex === null,
+                '{{ TALLKit::uploadBg(color: $color) }}': dragOver && dragOverIndex === null,
+                '{{ TALLKit::uploadBorder(color: $color) }}': dragOver && dragOverIndex === null,
+                '{{ TALLKit::uploadText(color: $color) }}': dragOver && dragOverIndex === null,
             }"
             :label="$variant === 'gallery' ? null : 'Drag or click to select'"
             icon="cloud-upload-outline"
-            :icon:size="TALLKit::adjustSize($size, move: 1)"
+            :icon:size="TALLKit::adjustSize(size: $size, move: 1)"
             @click="selectFile"
         />
 

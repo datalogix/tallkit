@@ -14,13 +14,13 @@
                     ->classes(TALLKit::fontSize(size: $size, mode: $mode),)
             }}
         >
-            <ol {{ TALLKit::attributesAfter($attributes, 'list:')->classes('flex items-center') }}>
+            <ol {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'list:')->classes('flex items-center') }}>
                 @foreach (collect($items) as $index => $item)
                     <tk:breadcrumb.item
-                        :attributes="TALLKit::attributesAfter($attributes, 'item:')
+                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'item:')
                             ->merge(is_array($item) ? $item : ['label' => $item], false)
                             ->merge($loop->last ? ['aria-current' => 'page'] : [], false)
-                            ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId('breadcrumb-item', (string) data_get($item, 'label', $index))] : [], false)
+                            ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId(prefix: 'breadcrumb-item', name: (string) data_get($item, 'label', $index))] : [], false)
                         "
                         :$size
                     />

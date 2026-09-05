@@ -76,7 +76,7 @@ if ($config = data_get($currencies, Str::upper($currency))) {
 
 @endphp
 <tk:input
-    :attributes="TALLKit::mergeDefinedFieldProps($attributes, get_defined_vars())"
+    :attributes="TALLKit::mergeDefinedFieldProps(attributes: $attributes, scope: get_defined_vars())"
     :$placeholder
     :prefix="$prefix ?? ($position === 'prefix' ? $symbol : null)"
     :suffix="$suffix ?? ($position === 'suffix' ? $symbol : null)"

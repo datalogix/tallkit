@@ -9,9 +9,9 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext($attributes, $label, $id);
-$type ??= TALLKit::detectInputType($name);
-$mask = TALLKit::detectInputMask($name, $mask, $type);
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
+$type ??= TALLKit::detectInputType(name: $name);
+$mask = TALLKit::detectInputMask(name: $name, mask: $mask, type: $type);
 $viewable ??= $type === 'password';
 $hasControl = $clearable || $copyable || $viewable || $prepend || $icon || $append || $loading || $iconTrailing || $kbd || $attributes->has('class');
 
@@ -41,7 +41,7 @@ $hasControl = $clearable || $copyable || $viewable || $prepend || $icon || $appe
                     fn ($attrs) => $attrs->classes(
                         'tk-control-wrapper',
                         TALLKit::roundedSize(size: $size, mode: 'large'),
-                        TALLKit::controlFocusRingNested($color),
+                        TALLKit::controlFocusRingNested(color: $color),
                     ),
                 )
             "
@@ -61,14 +61,11 @@ $hasControl = $clearable || $copyable || $viewable || $prepend || $icon || $appe
                             'wire:model' => $wireModel,
                             'x-data' => $mask ? true : null,
                             'x-mask' => $mask,
-                            'aria-describedby' => TALLKit::ariaDescribedBy($id, $description, $help, $invalid, $showError),
+                            'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                             'aria-invalid' => $invalid ? 'true' : null,
                             'data-invalid' => $invalid ? true : null,
                         ])
-                        ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes([
-                            'prepend:', 'icon:', 'append:', 'loading:', 'icon-trailing:', 'kbd:',
-                            'input:', 'clearable:', 'copyable:', 'viewable:',
-                        ]))
+                        ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: ['input:', 'clearable:', 'copyable:', 'viewable:']))
                         ->except('class')
                         ->classes(
                             '
@@ -90,7 +87,7 @@ $hasControl = $clearable || $copyable || $viewable || $prepend || $icon || $appe
                             fn ($attrs) => $attrs->classes(
                                 'tk-control-standalone',
                                 TALLKit::roundedSize(size: $size, mode: 'large'),
-                                TALLKit::controlFocusRing($color),
+                                TALLKit::controlFocusRing(color: $color),
                             ),
                         )
                 }}
@@ -101,16 +98,16 @@ $hasControl = $clearable || $copyable || $viewable || $prepend || $icon || $appe
                     {{ $append ?? '' }}
 
                     @if ($clearable)
-                        <tk:input.clearable
-                            :attributes="TALLKit::attributesAfter($attributes, 'clearable:')"
+                        <tk:clearable
+                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'clearable:')"
                             :$size
                             :label="is_string($clearable) ? $clearable : null"
                         />
                     @endif
 
                     @if ($copyable)
-                        <tk:copy
-                            :attributes="TALLKit::attributesAfter($attributes, 'copyable:')"
+                        <tk:copyable
+                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'copyable:')"
                             :$size
                             :label="is_string($copyable) ? $copyable : null"
                         />
@@ -118,7 +115,7 @@ $hasControl = $clearable || $copyable || $viewable || $prepend || $icon || $appe
 
                     @if ($viewable)
                         <tk:input.viewable
-                            :attributes="TALLKit::attributesAfter($attributes, 'viewable:')"
+                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'viewable:')"
                             :$size
                             :label="is_string($viewable) ? $viewable : null"
                         />

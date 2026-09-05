@@ -26,9 +26,9 @@
 >
     @if ($title || $subtitle || $description || $append || $actions)
         <tk:content
-            :attributes="TALLKit::attributesAfter($attributes, 'header:', prepend: ['container:', 'title:', 'description:' => 'subtitle:', 'list:', 'actions:'])
-                ->merge(TALLKit::attributesAfter($attributes, 'icon', prepend: 'title:icon')->getAttributes())
-                ->merge(TALLKit::attributesAfter($attributes, 'badge', prepend: 'title:badge')->getAttributes())
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'header:', prepend: ['container:', 'title:', 'description:' => 'subtitle:', 'list:', 'actions:'])
+                ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon', prepend: 'title:icon')->getAttributes())
+                ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'badge', prepend: 'title:badge')->getAttributes())
             "
             :$size
             :title:icon:size="$size"
@@ -53,14 +53,14 @@
                 ($slot->hasActualContent() || $content)
             )
         )
-            <tk:separator :attributes="TALLKit::attributesAfter($attributes, 'separator:')" />
+            <tk:separator :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'separator:')" />
         @endif
     @endif
 
     @if ($slot->hasActualContent() || $content)
         <div
             {{
-                TALLKit::attributesAfter($attributes, 'content:')
+                TALLKit::attributesAfter(attributes: $attributes, prefix: 'content:')
                     ->dataKey('section-content')
                     ->classes(TALLKit::generateClassBySize(size: $size, name: 'space-y', values: [3, 3.5, 4, 4.5, 5, 5.5, 6]))
             }}

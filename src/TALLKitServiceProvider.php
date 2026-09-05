@@ -4,12 +4,15 @@ namespace TALLKit;
 
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\View\ComponentAttributeBag;
 use Livewire\Component;
 use Livewire\Livewire;
 use TALLKit\Assets\AssetManager;
+use TALLKit\Http\Controllers\UploadController;
 use TALLKit\Livewire\ComponentMixin;
+use TALLKit\Livewire\DateRangeSynth;
 use TALLKit\View\BladeDirectives;
 use TALLKit\View\Compilers\ComponentTagCompiler;
 use TALLKit\View\ComponentAttributeBagMixin;
@@ -34,6 +37,8 @@ class TALLKitServiceProvider extends ServiceProvider
         if (class_exists(Livewire::class)) {
             Component::mixin(new ComponentMixin);
 
+            Livewire::propertySynthesizer(DateRangeSynth::class);
+
             $this->bootMagicActions();
         }
 
@@ -42,6 +47,7 @@ class TALLKitServiceProvider extends ServiceProvider
         $this->bootComponentPath();
         $this->bootTagCompiler();
         $this->bootMacros();
+        $this->bootRoutes();
 
         AssetManager::boot();
 
@@ -76,6 +82,17 @@ class TALLKitServiceProvider extends ServiceProvider
     protected function bootMacros()
     {
         ComponentAttributeBag::mixin(new ComponentAttributeBagMixin);
+    }
+
+    protected function bootRoutes()
+    {
+        if (! config('tallkit.upload.enabled', true)) {
+            return;
+        }
+
+        Route::middleware(config('tallkit.upload.middleware', ['web']))
+            ->post(config('tallkit.upload.route', '/tallkit/upload'), [UploadController::class, 'store'])
+            ->name('tallkit.upload');
     }
 
     protected function bootMagicActions()

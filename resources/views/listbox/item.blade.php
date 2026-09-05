@@ -2,10 +2,10 @@
 @props(['size' => null])
 <li
     {{
-        TALLKit::attributesAfter($attributes, 'container:')
+        TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')
             ->classes('w-full group/item data-hidden:hidden')
     }}
-    id="{{ $attributes->get('wire:key', TALLKit::generateId('listbox-item')) }}"
+    id="{{ $attributes->get('wire:key', TALLKit::generateId(prefix: 'listbox-item')) }}"
     role="option"
 >
     <tk:button

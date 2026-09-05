@@ -4,7 +4,7 @@
 ])
 @if ($mode === 'toggle' || (($mode === null || $mode === true) && !($items || $slot->isNotEmpty())))
     <tk:appearance.toggle
-        :attributes="TALLKit::attributesAfter($attributes, 'toggle:')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'toggle:')"
     />
 @endif
 
@@ -18,7 +18,7 @@
         @if ($mode === 'selector' || $mode === null || $mode === true)
             <x-slot:prepend>
                 <tk:appearance.menu-item
-                    :attributes="TALLKit::attributesAfter($attributes, 'menu-item:')"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'menu-item:')"
                 />
 
                 <tk:menu.separator />

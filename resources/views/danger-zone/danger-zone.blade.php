@@ -13,11 +13,11 @@
     <x-slot:append>
         @if ($slot->isEmpty())
             <tk:modal.confirm
-                :attributes="TALLKit::attributesAfter($attributes, 'modal:')"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'modal:')"
                 variant="delete"
             >
                 <tk:button
-                    :attributes="TALLKit::attributesAfter($attributes, 'trigger:')->classes('mt-4')"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'trigger:')->classes('mt-4')"
                     variant="danger"
                     label="Delete"
                 />

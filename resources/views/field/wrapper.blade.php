@@ -6,16 +6,16 @@
 ])
 @php
 
-$hasPrefix = $prefix || TALLKit::attributesAfter($attributes, 'prefix:')->isNotEmpty();
-$hasSuffix = $suffix || TALLKit::attributesAfter($attributes, 'suffix:')->isNotEmpty();
+$hasPrefix = $prefix || TALLKit::attributesAfter(attributes: $attributes, prefix: 'prefix:')->isNotEmpty();
+$hasSuffix = $suffix || TALLKit::attributesAfter(attributes: $attributes, prefix: 'suffix:')->isNotEmpty();
 
 @endphp
 @if ($label || $description || $help || $hasPrefix || $hasSuffix)
-    <tk:field :$inline :$align :attributes="TALLKit::attributesAfter($attributes, 'field:')">
+    <tk:field :$inline :$align :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'field:')">
         <tk:label
-            :attributes="TALLKit::attributesAfter($attributes, 'label:')
-                ->merge(TALLKit::attributesAfter($attributes, 'info:', prepend: true)->getAttributes())
-                ->merge(TALLKit::attributesAfter($attributes, 'badge:', prepend: true)->getAttributes())
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'label:')
+                ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'info:', prepend: true)->getAttributes())
+                ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'badge:', prepend: true)->getAttributes())
             "
             :for="$id"
             :$label
@@ -27,16 +27,16 @@ $hasSuffix = $suffix || TALLKit::attributesAfter($attributes, 'suffix:')->isNotE
         />
 
         <tk:text
-            :attributes="TALLKit::attributesAfter($attributes, 'description:')->merge(['id' => $id ? $id.'-description' : null])"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'description:')->merge(['id' => $id ? $id.'-description' : null])"
             :label="$description"
             :$size
         />
 
         @if (!$inline && ($hasPrefix || $hasSuffix))
             <tk:field.group
-                :attributes="TALLKit::attributesAfter($attributes, 'group:')
-                    ->merge(TALLKit::attributesAfter($attributes, 'prefix:', prepend: true)->getAttributes())
-                    ->merge(TALLKit::attributesAfter($attributes, 'suffix:', prepend: true)->getAttributes())
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'group:')
+                    ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'prefix:', prepend: true)->getAttributes())
+                    ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'suffix:', prepend: true)->getAttributes())
                 "
                 :$prefix
                 :$suffix
@@ -49,14 +49,14 @@ $hasSuffix = $suffix || TALLKit::attributesAfter($attributes, 'suffix:')->isNotE
         @endif
 
         <tk:text
-            :attributes="TALLKit::attributesAfter($attributes, 'help:')->merge(['id' => $id ? $id.'-help' : null])"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'help:')->merge(['id' => $id ? $id.'-help' : null])"
             :label="$help"
             :$size
         />
 
         @if ($showError !== false)
             <tk:error
-                :attributes="TALLKit::attributesAfter($attributes, 'error:')->merge(['id' => $id ? $id.'-error' : null])"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'error:')->merge(['id' => $id ? $id.'-error' : null])"
                 :$name
                 :$size
             />

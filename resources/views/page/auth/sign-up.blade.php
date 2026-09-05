@@ -18,7 +18,7 @@ $login ??= route_detect([
     subtitle="Enter your details below to create your account:"
 >
     <tk:input
-        :attributes="TALLKit::attributesAfter($attributes, 'name:')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'name:')"
         :$size
         name="name"
         required
@@ -28,7 +28,7 @@ $login ??= route_detect([
     />
 
     <tk:input
-        :attributes="TALLKit::attributesAfter($attributes, 'email:')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'email:')"
         :$size
         name="email"
         required
@@ -37,7 +37,7 @@ $login ??= route_detect([
     />
 
     <tk:password
-        :attributes="TALLKit::attributesAfter($attributes, 'password:')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'password:')"
         :$size
         name="password"
         required
@@ -46,7 +46,7 @@ $login ??= route_detect([
     />
 
     <tk:password
-        :attributes="TALLKit::attributesAfter($attributes, 'password-confirmation:')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'password-confirmation:')"
         :$size
         name="password_confirmation"
         required
@@ -55,7 +55,7 @@ $login ??= route_detect([
     />
 
     <tk:terms.acceptance
-        :attributes="TALLKit::attributesAfter($attributes, 'terms:')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'terms:')"
         :$size
         name="terms"
         required
@@ -63,7 +63,7 @@ $login ??= route_detect([
     />
 
     <tk:submit
-        :attributes="TALLKit::attributesAfter($attributes, 'submit:')->classes('w-full')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'submit:')->classes('w-full')"
         :$size
         label="Create account"
         variant="accent"
@@ -71,15 +71,15 @@ $login ??= route_detect([
 
     @if ($login)
         <x-slot:append>
-            <div {{ TALLKit::attributesAfter($attributes, 'login:container:')->classes('space-x-1 rtl:space-x-reverse flex justify-center') }}>
+            <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'login:container:')->classes('space-x-1 rtl:space-x-reverse flex justify-center') }}>
                 <tk:text
-                    :attributes="TALLKit::attributesAfter($attributes, 'login:label:')"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'login:label:')"
                     :$size
                     label="Already have an account?"
                 />
 
                 <tk:link
-                    :attributes="TALLKit::attributesAfter($attributes, 'login:link:')"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'login:link:')"
                     :$size
                     :href="$login"
                     label="Sign in"

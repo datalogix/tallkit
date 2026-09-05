@@ -2,7 +2,7 @@
     'items' => null,
     'size' => null,
 ])
-<tk:dropdown :attributes="TALLKit::attributesAfter($attributes, 'dropdown:')">
+<tk:dropdown :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'dropdown:')">
     <tk:button
         :attributes="$attributes->whereDoesntStartWith(['dropdown:', 'menu:'])"
         :$size
@@ -12,7 +12,7 @@
     />
 
     <tk:menu
-        :attributes="TALLKit::attributesAfter($attributes, 'menu:')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'menu:')"
         :$items
         :$size
     >

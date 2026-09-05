@@ -43,6 +43,7 @@
         '
             w-full focus:outline-hidden
             [[disabled]_&]:opacity-50 [&[disabled]]:opacity-50
+            dark:[[disabled]_&]:opacity-40 dark:[&[disabled]]:opacity-40
 
             *:[data-tallkit-icon]:text-zinc-400
             dark:*:[data-tallkit-icon]:text-white/60

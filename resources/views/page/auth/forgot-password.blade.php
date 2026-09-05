@@ -18,7 +18,7 @@ $login ??= route_detect([
     subtitle="Enter your email address and we'll send you a password reset link."
 >
     <tk:input
-        :attributes="TALLKit::attributesAfter($attributes, 'email:')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'email:')"
         :$size
         name="email"
         required
@@ -27,7 +27,7 @@ $login ??= route_detect([
     />
 
     <tk:submit
-        :attributes="TALLKit::attributesAfter($attributes, 'submit:')->classes('w-full')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'submit:')->classes('w-full')"
         :$size
         label="Send password reset link"
         variant="accent"
@@ -36,7 +36,7 @@ $login ??= route_detect([
     @if ($login)
         <x-slot:append>
             <tk:link
-                :attributes="TALLKit::attributesAfter($attributes, 'login:')"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'login:')"
                 :href="$login"
                 :$size
                 label="Back to sign in"

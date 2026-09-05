@@ -7,7 +7,7 @@
         {{ $slot }}
     @else
         <tk:checkbox
-            :attributes="TALLKit::attributesAfter($attributes, 'checkbox:')"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'checkbox:')"
             x-model="selectAllChecked"
             x-on:change="toggleAll"
             :label="false"

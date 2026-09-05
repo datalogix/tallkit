@@ -7,9 +7,9 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext($attributes, $label, $id);
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
 $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd || $attributes->has('class');
-$options = TALLKit::parseOptions($attributes);
+$options = TALLKit::parseOptions(attributes: $attributes);
 $placeholderText = __(is_string($placeholder) ? $placeholder : '---');
 
 $flatOptions = collect();
@@ -37,7 +37,7 @@ foreach ($options as $optionItemValue => $optionItemLabel) {
                 fn ($attrs) => $attrs->classes(
                     'tk-control-wrapper-expanded',
                     TALLKit::roundedSize(size: $size, mode: 'large'),
-                    TALLKit::controlFocusRingNested($color, expanded: true),
+                    TALLKit::controlFocusRingNested(color: $color, expanded: true),
                 ),
             )
         "
@@ -48,8 +48,6 @@ foreach ($options as $optionItemValue => $optionItemLabel) {
                 value: @js($value ?? ($multiple ? [] : null)),
                 multiple: @js($multiple),
             })"
-            x-modelable="value"
-            {{ $attributes->only([])->merge(['wire:model' => $wireModel]) }}
         >
             <div
                 tabindex="0"
@@ -58,21 +56,16 @@ foreach ($options as $optionItemValue => $optionItemLabel) {
                 :aria-expanded="opened ? 'true' : 'false'"
                 aria-controls="{{ $id.'-listbox' }}"
                 {{
-                    $attributes
+                    TALLKit::attributesAfter(attributes: $attributes, prefix: 'trigger:')
                         ->dataKey('combobox')
                         ->dataKey('control')
                         ->dataKey('group-target')
                         ->merge([
                             'id' => $id,
-                            'aria-describedby' => TALLKit::ariaDescribedBy($id, $description, $help, $invalid, $showError),
+                            'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                             'aria-invalid' => $invalid ? 'true' : null,
                             'data-invalid' => $invalid ? true : null,
                         ])
-                        ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes([
-                            'prepend:', 'icon:', 'append:', 'loading:', 'icon-trailing:', 'kbd:',
-                            'selected:', 'selected-label:', 'selected-clear:', 'selected-option:',
-                            'popover:', 'listbox:', 'heading:', 'option:',
-                        ]))
                         ->except('class')
                         ->classes(
                             '
@@ -105,26 +98,43 @@ foreach ($options as $optionItemValue => $optionItemLabel) {
                             fn ($attrs) => $attrs->classes(
                                 'tk-control-standalone-expanded',
                                 TALLKit::roundedSize(size: $size, mode: 'large'),
-                                TALLKit::controlFocusRing($color, expanded: true),
+                                TALLKit::controlFocusRing(color: $color, expanded: true),
                             ),
                         )
                 }}
             >
+                <input
+                    type="hidden"
+                    {{
+                        $attributes
+                            ->dataKey('combobox-field')
+                            ->merge([
+                                'name' => $name,
+                                'value' => in_livewire() ? null : (is_array($value) ? implode(',', $value) : $value),
+                                'wire:model' => $wireModel,
+                            ])
+                            ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: [
+                                'trigger:', 'selected:', 'selected-label:', 'selected-clear:', 'selected-option:',
+                                'popover:', 'listbox:', 'heading:', 'option:',
+                            ]))
+                    }}
+                />
+
                 @if ($multiple)
                     <span
-                        {{ TALLKit::attributesAfter($attributes, 'selected-label:')->classes('truncate') }}
-                        x-show="opened || selectedCount === 0"
-                        x-text="selectedCount > 0 ? `${selectedCount} ${@js(__('selected'))}` : @js($placeholderText)"
-                        :class="{ 'text-zinc-400': selectedCount === 0 }"
+                        {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'selected-label:')->classes('truncate') }}
+                        x-show="opened || selectedCount() === 0"
+                        x-text="selectedCount() > 0 ? `${selectedCount()} ${@js(__('selected'))}` : @js($placeholderText)"
+                        :class="{ 'text-zinc-400': selectedCount() === 0 }"
                     ></span>
 
                     <div
-                        {{ TALLKit::attributesAfter($attributes, 'selected:')->classes('truncate flex flex-wrap gap-1') }}
-                        x-show="!opened && selectedCount > 0"
+                        {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'selected:')->classes('truncate flex flex-wrap gap-1') }}
+                        x-show="!opened && selectedCount() > 0"
                     >
                         @foreach ($flatOptions as $optionItemValue => $optionItemLabel)
                             <tk:badge
-                                :attributes="TALLKit::attributesAfter($attributes, 'selected-option:')->classes('truncate')"
+                                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'selected-option:')->classes('truncate')"
                                 :$size
                                 x-cloak
                                 x-show="isSelected({{ Js::from((string) $optionItemValue) }})"
@@ -137,17 +147,17 @@ foreach ($options as $optionItemValue => $optionItemLabel) {
                         @endforeach
                     </div>
                 @else
-                    <div {{ TALLKit::attributesAfter($attributes, 'selected:')->classes('truncate flex items-center gap-2') }}>
+                    <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'selected:')->classes('truncate flex items-center gap-2') }}>
                         <span
-                            {{ TALLKit::attributesAfter($attributes, 'selected-label:')->classes('truncate flex-1') }}
-                            x-text="selectedLabel ?? @js($placeholderText)"
-                            :class="{ 'text-zinc-400': !selectedLabel }"
+                            {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'selected-label:')->classes('truncate flex-1') }}
+                            x-text="selectedLabel() ?? @js($placeholderText)"
+                            :class="{ 'text-zinc-400': !selectedLabel() }"
                         ></span>
 
                         <tk:button
-                            :attributes="TALLKit::attributesAfter($attributes, 'selected-clear:')->classes('shrink-0')"
+                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'selected-clear:')->classes('shrink-0')"
                             :size="TALLKit::adjustSize(size: $size)"
-                            x-show="!this.opened && selectedLabel"
+                            x-show="!this.opened && selectedLabel()"
                             x-cloak
                             tooltip="Clear"
                             variant="none"
@@ -159,13 +169,13 @@ foreach ($options as $optionItemValue => $optionItemLabel) {
             </div>
 
             <tk:popover
-                :attributes="TALLKit::attributesAfter($attributes, 'popover:')
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'popover:')
                     ->classes(TALLKit::spaceBlock(size: $size), 'max-h-full')"
                 :$size
                 :$animation
             >
                 <tk:listbox
-                    :attributes="TALLKit::attributesAfter($attributes, 'listbox:')"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'listbox:')"
                     :$searchable
                     :$size
                     :$multiple
@@ -185,15 +195,15 @@ foreach ($options as $optionItemValue => $optionItemLabel) {
                     @foreach ($options as $optionItemValue => $optionItemLabel)
                         @if (is_array($optionItemLabel))
                             <tk:heading
-                                :attributes="TALLKit::attributesAfter($attributes, 'heading:')->classes('px-1')"
+                                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'heading:')->classes('px-1')"
                                 :label="$optionItemValue ?: '---'"
                                 :size="TALLKit::adjustSize(size: $size)"
                             />
 
                             @foreach ($optionItemLabel as $optionItemGroupValue => $optionItemGroupLabel)
                                 <tk:combobox.option
-                                    :attributes="TALLKit::attributesAfter($attributes, 'option:')
-                                        ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId('combobox-option', (string) $optionItemGroupValue)] : [], false)
+                                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'option:')
+                                        ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId(prefix: 'combobox-option', name: (string) $optionItemGroupValue)] : [], false)
                                     "
                                     :value="$optionItemGroupValue"
                                     :label="$optionItemGroupLabel"
@@ -201,8 +211,8 @@ foreach ($options as $optionItemValue => $optionItemLabel) {
                             @endforeach
                         @else
                             <tk:combobox.option
-                                :attributes="TALLKit::attributesAfter($attributes, 'option:')
-                                    ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId('combobox-option', (string) $optionItemValue)] : [], false)
+                                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'option:')
+                                    ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId(prefix: 'combobox-option', name: (string) $optionItemValue)] : [], false)
                                 "
                                 :value="$optionItemValue"
                                 :label="$optionItemLabel"

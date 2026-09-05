@@ -13,6 +13,7 @@
                     '
                         grid gap-x-3 gap-y-1.5
                         [&:has([data-tallkit-control][disabled])>[data-tallkit-label]]:opacity-50
+                        dark:[&:has([data-tallkit-control][disabled])>[data-tallkit-label]]:opacity-40
                     ',
                     match ($align) {
                         'justify-right', 'justify-left' => 'grid-cols-[1fr_auto]',
@@ -44,6 +45,7 @@
                         [&>[data-tallkit-label]+[data-tallkit-text]]:mb-2
                         [&>*:not([data-tallkit-label])+[data-tallkit-text]]:mt-2
                         [&:not(:has([data-tallkit-field])):has([data-tallkit-control][disabled])>[data-tallkit-label]]:opacity-50
+                        dark:[&:not(:has([data-tallkit-field])):has([data-tallkit-control][disabled])>[data-tallkit-label]]:opacity-40
                         [&_[data-tallkit-error]]:mt-1.5
                     ',
                 )

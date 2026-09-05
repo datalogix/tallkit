@@ -53,9 +53,9 @@ $broadcasting = config('broadcasting.default') && config('broadcasting.default')
             :$markAll
         />
     @else
-        <tk:dropdown :attributes="TALLKit::attributesAfter($attributes, 'dropdown:')">
+        <tk:dropdown :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'dropdown:')">
             <tk:button
-                :attributes="TALLKit::attributesAfter($attributes, 'button:')"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'button:')"
                 :$size
                 variant="subtle"
                 icon="bell-outline"
@@ -65,7 +65,7 @@ $broadcasting = config('broadcasting.default') && config('broadcasting.default')
             />
 
             <tk:popover
-                :attributes="TALLKit::attributesAfter($attributes, 'popover:')
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'popover:')
                     ->classes(
                         'w-full p-0 ',
                         $compact ? '[:where(&)]:max-w-xs' : '[:where(&)]:max-w-sm',

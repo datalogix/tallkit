@@ -18,7 +18,7 @@
     :alert="false"
 >
     <tk:card
-        :attributes="TALLKit::attributesAfter($attributes, 'card:', prepend: [
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'card:', prepend: [
             'image', 'alt', 'icon', 'badge', 'separator', 'content',
             'title:', 'subtitle:', 'container:', 'list:', 'actions:',
         ])"
@@ -33,7 +33,7 @@
         :$footer
     >
         <tk:alert.session
-            :attributes="TALLKit::attributesAfter($attributes, 'alert:')"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'alert:')"
             :$size
         >
             {{ $alert ?? '' }}

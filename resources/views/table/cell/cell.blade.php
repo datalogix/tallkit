@@ -16,7 +16,7 @@
         ',
     ])
 }}>
-    <div {{ TALLKit::attributesAfter($attributes, 'container:')->classes(
+    <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')->classes(
         'flex items-center gap-2',
         match ($align) {
             'center' => 'text-center justify-center',

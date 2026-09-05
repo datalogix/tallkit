@@ -6,6 +6,7 @@
     'alert' => null,
     'errorGroup' => null,
     'focusError' => null,
+    'clearErrorsOnSubmit' => null,
     'toast' => null,
     'errorMessage' => null,
     'successMessage' => null,
@@ -20,6 +21,7 @@ $action = in_livewire() ? ($action ?? 'submit') : route_detect(routes: [$route, 
     x-data="form({
         action: @js(in_livewire() ? $action : null),
         focusError: {{ $focusError === false ? 'false' : 'true' }},
+        clearErrorsOnSubmit: {{ $clearErrorsOnSubmit === false ? 'false' : 'true' }},
         toast: @js($toast ?? true),
         errorMessage: @js($errorMessage ?? __('There was an error submitting the form.')),
         successMessage: @js($successMessage ?? __('Form submitted successfully.')),
@@ -56,20 +58,20 @@ $action = in_livewire() ? ($action ?? 'submit') : route_detect(routes: [$route, 
     @endunless
 
     @if ($alert !== false)
-        <tk:alert.session :attributes="TALLKit::attributesAfter($attributes, 'alert:')">
+        <tk:alert.session :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'alert:')">
             {{ $alert ?? '' }}
         </tk:alert.session>
     @endif
 
     @if ($errorGroup)
-        <tk:error.group :attributes="TALLKit::attributesAfter($attributes, 'error-group:')" />
+        <tk:error.group :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'error-group:')->dataKey('error-group')" />
     @endif
 
     {{ $slot }}
 
     @if ($action && Str::doesntContain($slot, 'type="submit"', true))
         <tk:submit
-            :attributes="TALLKit::attributesAfter($attributes, 'submit:')->classes('w-full')"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'submit:')->classes('w-full')"
             variant="inverse"
         />
     @endif

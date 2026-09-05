@@ -12,9 +12,9 @@
 ])
 @php
 
-[$user, $name, $email, $username] = TALLKit::resolveUserContext($attributes);
-$initials = TALLKit::generateInitials($initials ?? $name, $attributes->pluck('initials:single'));
-$src ??= TALLKit::findAvatar($email ?? $username, $ttl);
+[$user, $name, $email, $username] = TALLKit::resolveUserContext(attributes: $attributes);
+$initials = TALLKit::generateInitials(value: $initials ?? $name, singleInitials: $attributes->pluck('initials:single'));
+$src ??= TALLKit::findAvatar(value: $email ?? $username, ttl: $ttl);
 
 if ($color === 'auto') {
     $colors = TALLKit::colors();
@@ -51,7 +51,7 @@ if ($tooltip === true) {
                 'outline' => '',
                 'ghost' => 'bg-transparent',
                 'subtle' => 'bg-transparent text-zinc-500',
-                default => TALLKit::pastelBackground($color) ?? '',
+                default => TALLKit::pastelBackground(color: $color) ?? '',
             },
         )
     "
@@ -59,18 +59,18 @@ if ($tooltip === true) {
     @if ($src)
         <img
             {{
-                TALLKit::attributesAfter($attributes, 'image:')
+                TALLKit::attributesAfter(attributes: $attributes, prefix: 'image:')
                     ->classes(TALLKit::roundedSize(size: $square ? $size : 'full'))
                     ->merge(['src' => $src, 'alt' => (string) ($alt ?? $name)])
             }}
         />
     @elseif (($initials || $slot->hasActualContent()) && !$icon)
-        <span {{ TALLKit::attributesAfter($attributes, 'initials:')->classes('select-none truncate m-px') }}>
+        <span {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'initials:')->classes('select-none truncate m-px') }}>
             {{ $initials ?: $slot }}
         </span>
     @else
         <tk:icon
-            :attributes="TALLKit::attributesAfter($attributes, 'icon:')->classes('shrink-0 opacity-75')"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')->classes('shrink-0 opacity-75')"
             :icon="is_string($icon) ? $icon : 'user'"
             :$size
         />

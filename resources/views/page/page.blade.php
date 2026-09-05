@@ -15,7 +15,7 @@
         </x-slot:actions>
     @endisset
 
-    <div {{ TALLKit::attributesAfter($attributes, 'container:')->classes(
+    <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')->classes(
         'flex items-start',
         match ($breakpoint) {
             'sm' => 'max-sm:flex-col',
@@ -27,7 +27,7 @@
         },
     ) }}>
         @if (collect($menu)->isNotEmpty())
-            <div {{ TALLKit::attributesAfter($attributes, 'menu:')->classes(
+            <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'menu:')->classes(
                 'w-full me-16 pb-6',
                 match ($breakpoint) {
                     'sm' => 'sm:w-[220px]',
@@ -39,7 +39,7 @@
                 },
             ) }}>
                 <tk:nav
-                    :attributes="TALLKit::attributesAfter($attributes, 'nav:')->classes(
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'nav:')->classes(
                         match ($breakpoint) {
                             'sm' => 'max-sm:hidden',
                             default => 'max-md:hidden',
@@ -62,7 +62,7 @@
 
                 @endphp
                 <tk:select
-                    :attributes="TALLKit::attributesAfter($attributes, 'select:')->classes(
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'select:')->classes(
                         match ($breakpoint) {
                             'sm' => 'sm:hidden',
                             default => 'md:hidden',
@@ -81,7 +81,7 @@
             </div>
         @endif
 
-        <div {{ TALLKit::attributesAfter($attributes, 'area:')->classes('flex-1 min-w-0 w-full [:where(&)]:space-y-6') }}>
+        <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'area:')->classes('flex-1 min-w-0 w-full [:where(&)]:space-y-6') }}>
             {{ $slot }}
         </div>
     </div>

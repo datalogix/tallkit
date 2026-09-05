@@ -16,7 +16,7 @@
         align: @js($align ?? 'center')
     })"
     {{
-        TALLKit::attributesAfter($attributes, 'container:')
+        TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')
             ->dataKey('tooltip')
             ->classes('contents')
     }}
@@ -35,7 +35,7 @@
             :$size
             :$arrow
         >
-            @if (TALLKit::isSlot($content))
+            @if (TALLKit::isSlot(slot: $content))
                 {{ $content }}
             @else
                 {!! nl2br(__($content)) !!}

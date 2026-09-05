@@ -17,7 +17,7 @@ $tag = $as ?? ($for ? 'label' : 'span');
     @if ($hasPrependOrAppend)
         <div
             {{
-                TALLKit::attributesAfter($attributes, 'area:')
+                TALLKit::attributesAfter(attributes: $attributes, prefix: 'area:')
                     ->dataKey('label')
                     ->classes(
                         'flex items-center gap-4',
@@ -30,7 +30,7 @@ $tag = $as ?? ($for ? 'label' : 'span');
     @endif
 
     @if ($labelPrepend)
-        <div {{ TALLKit::attributesAfter($attributes, 'label-prepend:')->classes('me-auto') }}>
+        <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'label-prepend:')->classes('me-auto') }}>
             {{ $labelPrepend }}
         </div>
     @endif
@@ -38,7 +38,7 @@ $tag = $as ?? ($for ? 'label' : 'span');
     <{{ $tag }}
         x-data="label"
         {{
-            TALLKit::attributesAfter($attributes, 'container:')
+            TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')
                 ->dataKey($hasPrependOrAppend ? null : 'label')
                 ->classes([
                     'cursor-default inline-flex',
@@ -54,7 +54,7 @@ $tag = $as ?? ($for ? 'label' : 'span');
             :icon-trailing:size="TALLKit::adjustSize(size: $size)"
             :badge:size="TALLKit::adjustSize(size: $size)"
             :attributes="$attributes->whereDoesntStartWith(['area:', 'label-prepend:', 'label-append:', 'container:', 'info:'])
-                ->merge(TALLKit::attributesAfter($attributes, 'info:', prepend: 'icon-trailing:')->getAttributes())
+                ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'info:', prepend: 'icon-trailing:')->getAttributes())
                 ->classes(
                     '[:where(&)]:text-zinc-800 dark:[:where(&)]:text-white',
                     TALLKit::fontSize(size: $size, weight: true)
@@ -66,7 +66,7 @@ $tag = $as ?? ($for ? 'label' : 'span');
     </{{ $tag }}>
 
     @if ($labelAppend)
-        <div {{ TALLKit::attributesAfter($attributes, 'label-append:')->classes('ms-auto') }}>
+        <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'label-append:')->classes('ms-auto') }}>
             {{ $labelAppend }}
         </div>
     @endif

@@ -4,8 +4,8 @@
 <tk:listbox
     :attributes="$attributes->classes(
         '
-            [:where(&)]:bg-white [:where(&)]:dark:bg-zinc-700
-            [:where(&)]:border [:where(&)]:border-zinc-200 [:where(&)]:dark:border-zinc-600
+            [:where(&)]:bg-white dark:[:where(&)]:bg-zinc-700
+            [:where(&)]:border [:where(&)]:border-zinc-200 dark:[:where(&)]:border-zinc-600
             [:where(&)]:overflow-hidden [:where(&)]:shadow-xs
         ',
         TALLKit::roundedSize(size: $size, mode: 'large')

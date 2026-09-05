@@ -17,7 +17,7 @@
     :alert="false"
 >
     <tk:section
-        :attributes="TALLKit::attributesAfter($attributes, 'section:', prepend: [
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'section:', prepend: [
             'icon', 'badge', 'separator', 'content',
             'header:', 'container:', 'title:', 'subtitle:', 'list:', 'actions:',
         ])"
@@ -31,7 +31,7 @@
         :$separator
     >
         <tk:alert.session
-            :attributes="TALLKit::attributesAfter($attributes, 'alert:')"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'alert:')"
             :$size
         >
             {{ $alert ?? '' }}

@@ -9,15 +9,15 @@
 ])
 @php
 
-[$user, $name, $email] = TALLKit::resolveUserContext($attributes);
+[$user, $name, $email] = TALLKit::resolveUserContext(attributes: $attributes);
 $image ??= data_get($user, 'image');
 $description ??= data_get($user, 'description', $displayEmail ? $email : null);
 
 @endphp
 <tk:content
     :attributes="TALLKit::attributesAfter(
-        $attributes,
-        'content:',
+        attributes: $attributes,
+        prefix: 'content:',
         prepend: ['container:', 'title:' => 'name:', 'description:', 'list:', 'actions:']
     )->classes('items-center')"
     container:class="-space-y-px!"

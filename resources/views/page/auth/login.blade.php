@@ -24,7 +24,7 @@ $signUp ??= route_detect([
     subtitle="Enter your access details below to sign in:"
 >
     <tk:input
-        :attributes="TALLKit::attributesAfter($attributes, 'email:')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'email:')"
         :$size
         name="email"
         autofocus
@@ -34,7 +34,7 @@ $signUp ??= route_detect([
     />
 
     <tk:password
-        :attributes="TALLKit::attributesAfter($attributes, 'password:')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'password:')"
         :$size
         name="password"
         required
@@ -43,7 +43,7 @@ $signUp ??= route_detect([
         @if ($forgotPassword)
             <x-slot:labelAppend>
                 <tk:link
-                    :attributes="TALLKit::attributesAfter($attributes, 'forgot-password:')"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'forgot-password:')"
                     :href="$forgotPassword"
                     :$size
                     label="Forgot your password?"
@@ -53,14 +53,14 @@ $signUp ??= route_detect([
     </tk:password>
 
     <tk:checkbox
-        :attributes="TALLKit::attributesAfter($attributes, 'remember:')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'remember:')"
         :$size
         name="remember"
         label="Remember me"
     />
 
     <tk:submit
-        :attributes="TALLKit::attributesAfter($attributes, 'submit:')->classes('w-full')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'submit:')->classes('w-full')"
         :$size
         label="Sign in"
         variant="accent"
@@ -68,15 +68,15 @@ $signUp ??= route_detect([
 
     @if ($signUp)
         <x-slot:append>
-            <div {{ TALLKit::attributesAfter($attributes, 'sign-up:container:')->classes('space-x-1 rtl:space-x-reverse flex justify-center') }}>
+            <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'sign-up:container:')->classes('space-x-1 rtl:space-x-reverse flex justify-center') }}>
                 <tk:text
-                    :attributes="TALLKit::attributesAfter($attributes, 'sign-up:label:')"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'sign-up:label:')"
                     :$size
                     label="Don't have an account?"
                 />
 
                 <tk:link
-                    :attributes="TALLKit::attributesAfter($attributes, 'sign-up:link:')"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'sign-up:link:')"
                     :href="$signUp"
                     :$size
                     label="Sign up"

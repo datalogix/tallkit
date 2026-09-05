@@ -36,7 +36,7 @@
             'accent' => 'text-[var(--color-accent-content)]',
             'strong' => '[:where(&)]:text-zinc-800 dark:[:where(&)]:text-white',
             'subtle' => '[:where(&)]:text-zinc-400 dark:[:where(&)]:text-white/50',
-            default => TALLKit::text($variant) ?? '[:where(&)]:text-zinc-700 dark:[:where(&)]:text-white/80',
+            default => TALLKit::text(color: $variant) ?? '[:where(&)]:text-zinc-700 dark:[:where(&)]:text-white/80',
         }
     )"
 >

@@ -44,22 +44,22 @@ $livewire ??= class_exists(\Livewire\Livewire::class);
 <!DOCTYPE html>
 <html
     {{
-        TALLKit::attributesAfter($attributes, 'html:')
+        TALLKit::attributesAfter(attributes: $attributes, prefix: 'html:')
             ->merge([
                 'lang' => $lang,
                 'dir' => $dir,
             ])
     }}
 >
-<head {{ TALLKit::attributesAfter($attributes, 'head:') }}>
+<head {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'head:') }}>
     @if ($charset) <meta charset="{{ $charset }}"> @endif
     @if ($viewport) <meta name="viewport" content="{{ $viewport }}"> @endif
     @if ($favicon) <link rel="icon" href="{{ $favicon }}"> @endif
     @if ($themeColor) <meta name="theme-color" content="{{ $themeColor }}"> @endif
     @if ($csrfToken && session()->isStarted()) <meta name="csrf-token" content="{{ csrf_token() }}"> @endif
     @foreach ($metaTags as $metaName => $metaContent) <meta name="{{ $metaName }}" content="{{ $metaContent }}"> @endforeach
-    @if ($meta) <tk:html.meta :attributes="TALLKit::attributesAfter($attributes, 'meta:')->merge(is_array($meta) ? $meta : [])" /> @endif
-    @if ($googleFonts) <tk:google.fonts :attributes="TALLKit::attributesAfter($attributes, 'google-fonts:')->merge($googleFonts)->merge(['noscript' => false])" /> @endif
+    @if ($meta) <tk:html.meta :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'meta:')->merge(is_array($meta) ? $meta : [])" /> @endif
+    @if ($googleFonts) <tk:google.fonts :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'google-fonts:')->merge($googleFonts)->merge(['noscript' => false])" /> @endif
     <title>{{ $title }}</title>
     {{ $head ?? '' }}
     @if ($appearance) <tk:appearance :nonce="is_string($appearance) ? $appearance : null" /> @endif
@@ -80,12 +80,12 @@ $livewire ??= class_exists(\Livewire\Livewire::class);
             'antialiased',
         )
 }}>
-    @if ($googleFonts) <tk:google.fonts :attributes="TALLKit::attributesAfter($attributes, 'google-fonts:')->merge($googleFonts)->merge(['noscript' => true])" /> @endif
+    @if ($googleFonts) <tk:google.fonts :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'google-fonts:')->merge($googleFonts)->merge(['noscript' => true])" /> @endif
     @if ($gtm) <tk:google.gtm :id="$gtm" noscript /> @endif
     {{ $slot }}
-    @foreach ($components as $c => $component) <x-dynamic-component :attributes="TALLKit::attributesAfter($attributes, 'components:')" :$component /> @endforeach
-    @if ($toast && $livewire) @persist('toast') <tk:toast :attributes="TALLKit::attributesAfter($attributes, 'toast:')" /> @endpersist @endif
-    @if ($toast && !$livewire) <tk:toast :attributes="TALLKit::attributesAfter($attributes, 'toast:')" /> @endif
+    @foreach ($components as $c => $component) <x-dynamic-component :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'components:')" :$component /> @endforeach
+    @if ($toast && $livewire) @persist('toast') <tk:toast :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'toast:')" /> @endpersist @endif
+    @if ($toast && !$livewire) <tk:toast :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'toast:')" /> @endif
     @foreach ($scripts as $script) <script src="{{ $script }}"></script> @endforeach
     @if ($stackScripts) @stack($stackScripts) @endif
 </body>

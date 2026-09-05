@@ -5,7 +5,7 @@
     'closeOnSelect' => null,
 ])
 <tk:modal
-    :attributes="TALLKit::attributesAfter($attributes, 'modal:')
+    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'modal:')
         ->classes('fixed mt-20 mx-auto')
         ->merge($focusOnOpen !== false ? ['x-on:opened' => '$el.querySelector(\'[data-tallkit-input]\')?.focus()'] : [])
     "
@@ -17,7 +17,7 @@
     <x-slot:trigger>
         @if ($slot->isEmpty())
             <tk:button
-                :attributes="TALLKit::attributesAfter($attributes, 'trigger:')"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'trigger:')"
                 :$size
                 label="Search"
                 icon="search"

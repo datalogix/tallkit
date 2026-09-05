@@ -6,7 +6,7 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext($attributes, $label, $id);
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
 $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd || $attributes->has('class');
 
 @endphp
@@ -22,7 +22,7 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
 
             <tk:text
                 x-text="value"
-                :size="TALLKit::adjustSize($size)"
+                :size="TALLKit::adjustSize(size: $size)"
                 variant="subtle"
             >{{ $value }}</tk:text>
         </x-slot:labelAppend>
@@ -48,7 +48,7 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
         <div
             wire:ignore
             x-data="slider"
-            {{ TALLKit::attributesAfter($attributes, 'slider:')->classes('w-full block space-y-1.5') }}
+            {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'slider:')->classes('w-full block space-y-1.5') }}
         >
             <input
                 type="range"
@@ -62,14 +62,11 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
                             'id' => $id,
                             'value' => in_livewire() ? null : $value,
                             'wire:model' => $wireModel,
-                            'aria-describedby' => TALLKit::ariaDescribedBy($id, $description, $help, $invalid, $showError),
+                            'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                             'aria-invalid' => $invalid ? 'true' : null,
                             'data-invalid' => $invalid ? true : null,
                         ])
-                        ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes([
-                            'prepend:', 'icon:', 'append:', 'loading:', 'icon-trailing:', 'kbd:',
-                            'slider:', 'ticks:', 'tick:',
-                        ]))
+                        ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: ['slider:', 'ticks:', 'tick:']))
                         ->classes(
                             '
                                 [--range-active:rgb(0_0_0_/_.8)]
@@ -89,9 +86,7 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
                                 bg-[var(--range-base)]
 
                                 text-zinc-700
-                                disabled:text-zinc-500
                                 dark:text-zinc-300
-                                dark:disabled:text-zinc-400
 
                                 disabled:cursor-not-allowed
 
@@ -152,7 +147,7 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
                             ',
                             TALLKit::height(size: $size, mode: 'smallest'),
                             TALLKit::fontSize(size: $size, mode: 'large'),
-                            TALLKit::roundedSize(size: $size, mode: 'large', before: true),
+                            TALLKit::roundedSize(size: $size, mode: 'large', after: null, before: true),
                             match ($size) {
                                 'xs' => '[&::-webkit-slider-thumb]:size-3.5 [&::-moz-range-thumb]:size-3.5',
                                 'sm' => '[&::-webkit-slider-thumb]:size-4 [&::-moz-range-thumb]:size-4',
@@ -169,7 +164,7 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
                                     focus-visible:[&::-moz-range-thumb]:outline-[var(--color-accent)]
                                     focus-visible:[&::-moz-range-thumb]:ring-[var(--color-accent)]/20
                                 ',
-                                default => TALLKit::sliderFocusRing($color) ?? '
+                                default => TALLKit::sliderFocusRing(color: $color) ?? '
                                     focus-visible:[&::-webkit-slider-thumb]:outline-blue-700 dark:focus-visible:[&::-webkit-slider-thumb]:outline-blue-300
                                     focus-visible:[&::-webkit-slider-thumb]:ring-blue-700/20 dark:focus-visible:[&::-webkit-slider-thumb]:ring-blue-300/20
                                     focus-visible:[&::-moz-range-thumb]:outline-blue-700 dark:focus-visible:[&::-moz-range-thumb]:outline-blue-300
@@ -183,14 +178,14 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
             @if ($slot->hasActualContent() || $ticks)
                 <div
                     {{
-                        TALLKit::attributesAfter($attributes, 'ticks:')
+                        TALLKit::attributesAfter(attributes: $attributes, prefix: 'ticks:')
                             ->dataKey('slider-ticks')
                             ->classes('flex justify-between')
                     }}
                 >
                     @foreach (collect($ticks) as $tick)
                         <tk:slider.tick
-                            :attributes="TALLKit::attributesAfter($attributes, 'tick:')->merge(is_array($tick) ? $tick : ['label' => $tick], false)"
+                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'tick:')->merge(is_array($tick) ? $tick : ['label' => $tick], false)"
                         />
                     @endforeach
 

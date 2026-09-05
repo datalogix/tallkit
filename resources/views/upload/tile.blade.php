@@ -42,7 +42,7 @@
     }}
     :class="{
         'ring-2': dragOverIndex === index,
-        '{{ TALLKit::uploadRing($color ?: 'blue') }}': dragOverIndex === index,
+        '{{ TALLKit::uploadRing(color: $color ?: 'blue') }}': dragOverIndex === index,
     }"
     :draggable="sortable"
     @dragstart="dragStart(index, $event)"
@@ -53,7 +53,7 @@
 >
     <div
         {{
-            TALLKit::attributesAfter($attributes, 'actions:')
+            TALLKit::attributesAfter(attributes: $attributes, prefix: 'actions:')
                 ->classes([
                     'flex items-center justify-end gap-1 bg-black/50 px-2 py-1',
                     'absolute inset-x-0 top-0 z-10 opacity-0 transition-opacity group-hover/tile:opacity-100 group-focus-within/tile:opacity-100' => $variant === 'gallery',
@@ -61,8 +61,8 @@
         }}
     >
         <tk:button
-            :attributes="TALLKit::attributesAfter($attributes, 'view:')"
-            :size="TALLKit::adjustSize($size)"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'view:')"
+            :size="TALLKit::adjustSize(size: $size)"
             x-show="file.url"
             variant="none"
             icon="eye"
@@ -71,9 +71,9 @@
         />
 
         <tk:button
-            :attributes="TALLKit::attributesAfter($attributes, 'edit:')"
-            :size="TALLKit::adjustSize($size)"
-            x-show="!multiple && file.status === 'done'"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'edit:')"
+            :size="TALLKit::adjustSize(size: $size)"
+            x-show="!multiple() && file.status === 'done'"
             variant="none"
             icon="pencil"
             tooltip="Edit"
@@ -81,8 +81,8 @@
         />
 
         <tk:button
-            :attributes="TALLKit::attributesAfter($attributes, 'cancel:')"
-            :size="TALLKit::adjustSize($size)"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'cancel:')"
+            :size="TALLKit::adjustSize(size: $size)"
             x-show="file.status === 'uploading'"
             variant="none"
             icon="close"
@@ -91,8 +91,8 @@
         />
 
         <tk:button
-            :attributes="TALLKit::attributesAfter($attributes, 'retry:')"
-            :size="TALLKit::adjustSize($size)"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'retry:')"
+            :size="TALLKit::adjustSize(size: $size)"
             x-show="file.status === 'error' || file.status === 'cancelled'"
             variant="none"
             icon="refresh"
@@ -101,8 +101,8 @@
         />
 
         <tk:button
-            :attributes="TALLKit::attributesAfter($attributes, 'remove:')"
-            :size="TALLKit::adjustSize($size)"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'remove:')"
+            :size="TALLKit::adjustSize(size: $size)"
             variant="none"
             icon="trash"
             tooltip="Remove"
@@ -111,13 +111,13 @@
     </div>
 
     <tk:upload.preview
-        :attributes="TALLKit::attributesAfter($attributes, 'preview:')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'preview:')"
         :$size
     />
 
     <div
         {{
-            TALLKit::attributesAfter($attributes, 'info:')
+            TALLKit::attributesAfter(attributes: $attributes, prefix: 'info:')
                 ->classes([
                     'flex flex-col',
                     'absolute inset-x-0 bottom-0 z-10' => $variant === 'gallery',
@@ -126,7 +126,7 @@
     >
         <tk:progress
             x-show="file.status === 'uploading'"
-            :attributes="TALLKit::attributesAfter($attributes, 'progress:')->classes('rounded-none')"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'progress:')->classes('rounded-none')"
             :$size
             position="none"
             variant="blue"
@@ -136,7 +136,7 @@
 
         <div
             {{
-                TALLKit::attributesAfter($attributes, 'file-info:')
+                TALLKit::attributesAfter(attributes: $attributes, prefix: 'file-info:')
                     ->classes([
                         'flex items-center justify-between gap-2 bg-black/50 px-2 py-1',
                         'opacity-0 transition-opacity group-hover/tile:opacity-100 group-focus-within/tile:opacity-100' => $variant === 'gallery',
@@ -145,20 +145,20 @@
         >
             <span
                 {{
-                    TALLKit::attributesAfter($attributes, 'file-name:')
+                    TALLKit::attributesAfter(attributes: $attributes, prefix: 'file-name:')
                         ->classes(
                             'flex-1 truncate text-white',
-                            TALLKit::fontSize(size: TALLKit::adjustSize($size))
+                            TALLKit::fontSize(size: TALLKit::adjustSize(size: $size))
                         )
                 }}
                 x-text="file.name"
             ></span>
             <span
                 {{
-                    TALLKit::attributesAfter($attributes, 'file-size:')
+                    TALLKit::attributesAfter(attributes: $attributes, prefix: 'file-size:')
                         ->classes(
                             'shrink-0 text-white/70',
-                            TALLKit::fontSize(size: TALLKit::adjustSize($size))
+                            TALLKit::fontSize(size: TALLKit::adjustSize(size: $size))
                         )
                 }}
                 x-text="formatSize(file.size)"

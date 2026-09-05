@@ -3,7 +3,7 @@
     'size' => null,
     'separator' => null,
 ])
-<li {{ TALLKit::attributesAfter($attributes, 'container:')->classes(
+<li {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')->classes(
     '
         flex items-center group/breadcrumb
         opacity-75 [&:has(a,button)]:opacity-100
@@ -20,7 +20,7 @@
     @endif
 
     <tk:breadcrumb.separator
-        :attributes="TALLKit::attributesAfter($attributes, 'separator:')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'separator:')"
         :icon="$separator"
         :$size
     />

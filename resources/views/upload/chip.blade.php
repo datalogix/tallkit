@@ -17,7 +17,7 @@
     }}
     :class="{
         'ring-2': dragOverIndex === index,
-        '{{ TALLKit::uploadRing($color ?: 'blue') }}': dragOverIndex === index,
+        '{{ TALLKit::uploadRing(color: $color ?: 'blue') }}': dragOverIndex === index,
         'border-red-400 dark:border-red-500': file.status === 'error',
     }"
     :draggable="sortable"
@@ -28,16 +28,16 @@
     @dragend="dragEnd"
 >
     <tk:upload.type-icon
-        :attributes="TALLKit::attributesAfter($attributes, 'icon:')->classes('shrink-0 text-zinc-400 dark:text-zinc-500')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')->classes('shrink-0 text-zinc-400 dark:text-zinc-500')"
         :$size
     />
 
     <span
         {{
-            TALLKit::attributesAfter($attributes, 'file-name:')
+            TALLKit::attributesAfter(attributes: $attributes, prefix: 'file-name:')
                 ->classes(
                     'truncate',
-                    TALLKit::fontSize(size: TALLKit::adjustSize($size))
+                    TALLKit::fontSize(size: TALLKit::adjustSize(size: $size))
                 )
         }}
         x-text="file.name"
@@ -47,8 +47,8 @@
     <template x-if="file.status === 'uploading'">
         <div class="w-10 shrink-0">
             <tk:progress
-                :attributes="TALLKit::attributesAfter($attributes, 'progress:')"
-                :size="TALLKit::adjustSize($size, move: -2)"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'progress:')"
+                :size="TALLKit::adjustSize(size: $size, move: -2)"
                 position="none"
                 variant="blue"
                 variable="file.progress"
@@ -57,8 +57,8 @@
     </template>
 
     <tk:button
-        :attributes="TALLKit::attributesAfter($attributes, 'retry:')"
-        :size="TALLKit::adjustSize($size, move: -1)"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'retry:')"
+        :size="TALLKit::adjustSize(size: $size, move: -1)"
         x-show="file.status === 'error' || file.status === 'cancelled'"
         variant="none"
         circle
@@ -68,8 +68,8 @@
     />
 
     <tk:button
-        :attributes="TALLKit::attributesAfter($attributes, 'cancel:')"
-        :size="TALLKit::adjustSize($size, move: -1)"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'cancel:')"
+        :size="TALLKit::adjustSize(size: $size, move: -1)"
         x-show="file.status === 'uploading'"
         variant="none"
         circle
@@ -79,8 +79,8 @@
     />
 
     <tk:button
-        :attributes="TALLKit::attributesAfter($attributes, 'remove:')"
-        :size="TALLKit::adjustSize($size, move: -1)"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'remove:')"
+        :size="TALLKit::adjustSize(size: $size, move: -1)"
         x-show="file.status !== 'uploading'"
         variant="none"
         circle

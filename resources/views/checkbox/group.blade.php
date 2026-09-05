@@ -9,8 +9,8 @@
 ])
 @php
 
-[$name, $fieldName, $label] = TALLKit::resolveFieldContext($attributes, $label);
-$options = TALLKit::parseOptions($attributes);
+[$name, $fieldName, $label] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label);
+$options = TALLKit::parseOptions(attributes: $attributes);
 
 @endphp
 @if ($slot->isNotEmpty() || filled($options))
@@ -26,20 +26,20 @@ $options = TALLKit::parseOptions($attributes);
         @foreach ($options as $optionItemValue => $optionItemLabel)
             @if (is_array($optionItemLabel))
                 <tk:heading
-                    :attributes="TALLKit::attributesAfter($attributes, 'heading:')"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'heading:')"
                     :label="$optionItemValue"
                     :size="TALLKit::adjustSize(size: $size)"
                 />
 
                 @foreach ($optionItemLabel as $optionItemGroupValue => $optionItemGroupLabel)
                     <tk:checkbox
-                        :attributes="TALLKit::attributesAfter($attributes, 'checkbox:')
-                            ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId('field', $fieldName, (string) $optionItemGroupValue)] : [], false)
+                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'checkbox:')
+                            ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId(prefix: 'field', name: $fieldName, suffix: (string) $optionItemGroupValue)] : [], false)
                         "
                         :label="$optionItemGroupLabel"
                         :value="$optionItemGroupValue"
                         :show-error="false"
-                        :id="TALLKit::generateId('field', $fieldName, (string) $optionItemGroupValue)"
+                        :id="TALLKit::generateId(prefix: 'field', name: $fieldName, suffix: (string) $optionItemGroupValue)"
                         :$name
                         :$size
                         :$variant
@@ -51,13 +51,13 @@ $options = TALLKit::parseOptions($attributes);
                 @endforeach
             @else
                 <tk:checkbox
-                    :attributes="TALLKit::attributesAfter($attributes, 'checkbox:')
-                        ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId('field', $fieldName, (string) $optionItemValue)] : [], false)
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'checkbox:')
+                        ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId(prefix: 'field', name: $fieldName, suffix: (string) $optionItemValue)] : [], false)
                     "
                     :label="$optionItemLabel"
                     :value="$optionItemValue"
                     :show-error="false"
-                    :id="TALLKit::generateId('field', $fieldName, (string) $optionItemValue)"
+                    :id="TALLKit::generateId(prefix: 'field', name: $fieldName, suffix: (string) $optionItemValue)"
                     :$name
                     :$size
                     :$variant
@@ -70,7 +70,7 @@ $options = TALLKit::parseOptions($attributes);
         @endforeach
 
         <tk:error
-            :attributes="TALLKit::attributesAfter($attributes, 'error:')"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'error:')"
             :name="$fieldName"
             :$size
         />

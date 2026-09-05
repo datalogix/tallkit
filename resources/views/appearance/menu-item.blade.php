@@ -7,7 +7,7 @@
 >
     <x-slot:append>
         <tk:appearance.selector
-            :attributes="TALLKit::attributesAfter($attributes, 'selector:')->classes('ms-4')"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'selector:')->classes('ms-4')"
             size="xs"
         />
     </x-slot:append>

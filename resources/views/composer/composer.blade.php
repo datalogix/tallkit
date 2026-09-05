@@ -12,7 +12,7 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext($attributes, $label, $id);
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
 
 @endphp
 <tk:field.wrapper
@@ -20,25 +20,21 @@
     :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
 >
     <div
-        wire:ignore.self
+        wire:ignore
         x-data="composer({ submit: @js($submit), placeholder: @js($placeholder ? __($placeholder) : null) })"
+        x-modelable="value"
         role="group"
         {{
             $attributes
                 ->merge([
-                    'wire:model' => $wireModel,
-                    'aria-describedby' => TALLKit::ariaDescribedBy($id, $description, $help, $invalid, $showError),
+                    'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                     'aria-invalid' => $invalid ? 'true' : null,
                     'data-invalid' => $invalid ? true : null,
                     'data-inline' => $inline ? true : null,
                 ])
-                ->whereDoesntStartWith([
-                    'field:', 'label:', 'info:', 'badge:', 'description:',
-                    'group:', 'prefix:', 'suffix:',
-                    'help:', 'error:',
-                    'control:', 'prepend:', 'icon:', 'append:', 'loading:', 'icon-trailing:', 'kbd:',
-                    'header:', 'input:', 'textarea:', 'footer:', 'actions-leading:', 'actions-trailing:',
-                ])
+                ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: [
+                    'hidden:', 'header:', 'input:', 'textarea:', 'footer:', 'actions-leading:', 'actions-trailing:',
+                ]))
                 ->classes(
                     '
                         grid
@@ -64,8 +60,8 @@
                         [&[disabled]]:shadow-none
                         [&[disabled]]:[&[data-invalid]]:shadow-none
 
-                        [&[disabled]]:opacity-75
-                        dark:[&[disabled]]:opacity-50
+                        [&[disabled]]:opacity-50
+                        dark:[&[disabled]]:opacity-40
 
                         [&[disabled]]:cursor-not-allowed
                         [&[disabled]]:pointer-events-none
@@ -73,12 +69,25 @@
                     TALLKit::fontSize(size: $size),
                     TALLKit::roundedSize(size: $size, mode: 'large'),
                     TALLKit::padding(size: $size),
-                    TALLKit::controlFocusRingNested($color),
+                    TALLKit::controlFocusRingNested(color: $color),
                 )
         }}
     >
+        <input
+            type="hidden"
+            {{
+                TALLKit::attributesAfter(attributes: $attributes, prefix: 'hidden:')
+                    ->dataKey('composer')
+                    ->merge([
+                        'name' => $name,
+                        'value' => in_livewire() ? null : $value,
+                        'wire:model' => $wireModel,
+                    ])
+            }}
+        />
+
         @if ($header && !$inline)
-            <div {{ TALLKit::attributesAfter($attributes, 'header:')->classes(
+            <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'header:')->classes(
                 'flex items-center col-span-3',
                 TALLKit::marginBottom(size: $size),
                 TALLKit::gap(size: $size, mode: 'smallest'),
@@ -105,6 +114,11 @@
                         [&_[data-tallkit-control]]:resize-none!
                         [&_[data-tallkit-control]]:shadow-none!
                         [&_[data-tallkit-control]]:rounded-none!
+
+                        [&_[data-tallkit-field-control-prepend]]:p-0!
+                        [&_[data-tallkit-field-control-prepend]]:pe-3!
+                        [&_[data-tallkit-field-control-append]]:p-0!
+                        [&_[data-tallkit-field-control-append]]:ps-3!
                     '
                 )"
         >
@@ -112,7 +126,8 @@
                 {{ $input }}
             @else
                 <tk:textarea
-                    :attributes="TALLKit::attributesAfter($attributes, 'textarea:')"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'textarea:')"
+                    counter:class="flex-1"
                     :$id
                     :$size
                     :$placeholder
@@ -125,7 +140,7 @@
         </tk:field.control>
 
         @if ($footer && !$inline)
-            <div {{ TALLKit::attributesAfter($attributes, 'footer:')->classes(
+            <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'footer:')->classes(
                 'flex items-center col-span-3',
                 TALLKit::marginTop(size: $size),
                 TALLKit::gap(size: $size, mode: 'smallest'),
@@ -135,7 +150,7 @@
         @endif
 
         @isset ($actionsLeading)
-            <div {{ TALLKit::attributesAfter($attributes, 'actions-leading:')->classes(
+            <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'actions-leading:')->classes(
                 '
                     flex items-start col-span-2
                     [[data-inline]_&]:col-span-1
@@ -149,7 +164,7 @@
         @endisset
 
         @isset ($actionsTrailing)
-            <div {{ TALLKit::attributesAfter($attributes, 'actions-trailing:')->classes(
+            <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'actions-trailing:')->classes(
                 '
                     flex items-start justify-end col-span-2
                     [[data-inline]_&]:col-span-1

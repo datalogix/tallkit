@@ -10,7 +10,7 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext($attributes, $label, $id);
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
 $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
 
 @endphp
@@ -24,7 +24,7 @@ $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
     <div
         {{ $attributes->only('disabled')->dataKey('control') }}
         {{
-            TALLKit::attributesAfter($attributes, 'control:')
+            TALLKit::attributesAfter(attributes: $attributes, prefix: 'control:')
                 ->classes(
                     'flex outline-offset-2 relative',
                     TALLKit::widthHeight(size: $size),
@@ -43,13 +43,13 @@ $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
                         'id' => $id,
                         'value' => $value,
                         'wire:model' => $wireModel,
-                        TALLKit::dataKey('checkbox-group') => $group,
-                        'aria-describedby' => TALLKit::ariaDescribedBy($id, $description, $help, $invalid, $showError),
+                        TALLKit::dataKey(name: 'checkbox-group') => $group,
+                        'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                         'aria-invalid' => $invalid ? 'true' : null,
                         'data-invalid' => $invalid ? true : null,
                         'aria-label' => $label ? null : __('Checkbox'),
                     ])
-                    ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes([
+                    ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: [
                         'icon-area:', 'icon-on:', 'icon-off:', 'icon-indeterminate:',
                     ]))
                     ->classes(
@@ -72,13 +72,14 @@ $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
                             checked:shadow-none
                             checked:not-[data-invalid]:border-none
                             checked:disabled:opacity-30
+                            dark:checked:disabled:opacity-20
 
                             enabled:hover:border-zinc-300
                             dark:enabled:hover:border-white/20
                         ',
                         match ($color) {
                             'accent' => 'checked:bg-[var(--color-accent)]',
-                            default => TALLKit::checkedBackground($color) ?? 'checked:bg-zinc-800 dark:checked:bg-white',
+                            default => TALLKit::checkedBackground(color: $color) ?? 'checked:bg-zinc-800 dark:checked:bg-white',
                         },
                     )
             }}
@@ -86,7 +87,7 @@ $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
 
         <div
             {{
-                TALLKit::attributesAfter($attributes, 'icon-area:')
+                TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-area:')
                     ->classes(
                         '
                             absolute
@@ -119,11 +120,11 @@ $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
         >
             <tk:icon
                 :icon="$iconOn ?? 'check'"
-                :attributes="TALLKit::attributesAfter($attributes, 'icon-on:')->classes(
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-on:')->classes(
                     'size-full m-px checked scale-90',
                     match (true) {
                         $color === 'accent' => 'text-[var(--color-accent-foreground)]',
-                        TALLKit::isColor($color) => 'text-white',
+                        TALLKit::isColor(color: $color) => 'text-white',
                         default => 'text-white dark:text-zinc-700',
                     },
                 )"
@@ -132,14 +133,14 @@ $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
             @if ($iconOff)
                 <tk:icon
                     :icon="$iconOff"
-                    :attributes="TALLKit::attributesAfter($attributes, 'icon-off:')->classes('size-full m-px unchecked')"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-off:')->classes('size-full m-px unchecked')"
                 />
             @endif
 
             @if ($indeterminate)
                 <tk:icon
                     :icon="$iconIndeterminate ?? 'minus'"
-                    :attributes="TALLKit::attributesAfter($attributes, 'icon-indeterminate:')->classes('size-full m-px indeterminate')"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-indeterminate:')->classes('size-full m-px indeterminate')"
                 />
             @endif
         </div>

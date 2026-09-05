@@ -23,7 +23,7 @@
     :attributes="$attributes
         ->dataKey('alert')
         ->whereDoesntStartWith(['message:', 'dismissible:', 'progress:'])
-        ->merge(TALLKit::attributesAfter($attributes, 'message:', prepend: 'description:')->getAttributes())
+        ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'message:', prepend: 'description:')->getAttributes())
         ->merge([
             'role' => in_array($type, ['danger', 'warning']) ? 'alert' : 'status',
             'aria-live' => in_array($type, ['danger', 'warning']) ? 'assertive' : 'polite',
@@ -89,7 +89,7 @@
 
             @if ($progress)
                 <tk:alert.progress
-                    :attributes="TALLKit::attributesAfter($attributes, 'progress:')"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'progress:')"
                     :type="is_string($progress) ? $progress : null"
                     :$size
                 />
@@ -103,7 +103,7 @@
 
             @if ($dismissible)
                 <tk:alert.close
-                    :attributes="TALLKit::attributesAfter($attributes, 'dismissible:')"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'dismissible:')"
                     :icon="is_string($dismissible) ? $dismissible : null"
                     :$type
                     :$size

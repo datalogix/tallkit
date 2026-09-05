@@ -14,7 +14,7 @@ $logout ??= route_detect(['logout', 'auth.logout'], default: null);
     subtitle="Before proceeding, please check your email for a verification link."
 >
     <tk:submit
-        :attributes="TALLKit::attributesAfter($attributes, 'submit:')->classes('w-full')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'submit:')->classes('w-full')"
         :$size
         label="Resend verification email"
         variant="accent"
@@ -23,7 +23,7 @@ $logout ??= route_detect(['logout', 'auth.logout'], default: null);
     @if ($logout)
         <x-slot:append>
             <tk:link
-                :attributes="TALLKit::attributesAfter($attributes, 'logout:')"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'logout:')"
                 :href="$logout"
                 :$size
                 label="Log out"

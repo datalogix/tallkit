@@ -14,12 +14,12 @@
     @elseif ($chart)
         <x-dynamic-component
             :component="'tallkit::chart.'.$chart"
-            :attributes="TALLKit::attributesAfter($attributes, 'chart:')"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'chart:')"
             x-effect="render(data)"
         />
     @else
         <tk:pretty-print-json
-            :attributes="TALLKit::attributesAfter($attributes, 'json:')"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'json:')"
             x-html="render(data)"
         />
     @endif

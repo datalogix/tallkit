@@ -10,7 +10,7 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext($attributes, $label, $id);
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
 $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd || $copyable || $attributes->has('class');
 $maxlength = (int) $maxlength;
 $hasCounter = (bool) ($counter ?? $maxlength);
@@ -23,8 +23,12 @@ $counterExpression = $maxlength ? sprintf("length + ' / %d'", $maxlength) : 'len
     :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
 >
     @if ($hasCounter || $maxRows)
-        <div x-data="textarea({ maxRows: @js($maxRows), counter: @js($hasCounter), length: @js($initialLength) })">
+        <div
+            x-data="textarea({ maxRows: @js($maxRows), counter: @js($hasCounter), length: @js($initialLength) })"
+            {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'counter:') }}
+        >
     @endif
+
     <tk:field.control
         :$size
         :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
@@ -33,7 +37,7 @@ $counterExpression = $maxlength ? sprintf("length + ' / %d'", $maxlength) : 'len
                 fn ($attrs) => $attrs->classes(
                     'tk-control-wrapper',
                     TALLKit::roundedSize(size: $size, mode: 'large'),
-                    TALLKit::controlFocusRingNested($color),
+                    TALLKit::controlFocusRingNested(color: $color),
                 ),
             )
         "
@@ -50,14 +54,11 @@ $counterExpression = $maxlength ? sprintf("length + ' / %d'", $maxlength) : 'len
                         'placeholder' => $placeholder ? __((string) $placeholder) : null,
                         'rows' => is_numeric($rows) || $rows === null ? ($rows ?? 3) : null,
                         'wire:model' => $wireModel,
-                        'aria-describedby' => TALLKit::ariaDescribedBy($id, $description, $help, $invalid, $showError),
+                        'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                         'aria-invalid' => $invalid ? 'true' : null,
                         'data-invalid' => $invalid ? true : null,
                     ])
-                    ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes([
-                        'prepend:', 'icon:', 'append:', 'loading:', 'icon-trailing:', 'kbd:',
-                        'textarea:', 'copyable:', 'counter:',
-                    ]))
+                    ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: ['counter:', 'textarea:', 'copyable:', 'counter:']))
                     ->except('class')
                     ->classes(['field-sizing-content' => $rows === 'auto'])
                     ->classes(
@@ -82,7 +83,7 @@ $counterExpression = $maxlength ? sprintf("length + ' / %d'", $maxlength) : 'len
                         fn ($attrs) => $attrs->classes(
                             'tk-control-standalone',
                             TALLKit::roundedSize(size: $size, mode: 'large'),
-                            TALLKit::controlFocusRing($color),
+                            TALLKit::controlFocusRing(color: $color),
                         ),
                     )
             }}
@@ -92,8 +93,8 @@ $counterExpression = $maxlength ? sprintf("length + ' / %d'", $maxlength) : 'len
             <x-slot:append>
                 {{ $append ?? '' }}
 
-                <tk:copy
-                    :attributes="TALLKit::attributesAfter($attributes, 'copyable:')"
+                <tk:copyable
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'copyable:')"
                     :$size
                     :label="is_string($copyable) ? $copyable : null"
                 />
@@ -103,12 +104,13 @@ $counterExpression = $maxlength ? sprintf("length + ' / %d'", $maxlength) : 'len
 
     @if ($hasCounter)
         <tk:text
-            :attributes="TALLKit::attributesAfter($attributes, 'counter:')->classes('text-end mt-1.5')"
-            :size="TALLKit::adjustSize($size)"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'counter:')->classes('text-end mt-1.5')"
+            :size="TALLKit::adjustSize(size: $size)"
             variant="subtle"
             x-text="{{ $counterExpression }}"
         >{{ $maxlength ? $initialLength.' / '. $maxlength : $initialLength }}</tk:text>
     @endif
+
     @if ($hasCounter || $maxRows)
         </div>
     @endif

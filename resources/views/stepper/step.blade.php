@@ -35,11 +35,11 @@ $ariaLabel = trim(
         match ($status) {
             'completed' => match ($color) {
                 'accent' => 'bg-[var(--color-accent)]',
-                default => TALLKit::background($color) ?? 'bg-green-600 dark:bg-green-700',
+                default => TALLKit::background(color: $color) ?? 'bg-green-600 dark:bg-green-700',
             },
             'active' => match ($color) {
                 'accent' => 'bg-[var(--color-accent)]',
-                default => TALLKit::backgroundActive($color) ?? 'bg-blue-500 dark:bg-blue-600',
+                default => TALLKit::backgroundActive(color: $color) ?? 'bg-blue-500 dark:bg-blue-600',
             },
             default => 'bg-zinc-400 dark:bg-zinc-600',
         },
@@ -49,7 +49,7 @@ $ariaLabel = trim(
     <x-slot:icon>
         @if ($icon)
             <tk:icon
-                :attributes="TALLKit::attributesAfter($attributes, 'icon:')"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')"
                 size="sm"
                 :icon="match ($status) {
                     'completed' => $iconCompleted,
@@ -60,7 +60,7 @@ $ariaLabel = trim(
         @elseif ($index)
             {{ $index }}
         @else
-            <span {{ TALLKit::attributesAfter($attributes, 'bullet:')->classes(
+            <span {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'bullet:')->classes(
                 'bg-white rounded-full',
                 TALLKit::widthHeight(size: $size, mode: 'smallest')
             ) }}></span>

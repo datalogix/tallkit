@@ -25,13 +25,13 @@
         {{ $search }}
     @elseif ($searchable !== false)
         <tk:listbox.search
-            :attributes="TALLKit::attributesAfter($attributes, 'search:')"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'search:')"
             :$size
         />
     @endisset
 
     <tk:listbox.items
-        :attributes="TALLKit::attributesAfter($attributes, 'items:', prepend: ['item:'])
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'items:', prepend: ['item:'])
             ->when(
                 isset($search) || $searchable !== false,
                 fn ($attributes) => $attributes->classes(TALLKit::generateClassBySize(size: $size, name: 'max-h', values: ['48', '56', '64', '72', '80', '88', '96']))
@@ -50,7 +50,7 @@
             {{ $empty }}
         @elseif ($noRecords !== false)
             <tk:listbox.no-records
-                :attributes="TALLKit::attributesAfter($attributes, 'no-records:')"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'no-records:')"
                 :$size
             />
         @endisset

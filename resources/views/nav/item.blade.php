@@ -30,7 +30,7 @@ $square ??= $slot->isEmpty() && !$attributes->get('label');
             '
                 relative
                 [&:is(a,button)]:hover:text-zinc-800 dark:[&:is(a,button)]:hover:text-white
-                [&[disabled]]:opacity-75 dark:[&[disabled]]:opacity-50
+                [&[disabled]]:opacity-50 dark:[&[disabled]]:opacity-40
                 [&[disabled]]:cursor-default [&[disabled]]:pointer-events-none
             ',
             '[&:is(a,button)]:hover:bg-zinc-800/10 dark:[&:is(a,button)]:hover:bg-white/10' => $indicator && $indicator !== 'bg',

@@ -52,7 +52,7 @@ $list = (bool) $list;
         >
             @foreach (collect($items) as $item)
                 <tk:nav.item
-                    :attributes="TALLKit::attributesAfter($attributes, 'item:')->merge(is_array($item) ? $item : ['label' => $item], false)"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'item:')->merge(is_array($item) ? $item : ['label' => $item], false)"
                     :$size
                 />
             @endforeach
@@ -63,7 +63,7 @@ $list = (bool) $list;
         @if ($indicator !== false)
             @persist('nav-indicator'.($list ? '-list' : '').(is_string($indicator) ? '-'.$indicator : ''))
                 <tk:nav.indicator
-                    :attributes="TALLKit::attributesAfter($attributes, 'indicator:')"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'indicator:')"
                     :mode="match ($list) {
                         true => in_array($indicator, ['line-left', 'line-right']) ? $indicator : 'bg',
                         default => in_array($indicator, ['line-top', 'line-bottom']) ? $indicator : 'bg',

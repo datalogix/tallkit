@@ -2,7 +2,7 @@
     'size' => null,
 ])
 <tk:skeleton :attributes="$attributes->classes(
-    TALLKit::widthHeight($size, mode: 'large'),
+    TALLKit::widthHeight(size: $size, mode: 'large'),
     '[:where(&)]:rounded-full',
 )">
     {{ $slot }}

@@ -26,13 +26,13 @@
     @foreach (collect($items) as $item)
         @if ($item)
             <tk:menu.item
-                :attributes="TALLKit::attributesAfter($attributes, 'item:')->merge(is_array($item) ? $item : ['label' => $item], false)"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'item:')->merge(is_array($item) ? $item : ['label' => $item], false)"
                 :$size
             />
         @endif
 
         @if (empty($item) || data_get($item, 'separator') === true)
-            <tk:menu.separator :attributes="TALLKit::attributesAfter($attributes, 'separator:')" />
+            <tk:menu.separator :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'separator:')" />
         @endif
     @endforeach
 

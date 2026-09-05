@@ -10,7 +10,7 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext($attributes, $label, $id);
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
 $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
 $hasStateLabel = $labelOn || $labelOff;
 
@@ -25,7 +25,7 @@ $hasStateLabel = $labelOn || $labelOff;
     @if ($hasStateLabel)
         <div
             {{
-                TALLKit::attributesAfter($attributes, 'state-group:')
+                TALLKit::attributesAfter(attributes: $attributes, prefix: 'state-group:')
                     ->classes(
                         'inline-flex items-center has-[input:disabled]:cursor-not-allowed',
                         '[&_.label-checked]:hidden [&_.label-unchecked]:inline has-[input:checked]:[&_.label-checked]:inline has-[input:checked]:[&_.label-unchecked]:hidden',
@@ -37,7 +37,7 @@ $hasStateLabel = $labelOn || $labelOff;
     <label
         {{ $attributes->only('disabled')->dataKey('control') }}
         {{
-            TALLKit::attributesAfter($attributes, 'control:')
+            TALLKit::attributesAfter(attributes: $attributes, prefix: 'control:')
                 ->classes(
                     '
                         tk-control-transition
@@ -62,6 +62,7 @@ $hasStateLabel = $labelOn || $labelOff;
 
                         has-[input:disabled]:opacity-20
                         has-[input:disabled:checked]:opacity-10
+
                         dark:has-[input:disabled]:opacity-30
                         dark:has-[input:disabled:checked]:opacity-20
 
@@ -76,7 +77,7 @@ $hasStateLabel = $labelOn || $labelOff;
                             has-[input:checked]:[&_span]:bg-[var(--color-accent-foreground)]
                             has-[input:checked]:[&_span]:text-[var(--color-accent-content)]
                         ',
-                        default => TALLKit::checkedBackground($color, wrapped: true)
+                        default => TALLKit::checkedBackground(color: $color, wrapped: true)
                             ?? 'has-[input:checked]:bg-zinc-800 dark:has-[input:checked]:bg-white dark:has-[input:checked]:[&_span]:bg-zinc-800',
                     },
                 )
@@ -94,22 +95,20 @@ $hasStateLabel = $labelOn || $labelOff;
                         'id' => $id,
                         'value' => $value,
                         'wire:model' => $wireModel,
-                        TALLKit::dataKey('toggle-group') => $group,
+                        TALLKit::dataKey(name: 'toggle-group') => $group,
                         'aria-label' => ($label || $hasStateLabel) ? null : __('Toggle'),
-                        'aria-describedby' => TALLKit::ariaDescribedBy($id, $description, $help, $invalid, $showError),
+                        'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                         'aria-invalid' => $invalid ? 'true' : null,
                         'data-invalid' => $invalid ? true : null,
                     ])
-                    ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes([
-                        'icon:', 'icon-on:', 'icon-off:', 'state:', 'state-group:',
-                    ]))
+                    ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: ['icon-on:', 'icon-off:', 'state:', 'state-group:']))
                     ->classes('sr-only peer')
             }}
         />
         <span
             aria-hidden="true"
             {{
-                TALLKit::attributesAfter($attributes, 'icon:')
+                TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')
                     ->classes(
                         '
                             bg-white
@@ -145,14 +144,14 @@ $hasStateLabel = $labelOn || $labelOff;
             @if ($iconOn)
                 <tk:icon
                     :icon="$iconOn"
-                    :attributes="TALLKit::attributesAfter($attributes, 'icon-on:')->classes('checked')"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-on:')->classes('checked')"
                 />
             @endif
 
             @if ($iconOff)
                 <tk:icon
                     :icon="$iconOff"
-                    :attributes="TALLKit::attributesAfter($attributes, 'icon-off:')->classes('unchecked')"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-off:')->classes('unchecked')"
                 />
             @endif
         </span>
@@ -161,7 +160,7 @@ $hasStateLabel = $labelOn || $labelOff;
         <label
             for="{{ $id }}"
             {{
-                TALLKit::attributesAfter($attributes, 'state:')
+                TALLKit::attributesAfter(attributes: $attributes, prefix: 'state:')
                     ->classes('cursor-pointer select-none', TALLKit::fontSize(size: $size))
             }}
         >

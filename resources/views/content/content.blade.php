@@ -22,8 +22,8 @@ $hasContent = $slot->hasActualContent();
             TALLKit::gap(size: $size),
         )
     }}>
-        @if (TALLKit::isSlot($icon))
-            @php($iconAttrs = TALLKit::attributesAfter($attributes, 'icon:'))
+        @if (TALLKit::isSlot(slot: $icon))
+            @php($iconAttrs = TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:'))
             <div {{
                 $iconAttrs->when(
                     !$iconAttrs->has('aria-label') && !$iconAttrs->has('aria-labelledby'),
@@ -34,24 +34,24 @@ $hasContent = $slot->hasActualContent();
             </div>
         @elseif ($icon)
             <tk:icon
-                :attributes="TALLKit::attributesAfter($attributes, 'icon:')"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')"
                 :$icon
                 :$size
             />
         @endif
 
-        <div {{ TALLKit::attributesAfter($attributes, 'container:')->classes('flex-1', TALLKit::spaceBlock(size: $size)) }}>
+        <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')->classes('flex-1', TALLKit::spaceBlock(size: $size)) }}>
             {{ $prepend }}
 
             <tk:heading
-                :attributes="TALLKit::attributesAfter($attributes, 'title:')"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'title:')"
                 :label="$title"
                 :$size
             />
 
             @if (is_string($description) || $hasContent)
                 <tk:text
-                    :attributes="TALLKit::attributesAfter($attributes, 'description:')"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'description:')"
                     :label="is_string($description) ? $description : null"
                     :$size
                 >
@@ -61,7 +61,7 @@ $hasContent = $slot->hasActualContent();
 
             @if (is_array($description))
                 <tk:list
-                    :attributes="TALLKit::attributesAfter($attributes, 'list:')"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'list:')"
                     :items="$description"
                     :$size
                 />
@@ -71,7 +71,7 @@ $hasContent = $slot->hasActualContent();
         </div>
 
         @if ($actions)
-            <div {{ TALLKit::attributesAfter($attributes, 'actions:')->classes(
+            <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'actions:')->classes(
                 'shrink-0 flex items-center',
                 TALLKit::gap(size: $size)
             ) }}>

@@ -8,7 +8,7 @@ export default defineConfig({
   build: {
     minify: false,
     lib: {
-      entry: resolve(__dirname, 'resources/js/tallkit.js'),
+      entry: resolve(import.meta.dirname, 'resources/js/tallkit.js'),
       name: 'TALLKit',
     },
     rollupOptions: {

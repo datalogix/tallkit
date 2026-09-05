@@ -94,7 +94,7 @@ $types = [
     ) }}
 >
     <div class="absolute w-full backface-hidden">
-        <div class="absolute right-4 top-5 w-20 h-14 flex" x-html="typeOptions.icon"></div>
+        <div class="absolute right-4 top-5 w-20 h-14 flex" x-html="typeOptions().icon"></div>
         @isset ($frontSvg)
             {{ $frontSvg }}
         @else
@@ -105,14 +105,14 @@ $types = [
                             <g>
                                 <path
                                     class="transition duration-500"
-                                    :class="typeOptions.lightcolor"
+                                    :class="typeOptions().lightcolor"
                                     d="M40,0h670c22.1,0,40,17.9,40,40v391c0,22.1-17.9,40-40,40H40c-22.1,0-40-17.9-40-40V40 C0,17.9,17.9,0,40,0z"
                                 />
                             </g>
                         </g>
                         <path
                             class="transition duration-500"
-                            :class="typeOptions.darkcolor"
+                            :class="typeOptions().darkcolor"
                             d="M750,431V193.2c-217.6-57.5-556.4-13.5-750,24.9V431c0,22.1,17.9,40,40,40h670C732.1,471,750,453.1,750,431z"
                         />
                     </g>
@@ -198,7 +198,7 @@ $types = [
                         <g>
                             <path
                                 class="transition duration-500"
-                                :class="typeOptions.darkcolor"
+                                :class="typeOptions().darkcolor"
                                 d="M40,0h670c22.1,0,40,17.9,40,40v391c0,22.1-17.9,40-40,40H40c-22.1,0-40-17.9-40-40V40 C0,17.9,17.9,0,40,0z"
                             />
                         </g>

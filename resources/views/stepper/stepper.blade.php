@@ -23,9 +23,9 @@ $totalSteps = collect($steps)->filter()->count();
     @foreach (collect($steps) as $index => $step)
         @if ($step)
             <tk:stepper.step
-                :attributes="TALLKit::attributesAfter($attributes, 'step:')
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'step:')
                     ->merge(is_array($step) ? $step : ['label' => $step], false)
-                    ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId('stepper-step', (string) $index)] : [], false)
+                    ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId(prefix: 'stepper-step', name: (string) $index)] : [], false)
                 "
                 :index="$index + 1"
                 :total="$totalSteps"
@@ -39,7 +39,7 @@ $totalSteps = collect($steps)->filter()->count();
 
          @if (! $loop->last)
             <tk:stepper.line
-                :attributes="TALLKit::attributesAfter($attributes, 'line:')"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'line:')"
                 :$size
             />
         @endif

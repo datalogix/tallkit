@@ -9,7 +9,7 @@
         $attributes
             ->dataKey('loading')
             ->classes(
-                TALLKit::widthHeight($size),
+                TALLKit::widthHeight(size: $size),
                 '
                     pointer-events-none inline-block aspect-square align-middle
                     mask-size-[100%] mask-no-repeat mask-center

@@ -18,13 +18,13 @@ $isJsMethod = Str::startsWith($attributes->whereStartsWith('wire:click')->first(
 $loading ??= $isTypeSubmitAndNotDisabledOnRender || $attributes->whereStartsWith('wire:click')->isNotEmpty() && !$isJsMethod;
 
 if ($loading && $type !== 'submit' && !$isJsMethod) {
-    $attributes = $attributes->merge(['wire:loading.attr' => TALLKit::dataKey('button-loading')]);
+    $attributes = $attributes->merge(['wire:loading.attr' => TALLKit::dataKey(name: 'button-loading')]);
 
     if (!$attributes->has('wire:target') && $target = $attributes->whereStartsWith('wire:click')->first()) {
         $attributes = $attributes->merge(['wire:target' => $target], escape: false);
     }
 } else {
-    $attributes = $attributes->merge([TALLKit::dataKey('button-loading') => $loading]);
+    $attributes = $attributes->merge([TALLKit::dataKey(name: 'button-loading') => $loading]);
 }
 
 @endphp
@@ -40,11 +40,11 @@ if ($loading && $type !== 'submit' && !$isJsMethod) {
         ->whereDoesntStartWith(['loading-indicator:', 'loading:'])
         ->classes([
             '
-                relative justify-center
-                font-medium whitespace-nowrap
-                disabled:opacity-50 dark:disabled:opacity-30
-                disabled:cursor-default disabled:pointer-events-none
-                transition overflow-hidden
+                [:where(&)]:relative [:where(&)]:justify-center
+                [:where(&)]:font-medium [:where(&)]:whitespace-nowrap
+                [:where(&)]:disabled:opacity-50 dark:[:where(&)]:disabled:opacity-40
+                [:where(&)]:disabled:cursor-default [:where(&)]:disabled:pointer-events-none
+                [:where(&)]:transition [:where(&)]:overflow-hidden
             ',
             TALLKit::fontSize(size: $size),
             TALLKit::gap(size: $size),
@@ -59,126 +59,126 @@ if ($loading && $type !== 'submit' && !$isJsMethod) {
                 ],
             },
             match ($variant) { // Text color...
-                'accent' => 'text-[var(--color-accent-foreground)]',
-                'filled', 'outline', 'ghost' => 'text-zinc-800 dark:text-white',
-                'inverse' => 'text-white dark:text-zinc-800',
+                'accent' => '[:where(&)]:text-[var(--color-accent-foreground)]',
+                'filled', 'outline', 'ghost' => '[:where(&)]:text-zinc-800 dark:[:where(&)]:text-white',
+                'inverse' => '[:where(&)]:text-white dark:[:where(&)]:text-zinc-800',
                 'subtle', 'none' => '
-                    text-zinc-500
-                    hover:text-zinc-800
-                    [&[data-active]]:text-zinc-800
+                    [:where(&)]:text-zinc-500
+                    [:where(&)]:hover:text-zinc-800
+                    [:where(&)]:[&[data-active]]:text-zinc-800
 
-                    dark:text-zinc-400
-                    dark:hover:text-white
-                    dark:[&[data-active]]:text-white
+                    dark:[:where(&)]:text-zinc-400
+                    dark:[:where(&)]:hover:text-white
+                    dark:[:where(&)]:[&[data-active]]:text-white
                 ',
-                'amber', 'yellow', 'warning' => 'text-white dark:text-zinc-950',
-                default => 'text-white',
+                'amber', 'yellow', 'warning' => '[:where(&)]:text-white dark:[:where(&)]:text-zinc-950',
+                default => '[:where(&)]:text-white',
             },
             match ($variant) { // Border color...
                 'outline' => '
-                    border
-                    border-b-zinc-300/80
+                    [:where(&)]:border
+                    [:where(&)]:border-b-zinc-300/80
 
-                    border-zinc-200
-                    hover:border-zinc-200
-                    [&[data-active]]:border-zinc-200
+                    [:where(&)]:border-zinc-200
+                    [:where(&)]:hover:border-zinc-200
+                    [:where(&)]:[&[data-active]]:border-zinc-200
 
-                    dark:border-white/10
-                    dark:hover:border-white/10
-                    dark:[&[data-active]]:border-white/10
+                    dark:[:where(&)]:border-white/10
+                    dark:[:where(&)]:hover:border-white/10
+                    dark:[:where(&)]:[&[data-active]]:border-white/10
                 ',
                 'inverse', 'filled', 'subtle', 'ghost', 'none' => '',
-                default => 'border border-black/10',
+                default => '[:where(&)]:border [:where(&)]:border-black/10',
             },
             match ($variant) { // Background color...
                 'accent' => '
-                    bg-[var(--color-accent)]
-                    hover:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_30%)]
-                    [&[data-active]]:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_30%)]
+                    [:where(&)]:bg-[var(--color-accent)]
+                    [:where(&)]:hover:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_30%)]
+                    [:where(&)]:[&[data-active]]:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_30%)]
                 ',
                 'inverse' => '
-                    bg-zinc-700
-                    hover:bg-zinc-600/75
-                    [&[data-active]]:bg-zinc-600/75
+                    [:where(&)]:bg-zinc-700
+                    [:where(&)]:hover:bg-zinc-600/75
+                    [:where(&)]:[&[data-active]]:bg-zinc-600/75
 
-                    dark:bg-zinc-200
-                    dark:hover:bg-zinc-300/75
-                    dark:[&[data-active]]:bg-zinc-300/75
+                    dark:[:where(&)]:bg-zinc-200
+                    dark:[:where(&)]:hover:bg-zinc-300/75
+                    dark:[:where(&)]:[&[data-active]]:bg-zinc-300/75
                 ',
                 'info' => '
-                    bg-blue-600
-                    hover:bg-blue-700
-                    [&[data-active]]:bg-blue-700
+                    [:where(&)]:bg-blue-600
+                    [:where(&)]:hover:bg-blue-700
+                    [:where(&)]:[&[data-active]]:bg-blue-700
 
-                    dark:bg-blue-700
-                    dark:hover:bg-blue-600
-                    dark:[&[data-active]]:bg-blue-600
+                    dark:[:where(&)]:bg-blue-700
+                    dark:[:where(&)]:hover:bg-blue-600
+                    dark:[:where(&)]:[&[data-active]]:bg-blue-600
                 ',
                 'success' => '
-                    bg-green-600
-                    hover:bg-green-700
-                    [&[data-active]]:bg-green-700
+                    [:where(&)]:bg-green-600
+                    [:where(&)]:hover:bg-green-700
+                    [:where(&)]:[&[data-active]]:bg-green-700
 
-                    dark:bg-green-700
-                    dark:hover:bg-green-600
-                    dark:[&[data-active]]:bg-green-600
+                    dark:[:where(&)]:bg-green-700
+                    dark:[:where(&)]:hover:bg-green-600
+                    dark:[:where(&)]:[&[data-active]]:bg-green-600
                 ',
                 'danger' => '
-                    bg-red-600
-                    hover:bg-red-700
-                    [&[data-active]]:bg-red-700
+                    [:where(&)]:bg-red-600
+                    [:where(&)]:hover:bg-red-700
+                    [:where(&)]:[&[data-active]]:bg-red-700
 
-                    dark:bg-red-700
-                    dark:hover:bg-red-600
-                    dark:[&[data-active]]:bg-red-600
+                    dark:[:where(&)]:bg-red-700
+                    dark:[:where(&)]:hover:bg-red-600
+                    dark:[:where(&)]:[&[data-active]]:bg-red-600
                 ',
                 'outline' => '
-                    bg-white
-                    hover:bg-zinc-800/5
-                    [&[data-active]]:bg-zinc-800/5
+                    [:where(&)]:bg-white
+                    [:where(&)]:hover:bg-zinc-800/5
+                    [:where(&)]:[&[data-active]]:bg-zinc-800/5
 
-                    dark:bg-zinc-700
-                    dark:hover:bg-zinc-600/85
-                    dark:[&[data-active]]:bg-zinc-600/85
+                    dark:[:where(&)]:bg-zinc-700
+                    dark:[:where(&)]:hover:bg-zinc-600/85
+                    dark:[:where(&)]:[&[data-active]]:bg-zinc-600/85
                 ',
                 'filled' => '
-                    bg-zinc-800/5
-                    hover:bg-zinc-800/15
-                    [&[data-active]]:bg-zinc-800/15
+                    [:where(&)]:bg-zinc-800/5
+                    [:where(&)]:hover:bg-zinc-800/15
+                    [:where(&)]:[&[data-active]]:bg-zinc-800/15
 
-                    dark:bg-white/10
-                    dark:hover:bg-white/20
-                    dark:[&[data-active]]:bg-white/20
+                    dark:[:where(&)]:bg-white/10
+                    dark:[:where(&)]:hover:bg-white/20
+                    dark:[:where(&)]:[&[data-active]]:bg-white/20
                 ',
                 'subtle', 'ghost' => '
-                    bg-transparent
-                    hover:bg-zinc-800/10
-                    [&[data-active]]:bg-zinc-800/10
+                    [:where(&)]:bg-transparent
+                    [:where(&)]:hover:bg-zinc-800/10
+                    [:where(&)]:[&[data-active]]:bg-zinc-800/10
 
-                    dark:bg-transparent
-                    dark:hover:bg-white/10
-                    dark:[&[data-active]]:bg-white/10
+                    dark:[:where(&)]:bg-transparent
+                    dark:[:where(&)]:hover:bg-white/10
+                    dark:[:where(&)]:[&[data-active]]:bg-white/10
                 ',
                 'none' => 'bg-transparent',
-                default => TALLKit::interactiveBackground($variant === 'warning' ? 'yellow' : $variant) ?? '
-                    border
-                    border-b-zinc-300/80
+                default => TALLKit::interactiveBackground(color: $variant === 'warning' ? 'yellow' : $variant) ?? '
+                    [:where(&)]:border
+                    [:where(&)]:border-b-zinc-300/80
 
-                    text-zinc-800
-                    bg-white
-                    border-zinc-200
-                    hover:bg-zinc-800/5
-                    hover:border-zinc-200
-                    [&[data-active]]:bg-zinc-800/5
-                    [&[data-active]]:border-zinc-200
+                    [:where(&)]:text-zinc-800
+                    [:where(&)]:bg-white
+                    [:where(&)]:border-zinc-200
+                    [:where(&)]:hover:bg-zinc-800/5
+                    [:where(&)]:hover:border-zinc-200
+                    [:where(&)]:[&[data-active]]:bg-zinc-800/5
+                    [:where(&)]:[&[data-active]]:border-zinc-200
 
-                    dark:text-white
-                    dark:bg-zinc-700
-                    dark:border-white/10
-                    dark:hover:bg-zinc-600/85
-                    dark:hover:border-white/10
-                    dark:[&[data-active]]:bg-zinc-600/85
-                    dark:[&[data-active]]:border-white/10
+                    dark:[:where(&)]:text-white
+                    dark:[:where(&)]:bg-zinc-700
+                    dark:[:where(&)]:border-white/10
+                    dark:[:where(&)]:hover:bg-zinc-600/85
+                    dark:[:where(&)]:hover:border-white/10
+                    dark:[:where(&)]:[&[data-active]]:bg-zinc-600/85
+                    dark:[:where(&)]:[&[data-active]]:border-white/10
                 ',
             },
             match ($variant) { // Shadows...
@@ -200,20 +200,20 @@ if ($loading && $type !== 'submit' && !$isJsMethod) {
            $type === 'submit' ? '[&[disabled]>[data-tallkit-button-loading-indicator]]:opacity-100' : '[&[data-tallkit-button-loading]>[data-tallkit-button-loading-indicator]]:opacity-100',
            $type === 'submit' ? '[&[disabled]]:pointer-events-none' : 'data-tallkit-button-loading:pointer-events-none',
        ))
-        ->merge([TALLKit::dataKey('group-target') => !in_array($variant, ['subtle', 'ghost'])])
+        ->merge([TALLKit::dataKey(name: 'group-target') => !in_array($variant, ['subtle', 'ghost'])])
     "
 >
     @if ($loading)
         <x-slot:prepend>
             <div
                 {{
-                    TALLKit::attributesAfter($attributes, 'loading-indicator:')
+                    TALLKit::attributesAfter(attributes: $attributes, prefix: 'loading-indicator:')
                         ->dataKey('button-loading-indicator')
                         ->classes('absolute inset-0 flex items-center justify-center opacity-0')
                 }}
             >
                 <tk:loading
-                    :attributes="TALLKit::attributesAfter($attributes, 'loading:')->when(is_string($loading), fn ($attrs, $value) => $attrs->merge(['variant' => $value]))"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'loading:')->when(is_string($loading), fn ($attrs, $value) => $attrs->merge(['variant' => $value]))"
                     :$size
                 />
             </div>

@@ -22,12 +22,12 @@ $iconUnchecked ??= $attributes->pluck('icon-unchecked');
 >
     <x-slot:icon>
         <tk:icon
-            :attributes="TALLKit::attributesAfter($attributes, 'icon-checked:')->classes('hidden group-data-checked/menu-radio:block')"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-checked:')->classes('hidden group-data-checked/menu-radio:block')"
             :$icon
             :size="TALLKit::adjustSize(size: $size)"
         />
         <tk:icon
-            :attributes="TALLKit::attributesAfter($attributes, 'icon-unchecked:')->classes('block group-data-checked/menu-radio:hidden')"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-unchecked:')->classes('block group-data-checked/menu-radio:hidden')"
             :icon="$iconUnchecked"
             :size="TALLKit::adjustSize(size: $size)"
         />

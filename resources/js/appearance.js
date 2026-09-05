@@ -52,7 +52,7 @@ export const appearance = {
 
   toggle(event, options = {}) {
     const isAppearanceTransition = typeof document !== 'undefined'
-      && document.startViewTransition
+      && typeof document.startViewTransition === 'function'
       && !window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     if (!isAppearanceTransition || !event) {

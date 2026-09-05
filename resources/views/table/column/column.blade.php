@@ -47,7 +47,7 @@ if ($sortable === true) {
     }}
 >
     <tk:element
-        :attributes="TALLKit::attributesAfter($attributes, 'container:')
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')
             ->classes([
                 'flex w-full',
                 'group/sortable' => $sortable,

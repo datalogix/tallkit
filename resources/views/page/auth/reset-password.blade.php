@@ -19,7 +19,7 @@ $email ??= old('email', request('email'));
         type="hidden"
         name="token"
         {{
-            TALLKit::attributesAfter($attributes, 'token:')
+            TALLKit::attributesAfter(attributes: $attributes, prefix: 'token:')
                 ->when(
                     in_livewire(),
                     fn ($attrs) => $attrs->merge(['wire:model' => 'token']),
@@ -29,7 +29,7 @@ $email ??= old('email', request('email'));
     />
 
     <tk:input
-        :attributes="TALLKit::attributesAfter($attributes, 'email:')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'email:')"
         :$size
         name="email"
         :value="$email"
@@ -38,7 +38,7 @@ $email ??= old('email', request('email'));
     />
 
     <tk:password
-        :attributes="TALLKit::attributesAfter($attributes, 'new-password:')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'new-password:')"
         :$size
         label="New password"
         name="password"
@@ -48,7 +48,7 @@ $email ??= old('email', request('email'));
     />
 
     <tk:password
-        :attributes="TALLKit::attributesAfter($attributes, 'new-password-confirmation:')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'new-password-confirmation:')"
         :$size
         label="New password confirmation"
         name="password_confirmation"
@@ -58,7 +58,7 @@ $email ??= old('email', request('email'));
     />
 
     <tk:submit
-        :attributes="TALLKit::attributesAfter($attributes, 'submit:')->classes('w-full')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'submit:')->classes('w-full')"
         :$size
         label="Reset password"
         variant="accent"

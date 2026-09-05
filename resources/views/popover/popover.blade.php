@@ -8,7 +8,7 @@
     wire:ignore.self
     popover="manual"
     {{
-        TALLKit::attributesAfter($attributes, 'container:')
+        TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')
             ->classes('group [:where(&)]:focus:outline-hidden bg-transparent')
             ->merge(['data-keep-open' => $keepOpen])
             ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId(name: 'popover')] : [], false)
@@ -24,7 +24,7 @@
                     '
                         [:where(&)]:bg-white dark:[:where(&)]:bg-zinc-700
                         [:where(&)]:text-zinc-700 dark:[:where(&)]:text-white
-                        [:where(&)]:border [:where(&)]:border-zinc-200 [:where(&)]:dark:border-white/10
+                        [:where(&)]:border [:where(&)]:border-zinc-200 dark:[:where(&)]:border-white/10
                         [:where(&)]:shadow-xs
                         [:where(&)]:overflow-auto
 

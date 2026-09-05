@@ -19,7 +19,7 @@
                     focus-visible:outline-offset-0
                     focus-visible:ring-2
                 ',
-                TALLKit::controlFocusRing($color) ?? 'tk-control-focus-ring',
+                TALLKit::controlFocusRing(color: $color) ?? 'tk-control-focus-ring',
                 TALLKit::roundedSize(size: $size),
                 TALLKit::spaceBlock(size: $size, mode: 'smallest')
             )
@@ -32,9 +32,9 @@
 
     @foreach (collect($items) as $index => $item)
         <tk:listbox.item
-            :attributes="TALLKit::attributesAfter($attributes, 'item:')
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'item:')
                 ->merge(is_array($item) ? $item : ['label' => $item], false)
-                ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId('listbox-item', (string) data_get($item, 'value', $index))] : [], false)
+                ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId(prefix: 'listbox-item', name: (string) data_get($item, 'value', $index))] : [], false)
             "
             :$size
         />

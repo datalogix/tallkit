@@ -24,12 +24,12 @@
         @foreach (collect($items) as $index => $item)
             <li
                 {{
-                    TALLKit::attributesAfter($attributes, 'li:')
-                        ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId('list-item', (string) $index)] : [], false)
+                    TALLKit::attributesAfter(attributes: $attributes, prefix: 'li:')
+                        ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId(prefix: 'list-item', name: (string) $index)] : [], false)
                 }}
             >
                 <tk:text
-                    :attributes="TALLKit::attributesAfter($attributes, 'item:')"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'item:')"
                     :label="$item"
                 />
             </li>

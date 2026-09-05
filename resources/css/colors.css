@@ -1,11 +1,3 @@
-/*
- * InteractsWithColor: colors are concatenated from `$colors`, so Tailwind never sees the literal
- * class names — safelisted here instead. Every group below lists the same 21 entries as
- * `$colors` (17 hues + slate/gray/zinc/stone) — adding a color there is covered automatically.
- * Each line covers exactly the (prefix, property, shade) tuples that method actually produces,
- * not a broad shade x prefix cross product.
- */
-
 /* background()/backgroundActive()/frameBackground()/interactiveBackground() (default) — plain bg */
 @source inline('bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{500,600,700}');
 @source inline('dark:bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{400,500,600,700}');

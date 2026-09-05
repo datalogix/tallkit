@@ -8,7 +8,7 @@
     subtitle="This is a secure area of the application. Please confirm your password before continuing."
 >
     <tk:password
-        :attributes="TALLKit::attributesAfter($attributes, 'password:')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'password:')"
         :$size
         name="password"
         required
@@ -17,7 +17,7 @@
     />
 
     <tk:submit
-        :attributes="TALLKit::attributesAfter($attributes, 'submit:')->classes('w-full')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'submit:')->classes('w-full')"
         :$size
         label="Confirm"
         variant="accent"

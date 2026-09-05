@@ -34,7 +34,7 @@
 >
     @if ($image)
         <img
-            {{ TALLKit::attributesAfter($attributes, 'image:')->classes('w-full object-cover') }}
+            {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'image:')->classes('w-full object-cover') }}
             src="{{ $image }}"
             alt="{{ __($alt ?? (is_string($title) ? $title : '')) }}"
         />
@@ -44,7 +44,7 @@
 
     <tk:section
         :attributes="
-            TALLKit::attributesAfter($attributes,
+            TALLKit::attributesAfter(attributes: $attributes,
                 prefix: 'section:',
                 prepend: ['icon', 'badge', 'container:', 'list:', 'title:', 'subtitle:', 'separator:', 'content:', 'actions:']
             )->classes(TALLKit::padding(size: $size, mode: 'largest'))

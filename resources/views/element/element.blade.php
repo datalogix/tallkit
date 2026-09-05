@@ -43,13 +43,18 @@ $external ??= $attributes->get('target') === '_blank';
 <tk:tooltip.wrapper :$attributes :$tooltip>
     <{{ $as }} {{ $attributes
         ->dataKey($name)
-        ->merge([TALLKit::dataKey($name . '-has-icon') => !!$icon && $name])
+        ->merge([TALLKit::dataKey(name: $name . '-has-icon') => !!$icon && $name])
         ->whereDoesntStartWith(['tooltip:', 'icon-wrapper:', 'icon:', 'icon-dot:', 'content:', 'prefix:', 'suffix:', 'icon-trailing:', 'info:', 'badge:', 'kbd:'])
         ->when($current && $as !== 'p' && $as !== 'span', fn ($attrs, $value) => $attrs->merge([
             'data-current' => $value,
             'aria-current' => $value === true ? 'page' : $value,
         ]))
-        ->when($as !== 'p' || $icon, fn ($attrs) => $attrs->classes('inline-flex justify-center items-center [:where(&)]:gap-2'))
+        ->when($as !== 'p' || $icon, fn ($attrs) => $attrs->classes('
+            [:where(&)]:inline-flex
+            [:where(&)]:justify-center
+            [:where(&)]:items-center
+            [:where(&)]:gap-2
+        '))
         ->when($as === 'a', fn ($attrs) => $attrs->merge([
             'target' => $external === true ? '_blank' : $external,
             'wire:navigate' => !$external && $navigate !== false,
@@ -64,15 +69,15 @@ $external ??= $attributes->get('target') === '_blank';
         {{ $prepend ?? '' }}
 
         @if ($icon && $iconDot)
-            <span {{ TALLKit::attributesAfter($attributes, 'icon-wrapper:')->classes('relative') }}>
+            <span {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-wrapper:')->classes('relative') }}>
                 @if (is_string($icon) && $icon !== '')
                     <tk:icon
-                        :attributes="TALLKit::attributesAfter($attributes, 'icon:')"
+                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')"
                         :$icon
                     />
                 @else
                     <tk:element
-                        :attributes="TALLKit::attributesAfter($attributes, 'icon:')"
+                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')"
                         :label="$icon"
                     />
                 @endif
@@ -80,7 +85,7 @@ $external ??= $attributes->get('target') === '_blank';
                 @if ($iconDot)
                     <span class="absolute -top-2 end-.5">
                         <tk:element
-                            :attributes="TALLKit::attributesAfter($attributes, 'icon-dot:')->classes([
+                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-dot:')->classes([
                                 'rounded-full bg-zinc-500 dark:bg-zinc-400 size-2',
                                 '
                                     flex items-center justify-center
@@ -96,12 +101,12 @@ $external ??= $attributes->get('target') === '_blank';
         @elseif ($icon)
             @if (is_string($icon) && $icon !== '')
                 <tk:icon
-                    :attributes="TALLKit::attributesAfter($attributes, 'icon:')"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')"
                     :$icon
                 />
             @else
                 <tk:element
-                    :attributes="TALLKit::attributesAfter($attributes, 'icon:')"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')"
                     :label="$icon"
                 />
             @endif
@@ -111,21 +116,31 @@ $external ??= $attributes->get('target') === '_blank';
 
         @if (isset($prefix) && $prefix !== '')
             <tk:element
-                :attributes="TALLKit::attributesAfter($attributes, 'prefix:')->classes('me-auto font-medium text-xs text-zinc-500 dark:text-zinc-400')"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'prefix:')
+                    ->classes(
+                        '
+                            [:where(&)]:me-auto
+                            [:where(&)]:font-medium
+                            [:where(&)]:text-xs
+                            [:where(&)]:text-zinc-500
+                            dark:[:where(&)]:text-zinc-400
+                        '
+                    )
+                "
                 :label="$prefix"
             />
         @endif
 
-        @if (TALLKit::attributesAfter($attributes, 'content:')->isNotEmpty() && ($slot->hasActualContent() || $label))
+        @if (TALLKit::attributesAfter(attributes: $attributes, prefix: 'content:')->isNotEmpty() && ($slot->hasActualContent() || $label))
             <tk:element
-                :attributes="TALLKit::attributesAfter($attributes, 'content:')"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'content:')"
                 :$label
             >
                 {{ $slot }}
             </tk:element>
         @elseif ($slot->hasActualContent() || $label === true)
             {{ $slot }}
-        @elseif (TALLKit::isSlot($label))
+        @elseif (TALLKit::isSlot(slot: $label))
             {{ $label }}
         @elseif (is_string($label))
             @php($translatedLabel = e(__($label)))
@@ -137,20 +152,30 @@ $external ??= $attributes->get('target') === '_blank';
 
         @if (isset($suffix) && $suffix !== '')
             <tk:element
-                :attributes="TALLKit::attributesAfter($attributes, 'suffix:')->classes('ms-auto font-medium text-xs text-zinc-500 dark:text-zinc-400')"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'suffix:')
+                    ->classes(
+                        '
+                            [:where(&)]:ms-auto
+                            [:where(&)]:font-medium
+                            [:where(&)]:text-xs
+                            [:where(&)]:text-zinc-500
+                            dark:[:where(&)]:text-zinc-400
+                        '
+                    )
+                "
                 :label="$suffix"
             />
         @endif
 
         @if ((is_string($iconTrailing) && $iconTrailing !== '') || $info)
             <tk:icon
-                :attributes="TALLKit::attributesAfter($attributes, 'icon-trailing:')->merge(TALLKit::attributesAfter($attributes, 'info:')->getAttributes())"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-trailing:')->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'info:')->getAttributes())"
                 :icon="$info ? 'help' : $iconTrailing"
                 :tooltip="$info"
             />
         @elseif ($iconTrailing)
             <tk:element
-                :attributes="TALLKit::attributesAfter($attributes, 'icon-trailing:')->classes('ms-auto')"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-trailing:')->classes('[:where(&)]:ms-auto')"
                 :label="$iconTrailing"
             />
         @else
@@ -159,14 +184,14 @@ $external ??= $attributes->get('target') === '_blank';
 
         @if (isset($badge) && $badge !== '')
             <tk:badge
-                :attributes="TALLKit::attributesAfter($attributes, 'badge:')->classes('ms-auto')"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'badge:')->classes('[:where(&)]:ms-auto')"
                 :label="$badge"
             />
         @endif
 
         @if (isset($kbd) && $kbd !== '')
             <tk:kbd
-                :attributes="TALLKit::attributesAfter($attributes, 'kbd:')->classes('ms-auto')"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'kbd:')->classes('[:where(&)]:ms-auto')"
                 :label="$kbd"
             />
         @endif
