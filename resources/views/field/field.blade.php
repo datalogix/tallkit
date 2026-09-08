@@ -11,7 +11,7 @@
                 $inline,
                 fn ($attrs) => $attrs->classes(
                     '
-                        grid gap-x-3 gap-y-1.5
+                        grid gap-x-3
                         [&:has([data-tallkit-control][disabled])>[data-tallkit-label]]:opacity-50
                         dark:[&:has([data-tallkit-control][disabled])>[data-tallkit-label]]:opacity-40
                     ',

@@ -20,7 +20,7 @@
             header:class="p-3 pb-0 items-center"
         >
             <x-slot:actions>
-                <tk:tab.items
+                <tk:tab.tabs
                     :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'tab-items:')"
                     :size="TALLKit::adjustSize(size: $size)"
                     variant="segmented"
@@ -39,7 +39,7 @@
                         name="read"
                         label="Read"
                     />
-                </tk:tab.items>
+                </tk:tab.tabs>
             </x-slot:actions>
 
             <tk:tab.panels

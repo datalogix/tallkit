@@ -1,7 +1,7 @@
 export function dataOptions() {
   return {
-    getDataOptions() {
-      return window.Alpine.evaluate(this.$el, this.$el.getAttribute('data-options') || '{}');
+    getDataOptions(el = this.$el) {
+      return window.Alpine.evaluate(el, el.getAttribute('data-options') || '{}');
     }
   };
 }

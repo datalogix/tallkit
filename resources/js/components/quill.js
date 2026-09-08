@@ -65,14 +65,18 @@ export function quill({ options = {}, scripts = [], styles = [], mode = null } =
       this.initField()
 
       this.load(() => loadRemoteAssets(
-        () => !!window.Quill,
-        ['https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js', ...scripts],
+        () => !!window.Quill && !!window.DOMPurify,
+        [
+          'https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js',
+          'https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js',
+          ...scripts
+        ],
         ['https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css', ...styles]
       ).then(() => this.mount()))
     },
 
     applyExternalValue(value) {
-      this.editor.clipboard.dangerouslyPasteHTML(value ?? '')
+      this.editor.clipboard.dangerouslyPasteHTML(window.DOMPurify.sanitize(value ?? ''))
     },
 
     mount() {
@@ -83,7 +87,7 @@ export function quill({ options = {}, scripts = [], styles = [], mode = null } =
             toolbar: resolveToolbar(mode)
           },
           ...options,
-          ...this.getDataOptions()
+          ...this.getDataOptions(this.$refs.root)
         })
 
         this.editor.on('text-change', () => {

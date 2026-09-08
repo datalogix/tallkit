@@ -14,6 +14,7 @@
             ]))
         "
         :$size
+        type="button"
         iconTrailing="chevron-down"
     >
         {{ $label ?? '' }}

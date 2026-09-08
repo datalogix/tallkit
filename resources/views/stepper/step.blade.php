@@ -25,10 +25,10 @@ $ariaLabel = trim(
             TALLKit::fontSize(size: $size),
         )
         ->merge([
-            'aria-current' => $status === 'active' ?  'step' : false,
             'aria-label' => $ariaLabel ?: null,
         ])
     "
+    :current="$status === 'active' ?  'step' : false"
     :icon:class="TALLKit::classes(
         'rounded-full text-white flex items-center justify-center font-semibold shrink-0',
         TALLKit::widthHeight(size: $size, mode: 'large'),

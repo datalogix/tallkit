@@ -186,6 +186,8 @@ $initialValueString = match (true) {
     >
         @for ($m = 0; $m < $monthsCount; $m++)
             <div
+                role="grid"
+                aria-label="{{ __('Calendar') }}"
                 {{
                     TALLKit::attributesAfter(attributes: $attributes, prefix: 'month:')
                         ->classes(
@@ -208,6 +210,7 @@ $initialValueString = match (true) {
                 @endif
 
                 <div
+                    role="row"
                     {{
                         TALLKit::attributesAfter(attributes: $attributes, prefix: 'weekdays:')
                             ->classes(
@@ -223,6 +226,7 @@ $initialValueString = match (true) {
 
                     <template x-for="(label, index) in weekdayLabels()" :key="index">
                         <div
+                            role="columnheader"
                             {{
                                 TALLKit::attributesAfter(attributes: $attributes, prefix: 'weekday:')
                                     ->classes('py-1')
@@ -234,6 +238,7 @@ $initialValueString = match (true) {
 
                 <template x-for="week in weeksFor({{ $m }})" :key="week.key">
                     <div
+                        role="row"
                         {{
                             TALLKit::attributesAfter(attributes: $attributes, prefix: 'week:')
                                 ->classes('grid', $weekNumbers ? 'grid-cols-8' : 'grid-cols-7')
@@ -288,6 +293,10 @@ $initialValueString = match (true) {
                                 variant="ghost"
                                 square
                                 :size="$size"
+                                role="gridcell"
+                                ::aria-label="dayAriaLabel(day.iso)"
+                                ::aria-selected="isSelected(day.iso)"
+                                ::aria-current="isToday(day.iso) ? 'date' : false"
                                 ::data-active="isSelected(day.iso)"
                                 ::data-today="isToday(day.iso)"
                                 ::data-outside-month="!day.inMonth"

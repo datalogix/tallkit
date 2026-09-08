@@ -101,7 +101,7 @@ export function tinymce({ options = {}, scripts = [], mode = null } = {}) {
             })
           },
           ...options,
-          ...this.getDataOptions(),
+          ...this.getDataOptions(this.input),
         })
 
         this.editor = editor

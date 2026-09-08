@@ -48,6 +48,7 @@ foreach ($options as $optionItemValue => $optionItemLabel) {
                 value: @js($value ?? ($multiple ? [] : null)),
                 multiple: @js($multiple),
             })"
+            class="flex-1"
         >
             <div
                 tabindex="0"
@@ -172,7 +173,7 @@ foreach ($options as $optionItemValue => $optionItemLabel) {
                 :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'popover:')
                     ->classes(TALLKit::spaceBlock(size: $size), 'max-h-full')"
                 :$size
-                :$animation
+                :animation="$animation ?? 'none'"
             >
                 <tk:listbox
                     :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'listbox:')"

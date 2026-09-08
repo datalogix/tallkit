@@ -18,17 +18,16 @@ $initialLength = mb_strlen((string) (in_livewire() ? null : ($value ?? $slot)));
 $counterExpression = $maxlength ? sprintf("length + ' / %d'", $maxlength) : 'length';
 
 @endphp
+@if ($hasCounter || $maxRows)
+    <div
+        x-data="textarea({ maxRows: @js($maxRows), counter: @js($hasCounter), length: @js($initialLength) })"
+        {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'counter:') }}
+    >
+@endif
 <tk:field.wrapper
     :$name
     :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
 >
-    @if ($hasCounter || $maxRows)
-        <div
-            x-data="textarea({ maxRows: @js($maxRows), counter: @js($hasCounter), length: @js($initialLength) })"
-            {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'counter:') }}
-        >
-    @endif
-
     <tk:field.control
         :$size
         :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
@@ -101,7 +100,7 @@ $counterExpression = $maxlength ? sprintf("length + ' / %d'", $maxlength) : 'len
             </x-slot:append>
         @endif
     </tk:field.control>
-
+</tk:field.wrapper>
     @if ($hasCounter)
         <tk:text
             :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'counter:')->classes('text-end mt-1.5')"
@@ -110,8 +109,6 @@ $counterExpression = $maxlength ? sprintf("length + ' / %d'", $maxlength) : 'len
             x-text="{{ $counterExpression }}"
         >{{ $maxlength ? $initialLength.' / '. $maxlength : $initialLength }}</tk:text>
     @endif
-
-    @if ($hasCounter || $maxRows)
-        </div>
-    @endif
-</tk:field.wrapper>
+@if ($hasCounter || $maxRows)
+    </div>
+@endif

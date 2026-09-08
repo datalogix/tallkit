@@ -6,8 +6,8 @@
 ])
 @php
 
-$hasPrefix = $prefix || TALLKit::attributesAfter(attributes: $attributes, prefix: 'prefix:')->isNotEmpty();
-$hasSuffix = $suffix || TALLKit::attributesAfter(attributes: $attributes, prefix: 'suffix:')->isNotEmpty();
+$hasPrefix = !$inline && ($prefix || TALLKit::attributesAfter(attributes: $attributes, prefix: 'prefix:')->isNotEmpty());
+$hasSuffix = !$inline && ($suffix || TALLKit::attributesAfter(attributes: $attributes, prefix: 'suffix:')->isNotEmpty());
 
 @endphp
 @if ($label || $description || $help || $hasPrefix || $hasSuffix)
@@ -32,7 +32,7 @@ $hasSuffix = $suffix || TALLKit::attributesAfter(attributes: $attributes, prefix
             :$size
         />
 
-        @if (!$inline && ($hasPrefix || $hasSuffix))
+        @if ($hasPrefix || $hasSuffix)
             <tk:field.group
                 :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'group:')
                     ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'prefix:', prepend: true)->getAttributes())

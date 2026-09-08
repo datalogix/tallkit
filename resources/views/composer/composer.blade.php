@@ -26,6 +26,8 @@
         role="group"
         {{
             $attributes
+                ->dataKey('control')
+                ->dataKey('group-target')
                 ->merge([
                     'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                     'aria-invalid' => $invalid ? 'true' : null,

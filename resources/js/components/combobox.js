@@ -56,23 +56,25 @@ export function combobox(
         },
 
         ['@keydown.enter.prevent']() {
-          if (this.opened) return
-          this.open()
+          if (!this.opened) return this.open()
+          this.select(this.index)
         },
 
         ['@keydown.space.prevent']() {
-          if (this.opened) return
-          this.open()
+          if (!this.opened) return this.open()
+          this.select(this.index)
         },
 
         ['@keydown.arrow-up.prevent']() {
-          if (this.opened) return
-          this.open()
+          if (!this.opened) return this.open()
+          this.lastInteraction = 'keyboard'
+          this.prev()
         },
 
         ['@keydown.arrow-down.prevent']() {
-          if (this.opened) return
-          this.open()
+          if (!this.opened) return this.open()
+          this.lastInteraction = 'keyboard'
+          this.next()
         },
       })
 

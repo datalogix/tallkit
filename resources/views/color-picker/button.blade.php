@@ -5,6 +5,7 @@
     'clearable' => null,
     'dropper' => null,
     'size' => null,
+    'keepOpen' => null,
 ])
 @php
 
@@ -25,16 +26,29 @@ $style = $preview === 'underline' ? "value ? 'box-shadow: inset 0 -2px 0 0 ' + v
         :arrow="false"
     />
 
-    <tk:popover :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'popover:')->classes('p-2 space-y-2')">
+    <tk:popover
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'popover:')->classes('p-2 space-y-2')"
+        :$keepOpen
+    >
         <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'swatch:')->classes('grid grid-cols-5 gap-1') }}>
             @foreach ($swatches as $swatch)
                 <tk:button
                     :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'option:')
                         ->classes(
-                            'tk-control-transition',
+                            '
+                                tk-control-transition
+
+                                [&[data-active]]:ring-2
+                                [&[data-active]]:ring-offset-2
+                                [&[data-active]]:ring-black/40
+                                [&[data-active]]:dark:ring-white/60
+                                [&[data-active]]:ring-offset-white
+                                [&[data-active]]:dark:ring-offset-zinc-700
+                            ',
                             TALLKit::widthHeight(size: $size)
                         )
                     "
+                    ::data-active="value === '{{ $swatch }}'"
                     @click="pick('{{ $swatch }}')"
                     title="{{ $swatch }}"
                     style="background-color: {{ $swatch }}"

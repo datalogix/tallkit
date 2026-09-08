@@ -17,7 +17,7 @@ export function apexcharts() {
 
     render(options = {}) {
       try {
-        const merged = { ...options, ...this.getDataOptions() }
+        const merged = { ...options, ...this.getDataOptions(this.$refs.target) }
 
         if (this.chart) {
           this.chart.updateOptions(merged)

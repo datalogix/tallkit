@@ -71,7 +71,9 @@ if (! function_exists('in_livewire')) {
 if (! function_exists('is_current_href')) {
     function is_current_href(?string $href = null, ?bool $exact = null)
     {
-        $href ??= '';
+        if (blank($href)) {
+            return false;
+        }
 
         $hrefForCurrentDetection = Str::startsWith($href, trim(config('app.url')))
             ? Str::after($href, trim(config('app.url'), '/'))

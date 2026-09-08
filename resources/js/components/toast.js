@@ -70,6 +70,7 @@ export function toast() {
 
     destroy() {
       this._listeners.forEach((off) => off())
+      clearTimeout(this.idleTimeout)
     },
 
     syncAttention() {

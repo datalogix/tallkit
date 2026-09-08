@@ -9,13 +9,12 @@
     'copyable' => null,
     'dropper' => null,
     'live' => null,
+    'keepOpen' => null,
 ])
 @php
 
 [$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
 $disabled = (bool) $attributes->get('disabled');
-$type ??= 'input';
-$format ??= 'hex';
 $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) {
     'hexa' => '#00000000',
     'rgba' => 'rgba(0, 0, 0, 0)',
@@ -33,6 +32,7 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
         x-data="colorPicker({{ Js::from(['value' => $value, 'format' => $format]) }})"
         {{
             TALLKit::attributesAfter(attributes: $attributes, prefix: 'picker:')
+                ->classes(['flex-1' => $type !== 'button'])
                 ->merge(['x-effect' => $live ? "value = ($live) ?? null" : false])
         }}
     >
@@ -68,6 +68,7 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
                         'id' => $id,
                         'aria-invalid' => $invalid ? 'true' : null,
                         'data-invalid' => $invalid ? true : null,
+                        TALLKit::dataKey('group-target') => true,
                     ])
                     ->classes(
                         TALLKit::roundedSize(size: $size, mode: 'large'),
@@ -89,6 +90,7 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
                 :$dropper
                 :$size
                 :$disabled
+                :$keepOpen
                 variant="subtle"
             />
         @else
@@ -116,6 +118,9 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
                                 TALLKit::roundedSize(size: $size),
                                 TALLKit::widthHeight(size: $size),
                             )
+                            ->merge([
+                                TALLKit::dataKey('group-target') => false,
+                            ])
                         "
                         :icon="false"
                         :$swatches
@@ -123,6 +128,7 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
                         :$dropper
                         :$size
                         :$disabled
+                        :$keepOpen
                     />
                 </x-slot:prepend>
 

@@ -295,7 +295,7 @@ export function tiptap(
           onSelectionUpdate: () => { this.tick++ },
           onTransaction: () => { this.tick++ },
           ...options,
-          ...this.getDataOptions(),
+          ...this.getDataOptions(this.$refs.root),
         })
 
         this.$dispatch('rendered', { editor })

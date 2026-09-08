@@ -11,12 +11,13 @@
     'size' => null,
     'progress' => null,
     'timeout' => null,
+    'duration' => null,
     'pauseOnHover' => null,
     'options' => null,
 ])
 <tk:content
     x-data="alertComponent({{ Js::from([
-        'timeout' => $timeout ?? ($progress ? 7000 : null),
+        'timeout' => $timeout ?? $duration ?? ($progress ? 7000 : null),
         'pauseOnHover' => $pauseOnHover ?? (bool) $progress,
     ] + ($options ?? [])) }})"
     aria-atomic="true"

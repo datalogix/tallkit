@@ -18,7 +18,7 @@ export function frappeCharts() {
     render(options = {}) {
       try {
         this.chart?.destroy?.()
-        this.chart = new window.frappe.Chart(this.$refs.target, { ...options, ...this.getDataOptions() })
+        this.chart = new window.frappe.Chart(this.$refs.target, { ...options, ...this.getDataOptions(this.$refs.target) })
         this.$dispatch('rendered', { chart: this.chart })
       } catch (e) {
         this.fail(e)

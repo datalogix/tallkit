@@ -17,7 +17,7 @@ export function chartjs() {
 
     render(options = {}) {
       try {
-        const merged = { ...options, ...this.getDataOptions() }
+        const merged = { ...options, ...this.getDataOptions(this.$refs.target) }
 
         if (this.chart) {
           Object.assign(this.chart.config, merged)

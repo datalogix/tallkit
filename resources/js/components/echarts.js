@@ -18,7 +18,7 @@ export function echarts() {
     render(options = {}) {
       try {
         this.chart ??= window.echarts.init(this.$refs.target)
-        this.chart.setOption({ ...options, ...this.getDataOptions() })
+        this.chart.setOption({ ...options, ...this.getDataOptions(this.$refs.target) })
         this.$dispatch('rendered', { chart: this.chart })
       } catch (e) {
         this.fail(e)

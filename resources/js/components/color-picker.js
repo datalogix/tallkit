@@ -1,14 +1,14 @@
 import { normalizeColor } from '../utils'
 import { bindableField } from '../mixins/bindable-field'
 
-export function colorPicker({ value = null, format = 'hex' } = {}) {
+export function colorPicker({ value = null, format = null } = {}) {
   const _bindableField = bindableField({ key: 'color-picker' })
 
   return {
     ..._bindableField,
 
     value,
-    format,
+    format: format ?? 'hex',
 
     init() {
       _bindableField.init.call(this)

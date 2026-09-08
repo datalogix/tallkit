@@ -34,6 +34,6 @@ $message ??= TALLKit::getError(name: $name, slot: $slot, bag: $bag);
             />
         @endif
 
-        {!! $message !!}
+        {{ $message }}
     </div>
 @endif

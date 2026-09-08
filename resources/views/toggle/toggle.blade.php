@@ -16,7 +16,7 @@ $hasStateLabel = $labelOn || $labelOff;
 
 @endphp
 <tk:field.wrapper
-    inline
+    :inline="!$hasStateLabel"
     :$align
     :$name
     :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
@@ -26,11 +26,11 @@ $hasStateLabel = $labelOn || $labelOff;
         <div
             {{
                 TALLKit::attributesAfter(attributes: $attributes, prefix: 'state-group:')
-                    ->classes(
-                        'inline-flex items-center has-[input:disabled]:cursor-not-allowed',
+                    ->classes([
+                        'flex items-center has-[input:disabled]:cursor-not-allowed',
                         '[&_.label-checked]:hidden [&_.label-unchecked]:inline has-[input:checked]:[&_.label-checked]:inline has-[input:checked]:[&_.label-unchecked]:hidden',
                         TALLKit::gap(size: $size, mode: 'small'),
-                    )
+                    ])
             }}
         >
     @endif
@@ -157,16 +157,21 @@ $hasStateLabel = $labelOn || $labelOff;
         </span>
     </label>
     @if ($hasStateLabel)
-        <label
-            for="{{ $id }}"
-            {{
-                TALLKit::attributesAfter(attributes: $attributes, prefix: 'state:')
-                    ->classes('cursor-pointer select-none', TALLKit::fontSize(size: $size))
-            }}
-        >
-            <span class="label-checked">{{ $labelOn }}</span>
-            <span class="label-unchecked">{{ $labelOff }}</span>
-        </label>
+            <label
+                {{
+                    TALLKit::attributesAfter(attributes: $attributes, prefix: 'state:')
+                        ->merge([
+                            'for' => $id,
+                        ])
+                        ->classes(
+                            'cursor-pointer select-none',
+                            TALLKit::fontSize(size: $size)
+                        )
+                }}
+            >
+                <span class="label-checked">{{ $labelOn }}</span>
+                <span class="label-unchecked">{{ $labelOff }}</span>
+            </label>
         </div>
     @endif
 </tk:field.wrapper>

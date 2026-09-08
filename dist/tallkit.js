@@ -136,8 +136,11 @@
 	//#endregion
 	//#region resources/js/utils/assets.js
 	var scripts = /* @__PURE__ */ new Map();
-	async function loadScript(src) {
-		if (Array.isArray(src)) return src.reduce((p, s) => p.then(async (events) => [...events, await loadScript(s)]), Promise.resolve([]));
+	async function loadScript(src, { integrity, crossorigin } = {}) {
+		if (Array.isArray(src)) return src.reduce((p, s) => p.then(async (events) => [...events, await loadScript(s, {
+			integrity,
+			crossorigin
+		})]), Promise.resolve([]));
 		if (scripts.has(src)) return scripts.get(src);
 		const promise = new Promise((resolve, reject) => {
 			if (document.querySelector(`script[src="${src}"]`)) {
@@ -147,6 +150,8 @@
 			const script = document.createElement("script");
 			script.src = src;
 			script.defer = true;
+			if (integrity) script.integrity = integrity;
+			if (integrity || crossorigin) script.crossOrigin = crossorigin ?? "anonymous";
 			script.onload = resolve;
 			script.onerror = (e) => {
 				scripts.delete(src);
@@ -177,8 +182,11 @@
 		return promise;
 	}
 	var styles = /* @__PURE__ */ new Map();
-	function loadStyle(href) {
-		if (Array.isArray(href)) return href.reduce((p, s) => p.then(async (events) => [...events, await loadStyle(s)]), Promise.resolve([]));
+	function loadStyle(href, { integrity, crossorigin } = {}) {
+		if (Array.isArray(href)) return href.reduce((p, s) => p.then(async (events) => [...events, await loadStyle(s, {
+			integrity,
+			crossorigin
+		})]), Promise.resolve([]));
 		if (styles.has(href)) return styles.get(href);
 		const promise = new Promise((resolve, reject) => {
 			if (document.querySelector(`link[rel="stylesheet"][href="${href}"]`)) {
@@ -188,6 +196,8 @@
 			const link = document.createElement("link");
 			link.rel = "stylesheet";
 			link.href = href;
+			if (integrity) link.integrity = integrity;
+			if (integrity || crossorigin) link.crossOrigin = crossorigin ?? "anonymous";
 			link.onload = resolve;
 			link.onerror = (e) => {
 				styles.delete(href);
@@ -1014,8 +1024,8 @@
 	//#endregion
 	//#region resources/js/mixins/data-options.js
 	function dataOptions() {
-		return { getDataOptions() {
-			return window.Alpine.evaluate(this.$el, this.$el.getAttribute("data-options") || "{}");
+		return { getDataOptions(el = this.$el) {
+			return window.Alpine.evaluate(el, el.getAttribute("data-options") || "{}");
 		} };
 	}
 	//#endregion
@@ -1120,7 +1130,7 @@
 				try {
 					const merged = {
 						...options,
-						...this.getDataOptions()
+						...this.getDataOptions(this.$refs.target)
 					};
 					if (this.chart) this.chart.updateOptions(merged);
 					else {
@@ -3500,6 +3510,9 @@
 					year: "numeric"
 				}).format(this.monthAt(monthIndex));
 			},
+			dayAriaLabel(iso) {
+				return new Intl.DateTimeFormat(this.locale, { dateStyle: "full" }).format(parseIso(iso));
+			},
 			monthOptions() {
 				const fmt = new Intl.DateTimeFormat(this.locale, { month: "long" });
 				return Array.from({ length: 12 }, (_, i) => ({
@@ -3784,7 +3797,7 @@
 				try {
 					const merged = {
 						...options,
-						...this.getDataOptions()
+						...this.getDataOptions(this.$refs.target)
 					};
 					if (this.chart) {
 						Object.assign(this.chart.config, merged);
@@ -3863,12 +3876,12 @@
 	//#endregion
 	//#region resources/js/components/color-picker.js
 	var color_picker_exports = /* @__PURE__ */ __exportAll({ colorPicker: () => colorPicker });
-	function colorPicker({ value = null, format = "hex" } = {}) {
+	function colorPicker({ value = null, format = null } = {}) {
 		const _bindableField = bindableField({ key: "color-picker" });
 		return {
 			..._bindableField,
 			value,
-			format,
+			format: format ?? "hex",
 			init() {
 				_bindableField.init.call(this);
 			},
@@ -3953,20 +3966,22 @@
 						this.toggle();
 					},
 					["@keydown.enter.prevent"]() {
-						if (this.opened) return;
-						this.open();
+						if (!this.opened) return this.open();
+						this.select(this.index);
 					},
 					["@keydown.space.prevent"]() {
-						if (this.opened) return;
-						this.open();
+						if (!this.opened) return this.open();
+						this.select(this.index);
 					},
 					["@keydown.arrow-up.prevent"]() {
-						if (this.opened) return;
-						this.open();
+						if (!this.opened) return this.open();
+						this.lastInteraction = "keyboard";
+						this.prev();
 					},
 					["@keydown.arrow-down.prevent"]() {
-						if (this.opened) return;
-						this.open();
+						if (!this.opened) return this.open();
+						this.lastInteraction = "keyboard";
+						this.next();
 					}
 				});
 				bind([
@@ -4505,7 +4520,7 @@
 					this.chart ??= window.echarts.init(this.$refs.target);
 					this.chart.setOption({
 						...options,
-						...this.getDataOptions()
+						...this.getDataOptions(this.$refs.target)
 					});
 					this.$dispatch("rendered", { chart: this.chart });
 				} catch (e) {
@@ -4672,7 +4687,7 @@
 							this.sync(JSON.stringify(output));
 						},
 						...options,
-						...this.getDataOptions()
+						...this.getDataOptions(this.$refs.root)
 					});
 					this.editor.isReady.then(() => this.$dispatch("rendered", { editor: this.editor }));
 				} catch (e) {
@@ -4825,7 +4840,7 @@
 					this.chart?.destroy?.();
 					this.chart = new window.frappe.Chart(this.$refs.target, {
 						...options,
-						...this.getDataOptions()
+						...this.getDataOptions(this.$refs.target)
 					});
 					this.$dispatch("rendered", { chart: this.chart });
 				} catch (e) {
@@ -5500,10 +5515,14 @@
 			editor: null,
 			init() {
 				this.initField();
-				this.load(() => loadRemoteAssets(() => !!window.Quill, ["https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js", ...scripts], ["https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css", ...styles]).then(() => this.mount()));
+				this.load(() => loadRemoteAssets(() => !!window.Quill && !!window.DOMPurify, [
+					"https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js",
+					"https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js",
+					...scripts
+				], ["https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css", ...styles]).then(() => this.mount()));
 			},
 			applyExternalValue(value) {
-				this.editor.clipboard.dangerouslyPasteHTML(value ?? "");
+				this.editor.clipboard.dangerouslyPasteHTML(window.DOMPurify.sanitize(value ?? ""));
 			},
 			mount() {
 				try {
@@ -5511,7 +5530,7 @@
 						theme: "snow",
 						modules: { toolbar: resolveToolbar(mode) },
 						...options,
-						...this.getDataOptions()
+						...this.getDataOptions(this.$refs.root)
 					});
 					this.editor.on("text-change", () => {
 						this.sync(this.editor.root.innerHTML);
@@ -5702,16 +5721,24 @@
 				const nextKey = orientation === "vertical" ? "arrow-down" : "arrow-right";
 				const previousKey = orientation === "vertical" ? "arrow-up" : "arrow-left";
 				bind(this.$root, {
-					[`@keydown.${nextKey}.prevent`](event) {
+					[`@keydown.${nextKey}`](event) {
+						if (!event.target.closest("[role=\"tab\"]")) return;
+						event.preventDefault();
 						this.focusTab(1, event.target);
 					},
-					[`@keydown.${previousKey}.prevent`](event) {
+					[`@keydown.${previousKey}`](event) {
+						if (!event.target.closest("[role=\"tab\"]")) return;
+						event.preventDefault();
 						this.focusTab(-1, event.target);
 					},
-					["@keydown.home.prevent"](event) {
+					["@keydown.home"](event) {
+						if (!event.target.closest("[role=\"tab\"]")) return;
+						event.preventDefault();
 						this.focusTab("first", event.target);
 					},
-					["@keydown.end.prevent"](event) {
+					["@keydown.end"](event) {
+						if (!event.target.closest("[role=\"tab\"]")) return;
+						event.preventDefault();
 						this.focusTab("last", event.target);
 					}
 				});
@@ -6081,7 +6108,7 @@
 							});
 						},
 						...options,
-						...this.getDataOptions()
+						...this.getDataOptions(this.input)
 					});
 					this.editor = editor;
 					this.$dispatch("rendered", { editor: this.editor });
@@ -6320,7 +6347,7 @@
 							this.tick++;
 						},
 						...options,
-						...this.getDataOptions()
+						...this.getDataOptions(this.$refs.root)
 					});
 					this.$dispatch("rendered", { editor });
 				} catch (e) {
@@ -6396,6 +6423,7 @@
 			},
 			destroy() {
 				this._listeners.forEach((off) => off());
+				clearTimeout(this.idleTimeout);
 			},
 			syncAttention() {
 				const shouldRun = this.isPageVisible && this.isUserActive;

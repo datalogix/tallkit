@@ -122,7 +122,7 @@ export function editorjs({ options = {}, scripts = [], styles = [], mode = null 
             this.sync(JSON.stringify(output))
           },
           ...options,
-          ...this.getDataOptions(),
+          ...this.getDataOptions(this.$refs.root),
         })
 
         this.editor.isReady.then(() => this.$dispatch('rendered', { editor: this.editor }))

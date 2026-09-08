@@ -165,6 +165,10 @@ export function calendar({
       return new Intl.DateTimeFormat(this.locale, { month: 'long', year: 'numeric' }).format(this.monthAt(monthIndex))
     },
 
+    dayAriaLabel(iso) {
+      return new Intl.DateTimeFormat(this.locale, { dateStyle: 'full' }).format(parseIso(iso))
+    },
+
     monthOptions() {
       const fmt = new Intl.DateTimeFormat(this.locale, { month: 'long' })
 

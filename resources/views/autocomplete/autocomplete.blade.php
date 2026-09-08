@@ -21,14 +21,14 @@ $listboxId = TALLKit::attributesAfter(attributes: $attributes, prefix: 'items:')
         aria-autocomplete="list"
         aria-haspopup="listbox"
         :aria-controls="$listboxId"
-        :aria-expanded="opened ? 'true' : 'false'"
+        ::aria-expanded="opened ? 'true' : 'false'"
         autocomplete="off"
     />
 
     <tk:popover
         :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'popover:')"
         :$size
-        :$animation
+        :animation="$animation ?? 'none'"
     >
         <tk:listbox.items
             :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'items:')"

@@ -90,7 +90,10 @@ $showPresets = count($presetKeys) > 0;
             'withConfirmation' => (bool) $withConfirmation,
             'labels' => ['selected' => __('selected')],
         ]) }})"
-        {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'picker:') }}
+        {{
+            TALLKit::attributesAfter(attributes: $attributes, prefix: 'picker:')
+                ->classes('flex-1')
+        }}
     >
         <tk:field.control
             :$size

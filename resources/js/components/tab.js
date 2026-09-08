@@ -27,19 +27,27 @@ export function tab(
       const previousKey = orientation === 'vertical' ? 'arrow-up' : 'arrow-left'
 
       bind(this.$root, {
-        [`@keydown.${nextKey}.prevent`](event) {
+        [`@keydown.${nextKey}`](event) {
+          if (!event.target.closest('[role="tab"]')) return
+          event.preventDefault()
           this.focusTab(1, event.target)
         },
 
-        [`@keydown.${previousKey}.prevent`](event) {
+        [`@keydown.${previousKey}`](event) {
+          if (!event.target.closest('[role="tab"]')) return
+          event.preventDefault()
           this.focusTab(-1, event.target)
         },
 
-        ['@keydown.home.prevent'](event) {
+        ['@keydown.home'](event) {
+          if (!event.target.closest('[role="tab"]')) return
+          event.preventDefault()
           this.focusTab('first', event.target)
         },
 
-        ['@keydown.end.prevent'](event) {
+        ['@keydown.end'](event) {
+          if (!event.target.closest('[role="tab"]')) return
+          event.preventDefault()
           this.focusTab('last', event.target)
         },
       })

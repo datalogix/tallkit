@@ -10,7 +10,7 @@
 >
     <tk:button
         :attributes="$attributes->whereDoesntStartWith(['container:'])
-            ->classes('w-full justify-start hover:bg-transparent dark:hover:bg-transparent')"
+            ->classes('w-full justify-start')"
         :$size
         variant="ghost"
         tabindex="-1"

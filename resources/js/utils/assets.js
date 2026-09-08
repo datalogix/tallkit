@@ -1,9 +1,9 @@
 const scripts = new Map()
 
-export async function loadScript(src) {
+export async function loadScript(src, { integrity, crossorigin } = {}) {
   if (Array.isArray(src)) {
     return src.reduce(
-      (p, s) => p.then(async (events) => [...events, await loadScript(s)]),
+      (p, s) => p.then(async (events) => [...events, await loadScript(s, { integrity, crossorigin })]),
       Promise.resolve([])
     );
   }
@@ -21,6 +21,8 @@ export async function loadScript(src) {
     const script = document.createElement('script')
     script.src = src
     script.defer = true
+    if (integrity) script.integrity = integrity
+    if (integrity || crossorigin) script.crossOrigin = crossorigin ?? 'anonymous'
     script.onload = resolve
     script.onerror = (e) => {
       scripts.delete(src)
@@ -67,10 +69,10 @@ export async function loadRemoteModule(src) {
 
 const styles = new Map()
 
-export function loadStyle(href) {
+export function loadStyle(href, { integrity, crossorigin } = {}) {
   if (Array.isArray(href)) {
     return href.reduce(
-      (p, s) => p.then(async (events) => [...events, await loadStyle(s)]),
+      (p, s) => p.then(async (events) => [...events, await loadStyle(s, { integrity, crossorigin })]),
       Promise.resolve([])
     );
   }
@@ -88,6 +90,8 @@ export function loadStyle(href) {
     const link = document.createElement('link')
     link.rel = 'stylesheet'
     link.href = href
+    if (integrity) link.integrity = integrity
+    if (integrity || crossorigin) link.crossOrigin = crossorigin ?? 'anonymous'
     link.onload = resolve
     link.onerror = (e) => {
       styles.delete(href)

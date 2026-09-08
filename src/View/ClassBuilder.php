@@ -34,9 +34,10 @@ class ClassBuilder implements Stringable
 
     public function __toString()
     {
-        return $this->classes->unique()
-            ->filter()
+        return $this->classes
             ->map(fn ($class) => Str::trim($class))
+            ->unique()
+            ->filter()
             ->join(' ');
     }
 }

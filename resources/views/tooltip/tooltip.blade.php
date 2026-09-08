@@ -38,7 +38,7 @@
             @if (TALLKit::isSlot(slot: $content))
                 {{ $content }}
             @else
-                {!! nl2br(__($content)) !!}
+                {!! nl2br(e(__($content))) !!}
             @endif
         </tk:tooltip.content>
     @endif

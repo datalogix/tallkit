@@ -15,7 +15,7 @@ class UploadController extends Controller
         $maxSize = $this->resolveMaxSize($type, $request->integer('max_size'));
 
         $request->validate([
-            'file' => ['required', 'file', "max:{$maxSize}"],
+            'file' => ['required', 'file', "max:{$maxSize}", 'mimes:'.implode(',', $this->allowedExtensions())],
             'disk' => ['nullable', 'string'],
             'directory' => ['nullable', 'string'],
         ]);
@@ -36,6 +36,21 @@ class UploadController extends Controller
         $ceiling = is_array($sizes) ? (int) ($sizes[$type] ?? $sizes['default'] ?? 20480) : (int) $sizes;
 
         return $requested > 0 ? min($requested, $ceiling) : $ceiling;
+    }
+
+    protected function allowedExtensions(): array
+    {
+        return config('tallkit.upload.allowed_extensions', [
+            'jpg', 'jpeg', 'png', 'gif', 'webp',
+            'mp4', 'mov', 'webm',
+            'mp3', 'wav',
+            'pdf',
+            'doc', 'docx',
+            'xls', 'xlsx',
+            'ppt', 'pptx',
+            'zip', 'rar', '7z',
+            'txt', 'md', 'csv',
+        ]);
     }
 
     protected function resolveDisk(?string $disk): string

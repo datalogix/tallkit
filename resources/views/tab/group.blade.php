@@ -5,11 +5,22 @@
     'orientation' => null,
 ])
 <div
-    {{ $attributes->classes(TALLKit::spaceBlock(size: $size, mode: 'largest')) }}
     wire:ignore.self
-    x-data="tab({ selectFirst: {{ $selectFirst !== false ? 'true' : 'false' }}, orientation: @js($orientation ?? 'horizontal') })"
+    x-data="tab({
+        selectFirst: {{ $selectFirst !== false ? 'true' : 'false' }},
+        orientation: @js($orientation === 'vertical' ? 'vertical' : 'horizontal')
+    })"
     x-modelable="selected"
     x-cloak
+    {{
+        $attributes
+            ->classes([
+                'flex flex-col',
+                'flex-row' => $orientation === 'vertical',
+                TALLKit::spaceBlock(size: $size, mode: 'large'),
+                TALLKit::spaceInline(size: $size, mode: 'large'),
+            ])
+    }}
 >
     {{ $slot }}
 </div>

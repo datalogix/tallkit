@@ -15,7 +15,7 @@
                 :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'prefix:')"
                 :$size
             >
-                {!! $prefix !!}
+                {{ $prefix }}
             </tk:field.group.prefix>
         @endif
 
@@ -26,7 +26,7 @@
                 :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'suffix:')"
                 :$size
             >
-                {!! $suffix !!}
+                {{ $suffix }}
             </tk:field.group.suffix>
         @endif
     </div>

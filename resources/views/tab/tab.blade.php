@@ -1,4 +1,4 @@
-@aware(['size', 'variant'])
+@aware(['size', 'variant', 'orientation'])
 @props([
     'size' => null,
     'variant' => null,
@@ -14,11 +14,10 @@ $name ??= TALLKit::generateId(prefix: 'tab');
     :attributes="$attributes
         ->classes(
             'shrink-0',
-            TALLKit::paddingInline(size: $size),
+            TALLKit::padding(size: $size),
             match ($variant) {
                 'line' => '
-                    -mb-px
-                    border-b-2 border-transparent
+                    border-transparent
                     [&[data-selected]]:border-zinc-800
                     dark:[&[data-selected]]:border-white
                 ',
@@ -33,13 +32,30 @@ $name ??= TALLKit::generateId(prefix: 'tab');
                     [&[data-selected]]:bg-white dark:[&[data-selected]]:bg-white/20
                 ',
                 default => '
-                    rounded-t-lg
-                    border border-b-0
                     border-zinc-800/10 dark:border-white/20
                     [&[data-selected]]:bg-zinc-800 dark:[&[data-selected]]:bg-white
                     [&[data-selected]]:text-white dark:[&[data-selected]]:text-zinc-800
-                '
-            }
+                ',
+            },
+        )
+        ->when(
+            $orientation === 'vertical',
+            fn ($attrs) => $attrs->classes(
+                match ($variant) {
+                    'line' => '-mr-px border-r-2',
+                    'pills' => '',
+                    'segmented' => '',
+                    default => 'rounded-l-lg border border-r-0',
+                },
+            ),
+            fn ($attrs) => $attrs->classes(
+                match ($variant) {
+                    'line' => '-mb-px border-b-2',
+                    'pills' => '',
+                    'segmented' => '',
+                    default => 'rounded-t-lg border border-b-0',
+                },
+            ),
         )
         ->merge([
             'data-selected' => $selected ? '' : false,
@@ -51,7 +67,6 @@ $name ??= TALLKit::generateId(prefix: 'tab');
             ':tabindex' => 'isSelected(' . Js::from($name) . ') ? 0 : -1',
             ':aria-selected' => 'isSelected(' . Js::from($name) . ')',
             ':data-selected' => 'isSelected(' . Js::from($name) . ')',
-            ':data-active' => 'isSelected(' . Js::from($name) . ')',
             'x-on:click' => 'select(' . Js::from($name) . ')',
         ])
     "
