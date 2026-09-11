@@ -29,17 +29,7 @@
         :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'identifier:')"
         :$size
         :$identifier
-        :value="$identifierValue ?? old(match ($identifier) {
-            'cpf' => 'cpf',
-            'username' => 'username',
-            'both' => 'login',
-            default => 'email',
-        }, request(match ($identifier) {
-            'cpf' => 'cpf',
-            'username' => 'username',
-            'both' => 'login',
-            default => 'email',
-        }))"
+        :value="$identifierValue ?? old($identifier, request($identifier))"
     />
 
     <tk:password

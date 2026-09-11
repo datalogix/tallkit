@@ -1,11 +1,11 @@
 @props([
-    'login' => null,
+    'loginUrl' => null,
     'size' => null,
     'identifier' => null
 ])
 @php
 
-$login ??= route_detect([
+$loginUrl ??= route_detect([
     'login', 'auth.login',
     'signin', 'auth.signin',
     'sign-in', 'auth.sign-in',
@@ -18,8 +18,9 @@ $login ??= route_detect([
     title="Forgot password"
     :subtitle="match ($identifier) {
         'cpf' => 'Enter your CPF and we\'ll send you a password reset link.',
+        'cnpj' => 'Enter your CNPJ and we\'ll send you a password reset link.',
         'username' => 'Enter your username and we\'ll send you a password reset link.',
-        'both' => 'Enter your login and we\'ll send you a password reset link.',
+        'login' => 'Enter your login and we\'ll send you a password reset link.',
         default => 'Enter your email address and we\'ll send you a password reset link.',
     }"
 >
@@ -38,12 +39,12 @@ $login ??= route_detect([
         variant="accent"
     />
 
-    @if ($login)
+    @if ($loginUrl)
         <tk:separator :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'separator:')" />
 
         <tk:link
             :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'login:')"
-            :href="$login"
+            :href="$loginUrl"
             :$size
             label="Back to sign in"
         />

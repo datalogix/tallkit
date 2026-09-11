@@ -1,10 +1,10 @@
 @props([
-    'logout' => null,
+    'logoutUrl' => null,
     'size' => null,
 ])
 @php
 
-$logout ??= route_detect(['logout', 'auth.logout'], default: null);
+$logoutUrl ??= route_detect(['logout', 'auth.logout'], default: null);
 
 @endphp
 <tk:form.section
@@ -22,11 +22,11 @@ $logout ??= route_detect(['logout', 'auth.logout'], default: null);
         variant="accent"
     />
 
-    @if ($logout)
+    @if ($logoutUrl)
         <x-slot:append>
             <tk:link
                 :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'logout:')"
-                :href="$logout"
+                :href="$logoutUrl"
                 :$size
                 label="Log out"
             />

@@ -1,12 +1,13 @@
 @props([
-    'login' => null,
+    'loginUrl' => null,
     'size' => null,
     'identifier' => null,
+    'requiresEmail' => null,
     'oauth' => null,
 ])
 @php
 
-$login ??= route_detect([
+$loginUrl ??= route_detect([
     'login', 'auth.login',
     'signin', 'auth.signin',
     'sign-in', 'auth.sign-in',
@@ -14,7 +15,7 @@ $login ??= route_detect([
 
 @endphp
 <tk:form.section
-    :attributes="$attributes->whereDoesntStartWith(['name:', 'identifier:', 'password:', 'password-confirmation:', 'terms:', 'submit:', 'oauth:', 'login:'])"
+    :attributes="$attributes->whereDoesntStartWith(['name:', 'email:', 'identifier:', 'password:', 'password-confirmation:', 'terms:', 'submit:', 'oauth:', 'login:'])"
     :$size
     title="Create an account"
     subtitle="Enter your details below to create your account:"
@@ -28,6 +29,17 @@ $login ??= route_detect([
         autofocus
         placeholder="Full name"
     />
+
+    @if ($requiresEmail !== false && $identifier !== 'email')
+        <tk:input
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'email:')"
+            :$size
+            name="email"
+            required
+            autocomplete="email"
+            placeholder="Email address"
+        />
+    @endif
 
     {{ $slot }}
 
@@ -76,7 +88,7 @@ $login ??= route_detect([
         :providers="$oauth"
     />
 
-    @if ($login)
+    @if ($loginUrl)
         <tk:separator :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'separator:')" />
 
         <div
@@ -94,7 +106,7 @@ $login ??= route_detect([
             <tk:link
                 :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'login:link:')"
                 :$size
-                :href="$login"
+                :href="$loginUrl"
                 label="Sign in"
             />
         </div>

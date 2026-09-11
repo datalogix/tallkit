@@ -1,18 +1,18 @@
 @props([
-    'forgotPassword' => null,
-    'signUp' => null,
+    'forgotPasswordUrl' => null,
+    'signUpUrl' => null,
     'size' => null,
     'identifier' => null,
     'oauth' => null,
 ])
 @php
 
-$forgotPassword ??= route_detect([
+$forgotPasswordUrl ??= route_detect([
     'forgot-password',
     'auth.forgot-password'
 ], default: null);
 
-$signUp ??= route_detect([
+$signUpUrl ??= route_detect([
     'signup', 'auth.signup',
     'sign-up', 'auth.sign-up',
     'register', 'auth.register',
@@ -40,11 +40,11 @@ $signUp ??= route_detect([
         required
         placeholder
     >
-        @if ($forgotPassword)
+        @if ($forgotPasswordUrl)
             <x-slot:labelAppend>
                 <tk:link
                     :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'forgot-password:')"
-                    :href="$forgotPassword"
+                    :href="$forgotPasswordUrl"
                     :$size
                     label="Forgot your password?"
                 />
@@ -72,7 +72,7 @@ $signUp ??= route_detect([
         :providers="$oauth"
     />
 
-    @if ($signUp)
+    @if ($signUpUrl)
         <tk:separator :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'separator:')" />
 
         <div
@@ -89,7 +89,7 @@ $signUp ??= route_detect([
 
             <tk:link
                 :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'sign-up:link:')"
-                :href="$signUp"
+                :href="$signUpUrl"
                 :$size
                 label="Sign up"
             />
