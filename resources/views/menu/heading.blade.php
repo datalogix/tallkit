@@ -5,7 +5,8 @@
 ])
 <tk:heading
     :attributes="$attributes->classes(
-        'w-full justify-start text-zinc-500 dark:text-zinc-400',
+        'w-full justify-start',
+        TALLKit::textNeutral(variant: 'subtle'),
         TALLKit::padding(size: $size, mode: 'smallest'
     ))"
     :size="TALLKit::adjustSize(size: $size)"

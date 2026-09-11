@@ -16,6 +16,8 @@
 
 [$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
 
+$disabled = (bool) $attributes->get('disabled');
+
 @endphp
 <tk:field.wrapper
     :$name
@@ -65,7 +67,7 @@
                             'wire:model' => $wireModel,
                         ])
                         ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: [
-                            'picker:', 'trigger:', 'popover:', 'list:', 'slot:', 'footer:',
+                            'picker:', 'trigger:', 'placeholder:', 'formatted:', 'popover:', 'list:', 'slot:',
                         ]))
                 }}
             />
@@ -85,7 +87,7 @@
                                 'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                                 'aria-invalid' => $invalid ? 'true' : null,
                                 'data-invalid' => $invalid ? true : null,
-                                'disabled' => (bool) $attributes->get('disabled') ?: null,
+                                'disabled' => $disabled ?: null,
                                 'readonly' => $multiple ?: null,
                             ])
                             ->classes(
@@ -121,32 +123,33 @@
                                 [:where(&)]:w-full
                                 [:where(&)]:justify-start
                                 [:where(&)]:font-normal
-
-                                [:where(&)]:text-zinc-700
-                                hover:[:where(&)]:text-zinc-700
-                                dark:[:where(&)]:text-zinc-300
-                                dark:[:where(&)]:hover:text-zinc-300
                             ',
+                            TALLKit::textNeutral(prefix: '[:where(&)]:'),
+                            TALLKit::textNeutral(prefix: 'hover:[:where(&)]:'),
                             TALLKit::height(size: $size),
                             TALLKit::paddingInline(size: $size, mode: 'large'),
                             TALLKit::fontSize(size: $size, mode: 'large'),
                         )
-                        ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: [
-                            'picker:', 'popover:', 'list:', 'slot:', 'footer:',
-                        ]))
                     "
                     variant="none"
-                    :disabled="(bool) $attributes->get('disabled')"
+                    :$disabled
                     :$size
                 >
                     <span
                         x-show="!formatted()"
                         {{
                             TALLKit::attributesAfter(attributes: $attributes, prefix: 'placeholder:')
-                                ->classes('text-zinc-400 dark:text-zinc-400')
+                                ->classes(TALLKit::textNeutral(variant: 'muted'))
                         }}
                     >{{ __(is_string($placeholder) ? $placeholder : 'Select time') }}</span>
-                    <span x-show="formatted()" x-text="formatted()"></span>
+                    <span
+                        x-show="formatted()"
+                        x-text="formatted()"
+                        {{
+                            TALLKit::attributesAfter(attributes: $attributes, prefix: 'formatted:')
+                                ->classes('overflow-hidden text-ellipsis')
+                        }}
+                    ></span>
                 </tk:button>
             @endif
         </tk:field.control>

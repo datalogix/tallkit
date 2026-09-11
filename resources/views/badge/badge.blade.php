@@ -33,7 +33,7 @@
             fn ($c) => $c->classes(match ($color) {
                 'accent' => 'text-[var(--color-accent-foreground)] bg-[var(--color-accent)] [&:is(button)]:hover:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_15%)]',
                 'inverse' => 'text-white dark:text-zinc-700 bg-zinc-700 dark:bg-white [&:is(button)]:hover:bg-zinc-800 dark:[&:is(button)]:hover:bg-zinc-300',
-                default => TALLKit::solidBackground(color: $color) ?? 'text-white dark:text-white bg-zinc-500 dark:bg-zinc-600 [&:is(button)]:hover:bg-zinc-600 dark:[&:is(button)]:hover:bg-zinc-500',
+                default => TALLKit::solidBackground(color: $color) ?? 'text-white bg-zinc-500 dark:bg-zinc-600 [&:is(button)]:hover:bg-zinc-600 dark:[&:is(button)]:hover:bg-zinc-500',
             }),
             fn ($c) => $c->classes(match ($color) {
                 'accent' => '
@@ -44,9 +44,8 @@
                     dark:[&:is(button)]:hover:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_50%)]
                 ',
                 'inverse' => 'text-white dark:text-zinc-700 bg-zinc-700/90 dark:bg-white/90 [&:is(button)]:hover:bg-zinc-500 dark:[&:is(button)]:hover:bg-zinc-300',
-                default => TALLKit::mutedBackground(color: $color, as: 'button') === null
-                    ? 'text-zinc-700 dark:text-zinc-200 bg-zinc-400/20 dark:bg-zinc-400/40 [&:is(button)]:hover:bg-zinc-400/30 dark:[&:is(button)]:hover:bg-zinc-400/50'
-                    : TALLKit::mutedText(color: $color).' '.TALLKit::mutedBackground(color: $color, as: 'button'),
+                default => (TALLKit::mutedText(color: $color) ?? TALLKit::mutedText(color: 'zinc'))
+                    .' '.(TALLKit::mutedBackground(color: $color, as: 'button') ?? TALLKit::mutedBackground(color: 'zinc', as: 'button')),
             })
         )
     "

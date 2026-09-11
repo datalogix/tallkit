@@ -31,6 +31,7 @@
                 <tk:text
                     :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'item:')"
                     :label="$item"
+                    as="span"
                 />
             </li>
         @endforeach

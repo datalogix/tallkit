@@ -85,7 +85,7 @@ $livewire ??= class_exists(\Livewire\Livewire::class);
     {{ $slot }}
     @foreach ($components as $c => $component) <x-dynamic-component :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'components:')" :$component /> @endforeach
     @if ($toast && $livewire) @persist('toast') <tk:toast :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'toast:')" /> @endpersist @endif
-    @if ($toast && !$livewire) <tk:toast :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'toast:')" /> @endif
+    @if ($toast && ! $livewire) <tk:toast :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'toast:')" /> @endif
     @foreach ($scripts as $script) <script src="{{ $script }}"></script> @endforeach
     @if ($stackScripts) @stack($stackScripts) @endif
 </body>

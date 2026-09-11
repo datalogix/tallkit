@@ -14,10 +14,8 @@ $descriptionId = "{$id}-description";
 <fieldset {{
     $attributes
         ->classes('
-            [&[disabled]_[data-tallkit-label]]:opacity-50
-            [&[disabled]_[data-tallkit-legend]]:opacity-50
-            dark:[&[disabled]_[data-tallkit-label]]:opacity-40
-            dark:[&[disabled]_[data-tallkit-legend]]:opacity-40
+            [&[disabled]_[data-tallkit-label]]:opacity-disabled
+            [&[disabled]_[data-tallkit-legend]]:opacity-disabled
             [&_[data-tallkit-field]]:mb-2
             [&>[data-tallkit-field]:has(>[data-tallkit-text])]:mb-4
             [&>[data-tallkit-field]:last-child]:mb-0

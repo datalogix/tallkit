@@ -2,18 +2,16 @@
 @source inline('bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{500,600,700}');
 @source inline('dark:bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{400,500,600,700}');
 
-/* interactiveBackground() — hover/active states */
-@source inline('hover:bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-600');
-@source inline('[&[data-active]]:bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-600');
-@source inline('dark:{hover:,[&[data-active]]:}bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{300,400,500}');
-
-/* checkedBackground() — checkbox/radio (checked:) and toggle (has-[input:checked]:) */
-@source inline('{checked:,has-[input:checked]:}bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-600');
-@source inline('dark:{checked:,has-[input:checked]:}bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-500');
-
-/* solidBackground() — badge solid */
-@source inline('[&:is(button)]:hover:bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-600');
-@source inline('dark:[&:is(button)]:hover:bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-500');
+/*
+ * interactiveBackground() (hover:/[&[data-active]]:), checkedBackground()
+ * (checked:/has-[input:checked]:), and solidBackground()'s [&:is(button)]:hover:
+ * fragment — all five states share the same shade 600 light / up to {300,400,500}
+ * dark (checkedBackground/solidBackground always resolve to 500 dark; the wider
+ * {300,400,500} is interactiveBackground's amber/yellow special-casing), so
+ * they're safelisted together instead of as three separate blocks.
+ */
+@source inline('{hover:,[&[data-active]]:,checked:,has-[input:checked]:,[&:is(button)]:hover:}bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-600');
+@source inline('dark:{hover:,[&[data-active]]:,checked:,has-[input:checked]:,[&:is(button)]:hover:}bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{300,400,500}');
 
 /* mutedBackground() — status ([&:is(a)]) and badge muted ([&:is(button)]), shade fixed at 400 */
 @source inline('bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-400/20');
@@ -25,16 +23,50 @@
 @source inline('bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-500/10');
 @source inline('dark:bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-300/10');
 
-/* text()/textStrong()/mutedText()/uploadText() — plain text color */
-@source inline('text-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{600,700}');
-@source inline('dark:text-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{200,300,400,500,700}');
+/*
+ * text()/textStrong()/mutedText()/uploadText() — plain text color, optionally
+ * prefixed with data-active: (menu item danger variant) or [:where(&)]: (error
+ * message). All three forms share shade 600 light / {400,500} dark (the pair
+ * text() itself can produce); 700 light and 200/300/700 dark are the extra
+ * shades used only by the un-prefixed textStrong()/mutedText()/uploadText().
+ */
+@source inline('{,data-active:,[:where(&)]:}text-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-600');
+@source inline('text-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-700');
+@source inline('dark:{,data-active:,[:where(&)]:}text-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{400,500}');
+@source inline('dark:text-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{200,300,700}');
+
+/*
+ * textNeutral() — fixed zinc/white shades, independent of the 21-color loop above.
+ * Covers the no-prefix and [:where(&)]: forms (heading, text, label, button, table,
+ * avatar, kbd, pagination, calendar, time-picker, toast, date-picker, menu, nav, upload, ...)
+ * plus the single-variant ('strong') prefixed forms used by menu/nav active & current states
+ * and the table footer heading, and the ('muted') *:[data-tallkit-icon]: prefix used by
+ * the menu item icon, and the hover:[:where(&)]: prefix used by the date-picker/
+ * time-picker trigger button.
+ */
+@source inline('{,[:where(&)]:,hover:[:where(&)]:}text-zinc-{400,500,700,800,900}');
+@source inline('dark:{,[:where(&)]:,hover:[:where(&)]:}text-white{,/80}');
+@source inline('dark:{,[:where(&)]:}text-zinc-{400,500}');
+@source inline('{data-active:,data-current:,[&:is(a,button)]:hover:,*:}text-zinc-800');
+@source inline('dark:{data-active:,data-current:,[&:is(a,button)]:hover:,*:}text-white');
+@source inline('*:[data-tallkit-icon]:text-zinc-400');
+@source inline('dark:*:[data-tallkit-icon]:text-zinc-500');
+
+/*
+ * backgroundNeutral() — fixed zinc/white overlay shades for subtle surfaces
+ * (kbd, avatar filled, field group side, tabs segmented, separator, nav
+ * group line, nav indicator/item hover & current).
+ */
+@source inline('{,[:where(&)]:,[&:is(a,button)]:hover:,data-current:}bg-zinc-800/{5,10,20}');
+@source inline('dark:{,[:where(&)]:,[&:is(a,button)]:hover:,data-current:}bg-white/{10,20}');
 
 /* uploadRing()/uploadBorder() */
-@source inline('{ring,border}-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-700');
-@source inline('dark:{ring,border}-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-300');
+@source inline('{ring,border}-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{300,400,500,600,700}');
+@source inline('dark:{ring,border}-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{300,400,500,600,700}');
 
-/* pastelBackground() — avatar */
+/* pastelBackground() — avatar (dark:text-*-200 reuses the text()/mutedText() safelist above) */
 @source inline('bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-200');
+@source inline('dark:bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-800/40');
 @source inline('text-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-800');
 
 /* controlFocusRing()/controlFocusRingNested() — textarea/select/listbox focus ring (important) */

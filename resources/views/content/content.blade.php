@@ -26,7 +26,7 @@ $hasContent = $slot->hasActualContent();
             @php($iconAttrs = TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:'))
             <div {{
                 $iconAttrs->when(
-                    !$iconAttrs->has('aria-label') && !$iconAttrs->has('aria-labelledby'),
+                    ! $iconAttrs->has('aria-label') && ! $iconAttrs->has('aria-labelledby'),
                     fn ($attrs) => $attrs->merge(['aria-hidden' => 'true'])
                 )
             }}>
@@ -40,7 +40,15 @@ $hasContent = $slot->hasActualContent();
             />
         @endif
 
-        <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')->classes('flex-1', TALLKit::spaceBlock(size: $size)) }}>
+        <div
+            {{
+                TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')
+                    ->classes(
+                        'flex-1',
+                        TALLKit::spaceBlock(size: $size)
+                    )
+            }}
+        >
             {{ $prepend }}
 
             <tk:heading

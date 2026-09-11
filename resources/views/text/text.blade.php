@@ -34,9 +34,9 @@
         TALLKit::iconSize(size: $size, mode: $mode),
         match ($variant) {
             'accent' => 'text-[var(--color-accent-content)]',
-            'strong' => '[:where(&)]:text-zinc-800 dark:[:where(&)]:text-white',
-            'subtle' => '[:where(&)]:text-zinc-400 dark:[:where(&)]:text-white/50',
-            default => TALLKit::text(color: $variant) ?? '[:where(&)]:text-zinc-700 dark:[:where(&)]:text-white/80',
+            'strong' => TALLKit::textNeutral(variant: 'strong', prefix: '[:where(&)]:'),
+            'subtle' => TALLKit::textNeutral(variant: 'subtle', prefix: '[:where(&)]:'),
+            default => TALLKit::text(color: $variant) ?? TALLKit::textNeutral(prefix: '[:where(&)]:'),
         }
     )"
 >

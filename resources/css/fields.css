@@ -45,57 +45,72 @@
     dark:text-zinc-300
 
     placeholder-zinc-400
-    dark:placeholder-zinc-400
+    dark:placeholder-zinc-500
 
-    disabled:cursor-not-allowed disabled:resize-none;
+    disabled:cursor-not-allowed
+    disabled:resize-none
+  ;
 }
 
 @utility tk-control-transition {
   @apply
     transition-colors transition-shadow transition-transform
-    duration-200 ease-out motion-reduce:transition-none;
+    duration-200 ease-out motion-reduce:transition-none
+  ;
 }
 
 @utility tk-control-surface {
   @apply
     bg-white dark:bg-white/10
     border border-zinc-300 dark:border-white/10
-    shadow-xs;
+    shadow-xs
+  ;
 }
 
 @utility tk-control-invalid-border {
   @apply
     [&[data-invalid]:not(:focus-visible)]:border-red-500
-    dark:[&[data-invalid]:not(:focus-visible)]:border-red-400;
+    dark:[&[data-invalid]:not(:focus-visible)]:border-red-400
+  ;
 }
 
 @utility tk-control-invalid-border-nested {
   @apply
     has-[[data-tallkit-control][data-invalid]:not(:focus-visible)]:border-red-500
-    dark:has-[[data-tallkit-control][data-invalid]:not(:focus-visible)]:border-red-400;
+    dark:has-[[data-tallkit-control][data-invalid]:not(:focus-visible)]:border-red-400
+  ;
 }
 
 @utility tk-control-disabled {
   @apply
-    disabled:border-zinc-200 dark:disabled:border-white/5
-    disabled:[&[data-invalid]:not(:focus-visible)]:border-red-500
-    dark:disabled:[&[data-invalid]:not(:focus-visible)]:border-red-400
-    disabled:shadow-none
-    [&[data-invalid]]:disabled:shadow-none
-    disabled:opacity-50 dark:disabled:opacity-40;
+    [&:is(:disabled,[disabled])]:border-zinc-200 dark:[&:is(:disabled,[disabled])]:border-white/5
+    [&:is(:disabled,[disabled])[data-invalid]:not(:focus-visible)]:border-red-500
+    dark:[&:is(:disabled,[disabled])[data-invalid]:not(:focus-visible)]:border-red-400
+    [&:is(:disabled,[disabled])]:shadow-none
+    [&[data-invalid]:is(:disabled,[disabled])]:shadow-none
+    [&:is(:disabled,[disabled])]:opacity-disabled
+    [&:is(:disabled,[disabled])]:cursor-not-allowed
+  ;
 }
 
 @utility tk-control-disabled-nested {
   @apply
-    has-[[data-tallkit-control]:disabled]:border-zinc-200
-    dark:has-[[data-tallkit-control]:disabled]:border-white/5
-    has-[[data-tallkit-control][data-invalid]:disabled:not(:focus-visible)]:border-red-500
-    dark:has-[[data-tallkit-control][data-invalid]:disabled:not(:focus-visible)]:border-red-400
-    has-[[data-tallkit-control]:disabled]:shadow-none
-    has-[[data-tallkit-control][data-invalid]:disabled]:shadow-none
-    has-[[data-tallkit-control]:disabled]:opacity-50
-    dark:has-[[data-tallkit-control]:disabled]:opacity-40
-    has-[[data-tallkit-control]:disabled]:cursor-not-allowed;
+    has-[[data-tallkit-control]:is(:disabled,[disabled])]:border-zinc-200
+    dark:has-[[data-tallkit-control]:is(:disabled,[disabled])]:border-white/5
+    has-[[data-tallkit-control][data-invalid]:is(:disabled,[disabled]):not(:focus-visible)]:border-red-500
+    dark:has-[[data-tallkit-control][data-invalid]:is(:disabled,[disabled]):not(:focus-visible)]:border-red-400
+    has-[[data-tallkit-control]:is(:disabled,[disabled])]:shadow-none
+    has-[[data-tallkit-control][data-invalid]:is(:disabled,[disabled])]:shadow-none
+    has-[[data-tallkit-control]:is(:disabled,[disabled])]:opacity-disabled
+    has-[[data-tallkit-control]:is(:disabled,[disabled])]:cursor-not-allowed
+  ;
+}
+
+@utility tk-control-invalid-border-self-nested-focus {
+  @apply
+    [&[data-invalid]:not(:has([data-tallkit-control]:focus-visible))]:border-red-500
+    dark:[&[data-invalid]:not(:has([data-tallkit-control]:focus-visible))]:border-red-400
+  ;
 }
 
 @utility tk-control-focus-ring {
@@ -103,7 +118,8 @@
     focus-visible:outline-2 focus-visible:outline-blue-700
     dark:focus-visible:outline-blue-300 focus-visible:outline-offset-0
     focus-visible:ring-2 focus-visible:ring-blue-700/20
-    dark:focus-visible:ring-blue-300/20;
+    dark:focus-visible:ring-blue-300/20
+  ;
 }
 
 @utility tk-control-focus-ring-nested {
@@ -114,7 +130,8 @@
     has-[[data-tallkit-control]:focus-visible]:outline-offset-0
     has-[[data-tallkit-control]:focus-visible]:ring-2
     has-[[data-tallkit-control]:focus-visible]:ring-blue-700/20
-    dark:has-[[data-tallkit-control]:focus-visible]:ring-blue-300/20;
+    dark:has-[[data-tallkit-control]:focus-visible]:ring-blue-300/20
+  ;
 }
 
 @utility tk-control-focus-ring-self {
@@ -125,13 +142,15 @@
     has-[input:focus-visible]:outline-offset-0
     has-[input:focus-visible]:ring-2
     has-[input:focus-visible]:ring-blue-700/20
-    dark:has-[input:focus-visible]:ring-blue-300/20;
+    dark:has-[input:focus-visible]:ring-blue-300/20
+  ;
 }
 
 @utility tk-control-invalid-ring-self {
   @apply
     has-[input[data-invalid]]:ring-red-500
-    dark:has-[input[data-invalid]]:ring-red-400;
+    dark:has-[input[data-invalid]]:ring-red-400
+  ;
 }
 
 @utility tk-control-focus-ring-expanded {
@@ -142,7 +161,8 @@
     [&:is(:focus-visible,[aria-expanded=true])]:outline-offset-0
     [&:is(:focus-visible,[aria-expanded=true])]:ring-2
     [&:is(:focus-visible,[aria-expanded=true])]:ring-blue-700/20
-    dark:[&:is(:focus-visible,[aria-expanded=true])]:ring-blue-300/20;
+    dark:[&:is(:focus-visible,[aria-expanded=true])]:ring-blue-300/20
+  ;
 }
 
 @utility tk-control-focus-ring-expanded-nested {
@@ -153,7 +173,8 @@
     has-[[data-tallkit-control]:is(:focus-visible,[aria-expanded=true])]:outline-offset-0
     has-[[data-tallkit-control]:is(:focus-visible,[aria-expanded=true])]:ring-2
     has-[[data-tallkit-control]:is(:focus-visible,[aria-expanded=true])]:ring-blue-700/20
-    dark:has-[[data-tallkit-control]:is(:focus-visible,[aria-expanded=true])]:ring-blue-300/20;
+    dark:has-[[data-tallkit-control]:is(:focus-visible,[aria-expanded=true])]:ring-blue-300/20
+  ;
 }
 
 .tk-control-wrapper {
@@ -163,7 +184,8 @@
     tk-control-disabled-nested
     tk-control-invalid-border-nested
     tk-control-focus-ring-nested
-    [&_[data-tallkit-control]]:outline-none;
+    [&_[data-tallkit-control]]:outline-none
+  ;
 }
 
 .tk-control-standalone {
@@ -171,7 +193,8 @@
     tk-control-surface
     tk-control-disabled
     tk-control-invalid-border
-    tk-control-focus-ring;
+    tk-control-focus-ring
+  ;
 }
 
 .tk-control-wrapper-expanded {
@@ -181,7 +204,8 @@
     tk-control-disabled-nested
     tk-control-invalid-border-nested
     tk-control-focus-ring-expanded-nested
-    [&_[data-tallkit-control]]:outline-none;
+    [&_[data-tallkit-control]]:outline-none
+  ;
 }
 
 .tk-control-standalone-expanded {
@@ -189,7 +213,8 @@
     tk-control-surface
     tk-control-disabled
     tk-control-invalid-border
-    tk-control-focus-ring-expanded;
+    tk-control-focus-ring-expanded
+  ;
 }
 
 .tk-control-wrapper-no-disabled {
@@ -198,7 +223,8 @@
     tk-control-surface
     tk-control-invalid-border-nested
     tk-control-focus-ring-nested
-    [&_[data-tallkit-control]]:outline-none;
+    [&_[data-tallkit-control]]:outline-none
+  ;
 }
 
 .tk-field-group {
@@ -247,13 +273,15 @@
     /* "Weld" borders for sub-children of field controls (time/date picker wrapper divs, etc.) */
     [&>*:not(:first-child):not(:last-child):not(:only-child)_[data-tallkit-field-control]:not([popover]_*)]:rounded-none
     [&>*:first-child:not(:last-child)_[data-tallkit-field-control]:not([popover]_*)]:rounded-e-none
-    [&>*:last-child:not(:first-child)_[data-tallkit-field-control]:not([popover]_*)]:rounded-s-none;
+    [&>*:last-child:not(:first-child)_[data-tallkit-field-control]:not([popover]_*)]:rounded-s-none
+  ;
 }
 
 .tk-control-standalone-no-disabled {
   @apply
     tk-control-surface
     tk-control-invalid-border
-    tk-control-focus-ring;
+    tk-control-focus-ring
+  ;
 }
 

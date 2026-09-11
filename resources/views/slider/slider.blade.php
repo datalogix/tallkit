@@ -88,8 +88,6 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
                                 text-zinc-700
                                 dark:text-zinc-300
 
-                                disabled:cursor-not-allowed
-
                                 border
                                 border-zinc-300
                                 dark:border-white/10
@@ -185,7 +183,10 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
                 >
                     @foreach (collect($ticks) as $tick)
                         <tk:slider.tick
-                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'tick:')->merge(is_array($tick) ? $tick : ['label' => $tick], false)"
+                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'tick:')
+                                ->merge(is_array($tick) ? $tick : ['label' => $tick], false)
+                            "
+                            :$size
                         />
                     @endforeach
 

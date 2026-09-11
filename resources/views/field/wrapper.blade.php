@@ -6,8 +6,8 @@
 ])
 @php
 
-$hasPrefix = !$inline && ($prefix || TALLKit::attributesAfter(attributes: $attributes, prefix: 'prefix:')->isNotEmpty());
-$hasSuffix = !$inline && ($suffix || TALLKit::attributesAfter(attributes: $attributes, prefix: 'suffix:')->isNotEmpty());
+$hasPrefix = ! $inline && ($prefix || TALLKit::attributesAfter(attributes: $attributes, prefix: 'prefix:')->isNotEmpty());
+$hasSuffix = ! $inline && ($suffix || TALLKit::attributesAfter(attributes: $attributes, prefix: 'suffix:')->isNotEmpty());
 
 @endphp
 @if ($label || $description || $help || $hasPrefix || $hasSuffix)

@@ -36,7 +36,8 @@
         >
             @if ($line !== false)
                 <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'line:')->classes(
-                    'absolute inset-y-[3px] w-px bg-zinc-200 dark:bg-white/20 start-0',
+                    'absolute inset-y-[3px] w-px start-0',
+                    TALLKit::backgroundNeutral(variant: 'strong'),
                     TALLKit::generateClassBySize(size: $size, name: 'ms', values: ['4', '4.5', '5', '5.5', '6', '6.5', '7']),
                 ) }}></div>
             @endif
@@ -47,7 +48,7 @@
 @elseif ($heading)
     <div {{ $attributes->whereDoesntStartWith(['heading:', 'container:'])->classes('block space-y-[2px]') }}>
         <tk:heading
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'heading:')->classes('leading-none text-zinc-500 dark:text-zinc-400 p-2.5')"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'heading:')->classes('leading-none p-2.5', TALLKit::textNeutral(variant: 'subtle'))"
             :size="TALLKit::adjustSize(size: $size)"
             :label="$heading"
         />

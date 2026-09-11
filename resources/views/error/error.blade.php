@@ -20,7 +20,8 @@ $message ??= TALLKit::getError(name: $name, slot: $slot, bag: $bag);
                 ->dataKey('error')
                 ->whereDoesntStartWith(['icon:'])
                 ->classes(
-                    'flex items-center text-red-500 dark:text-red-400',
+                    'flex items-center',
+                    TALLKit::text(color: 'red', prefix: '[:where(&)]:'),
                     TALLKit::fontSize(size: $size),
                     TALLKit::iconSize(size: $size),
                     TALLKit::gap(size: $size),

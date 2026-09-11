@@ -7,6 +7,8 @@
     title="Confirm password"
     subtitle="This is a secure area of the application. Please confirm your password before continuing."
 >
+    {{ $slot }}
+
     <tk:password
         :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'password:')"
         :$size

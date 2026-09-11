@@ -7,7 +7,7 @@
 $vertical = (bool) $vertical;
 
 $contentClasses = TALLKit::classes(
-    'bg-zinc-800/20 dark:bg-white/20',
+    TALLKit::backgroundNeutral(variant: 'strong'),
     'border-0 [print-color-adjust:exact]',
     $vertical ? 'self-stretch self-center w-px h-full' : 'h-px w-full',
 );
@@ -24,7 +24,7 @@ $contentClasses = TALLKit::classes(
 
         <span {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'content:')->classes(
             'shrink mx-6 whitespace-nowrap',
-            'text-zinc-500 dark:text-zinc-300',
+            TALLKit::textNeutral(variant: 'subtle'),
             TALLKit::fontSize(weight: true),
         ) }}>
             {{ $slot->isEmpty() ? __($text) : $slot }}

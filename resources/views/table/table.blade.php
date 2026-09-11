@@ -99,10 +99,10 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                     '
                         relative
                         [:where(&)]:min-w-full
-                        text-zinc-800 dark:text-white
                         divide-y divide-zinc-800/10 dark:divide-white/20
                         whitespace-nowrap
                     ',
+                    TALLKit::textNeutral(variant: 'strong'),
                 )
         }}>
             {{ $slot }}

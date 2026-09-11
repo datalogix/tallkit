@@ -75,9 +75,9 @@ $digitIndex = 0;
                         @endfor
                     </tk:otp.group>
 
-                    @if (! $loop->last)
+                    @unless ($loop->last)
                         <tk:otp.separator />
-                    @endif
+                    @endunless
                 @endforeach
             @else
                 @for ($i = 0; $i < strlen($format); $i++)

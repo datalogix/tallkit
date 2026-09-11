@@ -42,19 +42,25 @@
     :attributes="$attributes->classes(
         '
             w-full focus:outline-hidden
-            [[disabled]_&]:opacity-50 [&[disabled]]:opacity-50
-            dark:[[disabled]_&]:opacity-40 dark:[&[disabled]]:opacity-40
+            [[disabled]_&]:opacity-disabled [&[disabled]]:opacity-disabled
 
-            *:[data-tallkit-icon]:text-zinc-400
-            dark:*:[data-tallkit-icon]:text-white/60
             [&[data-active]_[data-tallkit-icon]]:text-current
         ',
+        TALLKit::textNeutral(variant: 'muted', prefix: '*:[data-tallkit-icon]:'),
         TALLKit::roundedSize(size: $size),
         TALLKit::paddingBlock(size: $size, mode: 'large'),
         TALLKit::paddingInline(size: $size, mode: 'largest'),
         match ($variant) {
-            'danger' => 'text-zinc-700 data-active:text-red-500 data-active:bg-red-50 dark:text-white/80 dark:data-active:bg-red-400/20 dark:data-active:text-red-200',
-            default => 'text-zinc-700 dark:text-white/80 data-active:text-zinc-800 dark:data-active:text-white data-active:bg-zinc-100 dark:data-active:bg-white/10',
+            'danger' => TALLKit::classes(
+                TALLKit::textNeutral(),
+                TALLKit::text(color: 'red', prefix: 'data-active:'),
+                'data-active:bg-red-50 dark:data-active:bg-red-400/20',
+            ),
+            default => TALLKit::classes(
+                TALLKit::textNeutral(),
+                TALLKit::textNeutral(variant: 'strong', prefix: 'data-active:'),
+                'data-active:bg-zinc-100 dark:data-active:bg-white/10',
+            ),
         },
     )->merge(['data-keep-open' => $keepOpen])"
 >

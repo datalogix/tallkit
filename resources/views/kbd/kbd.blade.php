@@ -9,16 +9,14 @@
         as="kbd"
         :attributes="$attributes->classes(
             TALLKit::fontSize(size: $size, weight: true),
-            '
-                pointer-events-none rounded
-                text-zinc-500 dark:text-zinc-400
-            ',
+            'pointer-events-none rounded',
+            TALLKit::textNeutral(variant: 'subtle'),
             match ($variant) {
                 'text' => 'bg-transparent',
                 default => TALLKit::classes(
                     TALLKit::paddingInline(size: TALLKit::adjustSize(size: $size), mode: 'small'),
                     TALLKit::paddingBlock(size: TALLKit::adjustSize(size: $size), mode: 'smallest'),
-                    'bg-zinc-800/10 dark:bg-white/10',
+                    TALLKit::backgroundNeutral(),
                 ),
             },
         )"

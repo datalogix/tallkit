@@ -30,7 +30,10 @@ trait InteractsWithColor
         return $this->colorClass($color, function ($color) use ($expanded) {
             $selector = $expanded ? '[&:is(:focus-visible,[aria-expanded=true])]:' : 'focus-visible:';
 
-            return "{$selector}outline-{$color}-700! dark:{$selector}outline-{$color}-300! {$selector}ring-{$color}-700/20! dark:{$selector}ring-{$color}-300/20!";
+            return "
+                {$selector}outline-{$color}-700! dark:{$selector}outline-{$color}-300!
+                {$selector}ring-{$color}-700/20! dark:{$selector}ring-{$color}-300/20!
+            ";
         });
     }
 
@@ -41,7 +44,10 @@ trait InteractsWithColor
                 ? 'has-[[data-tallkit-control]:is(:focus-visible,[aria-expanded=true])]:'
                 : 'has-[[data-tallkit-control]:focus-visible]:';
 
-            return "{$selector}outline-{$color}-700! dark:{$selector}outline-{$color}-300! {$selector}ring-{$color}-700/20! dark:{$selector}ring-{$color}-300/20!";
+            return "
+                {$selector}outline-{$color}-700! dark:{$selector}outline-{$color}-300!
+                {$selector}ring-{$color}-700/20! dark:{$selector}ring-{$color}-300/20!
+            ";
         });
     }
 
@@ -84,12 +90,23 @@ trait InteractsWithColor
         return $this->colorClass($color, fn ($color) => "bg-{$color}-500 dark:bg-{$color}-600");
     }
 
-    public function text(?string $color): ?string
+    public function border(?string $color): ?string
     {
-        return $this->colorClass($color, function ($color) {
-            $dark = in_array($color, ['amber', 'yellow', 'lime', 'green'], true) ? '500' : '400';
+        return $this->colorClass($color, fn ($color) => "border-{$color}-600 dark:border-{$color}-700");
+    }
 
-            return "text-{$color}-600 dark:text-{$color}-{$dark}";
+    public function borderActive(?string $color): ?string
+    {
+        return $this->colorClass($color, fn ($color) => "border-{$color}-500 dark:border-{$color}-600");
+    }
+
+    public function text(?string $color, ?string $prefix = null): ?string
+    {
+        return $this->colorClass($color, function ($color) use ($prefix) {
+            $dark = in_array($color, ['amber', 'yellow', 'lime', 'green'], true) ? '500' : '400';
+            $value = "text-{$color}-600 dark:text-{$color}-{$dark}";
+
+            return $prefix ? str_replace('text-', "{$prefix}text-", $value) : $value;
         });
     }
 
@@ -105,12 +122,40 @@ trait InteractsWithColor
 
     public function mutedBackground(?string $color, string $as = 'a'): ?string
     {
-        return $this->colorClass($color, fn ($color) => "bg-{$color}-400/20 dark:bg-{$color}-400/40 [&:is({$as})]:hover:bg-{$color}-400/30 dark:[&:is({$as})]:hover:bg-{$color}-400/50");
+        return $this->colorClass($color, fn ($color) => "
+            bg-{$color}-400/20 dark:bg-{$color}-400/40
+            [&:is({$as})]:hover:bg-{$color}-400/30
+            dark:[&:is({$as})]:hover:bg-{$color}-400/50
+        ");
     }
 
     public function mutedText(?string $color): ?string
     {
         return $this->colorClass($color, fn ($color) => "text-{$color}-700 dark:text-{$color}-200");
+    }
+
+    public function textNeutral(?string $variant = null, ?string $prefix = null): string
+    {
+        $value = match ($variant) {
+            'emphasis' => 'text-zinc-900 dark:text-white',
+            'strong' => 'text-zinc-800 dark:text-white',
+            'subtle' => 'text-zinc-500 dark:text-zinc-400',
+            'muted' => 'text-zinc-400 dark:text-zinc-500',
+            default => 'text-zinc-700 dark:text-white/80',
+        };
+
+        return $prefix ? str_replace('text-', "{$prefix}text-", $value) : $value;
+    }
+
+    public function backgroundNeutral(?string $variant = null, ?string $prefix = null): string
+    {
+        $value = match ($variant) {
+            'faint' => 'bg-zinc-800/5 dark:bg-white/10',
+            'strong' => 'bg-zinc-800/20 dark:bg-white/20',
+            default => 'bg-zinc-800/10 dark:bg-white/10',
+        };
+
+        return $prefix ? str_replace('bg-', "{$prefix}bg-", $value) : $value;
     }
 
     public function interactiveBackground(?string $color): ?string
@@ -136,12 +181,14 @@ trait InteractsWithColor
 
     public function solidBackground(?string $color): ?string
     {
-        return $this->colorClass($color, fn ($color) => "text-white dark:text-white bg-{$color}-500 dark:bg-{$color}-600 [&:is(button)]:hover:bg-{$color}-600 dark:[&:is(button)]:hover:bg-{$color}-500");
+        return $this->colorClass($color, fn ($color) => ($this->backgroundActive(color: $color) ?? '').' '."
+            text-white [&:is(button)]:hover:bg-{$color}-600 dark:[&:is(button)]:hover:bg-{$color}-500
+        ");
     }
 
     public function pastelBackground(?string $color): ?string
     {
-        return $this->colorClass($color, fn ($color) => "bg-{$color}-200 text-{$color}-800");
+        return $this->colorClass($color, fn ($color) => "bg-{$color}-200 dark:bg-{$color}-800/40 text-{$color}-800 dark:text-{$color}-200");
     }
 
     public function sliderFocusRing(?string $color): ?string

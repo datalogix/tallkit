@@ -18,9 +18,9 @@
                 'separator:', 'content:',
             ])
             ->classes([
-                '[&:has([data-tallkit-section-content]>:is([data-tallkit-card],[data-tallkit-table-container]))>[data-tallkit-separator]]:hidden' => !$separator,
+                '[&:has([data-tallkit-section-content]>:is([data-tallkit-card],[data-tallkit-table-container]))>[data-tallkit-separator]]:hidden' => ! $separator,
                 TALLKit::fontSize(size: $size),
-                TALLKit::generateClassBySize(size: $size, name: 'space-y', values: [3, 3.5, 4, 4.5, 5, 5.5, 6]),
+                TALLKit::generateClassBySize(size: $size, name: 'space-y', values: [4, 5, 6, 7, 8, 9, 10]),
             ])
     }}
 >
@@ -62,7 +62,7 @@
             {{
                 TALLKit::attributesAfter(attributes: $attributes, prefix: 'content:')
                     ->dataKey('section-content')
-                    ->classes(TALLKit::generateClassBySize(size: $size, name: 'space-y', values: [3, 3.5, 4, 4.5, 5, 5.5, 6]))
+                    ->classes(TALLKit::generateClassBySize(size: $size, name: 'space-y', values: [4, 5, 6, 7, 8, 9, 10]))
             }}
         >
             {{ __($content) }}

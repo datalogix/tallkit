@@ -12,15 +12,15 @@
 
 $variant = $variant ?: 'outline';
 $hasContent = $slot->hasActualContent() || $attributes->has('label');
-$square ??= !$circle && !($hasContent || $attributes->has('badge'));
-$isTypeSubmitAndNotDisabledOnRender = $type === 'submit' && !$attributes->has('disabled');
+$square ??= ! $circle && !($hasContent || $attributes->has('badge'));
+$isTypeSubmitAndNotDisabledOnRender = $type === 'submit' && ! $attributes->has('disabled');
 $isJsMethod = Str::startsWith($attributes->whereStartsWith('wire:click')->first() ?? '', '$js.');
-$loading ??= $isTypeSubmitAndNotDisabledOnRender || $attributes->whereStartsWith('wire:click')->isNotEmpty() && !$isJsMethod;
+$loading ??= $isTypeSubmitAndNotDisabledOnRender || $attributes->whereStartsWith('wire:click')->isNotEmpty() && ! $isJsMethod;
 
-if ($loading && $type !== 'submit' && !$isJsMethod) {
+if ($loading && $type !== 'submit' && ! $isJsMethod) {
     $attributes = $attributes->merge(['wire:loading.attr' => TALLKit::dataKey(name: 'button-loading')]);
 
-    if (!$attributes->has('wire:target') && $target = $attributes->whereStartsWith('wire:click')->first()) {
+    if (! $attributes->has('wire:target') && $target = $attributes->whereStartsWith('wire:click')->first()) {
         $attributes = $attributes->merge(['wire:target' => $target], escape: false);
     }
 } else {
@@ -42,7 +42,7 @@ if ($loading && $type !== 'submit' && !$isJsMethod) {
             '
                 [:where(&)]:relative [:where(&)]:justify-center
                 [:where(&)]:font-medium [:where(&)]:whitespace-nowrap
-                [:where(&)]:disabled:opacity-50 dark:[:where(&)]:disabled:opacity-40
+                [:where(&)]:disabled:opacity-disabled
                 [:where(&)]:disabled:cursor-default [:where(&)]:disabled:pointer-events-none
                 [:where(&)]:transition [:where(&)]:overflow-hidden
             ',
@@ -60,7 +60,7 @@ if ($loading && $type !== 'submit' && !$isJsMethod) {
             },
             match ($variant) { // Text color...
                 'accent' => '[:where(&)]:text-[var(--color-accent-foreground)]',
-                'filled', 'outline', 'ghost' => '[:where(&)]:text-zinc-800 dark:[:where(&)]:text-white',
+                'filled', 'outline', 'ghost' => TALLKit::textNeutral(variant: 'strong', prefix: '[:where(&)]:'),
                 'inverse' => '[:where(&)]:text-white dark:[:where(&)]:text-zinc-800',
                 'subtle', 'none' => '
                     [:where(&)]:text-zinc-500

@@ -3,14 +3,17 @@
     ...TALLKit::fieldControlProps(),
     'multiple' => null,
     'searchable' => true,
-    'animation' => null,
+    'type' => null,
 ])
 @php
 
 [$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
+
 $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd || $attributes->has('class');
 $options = TALLKit::parseOptions(attributes: $attributes);
 $placeholderText = __(is_string($placeholder) ? $placeholder : '---');
+$isInputTrigger = $type === 'input';
+$disabled = (bool) $attributes->get('disabled');
 
 $flatOptions = collect();
 
@@ -47,98 +50,72 @@ foreach ($options as $optionItemValue => $optionItemLabel) {
             x-data="combobox({
                 value: @js($value ?? ($multiple ? [] : null)),
                 multiple: @js($multiple),
+                type: @js($type),
             })"
             class="flex-1"
         >
-            <div
-                tabindex="0"
-                role="combobox"
-                aria-haspopup="listbox"
-                :aria-expanded="opened ? 'true' : 'false'"
-                aria-controls="{{ $id.'-listbox' }}"
-                {{
-                    TALLKit::attributesAfter(attributes: $attributes, prefix: 'trigger:')
-                        ->dataKey('combobox')
-                        ->dataKey('control')
-                        ->dataKey('group-target')
-                        ->merge([
-                            'id' => $id,
-                            'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
-                            'aria-invalid' => $invalid ? 'true' : null,
-                            'data-invalid' => $invalid ? true : null,
-                        ])
-                        ->except('class')
-                        ->classes(
-                            '
-                                tk-field-control-base
-                                peer
-                                cursor-default
-
-                                truncate
-
-                                bg-size-[1.5em_1.5em]
-                                bg-no-repeat
-
-                                bg-position-[right_.5rem_center]
-                                rtl:bg-position-[left_.5rem_center]
-
-                                flex
-                                items-center
-                                flex-wrap
-                                gap-1
-                            ',
-                            TALLKit::fontSize(size: $size, mode: 'large'),
-                            TALLKit::paddingStart(size: $size, mode: 'large'),
-                            TALLKit::paddingEnd(size: $size, mode: 'large'),
-                            TALLKit::paddingBlock(size: $size, mode: 'small'),
-                            TALLKit::generateClassBySize(size: $size, name: 'min-h', values: ['8', '9', '10', '12', '14', '16', '18']),
-                            $attributes->pluck('combobox:class'),
-                        )
-                        ->when(
-                            !$hasControl,
-                            fn ($attrs) => $attrs->classes(
-                                'tk-control-standalone-expanded',
-                                TALLKit::roundedSize(size: $size, mode: 'large'),
-                                TALLKit::controlFocusRing(color: $color, expanded: true),
-                            ),
-                        )
-                }}
-            >
-                <input
-                    type="hidden"
+            @if ($isInputTrigger)
+                <div
                     {{
-                        $attributes
-                            ->dataKey('combobox-field')
+                        TALLKit::attributesAfter(attributes: $attributes, prefix: 'trigger:')
+                            ->dataKey('control')
+                            ->dataKey('group-target')
                             ->merge([
-                                'name' => $name,
-                                'value' => in_livewire() ? null : (is_array($value) ? implode(',', $value) : $value),
-                                'wire:model' => $wireModel,
+                                'disabled' => $disabled ?: null,
+                                'aria-disabled' => $disabled ? 'true' : null,
                             ])
-                            ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: [
-                                'trigger:', 'selected:', 'selected-label:', 'selected-clear:', 'selected-option:',
-                                'popover:', 'listbox:', 'heading:', 'option:',
-                            ]))
+                            ->except('class')
+                            ->classes([
+                                '
+                                    tk-field-control-base
+                                    flex
+                                    items-center
+                                    flex-wrap
+                                    gap-1
+                                ',
+                                TALLKit::fontSize(size: $size, mode: 'large'),
+                                TALLKit::paddingStart(size: $size, mode: 'large'),
+                                TALLKit::paddingEnd(size: $size, mode: 'large'),
+                                TALLKit::paddingBlock(size: $size, mode: 'smallest'),
+                                TALLKit::generateClassBySize(size: $size, name: 'min-h', values: ['8', '9', '10', '12', '14', '16', '18']),
+                                $attributes->pluck('combobox:class'),
+                                'pointer-events-none' => $disabled,
+                            ])
+                            ->when(
+                                ! $hasControl,
+                                fn ($attrs) => $attrs->classes(
+                                    'tk-control-standalone-expanded',
+                                    TALLKit::roundedSize(size: $size, mode: 'large'),
+                                    TALLKit::controlFocusRing(color: $color, expanded: true),
+                                ),
+                            )
                     }}
-                />
+                >
+                    <input
+                        type="hidden"
+                        {{
+                            $attributes
+                                ->dataKey('combobox-field')
+                                ->merge([
+                                    'name' => $name,
+                                    'value' => in_livewire() ? null : (is_array($value) ? implode(',', $value) : $value),
+                                    'wire:model' => $wireModel,
+                                ])
+                                ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: [
+                                    'trigger:', 'search:', 'selected:', 'selected-label:', 'selected-clear:', 'selected-option:',
+                                    'popover:', 'listbox:', 'heading:', 'option:',
+                                ]))
+                        }}
+                    />
 
-                @if ($multiple)
-                    <span
-                        {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'selected-label:')->classes('truncate') }}
-                        x-show="opened || selectedCount() === 0"
-                        x-text="selectedCount() > 0 ? `${selectedCount()} ${@js(__('selected'))}` : @js($placeholderText)"
-                        :class="{ 'text-zinc-400': selectedCount() === 0 }"
-                    ></span>
-
-                    <div
-                        {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'selected:')->classes('truncate flex flex-wrap gap-1') }}
-                        x-show="!opened && selectedCount() > 0"
-                    >
+                    @if ($multiple)
                         @foreach ($flatOptions as $optionItemValue => $optionItemLabel)
                             <tk:badge
                                 :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'selected-option:')->classes('truncate')"
                                 :$size
                                 x-cloak
                                 x-show="isSelected({{ Js::from((string) $optionItemValue) }})"
+                                ::style="{ order: selectedOrder({{ Js::from((string) $optionItemValue) }}) }"
                                 @before-dismiss.prevent="remove({{ Js::from((string) $optionItemValue) }})"
                                 close
                                 close:tooltip="Remove"
@@ -146,18 +123,48 @@ foreach ($options as $optionItemValue => $optionItemLabel) {
                                 :label="$optionItemLabel"
                             />
                         @endforeach
-                    </div>
-                @else
-                    <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'selected:')->classes('truncate flex items-center gap-2') }}>
-                        <span
-                            {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'selected-label:')->classes('truncate flex-1') }}
-                            x-text="selectedLabel() ?? @js($placeholderText)"
-                            :class="{ 'text-zinc-400': !selectedLabel() }"
-                        ></span>
+                    @endif
 
+                    <input
+                        type="text"
+                        role="combobox"
+                        aria-autocomplete="list"
+                        aria-haspopup="listbox"
+                        aria-controls="{{ $id.'-listbox' }}"
+                        :aria-expanded="opened ? 'true' : 'false'"
+                        autocomplete="off"
+                        @if ($multiple)
+                            :placeholder="selectedCount() > 0 ? '' : {{ Js::from($placeholderText) }}"
+                        @else
+                            placeholder="{{ $placeholderText }}"
+                        @endif
+                        {{
+                            TALLKit::attributesAfter(attributes: $attributes, prefix: 'search:')
+                                ->dataKey('input')
+                                ->merge([
+                                    'id' => $id,
+                                    'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
+                                    'aria-invalid' => $invalid ? 'true' : null,
+                                    'data-invalid' => $invalid ? true : null,
+                                    'disabled' => $disabled ?: null,
+                                ])
+                                ->classes(
+                                    '
+                                        flex-1 min-w-0 truncate
+                                        bg-transparent
+                                        border-0 outline-none p-0
+                                        disabled:cursor-not-allowed
+                                        order-last
+                                    '
+                                )
+                        }}
+                    />
+
+                    @unless ($multiple)
                         <tk:button
-                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'selected-clear:')->classes('shrink-0')"
+                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'selected-clear:')->classes('shrink-0 order-last')"
                             :size="TALLKit::adjustSize(size: $size)"
+                            :$disabled
                             x-show="!this.opened && selectedLabel()"
                             x-cloak
                             tooltip="Clear"
@@ -165,15 +172,146 @@ foreach ($options as $optionItemValue => $optionItemLabel) {
                             icon="close"
                             @click.stop="clearValue()"
                         />
-                    </div>
-                @endif
-            </div>
+                    @endunless
+
+                    <tk:button
+                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'selected-clear:')->classes('shrink-0 order-last')"
+                        :$disabled
+                        variant="none"
+                        icon="ph:caret-up-down"
+                        @click.stop="toggle()"
+                    />
+                </div>
+            @else
+                <div
+                    tabindex="{{ $disabled ? '-1' : '0' }}"
+                    role="combobox"
+                    aria-haspopup="listbox"
+                    :aria-expanded="opened ? 'true' : 'false'"
+                    aria-controls="{{ $id.'-listbox' }}"
+                    {{
+                        TALLKit::attributesAfter(attributes: $attributes, prefix: 'trigger:')
+                            ->dataKey('combobox')
+                            ->dataKey('control')
+                            ->dataKey('group-target')
+                            ->merge([
+                                'id' => $id,
+                                'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
+                                'aria-invalid' => $invalid ? 'true' : null,
+                                'data-invalid' => $invalid ? true : null,
+                                'disabled' => $disabled ?: null,
+                                'aria-disabled' => $disabled ? 'true' : null,
+                            ])
+                            ->except('class')
+                            ->classes([
+                                '
+                                    tk-field-control-base
+                                    peer
+                                    cursor-default
+
+                                    truncate
+
+                                    bg-size-[1.5em_1.5em]
+                                    bg-no-repeat
+
+                                    bg-position-[right_.5rem_center]
+                                    rtl:bg-position-[left_.5rem_center]
+
+                                    flex
+                                    items-center
+                                    flex-wrap
+                                    gap-1
+                                ',
+                                TALLKit::fontSize(size: $size, mode: 'large'),
+                                TALLKit::paddingStart(size: $size, mode: 'large'),
+                                TALLKit::paddingEnd(size: $size, mode: 'large'),
+                                TALLKit::paddingBlock(size: $size, mode: 'smallest'),
+                                TALLKit::generateClassBySize(size: $size, name: 'min-h', values: ['8', '9', '10', '12', '14', '16', '18']),
+                                $attributes->pluck('combobox:class'),
+                                'pointer-events-none' => $disabled,
+                            ])
+                            ->when(
+                                ! $hasControl,
+                                fn ($attrs) => $attrs->classes(
+                                    'tk-control-standalone-expanded',
+                                    TALLKit::roundedSize(size: $size, mode: 'large'),
+                                    TALLKit::controlFocusRing(color: $color, expanded: true),
+                                ),
+                            )
+                    }}
+                >
+                    <input
+                        type="hidden"
+                        {{
+                            $attributes
+                                ->dataKey('combobox-field')
+                                ->merge([
+                                    'name' => $name,
+                                    'value' => in_livewire() ? null : (is_array($value) ? implode(',', $value) : $value),
+                                    'wire:model' => $wireModel,
+                                ])
+                                ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: [
+                                    'trigger:', 'search:', 'selected:', 'selected-label:', 'selected-clear:', 'selected-option:',
+                                    'popover:', 'listbox:', 'heading:', 'option:',
+                                ]))
+                        }}
+                    />
+
+                    @if ($multiple)
+                        <span
+                            {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'selected-label:')->classes('truncate', TALLKit::textNeutral(variant: 'muted')) }}
+                            x-show="selectedCount() === 0"
+                            x-text="@js($placeholderText)"
+                        ></span>
+
+                        <div
+                            {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'selected:')->classes('truncate flex flex-wrap gap-1') }}
+                            x-show="selectedCount() > 0"
+                        >
+                            @foreach ($flatOptions as $optionItemValue => $optionItemLabel)
+                                <tk:badge
+                                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'selected-option:')->classes('truncate')"
+                                    :$size
+                                    x-cloak
+                                    x-show="isSelected({{ Js::from((string) $optionItemValue) }})"
+                                    ::style="{ order: selectedOrder({{ Js::from((string) $optionItemValue) }}) }"
+                                    @before-dismiss.prevent="remove({{ Js::from((string) $optionItemValue) }})"
+                                    close
+                                    close:tooltip="Remove"
+                                    content:class="block truncate"
+                                    :label="$optionItemLabel"
+                                />
+                            @endforeach
+                        </div>
+                    @else
+                        <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'selected:')->classes('truncate flex items-center gap-2') }}>
+                            <span
+                                {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'selected-label:')->classes('truncate flex-1') }}
+                                x-text="selectedLabel() ?? @js($placeholderText)"
+                                :class="{ '{{ TALLKit::textNeutral(variant: 'muted') }}': !selectedLabel() }"
+                            ></span>
+
+                            <tk:button
+                                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'selected-clear:')->classes('shrink-0')"
+                                :size="TALLKit::adjustSize(size: $size)"
+                                :$disabled
+                                x-show="!this.opened && selectedLabel()"
+                                x-cloak
+                                tooltip="Clear"
+                                variant="none"
+                                icon="close"
+                                @click.stop="clearValue()"
+                            />
+                        </div>
+                    @endif
+                </div>
+            @endif
 
             <tk:popover
                 :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'popover:')
                     ->classes(TALLKit::spaceBlock(size: $size), 'max-h-full')"
                 :$size
-                :animation="$animation ?? 'none'"
+                animation="none"
             >
                 <tk:listbox
                     :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'listbox:')"
@@ -187,11 +325,14 @@ foreach ($options as $optionItemValue => $optionItemLabel) {
                 >
                     {{ $slot }}
 
-                    @isset ($search)
+                    @if ($isInputTrigger)
+                        {{-- the trigger input itself is the search field; suppress tk:listbox's own search partial while keeping its no-records state --}}
+                        <x-slot:search></x-slot:search>
+                    @elseif (isset($search))
                         <x-slot:search>
                             {{ $search }}
                         </x-slot:search>
-                    @endisset
+                    @endif
 
                     @foreach ($options as $optionItemValue => $optionItemLabel)
                         @if (is_array($optionItemLabel))

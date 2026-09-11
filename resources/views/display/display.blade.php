@@ -64,7 +64,7 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
                         $attributes->pluck('display:class'),
                     )
                     ->when(
-                        !$hasControl,
+                        ! $hasControl,
                         fn ($attrs) => $attrs->classes(
                             'tk-control-standalone-no-disabled',
                             TALLKit::roundedSize(size: $size, mode: 'large'),

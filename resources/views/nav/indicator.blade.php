@@ -22,10 +22,10 @@
                 match ($variant) {
                     'accent' => match ($mode) {
                         'bg' => 'bg-[color-mix(in_oklab,_var(--color-accent-content),_transparent_90%)]',
-                        default => 'bg-(--color-accent-content)',
+                        default => 'bg-[var(--color-accent-content)]',
                     },
                     default => match ($mode) {
-                        'bg' => 'bg-zinc-800/10 dark:bg-white/10',
+                        'bg' => TALLKit::backgroundNeutral(),
                         default => 'bg-zinc-800 dark:bg-white',
                     },
                 },

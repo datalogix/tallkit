@@ -1,6 +1,8 @@
 @props([
     'login' => null,
     'size' => null,
+    'identifier' => null,
+    'oauth' => null,
 ])
 @php
 
@@ -12,7 +14,7 @@ $login ??= route_detect([
 
 @endphp
 <tk:form.section
-    :attributes="$attributes->whereDoesntStartWith(['name:', 'email:', 'password:', 'password-confirmation:', 'terms:', 'submit:', 'login:'])"
+    :attributes="$attributes->whereDoesntStartWith(['name:', 'identifier:', 'password:', 'password-confirmation:', 'terms:', 'submit:', 'oauth:', 'login:'])"
     :$size
     title="Create an account"
     subtitle="Enter your details below to create your account:"
@@ -27,13 +29,12 @@ $login ??= route_detect([
         placeholder="Full name"
     />
 
-    <tk:input
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'email:')"
+    {{ $slot }}
+
+    <tk:page.auth.identifier
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'identifier:')"
         :$size
-        name="email"
-        required
-        autocomplete="email"
-        placeholder="email@example.com"
+        :$identifier
     />
 
     <tk:password
@@ -69,22 +70,33 @@ $login ??= route_detect([
         variant="accent"
     />
 
-    @if ($login)
-        <x-slot:append>
-            <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'login:container:')->classes('space-x-1 rtl:space-x-reverse flex justify-center') }}>
-                <tk:text
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'login:label:')"
-                    :$size
-                    label="Already have an account?"
-                />
+    <tk:page.auth.oauth
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'oauth:')"
+        :$size
+        :providers="$oauth"
+    />
 
-                <tk:link
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'login:link:')"
-                    :$size
-                    :href="$login"
-                    label="Sign in"
-                />
-            </div>
-        </x-slot:append>
+    @if ($login)
+        <tk:separator :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'separator:')" />
+
+        <div
+            {{
+                TALLKit::attributesAfter(attributes: $attributes, prefix: 'login:container:')
+                    ->classes('space-x-1 rtl:space-x-reverse flex justify-center')
+            }}
+        >
+            <tk:text
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'login:label:')"
+                :$size
+                label="Already have an account?"
+            />
+
+            <tk:link
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'login:link:')"
+                :$size
+                :href="$login"
+                label="Sign in"
+            />
+        </div>
     @endif
 </tk:form.section>

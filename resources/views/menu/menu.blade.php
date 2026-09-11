@@ -1,13 +1,11 @@
 @props([
     'items' => null,
     'size' => null,
-    'animation' => null,
 ])
 <tk:popover
     x-data="menu"
     role="menu"
     :$size
-    :$animation
     {{
         $attributes
             ->dataKey('menu')
@@ -26,7 +24,9 @@
     @foreach (collect($items) as $item)
         @if ($item)
             <tk:menu.item
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'item:')->merge(is_array($item) ? $item : ['label' => $item], false)"
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'item:')
+                    ->merge(is_array($item) ? $item : ['label' => $item], false)
+                "
                 :$size
             />
         @endif

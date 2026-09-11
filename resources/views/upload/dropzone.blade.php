@@ -22,7 +22,7 @@
                     '2xl' => 'h-60 w-60',
                     '3xl' => 'h-64 w-64',
                     default => 'h-48 w-48',
-                } => !$multiple && ! in_array($variant, ['avatar', 'button', 'list']),
+                } => ! $multiple && ! in_array($variant, ['avatar', 'button', 'list']),
                 'rounded-full' => $variant === 'avatar',
             ])
     }}
@@ -93,7 +93,7 @@
                 ->classes([
                     'flex-col border-2 border-dashed whitespace-normal',
                     'w-full' => $multiple,
-                    'size-full' => !$multiple,
+                    'size-full' => ! $multiple,
                     match ($size) {
                         'xs' => 'h-24',
                         'sm' => 'h-28',

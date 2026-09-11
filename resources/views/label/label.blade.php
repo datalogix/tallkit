@@ -21,7 +21,7 @@ $tag = $as ?? ($for ? 'label' : 'span');
                     ->dataKey('label')
                     ->classes(
                         'flex items-center gap-4',
-                        '[:where(&)]:text-zinc-800 dark:[:where(&)]:text-white',
+                        TALLKit::textNeutral(variant: 'strong', prefix: '[:where(&)]:'),
                         TALLKit::fontSize(size: $size, weight: true),
                         ['sr-only' => $srOnly],
                     )
@@ -43,7 +43,7 @@ $tag = $as ?? ($for ? 'label' : 'span');
                 ->classes([
                     'cursor-default inline-flex',
                     'flex-1' => $hasPrependOrAppend,
-                    'sr-only' => $srOnly && !$hasPrependOrAppend,
+                    'sr-only' => $srOnly && ! $hasPrependOrAppend,
                 ])
         }}
         @if ($for && $tag === 'label') for="{{ $for }}" @endif
@@ -56,7 +56,7 @@ $tag = $as ?? ($for ? 'label' : 'span');
             :attributes="$attributes->whereDoesntStartWith(['area:', 'label-prepend:', 'label-append:', 'container:', 'info:'])
                 ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'info:', prepend: 'icon-trailing:')->getAttributes())
                 ->classes(
-                    '[:where(&)]:text-zinc-800 dark:[:where(&)]:text-white',
+                    TALLKit::textNeutral(variant: 'strong', prefix: '[:where(&)]:'),
                     TALLKit::fontSize(size: $size, weight: true)
                 )
             "

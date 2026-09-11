@@ -49,23 +49,9 @@
 
                         tk-control-surface
                         tk-control-focus-ring-nested
+                        tk-control-disabled
+                        tk-control-invalid-border-self-nested-focus
 
-                        [&[disabled]]:border-zinc-200
-                        dark:[&[disabled]]:border-white/5
-
-                        [&[data-invalid]:not(:has([data-tallkit-control]:focus-visible))]:border-red-500
-                        dark:[&[data-invalid]:not(:has([data-tallkit-control]:focus-visible))]:border-red-400
-
-                        disabled:[&[data-invalid]:not(:has([data-tallkit-control]:focus-visible))]:border-red-500
-                        dark:disabled:[&[data-invalid]:not(:has([data-tallkit-control]:focus-visible))]:border-red-400
-
-                        [&[disabled]]:shadow-none
-                        [&[disabled]]:[&[data-invalid]]:shadow-none
-
-                        [&[disabled]]:opacity-50
-                        dark:[&[disabled]]:opacity-40
-
-                        [&[disabled]]:cursor-not-allowed
                         [&[disabled]]:pointer-events-none
                     ',
                     TALLKit::fontSize(size: $size),
@@ -88,7 +74,7 @@
             }}
         />
 
-        @if ($header && !$inline)
+        @if ($header && ! $inline)
             <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'header:')->classes(
                 'flex items-center col-span-3',
                 TALLKit::marginBottom(size: $size),
@@ -141,7 +127,7 @@
             @endisset
         </tk:field.control>
 
-        @if ($footer && !$inline)
+        @if ($footer && ! $inline)
             <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'footer:')->classes(
                 'flex items-center col-span-3',
                 TALLKit::marginTop(size: $size),

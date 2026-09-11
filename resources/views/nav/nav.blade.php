@@ -23,9 +23,9 @@ $list = (bool) $list;
                     ->classes(
                         '
                             relative flex flex-1 overflow-auto
-                            text-zinc-700 dark:text-white/80
                             border-zinc-800/10 dark:border-white/10
                         ',
+                        TALLKit::textNeutral(),
                         TALLKit::fontSize(size: $size, weight: true),
                         TALLKit::gap(size: $size),
                     )
@@ -52,7 +52,9 @@ $list = (bool) $list;
         >
             @foreach (collect($items) as $item)
                 <tk:nav.item
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'item:')->merge(is_array($item) ? $item : ['label' => $item], false)"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'item:')
+                        ->merge(is_array($item) ? $item : ['label' => $item], false)
+                    "
                     :$size
                 />
             @endforeach

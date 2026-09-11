@@ -1,4 +1,4 @@
-import { isoOf, parseIso, startOfMonth, startOfWeek, endOfMonth, addDays, addMonths, formatEditable, parseTypedDate, localeDateOrder } from '../utils'
+import { dataKey, isoOf, parseIso, startOfMonth, startOfWeek, endOfMonth, addDays, addMonths, formatEditable, parseTypedDate, localeDateOrder } from '../utils'
 import { popover } from './popover'
 import { calendar } from './calendar'
 import { bindableField } from '../mixins/bindable-field'
@@ -10,7 +10,6 @@ export function datePicker({
   mode = null,
   multiple = null,
   format = null,
-  labels = null,
   type = null,
   openTo = null,
   forceOpenTo = null,
@@ -81,6 +80,16 @@ export function datePicker({
       })
     },
 
+    isDisabled() {
+      return !!this.$root.querySelector(dataKey('control'))?.disabled
+    },
+
+    open(focus = true) {
+      if (this.isDisabled()) return
+
+      _popover.open.call(this, focus)
+    },
+
     onOpen() {
       if (withConfirmation) this.value = this.committed
       if (forceOpenTo && openTo) this.anchorMonth = startOfMonth(parseIso(openTo))
@@ -99,6 +108,7 @@ export function datePicker({
     },
 
     setSingleValue(iso) {
+      if (this.isDisabled()) return
       if (mode === 'range' || multiple) return
       if (iso && this.isDayDisabled(iso)) return
 
@@ -128,7 +138,7 @@ export function datePicker({
       }
 
       if (multiple) {
-        return this.value.length ? `${this.value.length} ${labels?.selected ?? 'selected'}` : null
+        return this.value.length ? this.value.map((iso) => fmt.format(parseIso(iso))).join(', ') : null
       }
 
       return fmt.format(parseIso(this.value))
@@ -180,6 +190,7 @@ export function datePicker({
     },
 
     commitTyped() {
+      if (this.isDisabled()) return
       if (!this.typable()) return
       if ((this.typed.match(/\d/g) ?? []).length < this.requiredDigitCount()) return
 
@@ -274,6 +285,8 @@ export function datePicker({
     },
 
     applyPreset(key) {
+      if (this.isDisabled()) return
+
       const range = this.presetRange(key)
       if (!range) return
 

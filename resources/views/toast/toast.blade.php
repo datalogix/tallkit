@@ -103,11 +103,11 @@
                     />
                     <div class="flex-1 flex flex-col gap-2">
                         <div
-                            {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'title:')->classes('font-medium text-zinc-800 dark:text-white') }}
+                            {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'title:')->classes('font-medium', TALLKit::textNeutral(variant: 'strong')) }}
                             x-html="toast.title || toast.message"
                         ></div>
                         <div
-                            {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'message:')->classes('font-normal text-zinc-500 dark:text-zinc-300') }}
+                            {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'message:')->classes('font-normal', TALLKit::textNeutral(variant: 'subtle')) }}
                             x-show="toast.title && toast.message"
                             x-html="toast.message"
                         ></div>

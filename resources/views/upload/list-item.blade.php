@@ -27,7 +27,7 @@
     @dragend="dragEnd"
 >
     <tk:upload.type-icon
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')->classes('shrink-0 text-zinc-400 dark:text-zinc-500')"
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')->classes('shrink-0', TALLKit::textNeutral(variant: 'muted'))"
         :$size
     />
 
@@ -55,7 +55,7 @@
                 {{
                     TALLKit::attributesAfter(attributes: $attributes, prefix: 'file-size:')
                         ->classes(
-                            'text-zinc-500 dark:text-zinc-400',
+                            TALLKit::textNeutral(variant: 'subtle'),
                             TALLKit::fontSize(size: TALLKit::adjustSize(size: $size))
                         )
                 }}

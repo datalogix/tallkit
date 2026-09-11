@@ -1,4 +1,4 @@
-import { parseCommaList, padDatePart, toMinutes, parseTimeToken } from '../utils'
+import { dataKey, parseCommaList, padDatePart, toMinutes, parseTimeToken } from '../utils'
 import { popover } from './popover'
 import { bindableField } from '../mixins/bindable-field'
 
@@ -76,6 +76,16 @@ export function timePicker({
       })
     },
 
+    isDisabled() {
+      return !!this.$root.querySelector(dataKey('control'))?.disabled
+    },
+
+    open(focus = true) {
+      if (this.isDisabled()) return
+
+      _popover.open.call(this, focus)
+    },
+
     onOpen() {
       _popover.onOpen.call(this)
       this.$nextTick(() => this.scrollToSelected())
@@ -120,6 +130,7 @@ export function timePicker({
     },
 
     select(hhmm) {
+      if (this.isDisabled()) return
       if (this.isTimeDisabled(hhmm)) return
 
       if (multiple) {
@@ -179,6 +190,7 @@ export function timePicker({
     },
 
     commitTyped() {
+      if (this.isDisabled()) return
       if (!this.typable()) return
       if ((this.typed.match(/\d/g) ?? []).length < 4) return
 

@@ -17,7 +17,7 @@
 $scrollIntoViewJsSnippet = ($scrollTo !== false) ? '($el.closest('.Js::from($scrollTo).') || document.querySelector('.Js::from($scrollTo).')).scrollIntoView()' : false;
 $isPaginator = $paginator instanceof \Illuminate\Contracts\Pagination\Paginator || $paginator instanceof \Illuminate\Contracts\Pagination\CursorPaginator;
 $isArrayable = Arr::arrayable($paginator);
-$textColors = TALLKit::classes('text-zinc-700 dark:text-zinc-300');
+$textColors = TALLKit::classes(TALLKit::textNeutral());
 
 @endphp
 @if ($total !== false || ($isPaginator && $paginator->hasPages()) || $isArrayable)
@@ -33,7 +33,7 @@ $textColors = TALLKit::classes('text-zinc-700 dark:text-zinc-300');
         @endif
 
         <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')->classes([
-            'py-4 px-6' => !$dense,
+            'py-4 px-6' => ! $dense,
             'p-2.5' => $dense,
         ]) }}>
             @if (isset($results))

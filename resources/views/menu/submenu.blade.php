@@ -3,7 +3,9 @@
 <div
     wire:ignore.self
     x-data="submenu"
-    {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:') }}
+    {{
+        TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')
+    }}
 >
     <tk:menu.item
         :attributes="$attributes->whereDoesntStartWith(['container:', 'menu:'])"

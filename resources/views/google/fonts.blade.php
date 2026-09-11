@@ -24,7 +24,7 @@ if (filter_var($families, FILTER_VALIDATE_URL) !== false) {
     <noscript><link rel="stylesheet" href="{{ $url }}" /></noscript>
 @endif
 
-@if (! $noscript)
+@unless ($noscript)
     @if ($prefetch)
         <link rel="dns-prefetch" href="https://fonts.gstatic.com/" />
     @endif
@@ -48,4 +48,4 @@ if (filter_var($families, FILTER_VALIDATE_URL) !== false) {
             document.querySelector("head").appendChild(l);
         </script>
     @endif
-@endif
+@endunless

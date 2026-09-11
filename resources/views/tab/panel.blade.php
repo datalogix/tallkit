@@ -7,8 +7,8 @@
         $attributes
             ->classes('[&:not([data-selected])]:hidden')
             ->merge(['data-selected' => $selected ? '' : false])
+            ->merge(in_livewire() ? ['wire:key' => $name] : [], false)
     }}
-    wire:key="{{ $name }}"
     data-name="{{ $name }}"
     id="{{ TALLKit::generateId(prefix: 'tabpanel', name: $name) }}"
     aria-labelledby="{{ TALLKit::generateId(prefix: 'tab', name: $name) }}"

@@ -83,7 +83,7 @@ $hasControl = $clearable || $copyable || $viewable || $prepend || $icon || $appe
                             $attributes->pluck('input:class'),
                          )
                          ->when(
-                            !$hasControl,
+                            ! $hasControl,
                             fn ($attrs) => $attrs->classes(
                                 'tk-control-standalone',
                                 TALLKit::roundedSize(size: $size, mode: 'large'),

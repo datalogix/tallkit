@@ -39,15 +39,15 @@ if ($tooltip === true) {
                 relative flex-none isolate
                 after:absolute after:inset-0 after:inset-ring-[1px] after:inset-ring-black/5 dark:after:inset-ring-white/5
                 [:where(&)]:bg-zinc-200 dark:[:where(&)]:bg-zinc-800
-                [:where(&)]:text-zinc-800 dark:[:where(&)]:text-white
             ',
+            TALLKit::textNeutral(variant: 'strong', prefix: '[:where(&)]:'),
             TALLKit::fontSize(size: $size, weight: true),
             TALLKit::roundedSize(size: $square ? $size : 'full', after: true),
             TALLKit::widthHeight(size: $size, mode: 'large'),
             match ($color) {
                 'accent' => 'bg-[var(--color-accent)] text-[var(--color-accent-foreground)]',
                 'inverse' => 'text-white bg-zinc-800 dark:text-zinc-800 dark:bg-white',
-                'filled' => 'bg-zinc-800/5 dark:bg-white/10',
+                'filled' => TALLKit::backgroundNeutral(variant: 'faint'),
                 'outline' => '',
                 'ghost' => 'bg-transparent',
                 'subtle' => 'bg-transparent text-zinc-500',
@@ -64,7 +64,7 @@ if ($tooltip === true) {
                     ->merge(['src' => $src, 'alt' => (string) ($alt ?? $name)])
             }}
         />
-    @elseif (($initials || $slot->hasActualContent()) && !$icon)
+    @elseif (($initials || $slot->hasActualContent()) && ! $icon)
         <span {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'initials:')->classes('select-none truncate m-px') }}>
             {{ $initials ?: $slot }}
         </span>

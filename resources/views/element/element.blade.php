@@ -57,7 +57,7 @@ $external ??= $attributes->get('target') === '_blank';
         '))
         ->when($as === 'a', fn ($attrs) => $attrs->merge([
             'target' => $external === true ? '_blank' : $external,
-            'wire:navigate' => !$external && $navigate !== false,
+            'wire:navigate' => ! $external && $navigate !== false,
             'href' => $href,
         ]))
         ->when($as === 'button', fn ($attrs) => $attrs->merge([
@@ -122,9 +122,8 @@ $external ??= $attributes->get('target') === '_blank';
                             [:where(&)]:me-auto
                             [:where(&)]:font-medium
                             [:where(&)]:text-xs
-                            [:where(&)]:text-zinc-500
-                            dark:[:where(&)]:text-zinc-400
-                        '
+                        ',
+                        TALLKit::textNeutral(variant: 'subtle', prefix: '[:where(&)]:'),
                     )
                 "
                 :label="$prefix"
@@ -158,9 +157,8 @@ $external ??= $attributes->get('target') === '_blank';
                             [:where(&)]:ms-auto
                             [:where(&)]:font-medium
                             [:where(&)]:text-xs
-                            [:where(&)]:text-zinc-500
-                            dark:[:where(&)]:text-zinc-400
-                        '
+                        ',
+                        TALLKit::textNeutral(variant: 'subtle', prefix: '[:where(&)]:'),
                     )
                 "
                 :label="$suffix"

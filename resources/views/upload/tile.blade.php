@@ -17,7 +17,7 @@
                 transition-all duration-200
             ',
             'border border-zinc-300 dark:border-white/10' => $variant !== 'gallery',
-            'size-full' => !$multiple,
+            'size-full' => ! $multiple,
             match ($variant) {
                 'gallery' => match ($size) {
                     'xs' => 'h-44 w-44',

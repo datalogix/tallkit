@@ -2,6 +2,8 @@
     'forgotPassword' => null,
     'signUp' => null,
     'size' => null,
+    'identifier' => null,
+    'oauth' => null,
 ])
 @php
 
@@ -18,19 +20,17 @@ $signUp ??= route_detect([
 
 @endphp
 <tk:form.section
-    :attributes="$attributes->whereDoesntStartWith(['email:', 'password:', 'forgot-password:', 'remember:', 'submit:', 'sign-up:'])"
+    :attributes="$attributes->whereDoesntStartWith(['identifier:', 'password:', 'forgot-password:', 'remember:', 'submit:', 'oauth:', 'sign-up:'])"
     :$size
     title="Sign in to your account"
     subtitle="Enter your access details below to sign in:"
 >
-    <tk:input
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'email:')"
+    {{ $slot }}
+
+    <tk:page.auth.identifier
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'identifier:')"
         :$size
-        name="email"
-        autofocus
-        required
-        autocomplete="email"
-        placeholder="email@example.com"
+        :$identifier
     />
 
     <tk:password
@@ -66,22 +66,33 @@ $signUp ??= route_detect([
         variant="accent"
     />
 
-    @if ($signUp)
-        <x-slot:append>
-            <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'sign-up:container:')->classes('space-x-1 rtl:space-x-reverse flex justify-center') }}>
-                <tk:text
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'sign-up:label:')"
-                    :$size
-                    label="Don't have an account?"
-                />
+    <tk:page.auth.oauth
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'oauth:')"
+        :$size
+        :providers="$oauth"
+    />
 
-                <tk:link
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'sign-up:link:')"
-                    :href="$signUp"
-                    :$size
-                    label="Sign up"
-                />
-            </div>
-        </x-slot:append>
+    @if ($signUp)
+        <tk:separator :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'separator:')" />
+
+        <div
+            {{
+                TALLKit::attributesAfter(attributes: $attributes, prefix: 'sign-up:container:')
+                    ->classes('space-x-1 rtl:space-x-reverse flex justify-center')
+            }}
+        >
+            <tk:text
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'sign-up:label:')"
+                :$size
+                label="Don't have an account?"
+            />
+
+            <tk:link
+                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'sign-up:link:')"
+                :href="$signUp"
+                :$size
+                label="Sign up"
+            />
+        </div>
     @endif
 </tk:form.section>

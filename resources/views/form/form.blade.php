@@ -41,7 +41,7 @@ $action = in_livewire() ? ($action ?? 'submit') : route_detect(routes: [$route, 
                 in_livewire(),
                 fn ($attrs) => $attrs->merge(['wire:submit' => $action]),
                 fn ($attrs) => $attrs
-                    ->merge(!$enctype && Str::contains($slot, 'type="file"', true) ? ['enctype' => 'multipart/form-data'] : [])
+                    ->merge(! $enctype && Str::contains($slot, 'type="file"', true) ? ['enctype' => 'multipart/form-data'] : [])
                     ->merge(['method' => $method])
                     ->merge(['action' => $action])
             )

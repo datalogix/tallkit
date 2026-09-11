@@ -78,7 +78,7 @@ $counterExpression = $maxlength ? sprintf("length + ' / %d'", $maxlength) : 'len
                         $attributes->pluck('textarea:class'),
                     )
                     ->when(
-                        !$hasControl,
+                        ! $hasControl,
                         fn ($attrs) => $attrs->classes(
                             'tk-control-standalone',
                             TALLKit::roundedSize(size: $size, mode: 'large'),

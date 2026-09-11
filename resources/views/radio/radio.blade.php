@@ -58,8 +58,6 @@ $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
                             appearance-none
                             [print-color-adjust:exact]
 
-                            disabled:cursor-not-allowed
-
                             checked:shadow-none
                             checked:not-[data-invalid]:border-none
                             checked:disabled:opacity-30

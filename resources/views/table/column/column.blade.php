@@ -30,11 +30,11 @@ if ($sortable === true) {
     {{
         $attributes->whereDoesntStartWith(['container:'])
             ->classes([
-                'py-4 px-6' => !$dense,
+                'py-4 px-6' => ! $dense,
                 'p-2.5' => $dense,
                 'tk-table-sticky-column' => $sticky,
                 '[:where(&)]:font-medium [:where(&)]:text-sm',
-                '[:where(&)]:text-zinc-800 dark:[:where(&)]:text-white',
+                TALLKit::textNeutral(variant: 'strong', prefix: '[:where(&)]:'),
             ])
             ->merge([
                 'aria-sort' => match ($sortable) {
@@ -67,7 +67,7 @@ if ($sortable === true) {
             'asc' => 'chevron-up',
             default => false
         }"
-        icon-trailing:class="opacity-50 group-hover/sortable:opacity-100"
+        icon-trailing:class="opacity-60 group-hover/sortable:opacity-100"
         icon-trailing:size="xs"
     >
         {{ $slot }}

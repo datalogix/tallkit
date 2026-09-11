@@ -21,7 +21,7 @@
                     match ($variant) {
                         'line' => 'flex border-zinc-800/10 dark:border-white/20',
                         'pills' => 'flex ',
-                        'segmented' => 'inline-flex p-1 rounded-lg bg-zinc-800/10 dark:bg-white/10',
+                        'segmented' => TALLKit::classes('inline-flex p-1 rounded-lg', TALLKit::backgroundNeutral()),
                         default => 'flex border-zinc-800/10 dark:border-white/20'
                     },
                 )

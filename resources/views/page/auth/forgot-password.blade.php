@@ -1,6 +1,7 @@
 @props([
     'login' => null,
     'size' => null,
+    'identifier' => null
 ])
 @php
 
@@ -12,18 +13,22 @@ $login ??= route_detect([
 
 @endphp
 <tk:form.section
-    :attributes="$attributes->whereDoesntStartWith(['email:', 'submit:', 'login:'])"
+    :attributes="$attributes->whereDoesntStartWith(['identifier:', 'submit:', 'separator:', 'login:'])"
     :$size
     title="Forgot password"
-    subtitle="Enter your email address and we'll send you a password reset link."
+    :subtitle="match ($identifier) {
+        'cpf' => 'Enter your CPF and we\'ll send you a password reset link.',
+        'username' => 'Enter your username and we\'ll send you a password reset link.',
+        'both' => 'Enter your login and we\'ll send you a password reset link.',
+        default => 'Enter your email address and we\'ll send you a password reset link.',
+    }"
 >
-    <tk:input
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'email:')"
+    {{ $slot }}
+
+    <tk:page.auth.identifier
+        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'identifier:')"
         :$size
-        name="email"
-        required
-        autofocus
-        placeholder="email@example.com"
+        :$identifier
     />
 
     <tk:submit
@@ -34,15 +39,13 @@ $login ??= route_detect([
     />
 
     @if ($login)
-        <x-slot:append>
-            <tk:link
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'login:')"
-                :href="$login"
-                :$size
-                label="Back to sign in"
-            />
-        </x-slot:append>
+        <tk:separator :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'separator:')" />
+
+        <tk:link
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'login:')"
+            :href="$login"
+            :$size
+            label="Back to sign in"
+        />
     @endif
 </tk:form.section>
-
-

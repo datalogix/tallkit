@@ -2,7 +2,6 @@
     'items' => null,
     'size' => null,
     'options' => null,
-    'animation' => null,
 ])
 @php
 
@@ -12,7 +11,10 @@ $listboxId = TALLKit::attributesAfter(attributes: $attributes, prefix: 'items:')
 <div
     wire:ignore.self
     x-data="autocomplete(@js($options))"
-    {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')->classes('[:where(&)]:w-full relative') }}
+    {{
+        TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')
+            ->classes('[:where(&)]:w-full relative')
+    }}
 >
     <tk:input
         :attributes="$attributes->whereDoesntStartWith(['container:', 'popover:', 'items:'])"
@@ -28,7 +30,7 @@ $listboxId = TALLKit::attributesAfter(attributes: $attributes, prefix: 'items:')
     <tk:popover
         :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'popover:')"
         :$size
-        :animation="$animation ?? 'none'"
+        animation="none"
     >
         <tk:listbox.items
             :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'items:')"

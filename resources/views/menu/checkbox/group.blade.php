@@ -14,7 +14,9 @@
 >
     @foreach (collect($items) as $item)
         <tk:menu.checkbox
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'item:')->merge(is_array($item) ? $item : ['label' => $item], false)"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'item:')
+                ->merge(is_array($item) ? $item : ['label' => $item], false)
+            "
             :$size
         />
     @endforeach

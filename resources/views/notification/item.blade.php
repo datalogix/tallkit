@@ -42,7 +42,7 @@ $read_at = data_get($data, 'read_at') ?? data_get($notification, 'read_at');
             ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId(prefix: 'notification-item', name: (string) $id)] : [], false)
     }}
 >
-    @if (!$compact && $icon !== false)
+    @if (! $compact && $icon !== false)
         <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-container:')->classes('shrink-0') }}>
             <tk:avatar
                 :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')"
@@ -95,7 +95,17 @@ $read_at = data_get($data, 'read_at') ?? data_get($notification, 'read_at');
                     ->classes('shrink-0 w-fit ms-auto flex justify-end')
             }}
         >
-            @if (! $read_at)
+            @if ($read_at)
+                <tk:button.group :$size>
+                    <tk:button
+                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'remove:')->dataKey('dismissible')"
+                        :size="TALLKit::adjustSize(size: $size, move: $compact ? -2 : -1)"
+                        action="deleteNotification({{ Js::from($id) }})"
+                        icon="trash-outline"
+                        tooltip="Remove notification"
+                    />
+                </tk:button.group>
+            @else
                 <div
                     {{
                         TALLKit::attributesAfter(attributes: $attributes, prefix: 'bullet:')
@@ -123,16 +133,6 @@ $read_at = data_get($data, 'read_at') ?? data_get($notification, 'read_at');
                         action="markNotificationAsRead({{ Js::from($id) }})"
                         icon="check-circle-outline"
                         tooltip="Mark as read"
-                    />
-                </tk:button.group>
-            @else
-                <tk:button.group :$size>
-                    <tk:button
-                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'remove:')->dataKey('dismissible')"
-                        :size="TALLKit::adjustSize(size: $size, move: $compact ? -2 : -1)"
-                        action="deleteNotification({{ Js::from($id) }})"
-                        icon="trash-outline"
-                        tooltip="Remove notification"
                     />
                 </tk:button.group>
             @endif

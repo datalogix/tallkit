@@ -1,48 +1,49 @@
 @props([
+    'size' => null,
+    'vertical' => null,
     'current' => null,
     'steps' => null,
-    'size' => null,
     'iconCompleted' => null,
     'iconActive' => null,
     'color' => null,
 ])
 @php
 
+$vertical = (bool) $vertical;
 $currentStep = (int) $current;
-$totalSteps = collect($steps)->filter()->count();
+$steps = collect($steps)->filter()->values();
+$totalSteps = $steps->count();
 
 @endphp
 <div
     {{
         $attributes
             ->whereDoesntStartWith(['step:', 'line:'])
-            ->classes('flex items-start justify-between w-full mx-auto')
+            ->classes([
+                '
+                    flex items-start justify-between w-full mx-auto
+                    [&_[data-tallkit-stepper-line]:last-child]:hidden
+                ',
+                'inline-flex flex-col' => $vertical
+            ])
     }}
     role="list"
 >
-    @foreach (collect($steps) as $index => $step)
-        @if ($step)
-            <tk:stepper.step
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'step:')
-                    ->merge(is_array($step) ? $step : ['label' => $step], false)
-                    ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId(prefix: 'stepper-step', name: (string) $index)] : [], false)
-                "
-                :index="$index + 1"
-                :total="$totalSteps"
-                :status="$currentStep === $index + 1 ? 'active' : ($currentStep > $index + 1 ? 'completed' : 'pending')"
-                :$iconCompleted
-                :$iconActive
-                :$size
-                :$color
-            />
-        @endif
-
-         @if (! $loop->last)
-            <tk:stepper.line
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'line:')"
-                :$size
-            />
-        @endif
+    @foreach ($steps as $index => $step)
+        <tk:stepper.step
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'step:')
+                ->merge(is_array($step) ? $step : ['label' => $step], false)
+                ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId(prefix: 'stepper-step', name: (string) $index)] : [], false)
+            "
+            :index="$index + 1"
+            :total="$totalSteps"
+            :status="$currentStep === $index + 1 ? 'active' : ($currentStep > $index + 1 ? 'completed' : 'pending')"
+            :$iconCompleted
+            :$iconActive
+            :$size
+            :$vertical
+            :$color
+        />
     @endforeach
 
     {{ $slot }}

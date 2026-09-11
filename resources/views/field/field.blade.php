@@ -12,8 +12,7 @@
                 fn ($attrs) => $attrs->classes(
                     '
                         grid gap-x-3
-                        [&:has([data-tallkit-control][disabled])>[data-tallkit-label]]:opacity-50
-                        dark:[&:has([data-tallkit-control][disabled])>[data-tallkit-label]]:opacity-40
+                        [&:has([data-tallkit-control][disabled])>[data-tallkit-label]]:opacity-disabled
                     ',
                     match ($align) {
                         'justify-right', 'justify-left' => 'grid-cols-[1fr_auto]',
@@ -44,8 +43,7 @@
                         [&>[data-tallkit-label]+[data-tallkit-text]]:mt-0
                         [&>[data-tallkit-label]+[data-tallkit-text]]:mb-2
                         [&>*:not([data-tallkit-label])+[data-tallkit-text]]:mt-2
-                        [&:not(:has([data-tallkit-field])):has([data-tallkit-control][disabled])>[data-tallkit-label]]:opacity-50
-                        dark:[&:not(:has([data-tallkit-field])):has([data-tallkit-control][disabled])>[data-tallkit-label]]:opacity-40
+                        [&:not(:has([data-tallkit-field])):has([data-tallkit-control][disabled])>[data-tallkit-label]]:opacity-disabled
                         [&_[data-tallkit-error]]:mt-1.5
                     ',
                 )

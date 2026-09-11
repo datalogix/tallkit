@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 
 trait InteractsWithIcon
 {
-    public function iconCacheKey(string $name)
+    public function iconKey(string $name)
     {
         return "tallkit-icon-{$name}";
     }
@@ -47,12 +47,13 @@ trait InteractsWithIcon
             Arr::map($collections, fn ($collection) => $collection.':'.Str::after($name, ':')),
         ));
 
-        foreach ($names as $name) {
-            $cached = Cache::store()->get($this->iconCacheKey($name));
+        $store = Cache::store();
+        $keys = Arr::map($names, $this->iconKey(...));
 
-            if ($cached) {
-                return $cached;
-            }
+        $cached = array_filter($store->getMultiple($keys));
+
+        if ($cached !== []) {
+            return Arr::first($cached);
         }
 
         foreach ($names as $name) {
@@ -61,7 +62,7 @@ trait InteractsWithIcon
             if (File::exists($path)) {
                 $contents = File::get($path);
 
-                Cache::store()->rememberForever($this->iconCacheKey($name), fn () => $contents);
+                $store->rememberForever($this->iconKey($name), fn () => $contents);
 
                 return $contents;
             }
@@ -85,7 +86,7 @@ trait InteractsWithIcon
             File::ensureDirectoryExists(dirname($path));
             File::put($path, $contents);
 
-            Cache::store()->rememberForever($this->iconCacheKey($name), fn () => $contents);
+            $store->rememberForever($this->iconKey($name), fn () => $contents);
 
             return $contents;
         }

@@ -10,6 +10,11 @@
     'multiple' => null,
     'color' => null,
 ])
+@php
+
+$hasSearchable = isset($search) || $searchable !== false;
+
+@endphp
 <div
     wire:ignore.self
     @if ($standalone !== false)
@@ -18,7 +23,7 @@
     {{
         $attributes
             ->whereDoesntStartWith(['search:', 'items:', 'item:', 'no-records:'])
-            ->classes(TALLKit::spaceBlock(size: $size, mode: 'small'))
+                ->when($hasSearchable, fn ($attrs) => $attrs->classes('[:where(&)]:flex [:where(&)]:flex-col', TALLKit::gapBlock(size: $size, mode: 'small')))
     }}
 >
     @isset ($search)
@@ -32,10 +37,7 @@
 
     <tk:listbox.items
         :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'items:', prepend: ['item:'])
-            ->when(
-                isset($search) || $searchable !== false,
-                fn ($attributes) => $attributes->classes(TALLKit::generateClassBySize(size: $size, name: 'max-h', values: ['48', '56', '64', '72', '80', '88', '96']))
-            )
+            ->when($hasSearchable, fn ($attrs) => $attrs->classes(TALLKit::generateClassBySize(size: $size, name: 'max-h', values: ['48', '56', '64', '72', '80', '88', '96'])))
         "
         :$items
         :$size
@@ -45,7 +47,7 @@
         {{ $slot}}
     </tk:listbox.items>
 
-    @if (isset($search) || $searchable !== false)
+    @if ($hasSearchable)
         @isset ($empty)
             {{ $empty }}
         @elseif ($noRecords !== false)

@@ -714,6 +714,10 @@
 		const ms = !milliseconds || isNaN(parseInt(milliseconds.toString())) ? defaultMilliseconds : parseInt(milliseconds.toString());
 		return setTimeout(callback, ms);
 	}
+	function interval(callback, milliseconds, defaultMilliseconds = 500) {
+		const ms = !milliseconds || isNaN(parseInt(milliseconds.toString())) ? defaultMilliseconds : parseInt(milliseconds.toString());
+		return setInterval(callback, ms);
+	}
 	function debounce(callback, delay = 300) {
 		let timeout = void 0;
 		const debounced = (...args) => {
@@ -3782,6 +3786,189 @@
 		};
 	}
 	//#endregion
+	//#region resources/js/components/carousel.js
+	var carousel_exports = /* @__PURE__ */ __exportAll({
+		carousel: () => carousel,
+		carouselControls: () => carouselControls
+	});
+	function carousel({ name = null, autoplay = false, interval: interval$1 = 5e3, advance = "slide", wrap = true, fade = false } = {}) {
+		return {
+			current: 0,
+			slideCount: 0,
+			visibleCount: 1,
+			_autoplayId: null,
+			_paused: false,
+			init() {
+				this._root = this.$root;
+				if (name) {
+					window.__tallkitCarousels ??= {};
+					window.__tallkitCarousels[name] = this;
+				}
+				this.measure();
+				this.$nextTick(() => this.render());
+				bind(this._root, {
+					["@keydown.arrow-left"]() {
+						this.prev();
+					},
+					["@keydown.arrow-right"]() {
+						this.next();
+					},
+					["@mouseenter"]() {
+						this.pause();
+					},
+					["@mouseleave"]() {
+						this.resume();
+					},
+					["@focusin"]() {
+						this.pause();
+					},
+					["@focusout"]() {
+						this.resume();
+					},
+					["x-resize"]() {
+						this.measure();
+						this.render();
+					}
+				});
+				this.startAutoplay();
+			},
+			destroy() {
+				clearInterval(this._autoplayId);
+				if (name && window.__tallkitCarousels?.[name] === this) delete window.__tallkitCarousels[name];
+			},
+			slides() {
+				return Array.from(this._root.querySelectorAll(dataKey("carousel-slide")));
+			},
+			track() {
+				return this._root.querySelector(dataKey("carousel-track"));
+			},
+			measure() {
+				const slides = this.slides();
+				const track = this.track();
+				this.slideCount = slides.length;
+				if (fade) {
+					this.visibleCount = 1;
+					return;
+				}
+				if (!slides.length || !track?.parentElement) {
+					this.visibleCount = 1;
+					return;
+				}
+				const viewportWidth = track.parentElement.getBoundingClientRect().width;
+				const trackLeft = slides[0].getBoundingClientRect().left;
+				let count = 0;
+				for (const slide of slides) {
+					if (slide.getBoundingClientRect().right - trackLeft > viewportWidth + 1) break;
+					count++;
+				}
+				this.visibleCount = Math.max(1, count);
+			},
+			maxIndex() {
+				return Math.max(0, this.slideCount - this.visibleCount);
+			},
+			step() {
+				return advance === "page" ? this.visibleCount : 1;
+			},
+			pageCount() {
+				return advance === "page" ? Math.max(1, Math.ceil(this.slideCount / this.visibleCount)) : this.maxIndex() + 1;
+			},
+			currentPage() {
+				return advance === "page" ? Math.floor(this.current / this.visibleCount) : this.current;
+			},
+			isPageActive(page) {
+				return this.currentPage() === page;
+			},
+			isFirst() {
+				return !wrap && this.current <= 0;
+			},
+			isLast() {
+				return !wrap && this.current >= this.maxIndex();
+			},
+			isSlideVisible(el) {
+				const index = this.slides().indexOf(el);
+				if (index === -1) return false;
+				return fade ? index === this.current : index >= this.current && index < this.current + this.visibleCount;
+			},
+			next() {
+				this.goTo(this.current + this.step());
+			},
+			prev() {
+				this.goTo(this.current - this.step());
+			},
+			goToPage(page) {
+				this.goTo(advance === "page" ? page * this.visibleCount : page);
+			},
+			goTo(index) {
+				const max = this.maxIndex();
+				this.current = wrap && max > 0 ? (index % (max + 1) + (max + 1)) % (max + 1) : Math.max(0, Math.min(max, index));
+				this.render();
+				this.resetAutoplay();
+			},
+			render() {
+				const slides = this.slides();
+				if (fade) {
+					slides.forEach((slide, index) => {
+						const active = index === this.current;
+						slide.style.opacity = active ? "1" : "0";
+						slide.toggleAttribute("data-active", active);
+						slide.style.pointerEvents = active ? "" : "none";
+					});
+					return;
+				}
+				const track = this.track();
+				const target = slides[this.current];
+				if (!track || !target) return;
+				const offset = target.getBoundingClientRect().left - track.getBoundingClientRect().left;
+				track.style.transform = `translateX(-${offset}px)`;
+			},
+			startAutoplay() {
+				if (!autoplay) return;
+				this._autoplayId = interval(() => {
+					if (!this._paused) this.next();
+				}, interval$1);
+			},
+			resetAutoplay() {
+				if (!autoplay) return;
+				clearInterval(this._autoplayId);
+				this.startAutoplay();
+			},
+			pause() {
+				this._paused = true;
+			},
+			resume() {
+				this._paused = false;
+			}
+		};
+	}
+	function carouselControls({ name = null } = {}) {
+		return {
+			target() {
+				return window.__tallkitCarousels?.[name] ?? null;
+			},
+			next() {
+				this.target()?.next();
+			},
+			prev() {
+				this.target()?.prev();
+			},
+			goToPage(page) {
+				this.target()?.goToPage(page);
+			},
+			pageCount() {
+				return this.target()?.pageCount() ?? 0;
+			},
+			isPageActive(page) {
+				return !!this.target()?.isPageActive(page);
+			},
+			isFirst() {
+				return this.target()?.isFirst() ?? true;
+			},
+			isLast() {
+				return this.target()?.isLast() ?? true;
+			}
+		};
+	}
+	//#endregion
 	//#region resources/js/components/chartjs.js
 	var chartjs_exports = /* @__PURE__ */ __exportAll({ chartjs: () => chartjs });
 	function chartjs() {
@@ -3918,7 +4105,8 @@
 	//#endregion
 	//#region resources/js/components/combobox.js
 	var combobox_exports = /* @__PURE__ */ __exportAll({ combobox: () => combobox });
-	function combobox({ value = null, multiple = false } = {}) {
+	function combobox({ value = null, multiple = false, type = null } = {}) {
+		const isInputTrigger = type === "input";
 		const _popover = popover({
 			mode: "manual",
 			position: "bottom",
@@ -3952,33 +4140,64 @@
 			selectedCount() {
 				return this.items.filter((item) => this.isSelected(this.getElementValue(item.el))).length;
 			},
+			selectedOrder(v) {
+				return this.value.map(String).indexOf(String(v));
+			},
+			isDisabled() {
+				return this.combobox.hasAttribute("disabled");
+			},
 			valueString() {
 				return multiple ? (this.value ?? []).join(",") : this.value ?? null;
+			},
+			syncInputDisplay() {
+				if (!isInputTrigger) return;
+				setFieldValue(this.input, multiple ? "" : this.selectedLabel() ?? "");
 			},
 			init() {
 				_popover.init.call(this);
 				_listbox.init.call(this);
-				this.combobox = this.$root.querySelector(dataKey("combobox"));
+				this.combobox = isInputTrigger ? this.input : this.$root.querySelector(dataKey("combobox"));
 				_bindableField.init.call(this);
-				bind(this.combobox, {
+				if (isInputTrigger) {
+					bind(this.input, {
+						["@focus"]() {
+							if (this.isDisabled()) return;
+							this.open();
+						},
+						["@blur"]() {
+							this.syncInputDisplay();
+						},
+						["@keydown.backspace"]() {
+							if (this.isDisabled()) return;
+							if (!multiple || this.input.value || this.value.length === 0) return;
+							this.remove(this.value.at(-1));
+						}
+					});
+					this.syncInputDisplay();
+				} else bind(this.combobox, {
 					["@click"]() {
+						if (this.isDisabled()) return;
 						this.combobox.focus();
 						this.toggle();
 					},
 					["@keydown.enter.prevent"]() {
+						if (this.isDisabled()) return;
 						if (!this.opened) return this.open();
 						this.select(this.index);
 					},
 					["@keydown.space.prevent"]() {
+						if (this.isDisabled()) return;
 						if (!this.opened) return this.open();
 						this.select(this.index);
 					},
 					["@keydown.arrow-up.prevent"]() {
+						if (this.isDisabled()) return;
 						if (!this.opened) return this.open();
 						this.lastInteraction = "keyboard";
 						this.prev();
 					},
 					["@keydown.arrow-down.prevent"]() {
+						if (this.isDisabled()) return;
 						if (!this.opened) return this.open();
 						this.lastInteraction = "keyboard";
 						this.next();
@@ -4007,12 +4226,15 @@
 				this.$nextTick(() => this.syncChecked());
 			},
 			open() {
+				if (this.isDisabled()) return;
 				_popover.open.call(this, false);
 				const target = multiple ? this.value.at(-1) : this.value;
 				const index = this.filteredItems.findIndex((item) => String(this.getElementValue(item.el)) === String(target));
 				this.index = index === -1 ? null : index;
 				requestAnimationFrame(() => {
-					this.input?.focus();
+					requestAnimationFrame(() => {
+						this.input?.focus();
+					});
 				});
 			},
 			close() {
@@ -4029,9 +4251,15 @@
 				return this.value.map(String).includes(String(v));
 			},
 			pick(v) {
-				if (multiple) this.value = this.isSelected(v) ? this.value.filter((x) => String(x) !== String(v)) : [...this.value, v];
-				else {
+				if (multiple) {
+					this.value = this.isSelected(v) ? this.value.filter((x) => String(x) !== String(v)) : [...this.value, v];
+					if (isInputTrigger) {
+						this.syncInputDisplay();
+						this.search();
+					}
+				} else {
 					this.value = this.isSelected(v) ? null : v;
+					if (isInputTrigger) this.syncInputDisplay();
 					this.closeAndFocus();
 				}
 			},
@@ -4040,7 +4268,9 @@
 				this.value = this.value.filter((x) => String(x) !== String(v));
 			},
 			clearValue() {
+				if (this.isDisabled()) return;
 				this.value = multiple ? [] : null;
+				this.syncInputDisplay();
 			},
 			syncChecked() {
 				this.items.forEach((item) => {
@@ -4196,7 +4426,7 @@
 		"short"
 	];
 	var DEFAULT_FORMAT = "medium";
-	function datePicker({ mode = null, multiple = null, format = null, labels = null, type = null, openTo = null, forceOpenTo = null, withConfirmation = null, ...calendarOptions } = {}) {
+	function datePicker({ mode = null, multiple = null, format = null, type = null, openTo = null, forceOpenTo = null, withConfirmation = null, ...calendarOptions } = {}) {
 		if (format && !DATE_STYLES.includes(format)) {
 			console.warn(`[tallkit] tk:date-picker received an invalid "format" ("${format}"). Expected one of: ${DATE_STYLES.join(", ")}. Falling back to "${DEFAULT_FORMAT}".`);
 			format = DEFAULT_FORMAT;
@@ -4253,6 +4483,13 @@
 					this.commitTyped();
 				});
 			},
+			isDisabled() {
+				return !!this.$root.querySelector(dataKey("control"))?.disabled;
+			},
+			open(focus = true) {
+				if (this.isDisabled()) return;
+				_popover.open.call(this, focus);
+			},
 			onOpen() {
 				if (withConfirmation) this.value = this.committed;
 				if (forceOpenTo && openTo) this.anchorMonth = startOfMonth(parseIso(openTo));
@@ -4267,6 +4504,7 @@
 				this.close();
 			},
 			setSingleValue(iso) {
+				if (this.isDisabled()) return;
 				if (mode === "range" || multiple) return;
 				if (iso && this.isDayDisabled(iso)) return;
 				this.value = iso || null;
@@ -4287,7 +4525,7 @@
 					const end = parseIso(this.value.end);
 					return fmt.formatRange ? fmt.formatRange(start, end) : `${fmt.format(start)} – ${fmt.format(end)}`;
 				}
-				if (multiple) return this.value.length ? `${this.value.length} ${labels?.selected ?? "selected"}` : null;
+				if (multiple) return this.value.length ? this.value.map((iso) => fmt.format(parseIso(iso))).join(", ") : null;
 				return fmt.format(parseIso(this.value));
 			},
 			committedString() {
@@ -4322,6 +4560,7 @@
 				return this.value ? formatEditable(this.value, this.locale) : "";
 			},
 			commitTyped() {
+				if (this.isDisabled()) return;
 				if (!this.typable()) return;
 				if ((this.typed.match(/\d/g) ?? []).length < this.requiredDigitCount()) return;
 				if (mode === "range") {
@@ -4421,6 +4660,7 @@
 				return this.value?.start === range.start && this.value?.end === range.end;
 			},
 			applyPreset(key) {
+				if (this.isDisabled()) return;
 				const range = this.presetRange(key);
 				if (!range) return;
 				this.value = range;
@@ -5929,6 +6169,13 @@
 					this.commitTyped();
 				});
 			},
+			isDisabled() {
+				return !!this.$root.querySelector(dataKey("control"))?.disabled;
+			},
+			open(focus = true) {
+				if (this.isDisabled()) return;
+				_popover.open.call(this, focus);
+			},
 			onOpen() {
 				_popover.onOpen.call(this);
 				this.$nextTick(() => this.scrollToSelected());
@@ -5957,6 +6204,7 @@
 				return this.value === hhmm;
 			},
 			select(hhmm) {
+				if (this.isDisabled()) return;
 				if (this.isTimeDisabled(hhmm)) return;
 				if (multiple) {
 					this.toggleMultiple(hhmm);
@@ -6000,6 +6248,7 @@
 				this.typed = this.value ?? "";
 			},
 			commitTyped() {
+				if (this.isDisabled()) return;
 				if (!this.typable()) return;
 				if ((this.typed.match(/\d/g) ?? []).length < 4) return;
 				const parsed = parseTimeToken(this.typed);
@@ -7070,6 +7319,7 @@
 			autocomplete_exports,
 			badge_exports,
 			calendar_exports,
+			carousel_exports,
 			chartjs_exports,
 			checkbox_all_exports,
 			clearable_exports,

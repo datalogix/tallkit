@@ -88,7 +88,6 @@ $showPresets = count($presetKeys) > 0;
             'locale' => $locale,
             'format' => $format,
             'withConfirmation' => (bool) $withConfirmation,
-            'labels' => ['selected' => __('selected')],
         ]) }})"
         {{
             TALLKit::attributesAfter(attributes: $attributes, prefix: 'picker:')
@@ -120,8 +119,8 @@ $showPresets = count($presetKeys) > 0;
                             'wire:model' => $wireModel,
                         ])
                         ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: [
-                            'picker:', 'trigger:', 'placeholder:', 'popover:', 'layout:', 'presets:', 'preset:', 'calendar:', 'inputs:',
-                            'start-date:', 'end-date:', 'single-date:',
+                            'picker:', 'trigger:', 'placeholder:', 'formatted:', 'popover:', 'layout:', 'presets:', 'preset:', 'calendar:', 'inputs:',
+                            'start-date:', 'divider:', 'end-date:', 'single-date:',
                             'footer:', 'clearable:', 'cancel:', 'apply:',
                         ]))
                 }}
@@ -152,11 +151,6 @@ $showPresets = count($presetKeys) > 0;
                                 TALLKit::paddingStart(size: $size, mode: 'large'),
                                 TALLKit::paddingEnd(size: $size, mode: 'large'),
                             )
-                            ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: [
-                                'picker:', 'placeholder:', 'popover:', 'layout:', 'presets:', 'preset:', 'calendar:', 'inputs:',
-                                'start-date:', 'end-date:', 'single-date:',
-                                'footer:', 'clearable:', 'cancel:', 'apply:',
-                            ]))
                     }}
                     @if ($multiple)
                         x-bind:value="formatted() ?? ''"
@@ -183,21 +177,13 @@ $showPresets = count($presetKeys) > 0;
                                 [:where(&)]:w-full
                                 [:where(&)]:justify-start
                                 [:where(&)]:font-normal
-
-                                [:where(&)]:text-zinc-700
-                                hover:[:where(&)]:text-zinc-700
-                                dark:[:where(&)]:text-zinc-300
-                                dark:[:where(&)]:hover:text-zinc-300
                             ',
+                            TALLKit::textNeutral(prefix: '[:where(&)]:'),
+                            TALLKit::textNeutral(prefix: 'hover:[:where(&)]:'),
                             TALLKit::height(size: $size),
                             TALLKit::paddingInline(size: $size, mode: 'large'),
                             TALLKit::fontSize(size: $size, mode: 'large'),
                         )
-                        ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: [
-                            'picker:', 'placeholder:', 'popover:', 'layout:', 'presets:', 'preset:', 'calendar:', 'inputs:',
-                            'start-date:', 'end-date:', 'single-date:',
-                            'footer:', 'clearable:', 'cancel:', 'apply:',
-                        ]))
                     "
                     variant="none"
                     :$disabled
@@ -207,10 +193,17 @@ $showPresets = count($presetKeys) > 0;
                         x-show="!formatted()"
                         {{
                             TALLKit::attributesAfter(attributes: $attributes, prefix: 'placeholder:')
-                                ->classes('text-zinc-400 dark:text-zinc-400')
+                                ->classes(TALLKit::textNeutral(variant: 'muted'))
                         }}
                     >{{ $placeholderText }}</span>
-                    <span x-show="formatted()" x-text="formatted()"></span>
+                    <span
+                        x-show="formatted()"
+                        x-text="formatted()"
+                        {{
+                            TALLKit::attributesAfter(attributes: $attributes, prefix: 'formatted:')
+                                ->classes('overflow-hidden text-ellipsis')
+                        }}
+                    ></span>
                 </tk:button>
             @endif
         </tk:field.control>
@@ -277,6 +270,7 @@ $showPresets = count($presetKeys) > 0;
                                             ->merge([
                                                 'min' => $min ?? null,
                                                 'max' => $max ?? null,
+                                                'disabled' => $disabled ?: null,
                                             ])
                                     }}
                                     type="date"
@@ -284,7 +278,13 @@ $showPresets = count($presetKeys) > 0;
                                     x-bind:value="value?.start ?? ''"
                                     @change="setRangeBound('start', $event.target.value)"
                                 />
-                                <span class="text-zinc-400 dark:text-zinc-500" aria-hidden="true">&ndash;</span>
+                                <span
+                                    aria-hidden="true"
+                                    {{
+                                        TALLKit::attributesAfter(attributes: $attributes, prefix: 'divider:')
+                                            ->classes(TALLKit::textNeutral(variant: 'muted'))
+                                    }}
+                                >&ndash;</span>
                                 <input
                                     {{
                                         TALLKit::attributesAfter(attributes: $attributes, prefix: 'end-date:')
@@ -303,6 +303,7 @@ $showPresets = count($presetKeys) > 0;
                                             ->merge([
                                                 'min' => $min ?? null,
                                                 'max' => $max ?? null,
+                                                'disabled' => $disabled ?: null,
                                             ])
                                     }}
                                     type="date"
@@ -329,6 +330,7 @@ $showPresets = count($presetKeys) > 0;
                                             ->merge([
                                                 'min' => $min ?? null,
                                                 'max' => $max ?? null,
+                                                'disabled' => $disabled ?: null,
                                             ])
                                     }}
                                     type="date"

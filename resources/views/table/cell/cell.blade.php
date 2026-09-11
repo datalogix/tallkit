@@ -7,13 +7,13 @@
 <td {{ $attributes
     ->whereDoesntStartWith(['container:'])
     ->classes([
-        'py-4 px-6' => !$dense,
+        'py-4 px-6' => ! $dense,
         'p-2.5' => $dense,
         'tk-table-sticky-column' => $sticky,
         '
             [:where(&)]:font-normal [:where(&)]:text-sm
-            [:where(&)]:text-zinc-700 dark:[:where(&)]:text-white/70
         ',
+        TALLKit::textNeutral(prefix: '[:where(&)]:'),
     ])
 }}>
     <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')->classes(

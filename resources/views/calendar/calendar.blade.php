@@ -214,7 +214,8 @@ $initialValueString = match (true) {
                     {{
                         TALLKit::attributesAfter(attributes: $attributes, prefix: 'weekdays:')
                             ->classes(
-                                'grid text-center text-zinc-400 dark:text-zinc-500',
+                                'grid text-center',
+                                TALLKit::textNeutral(variant: 'muted'),
                                 $weekNumbers ? 'grid-cols-8' : 'grid-cols-7',
                                 TALLKit::fontSize(size: $size, mode: 'small'),
                             )
@@ -250,7 +251,7 @@ $initialValueString = match (true) {
                                     TALLKit::attributesAfter(attributes: $attributes, prefix: 'week-number:')
                                         ->classes([
                                             'flex items-center justify-center',
-                                            'text-zinc-400 dark:text-zinc-500',
+                                            TALLKit::textNeutral(variant: 'muted'),
                                             TALLKit::fontSize(size: $size, mode: 'smallest'),
                                         ])
                                 }}
@@ -276,7 +277,7 @@ $initialValueString = match (true) {
                                         [&[data-unavailable]]:disabled:opacity-40
                                         [&[data-unavailable]]:disabled:line-through
 
-                                        [&[data-outside-month]]:opacity-50
+                                        [&[data-outside-month]]:opacity-60
                                         [&[data-active][data-outside-month]]:opacity-100
 
                                         [&[data-in-range]]:rounded-none

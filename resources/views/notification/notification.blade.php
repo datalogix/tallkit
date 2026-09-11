@@ -7,7 +7,6 @@
     'compact' => null,
     'tabs' => null,
     'markAll' => null,
-    'animation' => null,
 ])
 @php
 
@@ -73,7 +72,6 @@ $broadcasting = config('broadcasting.default') && config('broadcasting.default')
                     )
                 "
                 :$size
-                :$animation
                 keep-open
             >
                 <tk:notification.panel

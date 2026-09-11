@@ -16,7 +16,7 @@ $hasStateLabel = $labelOn || $labelOff;
 
 @endphp
 <tk:field.wrapper
-    :inline="!$hasStateLabel"
+    :inline="! $hasStateLabel"
     :$align
     :$name
     :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldProps())"

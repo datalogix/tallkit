@@ -7,7 +7,7 @@
 @php
 
 $list = (bool) $list;
-$square ??= $slot->isEmpty() && !$attributes->get('label');
+$square ??= $slot->isEmpty() && ! $attributes->get('label');
 
 @endphp
 <tk:element
@@ -29,22 +29,22 @@ $square ??= $slot->isEmpty() && !$attributes->get('label');
             TALLKit::roundedSize(size: $size),
             '
                 relative
-                [&:is(a,button)]:hover:text-zinc-800 dark:[&:is(a,button)]:hover:text-white
-                [&[disabled]]:opacity-50 dark:[&[disabled]]:opacity-40
+                [&[disabled]]:opacity-disabled
                 [&[disabled]]:cursor-default [&[disabled]]:pointer-events-none
             ',
-            '[&:is(a,button)]:hover:bg-zinc-800/10 dark:[&:is(a,button)]:hover:bg-white/10' => $indicator && $indicator !== 'bg',
+            TALLKit::textNeutral(variant: 'strong', prefix: '[&:is(a,button)]:hover:'),
+            TALLKit::backgroundNeutral(prefix: '[&:is(a,button)]:hover:') => $indicator && $indicator !== 'bg',
             match ($list) {
                 true => 'w-full justify-start',
                 default => '',
             },
             match ($variant) {
                 'accent' => '
-                    data-current:text-(--color-accent-content)
-                    hover:data-current:text-(--color-accent-content)
+                    data-current:text-[var(--color-accent-content)]
+                    hover:data-current:text-[var(--color-accent-content)]
                     hover:data-current:bg-[color-mix(in_oklab,_var(--color-accent-content),_transparent_90%)]
                 ',
-                default => 'data-current:text-zinc-800 dark:data-current:text-white',
+                default => TALLKit::textNeutral(variant: 'strong', prefix: 'data-current:'),
             },
         ])
         ->when(
@@ -52,7 +52,7 @@ $square ??= $slot->isEmpty() && !$attributes->get('label');
             fn ($c) => $c->classes(
                 match ($variant) {
                     'accent' => 'data-current:bg-[color-mix(in_oklab,_var(--color-accent-content),_transparent_90%)]',
-                    default => 'data-current:bg-zinc-800/10 dark:data-current:bg-white/10',
+                    default => TALLKit::backgroundNeutral(prefix: 'data-current:'),
                 }
             )
         )

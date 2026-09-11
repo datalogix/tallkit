@@ -9,7 +9,7 @@
         ->whereDoesntStartWith(['container:'])
         ->classes([
             '[grid-area:footer]',
-            'p-6 lg:p-8' => !$container,
+            'p-6 lg:p-8' => ! $container,
             'sticky bottom-0 z-10 shadow border-t border-current/15' => $sticky,
             match ($variant) {
                 'none' => '',

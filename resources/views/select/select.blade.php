@@ -92,7 +92,7 @@ $hasMatchingOption = (bool) array_intersect($valueStrings, array_map('strval', $
                         ),
                     )
                     ->when(
-                        !$hasControl,
+                        ! $hasControl,
                         fn ($attrs) => $attrs->classes(
                             'tk-control-standalone',
                             TALLKit::roundedSize(size: $size, mode: 'large'),
