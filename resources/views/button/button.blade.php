@@ -7,12 +7,16 @@
     'circle' => null,
     'square' => null,
     'variant' => null,
+    'label' => null,
+    'tooltip' => null,
+    'iconTrailing' => null,
+    'badge' => null,
 ])
 @php
 
 $variant = $variant ?: 'outline';
-$hasContent = $slot->hasActualContent() || $attributes->has('label');
-$square ??= ! $circle && !($hasContent || $attributes->has('badge'));
+$hasContent = $slot->hasActualContent() || $label !== null;
+$square ??= ! $circle && !($hasContent || $badge !== null);
 $isTypeSubmitAndNotDisabledOnRender = $type === 'submit' && ! $attributes->has('disabled');
 $isJsMethod = Str::startsWith($attributes->whereStartsWith('wire:click')->first() ?? '', '$js.');
 $loading ??= $isTypeSubmitAndNotDisabledOnRender || $attributes->whereStartsWith('wire:click')->isNotEmpty() && ! $isJsMethod;
@@ -31,11 +35,15 @@ if ($loading && $type !== 'submit' && ! $isJsMethod) {
 <tk:element
     name="button"
     :$href
+    :$label
+    :$tooltip
+    :$iconTrailing
+    :$badge
     :type="$type ?? 'button'"
     :icon:size="TALLKit::adjustSize(size: $size)"
     :icon-trailing:size="TALLKit::adjustSize(size: $size)"
     :badge:size="TALLKit::adjustSize(size: $size)"
-    :content:class="$loading && $hasContent ? 'flex-1' : ($attributes->has('badge') || $attributes->has('iconTrailing') ? 'flex-1' : null)"
+    :content:class="$loading && $hasContent ? 'flex-1' : ($badge !== null || $iconTrailing !== null ? 'flex-1' : null)"
     :attributes="$attributes
         ->whereDoesntStartWith(['loading-indicator:', 'loading:'])
         ->classes([

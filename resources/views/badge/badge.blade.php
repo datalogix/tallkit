@@ -5,11 +5,13 @@
     'rounded' => null,
     'solid' => null,
     'close' => null,
+    'label' => null,
 ])
 <tk:element
     name="badge"
     x-data="badge"
     content:class="flex items-center"
+    :$label
     :attributes="$attributes
         ->whereDoesntStartWith(['close:'])
         ->classes(

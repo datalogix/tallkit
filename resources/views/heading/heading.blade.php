@@ -2,10 +2,12 @@
     'size' => null,
     'mode' => null,
     'variant' => null,
+    'label' => null,
 ])
 <tk:element.wrapper
     name="heading"
     as="p"
+    :$label
     :attributes="$attributes->classes(
         TALLKit::fontSize(size: $size, mode: $mode ?? 'largest', weight: true),
         '[:where(&)]:w-fit [&:has(+[data-tallkit-text])]:mb-2 [[data-tallkit-text]+&]:mt-2',

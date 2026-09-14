@@ -1,7 +1,11 @@
+@props([
+    'label' => null,
+])
 <tk:button
     wire:replace.self
     x-cloak
     x-data="clearable()"
+    :$label
     :attributes="$attributes->classes('
         [[data-tallkit-control]:has(:placeholder-shown)_&]:hidden
         [[data-tallkit-control]:has(:disabled)_&]:hidden

@@ -3,15 +3,17 @@
     'size' => null,
     'variant' => null,
     'square' => null,
+    'label' => null,
 ])
 @php
 
 $list = (bool) $list;
-$square ??= $slot->isEmpty() && ! $attributes->get('label');
+$square ??= $slot->isEmpty() && ! $label;
 
 @endphp
 <tk:element
     name="nav-item"
+    :$label
     :icon:size="TALLKit::adjustSize(size: $size)"
     :icon:class="$square ? '' : 'me-1.5'"
     :icon-dot:class="'me-1'"

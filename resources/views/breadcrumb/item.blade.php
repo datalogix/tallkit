@@ -2,6 +2,7 @@
 @props([
     'size' => null,
     'separator' => null,
+    'label' => null,
 ])
 <li {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')->classes(
     '
@@ -11,6 +12,7 @@
 ) }}>
     @if ($slot->isEmpty())
         <tk:element
+            :$label
             :attributes="$attributes->whereDoesntStartWith(['container:', 'separator:'])"
             :icon:size="TALLKit::adjustSize(size: $size)"
             :$size

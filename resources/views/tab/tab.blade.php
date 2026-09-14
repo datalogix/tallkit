@@ -4,6 +4,8 @@
     'variant' => null,
     'name' => null,
     'selected' => null,
+    'label' => null,
+    'badge' => null,
 ])
 @php
 
@@ -71,6 +73,8 @@ $name ??= TALLKit::generateId(prefix: 'tab');
         ])
     "
     :$size
+    :$label
+    :$badge
     variant="none"
 >
     {{ $slot }}
