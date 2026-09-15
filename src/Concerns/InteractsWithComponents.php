@@ -109,17 +109,28 @@ trait InteractsWithComponents
         ?string $message = null,
         ?string $title = null,
         ?string $type = null,
-        ?int $duration = null,
+        int|bool|null $duration = null,
         ?string $position = null,
         ?bool $progress = null,
         ?string $size = null,
-
+        ?bool $invert = null,
+        ?array $actions = null,
+        ?string $id = null,
     ) {
-        if (! in_livewire()) {
+        $component = app('livewire')?->current();
+
+        if (! $component) {
             return;
         }
 
-        return app('livewire')->current()?->js(
+        if ($actions !== null) {
+            $actions = array_map(
+                fn (array $action) => isset($action['method']) ? [...$action, 'component' => $action['component'] ?? $component?->getId()] : $action,
+                $actions,
+            );
+        }
+
+        return $component?->js(
             '$tallkit.toast',
             $message,
             $title,
@@ -128,7 +139,15 @@ trait InteractsWithComponents
             $position,
             $progress,
             $size,
+            $invert,
+            $actions,
+            $id,
         );
+    }
+
+    public function closeToast(string $id)
+    {
+        return app('livewire')?->current()?->js('$tallkit.closeToast', $id);
     }
 
     public function toasts()

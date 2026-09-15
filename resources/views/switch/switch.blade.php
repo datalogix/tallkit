@@ -89,14 +89,14 @@ $hasStateLabel = $labelOn || $labelOff;
             role="switch"
             {{
                 $attributes
-                    ->dataKey('toggle')
+                    ->dataKey('switch')
                     ->merge([
                         'name' => $name,
                         'id' => $id,
                         'value' => $value,
                         'wire:model' => $wireModel,
-                        TALLKit::dataKey(name: 'toggle-group') => $group,
-                        'aria-label' => ($label || $hasStateLabel) ? null : __('Toggle'),
+                        TALLKit::dataKey(name: 'switch-group') => $group,
+                        'aria-label' => ($label || $hasStateLabel) ? null : __('Switch'),
                         'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                         'aria-invalid' => $invalid ? 'true' : null,
                         'data-invalid' => $invalid ? true : null,

@@ -14,9 +14,10 @@
         @if ($expanded !== false) data-open @endif
     >
         <tk:button
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'heading:')->classes('w-full justify-start p-2.5')"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'heading:')->classes('w-full min-w-0 justify-start p-2.5')"
             :$size
             :label="$heading"
+            content:class="truncate"
             variant="subtle"
             icon="chevron-right"
             icon:class="
@@ -28,7 +29,7 @@
         <div
             {{
                 TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')
-                    ->classes('relative hidden group-data-[open]/disclosure:block space-y-[2px]')
+                    ->classes('min-w-0 relative hidden group-data-[open]/disclosure:block space-y-[2px]')
                     ->when($line !== false, fn($attrs) => $attrs->classes(TALLKit::generateClassBySize(size: $size, name: 'ps', values: ['8', '9', '10', '11', '12', '13', '14'])))
                     ->when($collapse === true, fn($attrs) => $attrs->merge(['x-show' => 'opened', 'x-collapse' => '']))
                     ->when(is_string($collapse), fn($attrs) => $attrs->merge(['x-show' => 'opened', 'x-collapse.'.$collapse => '']))
@@ -48,7 +49,7 @@
 @elseif ($heading)
     <div {{ $attributes->whereDoesntStartWith(['heading:', 'container:'])->classes('block space-y-[2px]') }}>
         <tk:heading
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'heading:')->classes('leading-none p-2.5', TALLKit::textNeutral(variant: 'subtle'))"
+            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'heading:')->classes('p-2.5 leading-none truncate', TALLKit::textNeutral(variant: 'subtle'))"
             :size="TALLKit::adjustSize(size: $size)"
             :label="$heading"
         />

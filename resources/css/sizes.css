@@ -1,10 +1,10 @@
-/* width() — plus generateClassBySize(name: 'w') e.g. toggle.blade.php track */
+/* width() — plus generateClassBySize(name: 'w') e.g. switch.blade.php track */
 @source inline('[:where(&)]:w-{0,2,2.5,3,3.5,4,4.5,5,6,7,8,9,10,12,14,16,18,20,22,26,30,36,40,full}{!,}');
 
-/* height() — plus generateClassBySize(name: 'h') e.g. progress bar, toggle track */
+/* height() — plus generateClassBySize(name: 'h') e.g. progress bar, switch track */
 @source inline('[:where(&)]:h-{0,0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,6,7,8,9,10,12,14,16,18,20,22,26,30,36,40,px,full}');
 
-/* widthHeight() — plus generateClassBySize(name: 'size') e.g. spacer, toggle thumb */
+/* widthHeight() — plus generateClassBySize(name: 'size') e.g. spacer, switch thumb */
 @source inline('[:where(&)]:size-{0,2,2.5,3,3.5,4,4.5,5,5.5,6,7,8,9,10,12,14,16,20,24,28,full}');
 
 /* generateClassBySize(name: 'min-h') — select/combobox/display control min-height */

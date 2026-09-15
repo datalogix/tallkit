@@ -13,11 +13,15 @@
 @source inline('{hover:,[&[data-active]]:,checked:,has-[input:checked]:,[&:is(button)]:hover:}bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-600');
 @source inline('dark:{hover:,[&[data-active]]:,checked:,has-[input:checked]:,[&:is(button)]:hover:}bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{300,400,500}');
 
-/* mutedBackground() — status ([&:is(a)]) and badge muted ([&:is(button)]), shade fixed at 400 */
+/* mutedBackground() — status ([&:is(a)]), badge muted ([&:is(button)]), and button.blade.php's 'filled' isColored background (as: 'a'|'button'), shade fixed at 400 */
 @source inline('bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-400/20');
 @source inline('dark:bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-400/40');
 @source inline('{[&:is(a)]:hover:,[&:is(button)]:hover:}bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-400/30');
 @source inline('dark:{[&:is(a)]:hover:,[&:is(button)]:hover:}bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-400/50');
+
+/* button.blade.php isColored hover/active tint — outline/ghost/subtle variants stay transparent (or white) at rest, tint on hover/active; 'subtle' uses half the opacity of 'outline'/'ghost' (10/20 vs 20/40) */
+@source inline('[:where(&)]:{hover:,[&[data-active]]:}bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-400/{10,20}');
+@source inline('dark:[:where(&)]:{hover:,[&[data-active]]:}bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-400/{20,40}');
 
 /* uploadBg() — dropzone/chip/tile/list-item drag-over background */
 @source inline('bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-500/10');
@@ -28,12 +32,18 @@
  * prefixed with data-active: (menu item danger variant) or [:where(&)]: (error
  * message). All three forms share shade 600 light / {400,500} dark (the pair
  * text() itself can produce); 700 light and 200/300/700 dark are the extra
- * shades used only by the un-prefixed textStrong()/mutedText()/uploadText().
+ * shades used only by the un-prefixed textStrong()/mutedText()/uploadText() —
+ * which also covers button.blade.php's isColored text ('ghost' → text(),
+ * 'filled'/'outline' → mutedText(), both called unprefixed).
  */
 @source inline('{,data-active:,[:where(&)]:}text-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-600');
 @source inline('text-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-700');
 @source inline('dark:{,data-active:,[:where(&)]:}text-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{400,500}');
 @source inline('dark:text-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{200,300,700}');
+
+/* button.blade.php isColored 'subtle' text — resting lighter (400 light/300 dark), intensifies to match the 'ghost' variant's constant strength (600 light/400 dark) on hover/active */
+@source inline('[:where(&)]:{,hover:,[&[data-active]]:}text-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{400,600}');
+@source inline('dark:[:where(&)]:{,hover:,[&[data-active]]:}text-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{300,400}');
 
 /*
  * textNeutral() — fixed zinc/white shades, independent of the 21-color loop above.
@@ -60,9 +70,13 @@
 @source inline('{,[:where(&)]:,[&:is(a,button)]:hover:,data-current:}bg-zinc-800/{5,10,20}');
 @source inline('dark:{,[:where(&)]:,[&:is(a,button)]:hover:,data-current:}bg-white/{10,20}');
 
-/* uploadRing()/uploadBorder() */
-@source inline('{ring,border}-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{300,400,500,600,700}');
-@source inline('dark:{ring,border}-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{300,400,500,600,700}');
+/*
+ * uploadRing()/uploadBorder() (plain shades 300-700) and button.blade.php's
+ * 'outline' isColored border (the [:where(&)]: prefix and the 400/20, 400/40
+ * opacity shades exist only for this button border treatment).
+ */
+@source inline('{,[:where(&)]:}{ring,border}-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{300,400,500,600,700,400/20,400/40}');
+@source inline('dark:{,[:where(&)]:}{ring,border}-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{300,400,500,600,700,400/20,400/40}');
 
 /* pastelBackground() — avatar (dark:text-*-200 reuses the text()/mutedText() safelist above) */
 @source inline('bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-200');
@@ -95,5 +109,5 @@
 @source inline('focus-visible:[&::-{webkit-slider,moz-range}-thumb]:ring-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-700/20');
 @source inline('dark:focus-visible:[&::-{webkit-slider,moz-range}-thumb]:ring-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-300/20');
 
-/* frameBackground()/solidBackground() — static (non-color) fragments */
-@source inline('{,dark:,*:}text-white');
+/* frameBackground()/solidBackground() — static (non-color) fragments: unprefixed (solidBackground()) and *: (frameBackground()) */
+@source inline('{,*:}text-white');

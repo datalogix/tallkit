@@ -64,6 +64,7 @@ $description ??= match ((string) $code) {
     <tk:content
         :attributes="$attributes->whereStartsWith('content:')"
         :size="TALLKit::adjustSize(size: $size, move: 1)"
+        title:class="w-auto"
         :$title
         :$description
     />

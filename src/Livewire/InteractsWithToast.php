@@ -15,4 +15,9 @@ trait InteractsWithToast
     {
         return fn () => TALLKit::toasts();
     }
+
+    public function closeToast()
+    {
+        return fn (...$args) => TALLKit::closeToast(...$args);
+    }
 }

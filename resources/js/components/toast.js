@@ -13,8 +13,18 @@ export function toast() {
       bind(this.$el, {
         ['@toast.document'](e) {
           this.addToast(e.detail)
-        }
+        },
+        ['@toast-close.document'](e) {
+          this.removeToast(e.detail.id)
+        },
       })
+
+      window.__tallkitToastReady = true
+      ;(window.__tallkitToastQueue ?? []).forEach(({ event, detail }) => {
+        if (event === 'toast') this.addToast(detail)
+        if (event === 'toast-close') this.removeToast(detail.id)
+      })
+      window.__tallkitToastQueue = []
 
       this.initAttentionListeners()
     },
@@ -105,7 +115,7 @@ export function toast() {
         }
       }
 
-      const duration = props.duration ?? getDynamicDuration(props.title, props.message)
+      const duration = resolveDuration(props.duration, props.title, props.message, props.actions?.length > 0)
       const manager = this
       const currentToast = props.id ? this.toasts.find((t) => t.id === props.id) : null
 
@@ -124,6 +134,7 @@ export function toast() {
         progress: props.progress ?? true,
         pauseOnHover: props.pauseOnHover ?? true,
         swipe: props.swipe ?? true,
+        actions: normalizeActions(props.actions),
 
         visible: false,
 
@@ -289,12 +300,13 @@ export function toast() {
         'progress',
         'pauseOnHover',
         'swipe',
+        'invert',
+        'actions',
       ];
 
       for (const key in data) {
-        if (allowed.includes(key)) {
-          (toast)[key] = (data)[key]
-        }
+        if (!allowed.includes(key) || key === 'duration') continue
+        toast[key] = key === 'actions' ? normalizeActions(data[key]) : data[key]
       }
 
       toast.currentX = 0
@@ -306,7 +318,8 @@ export function toast() {
         toast.pausedAt = null
         toast.pausedByHover = false
         toast.pausedByAttention = false
-        toast.total = data.duration
+        toast.duration = resolveDuration(data.duration, toast.title, toast.message, toast.actions?.length > 0)
+        toast.total = toast.duration
         toast.elapsedBeforePause = 0
 
         toast.progressValue = 1
@@ -376,7 +389,7 @@ export function toast() {
       return this.notify({
         title: message,
         type: 'loading',
-        duration: null,
+        duration: false,
         progress: false,
         swipe: false,
         ...props
@@ -480,7 +493,55 @@ export function toast() {
   };
 }
 
-function normalizePosition(position = 'bottom-right') {
+function normalizeActions(actions) {
+  return (actions ?? []).map((action) => ({
+    loading: false,
+    ...action,
+    run() {
+      let result
+
+      if (this.onClick) {
+        result = this.onClick()
+      } else if (this.method) {
+        const component = window.Livewire?.find(this.component)
+
+        if (!component) {
+          console.warn(`[TALLKit] Toast action "${this.label}" could not find Livewire component "${this.component}" to call "${this.method}".`, this)
+          return
+        }
+
+        result = component.call(this.method, ...normalizeParams(this.params))
+      } else if (this.event) {
+        window.Livewire?.dispatch(this.event, this.params ?? {})
+        return
+      } else {
+        console.warn(`[TALLKit] Toast action "${this.label}" has no onClick, method, event, or href handler.`, this)
+        return
+      }
+
+      if (result instanceof Promise) {
+        this.loading = true
+        result.finally(() => { this.loading = false })
+      }
+    },
+  }))
+}
+
+function normalizeParams(params) {
+  if (params == null) return []
+  return Array.isArray(params) ? params : Object.values(params)
+}
+
+function resolveDuration(duration, title, message, hasActions = false) {
+  if (duration === false) return null
+  if (duration === true) return getDynamicDuration(title, message)
+  if (duration == null) return hasActions ? null : getDynamicDuration(title, message)
+  return duration
+}
+
+function normalizePosition(position) {
+  position ??= 'bottom-right'
+
   if (position === 'top') return 'top-right'
   if (position === 'bottom') return 'bottom-right'
   return position
@@ -494,8 +555,8 @@ function getDynamicDuration(title = '', message = '') {
   const base = 1000
 
   const weightedLength =
-    title.length * 1.2 +
-    message.length * 1.6
+    (title?.length ?? 0) * 1.2 +
+    (message?.length ?? 0) * 1.6
 
   const readingSpeed = 16
 

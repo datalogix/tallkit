@@ -1,11 +1,12 @@
 import { initAlpine, setupAlpine } from './alpine'
 import { appearance } from './appearance'
-import { toast } from './toast'
+import { toast, closeToast } from './toast'
 import { loadScript, loadStyle } from './utils'
 
 export const tallkit = {
   appearance,
   toast,
+  closeToast,
   loadScript,
   loadStyle,
   modal: (name) => {

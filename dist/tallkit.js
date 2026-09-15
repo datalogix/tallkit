@@ -5944,6 +5944,12 @@
 		};
 	}
 	//#endregion
+	//#region resources/js/components/switch-all.js
+	var switch_all_exports = /* @__PURE__ */ __exportAll({ switchAll: () => switchAll });
+	function switchAll({ group = null } = {}) {
+		return groupAll("switch", group ?? "");
+	}
+	//#endregion
 	//#region resources/js/components/tab.js
 	var tab_exports = /* @__PURE__ */ __exportAll({ tab: () => tab });
 	function tab({ selectFirst = null, orientation = null } = {}) {
@@ -6622,9 +6628,20 @@
 			idleDelay: 0,
 			_listeners: [],
 			init() {
-				bind(this.$el, { ["@toast.document"](e) {
-					this.addToast(e.detail);
-				} });
+				bind(this.$el, {
+					["@toast.document"](e) {
+						this.addToast(e.detail);
+					},
+					["@toast-close.document"](e) {
+						this.removeToast(e.detail.id);
+					}
+				});
+				window.__tallkitToastReady = true;
+				(window.__tallkitToastQueue ?? []).forEach(({ event, detail }) => {
+					if (event === "toast") this.addToast(detail);
+					if (event === "toast-close") this.removeToast(detail.id);
+				});
+				window.__tallkitToastQueue = [];
 				this.initAttentionListeners();
 			},
 			initAttentionListeners() {
@@ -6692,7 +6709,7 @@
 						if (oldest) this.removeToast(oldest.id);
 					}
 				}
-				const duration = props.duration ?? getDynamicDuration(props.title, props.message);
+				const duration = resolveDuration(props.duration, props.title, props.message, props.actions?.length > 0);
 				const manager = this;
 				const currentToast = props.id ? this.toasts.find((t) => t.id === props.id) : null;
 				if (currentToast) return this.updateToast(currentToast.id, props);
@@ -6706,6 +6723,7 @@
 					progress: props.progress ?? true,
 					pauseOnHover: props.pauseOnHover ?? true,
 					swipe: props.swipe ?? true,
+					actions: normalizeActions(props.actions),
 					visible: false,
 					progressValue: 1,
 					startTime: 0,
@@ -6819,9 +6837,14 @@
 					"attentionAware",
 					"progress",
 					"pauseOnHover",
-					"swipe"
+					"swipe",
+					"invert",
+					"actions"
 				];
-				for (const key in data) if (allowed.includes(key)) toast[key] = data[key];
+				for (const key in data) {
+					if (!allowed.includes(key) || key === "duration") continue;
+					toast[key] = key === "actions" ? normalizeActions(data[key]) : data[key];
+				}
 				toast.currentX = 0;
 				toast.swiping = false;
 				if (data.duration !== void 0) {
@@ -6829,7 +6852,8 @@
 					toast.pausedAt = null;
 					toast.pausedByHover = false;
 					toast.pausedByAttention = false;
-					toast.total = data.duration;
+					toast.duration = resolveDuration(data.duration, toast.title, toast.message, toast.actions?.length > 0);
+					toast.total = toast.duration;
 					toast.elapsedBeforePause = 0;
 					toast.progressValue = 1;
 					if (toast.visible) toast.start();
@@ -6884,7 +6908,7 @@
 				return this.notify({
 					title: message,
 					type: "loading",
-					duration: null,
+					duration: false,
 					progress: false,
 					swipe: false,
 					...props
@@ -6958,7 +6982,48 @@
 			}
 		};
 	}
-	function normalizePosition(position = "bottom-right") {
+	function normalizeActions(actions) {
+		return (actions ?? []).map((action) => ({
+			loading: false,
+			...action,
+			run() {
+				let result;
+				if (this.onClick) result = this.onClick();
+				else if (this.method) {
+					const component = window.Livewire?.find(this.component);
+					if (!component) {
+						console.warn(`[TALLKit] Toast action "${this.label}" could not find Livewire component "${this.component}" to call "${this.method}".`, this);
+						return;
+					}
+					result = component.call(this.method, ...normalizeParams(this.params));
+				} else if (this.event) {
+					window.Livewire?.dispatch(this.event, this.params ?? {});
+					return;
+				} else {
+					console.warn(`[TALLKit] Toast action "${this.label}" has no onClick, method, event, or href handler.`, this);
+					return;
+				}
+				if (result instanceof Promise) {
+					this.loading = true;
+					result.finally(() => {
+						this.loading = false;
+					});
+				}
+			}
+		}));
+	}
+	function normalizeParams(params) {
+		if (params == null) return [];
+		return Array.isArray(params) ? params : Object.values(params);
+	}
+	function resolveDuration(duration, title, message, hasActions = false) {
+		if (duration === false) return null;
+		if (duration === true) return getDynamicDuration(title, message);
+		if (duration == null) return hasActions ? null : getDynamicDuration(title, message);
+		return duration;
+	}
+	function normalizePosition(position) {
+		position ??= "bottom-right";
 		if (position === "top") return "top-right";
 		if (position === "bottom") return "bottom-right";
 		return position;
@@ -6967,16 +7032,10 @@
 		const text = `${title} ${message}`.trim();
 		const min = 3e3;
 		const max = 9e3;
-		let time = 1e3 + (title.length * 1.2 + message.length * 1.6) / 16 * 1e3;
+		let time = 1e3 + ((title?.length ?? 0) * 1.2 + (message?.length ?? 0) * 1.6) / 16 * 1e3;
 		const lines = text.split("\n").length;
 		time += lines * 300;
 		return Math.min(max, Math.max(min, time));
-	}
-	//#endregion
-	//#region resources/js/components/toggle-all.js
-	var toggle_all_exports = /* @__PURE__ */ __exportAll({ toggleAll: () => toggleAll });
-	function toggleAll({ group = null } = {}) {
-		return groupAll("toggle", group ?? "");
 	}
 	//#endregion
 	//#region resources/js/components/upload.js
@@ -7359,6 +7418,7 @@
 			sidebar_exports,
 			slider_exports,
 			submenu_exports,
+			switch_all_exports,
 			tab_exports,
 			table_exports,
 			textarea_exports,
@@ -7366,7 +7426,6 @@
 			tinymce_exports,
 			tiptap_exports,
 			toast_exports,
-			toggle_all_exports,
 			upload_exports
 		]).flatMap((module) => Object.entries(module).filter(([, v]) => typeof v === "function")));
 		for (const [name, fn] of Object.entries(components)) window.Alpine.data(name, fn);
@@ -7446,26 +7505,40 @@
 				type: "warning"
 			})
 		};
-		document.dispatchEvent(new CustomEvent("toast", { detail: parseArgs(...args) }));
+		emit("toast", parseArgs(...args));
+	}
+	function closeToast(id) {
+		emit("toast-close", { id });
+	}
+	function emit(event, detail) {
+		if (window.__tallkitToastReady) document.dispatchEvent(new CustomEvent(event, { detail }));
+		else (window.__tallkitToastQueue ??= []).push({
+			event,
+			detail
+		});
 	}
 	var parseArgs = (...args) => {
 		if (typeof args[0] === "object" && args[0] !== null && !Array.isArray(args[0])) return args[0];
-		const [message, title, type, duration, position, progress, size] = args;
-		return {
+		const [message, title, type, duration, position, progress, size, invert, actions, id] = args;
+		return Object.fromEntries(Object.entries({
 			message,
 			title,
 			type,
 			duration,
 			position,
 			progress,
-			size
-		};
+			size,
+			invert,
+			actions,
+			id
+		}).filter(([, value]) => value !== null));
 	};
 	//#endregion
 	//#region resources/js/tallkit.js
 	var tallkit = {
 		appearance,
 		toast,
+		closeToast,
 		loadScript,
 		loadStyle,
 		modal: (name) => {

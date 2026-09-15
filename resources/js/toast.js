@@ -8,7 +8,19 @@ export function toast(...args) {
     };
   }
 
-  document.dispatchEvent(new CustomEvent('toast', { detail: parseArgs(...args) }))
+  emit('toast', parseArgs(...args))
+}
+
+export function closeToast(id) {
+  emit('toast-close', { id })
+}
+
+function emit(event, detail) {
+  if (window.__tallkitToastReady) {
+    document.dispatchEvent(new CustomEvent(event, { detail }))
+  } else {
+    (window.__tallkitToastQueue ??= []).push({ event, detail })
+  }
 }
 
 const parseArgs = (...args) => {
@@ -16,6 +28,8 @@ const parseArgs = (...args) => {
     return args[0]
   }
 
-  const [message, title, type, duration, position, progress, size] = args
-  return { message, title, type, duration, position, progress, size }
+  const [message, title, type, duration, position, progress, size, invert, actions, id] = args
+  const detail = { message, title, type, duration, position, progress, size, invert, actions, id }
+
+  return Object.fromEntries(Object.entries(detail).filter(([, value]) => value !== null))
 }

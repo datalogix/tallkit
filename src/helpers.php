@@ -108,6 +108,13 @@ if (! function_exists('toast')) {
     }
 }
 
+if (! function_exists('close_toast')) {
+    function close_toast(...$args)
+    {
+        return TALLKit::closeToast(...$args);
+    }
+}
+
 if (! function_exists('alert')) {
     function alert(...$args)
     {
