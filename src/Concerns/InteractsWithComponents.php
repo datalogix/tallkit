@@ -62,7 +62,7 @@ trait InteractsWithComponents
 
             public function show()
             {
-                $component = in_livewire() ? app('livewire')->current() : null;
+                $component = app('livewire')?->current();
 
                 if (! $component) {
                     return;
@@ -77,7 +77,7 @@ trait InteractsWithComponents
 
             public function close()
             {
-                $component = in_livewire() ? app('livewire')->current() : null;
+                $component = app('livewire')?->current();
 
                 if (! $component) {
                     return;
@@ -98,9 +98,13 @@ trait InteractsWithComponents
         {
             public function close()
             {
-                if (in_livewire()) {
-                    app('livewire')->current()?->dispatch('modal-close');
+                $component = app('livewire')?->current();
+
+                if (! $component) {
+                    return;
                 }
+
+                $component->dispatch('modal-close');
             }
         };
     }
