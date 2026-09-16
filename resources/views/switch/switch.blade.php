@@ -7,12 +7,23 @@
     'labelOn' => null,
     'labelOff' => null,
     'group' => null,
+    'loading' => null,
+    'loadingDelay' => null,
+    'loadingMinDuration' => null,
 ])
 @php
 
 [$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
 $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
 $hasStateLabel = $labelOn || $labelOff;
+
+$wireModelDirective = $attributes->wire('model');
+$isLiveModel = $wireModelDirective?->directive && $wireModelDirective->hasModifier('live');
+$hasWireChange = $attributes->whereStartsWith('wire:change')->isNotEmpty();
+
+$loading ??= $hasWireChange || $isLiveModel;
+$loadingAction = $hasWireChange ? $attributes->whereStartsWith('wire:change')->first() : null;
+$loadingModel = $isLiveModel ? $wireModelDirective->value() : null;
 
 @endphp
 <tk:field.wrapper
@@ -35,9 +46,18 @@ $hasStateLabel = $labelOn || $labelOff;
         >
     @endif
     <label
-        {{ $attributes->only('disabled')->dataKey('control') }}
         {{
             TALLKit::attributesAfter(attributes: $attributes, prefix: 'control:')
+                ->dataKey('control')
+                ->merge([
+                    'x-data' => $loading ? 'toggle('.Js::from(array_filter([
+                        'action' => $loadingAction,
+                        'model' => $loadingModel,
+                        'delay' => $loadingDelay,
+                        'minDuration' => $loadingMinDuration,
+                    ], fn ($value) => $value !== null)).')' : null,
+                    'disabled' => $attributes->get('disabled'),
+                ])
                 ->classes(
                     '
                         tk-control-transition
@@ -101,7 +121,9 @@ $hasStateLabel = $labelOn || $labelOff;
                         'aria-invalid' => $invalid ? 'true' : null,
                         'data-invalid' => $invalid ? true : null,
                     ])
-                    ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: ['icon-on:', 'icon-off:', 'state:', 'state-group:']))
+                    ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: [
+                        'icon-on:', 'icon-off:', 'state:', 'state-group:', 'label-checked:', 'label-unchecked:'
+                    ]))
                     ->classes('sr-only peer')
             }}
         />
@@ -143,15 +165,33 @@ $hasStateLabel = $labelOn || $labelOff;
         >
             @if ($iconOn)
                 <tk:icon
+                    :$size
                     :icon="$iconOn"
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-on:')->classes('checked')"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-on:')
+                        ->classes('checked')
+                        ->when($loading, fn ($attrs) => $attrs->merge(['x-show' => '!busy']))
+                    "
                 />
             @endif
 
             @if ($iconOff)
                 <tk:icon
+                    :$size
                     :icon="$iconOff"
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-off:')->classes('unchecked')"
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-off:')
+                        ->classes('unchecked')
+                        ->when($loading, fn ($attrs) => $attrs->merge(['x-show' => '!busy']))
+                    "
+                />
+            @endif
+
+            @if ($loading)
+                <tk:loading
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'loading:')"
+                    x-show="busy"
+                    x-cloak
+                    :size="TALLKit::adjustSize(size: $size)"
+                    :announce="false"
                 />
             @endif
         </span>
@@ -165,12 +205,18 @@ $hasStateLabel = $labelOn || $labelOff;
                         ])
                         ->classes(
                             'cursor-pointer select-none',
-                            TALLKit::fontSize(size: $size)
+                            TALLKit::fontSize(size: $size),
                         )
                 }}
             >
-                <span class="label-checked">{{ $labelOn }}</span>
-                <span class="label-unchecked">{{ $labelOff }}</span>
+                <tk:element
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'label-checked:')->classes('label-checked')"
+                    :label="$labelOn"
+                />
+                <tk:element
+                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'label-unchecked:')->classes('label-unchecked')"
+                    :label="$labelOff"
+                />
             </label>
         </div>
     @endif

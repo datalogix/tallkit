@@ -45,6 +45,10 @@
 @source inline('[:where(&)]:{,hover:,[&[data-active]]:}text-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{400,600}');
 @source inline('dark:[:where(&)]:{,hover:,[&[data-active]]:}text-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{300,400}');
 
+/* toggle.blade.php isColored — active icon/label color (checked state), text() called with the has-[input:checked]: prefix */
+@source inline('has-[input:checked]:text-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-600');
+@source inline('dark:has-[input:checked]:text-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{400,500}');
+
 /*
  * textNeutral() — fixed zinc/white shades, independent of the 21-color loop above.
  * Covers the no-prefix and [:where(&)]: forms (heading, text, label, button, table,
@@ -61,6 +65,10 @@
 @source inline('dark:{data-active:,data-current:,[&:is(a,button)]:hover:,*:}text-white');
 @source inline('*:[data-tallkit-icon]:text-zinc-400');
 @source inline('dark:*:[data-tallkit-icon]:text-zinc-500');
+
+/* toggle.blade.php default (no color) — checked strengthens from the idle 'subtle' shade to 'strong', has-[input:checked]: prefix on textNeutral('strong') */
+@source inline('has-[input:checked]:text-zinc-800');
+@source inline('dark:has-[input:checked]:text-white');
 
 /*
  * backgroundNeutral() — fixed zinc/white overlay shades for subtle surfaces
