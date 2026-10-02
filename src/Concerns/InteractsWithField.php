@@ -244,6 +244,24 @@ trait InteractsWithField
         return '_'.implode('_', $words).'_';
     }
 
+    protected function fieldMasks(bool $all = false): array
+    {
+        $masks = (array) config('tallkit.masks', []);
+
+        if (! preg_match('/^[a-z]{2,3}([_-][A-Za-z0-9]+)?$/', (string) array_key_first($masks))) {
+            return $all ? [$masks] : $masks;
+        }
+
+        if ($all) {
+            return array_values(array_map(fn ($set) => (array) $set, $masks));
+        }
+
+        $locale = $this->resolveLocale();
+        $sets = collect($masks)->mapWithKeys(fn ($set, $key) => [$this->resolveLocale($key) => (array) $set]);
+
+        return $sets[$locale] ?? $sets[Str::before($locale, '-')] ?? [];
+    }
+
     public function fieldMask(
         ?string $name = null,
         null|string|bool $mask = null,
@@ -253,12 +271,15 @@ trait InteractsWithField
             return null;
         }
 
-        $masks = (array) config('tallkit.masks', []);
+        $masks = $this->fieldMasks();
 
         if (is_string($mask)) {
-            foreach ($masks as $maskValue => $names) {
-                if ($this->fieldNameMatches($mask, $names)) {
-                    return (string) $maskValue;
+            // A mask asked by name works in any locale.
+            foreach ([$masks, ...$this->fieldMasks(all: true)] as $set) {
+                foreach ($set as $maskValue => $names) {
+                    if ($this->fieldNameMatches($mask, $names)) {
+                        return (string) $maskValue;
+                    }
                 }
             }
 

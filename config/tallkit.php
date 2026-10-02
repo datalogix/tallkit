@@ -16,15 +16,17 @@ return [
         'unavatar' => true,
     ],
 
-    // mask => input names, the most specific first. [] turns them off.
+    // By app locale (or its language): mask => input names, the most specific first. A locale without one gets none.
     'masks' => [
-        '99999-999' => ['cep', 'zipcode', 'zip-code'],
-        '99/99/9999 99:99' => ['datetime', 'date_time', '_at'],
-        '99/99/9999' => ['date', 'birthdate', 'birth_date', '_on'],
-        '99:99' => ['time'],
-        '999.999.999-99' => ['cpf'],
-        '**.***.***/****-99' => ['cnpj'],
-        '(99) 999999999' => ['tel', 'phone', 'telephone', 'cellphone', 'mobile', 'whatsapp'],
+        'pt_BR' => [
+            '99999-999' => ['cep', 'zipcode', 'zip-code'],
+            '99/99/9999 99:99' => ['datetime', 'date_time', '_at'],
+            '99/99/9999' => ['date', 'birthdate', 'birth_date', '_on'],
+            '99:99' => ['time'],
+            '999.999.999-99' => ['cpf'],
+            '**.***.***/****-99' => ['cnpj'],
+            '(99) 999999999' => ['tel', 'phone', 'telephone', 'cellphone', 'mobile', 'whatsapp'],
+        ],
     ],
 
     'tooltip' => [

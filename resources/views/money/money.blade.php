@@ -59,13 +59,13 @@ $currencies = [
     ],
 ];
 
-$currency ??= match (app()->getLocale()) {
+$currency ??= match (TALLKit::locale()) {
     'pt_BR' => 'BRL',
     'pt_PT' => 'EUR',
     'en_US', 'en' => 'USD',
     'en_GB' => 'GBP',
     'ja_JP' => 'JPY',
-    default => match (Str::before(app()->getLocale(), '_')) {
+    default => match (Str::before(TALLKit::locale(), '_')) {
         'pt' => 'BRL',
         'en' => 'USD',
         'ja' => 'JPY',

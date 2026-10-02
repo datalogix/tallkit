@@ -1,4 +1,4 @@
-@aware(['size', 'collapse', 'reversed', 'border'])
+@aware(['size', 'collapse', 'reversed', 'border', 'level'])
 @props([
     'size' => null,
     'collapse' => null,
@@ -7,7 +7,7 @@
     'expanded' => null,
     'disabled' => null,
     'label' => null,
-    'level' => 3,
+    'level' => 2,
 ])
 <div
     wire:ignore.self

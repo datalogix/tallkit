@@ -22,7 +22,7 @@ $keywords ??= config('app.keywords');
 $author ??= config('app.author');
 $image ??= TALLKit::findImage('meta-image');
 $url ??= url()->current();
-$locale ??= app()->getLocale();
+$locale ??= TALLKit::locale();
 $canonical = $canonical === true
     ? (fn ($query) => url()->current().($query ? '?'.Arr::query($query) : ''))(
         Arr::where(request()->query(), fn ($value, $key) => ! preg_match('/^(utm_|fbclid$|gclid$|msclkid$|mc_|_ga$)/', (string) $key))

@@ -4,6 +4,7 @@
     'reversed' => null,
     'size' => null,
     'border' => null,
+    'level' => 2,
 ])
 <div
     x-data="disclosureGroup({ exclusive: @js($exclusive) })"

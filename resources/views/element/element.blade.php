@@ -29,6 +29,7 @@
 
 $as ??= 'span';
 $href ??= route_detect($route, $parameters, $href);
+$href = TALLKit::safeHref($href);
 $ariaLabel = $ariaLabel === true || $ariaLabel === null
     ? (in_array($as, ['a', 'button'], true) || $href || $type || $action || $attributes->has('role')
         ? (is_string($label) && $label !== '' ? $label : ($slot->hasActualContent() ? null : $tooltip))

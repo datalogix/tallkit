@@ -37,20 +37,25 @@ trait InteractsWithUrl
         return $this->findAsset($paths);
     }
 
-    // Read as a browser reads an href: "\tjava\nscript:" is javascript:, and parse_url() takes " javascript:" for a path.
     public function safeUrl(?string $url): ?string
+    {
+        [$url, $scheme] = $this->urlScheme($url);
+
+        return $url === '' || ($scheme !== null && ! in_array($scheme, ['http', 'https'], true)) ? null : $url;
+    }
+
+    public function safeHref(string|\Stringable|null $href): ?string
+    {
+        [$url, $scheme] = $this->urlScheme((string) $href);
+
+        return $url === '' || in_array($scheme, ['javascript', 'vbscript', 'data'], true) ? null : (string) $href;
+    }
+
+    protected function urlScheme(?string $url): array
     {
         $url = preg_replace('/[\t\n\r]/', '', trim((string) $url, "\x00..\x20"));
 
-        if ($url === '') {
-            return null;
-        }
-
-        if (preg_match('/^([^:\/?#]+):/', $url, $match)) {
-            return in_array(strtolower($match[1]), ['http', 'https'], true) ? $url : null;
-        }
-
-        return $url;
+        return [$url, preg_match('/^([^:\/?#]+):/', $url, $match) ? strtolower($match[1]) : null];
     }
 
     public function isCurrentHref(?string $href = null, ?bool $exact = null, ?bool $query = null): bool
