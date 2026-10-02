@@ -18,5 +18,9 @@
 /composer.lock export-ignore
 /package-lock.json export-ignore
 /package.json export-ignore
+/pnpm-lock.yaml export-ignore
+/pnpm-workspace.yaml export-ignore
+/vite.config.ts export-ignore
+/eslint.config.js export-ignore
 /phpunit.xml.dist export-ignore
 /tests export-ignore

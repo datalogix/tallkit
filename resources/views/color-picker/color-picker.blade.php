@@ -1,7 +1,7 @@
 @props([
     ...TALLKit::fieldProps(),
     ...TALLKit::fieldControlProps(),
-    'type' => null,
+    'trigger' => null,
     'format' => null,
     'preview' => null,
     'swatches' => null,
@@ -13,8 +13,9 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
-$disabled = (bool) $attributes->get('disabled');
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
+$value = TALLKit::fieldOldValue($fieldName, $value);
+$disabled = TALLKit::isAttributeEnabled($attributes->get('disabled'));
 $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) {
     'hexa' => '#00000000',
     'rgba' => 'rgba(0, 0, 0, 0)',
@@ -25,18 +26,18 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
 @endphp
 <tk:field.wrapper
     :$name
-    :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
 >
     <div
         wire:ignore.self
-        x-data="colorPicker({{ Js::from(['value' => $value, 'format' => $format]) }})"
+        x-data="colorPicker(@js(['value' => $value, 'format' => $format]))"
         {{
-            TALLKit::attributesAfter(attributes: $attributes, prefix: 'picker:')
-                ->classes(['flex-1' => $type !== 'button'])
+            $attributes->prefixed('picker:')
+                ->classes(['flex-1' => $trigger !== 'button'])
                 ->merge(['x-effect' => $live ? "value = ($live) ?? null" : false])
         }}
     >
-        @if ($type === 'button')
+        @if ($trigger === 'button')
             <input
                 type="hidden"
                 {{
@@ -46,8 +47,6 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
                             'name' => $name,
                             'value' => in_livewire() ? null : $value,
                             'wire:model' => $wireModel,
-                            'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
-                            'aria-invalid' => $invalid ? 'true' : null,
                             'data-invalid' => $invalid ? true : null,
                         ])
                         ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: [
@@ -58,18 +57,19 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
             />
 
             <tk:color-picker.button
-                :attributes="TALLKit::attributesAfter(
-                        attributes: $attributes,
-                        prefix: 'trigger:',
-                        prepend: ['dropdown:', 'popover:', 'swatch:', 'option:', 'footer:', 'custom:', 'dropper:', 'clearable:']
+                :attributes="$attributes->prefixed('trigger:',
+                        with: ['dropdown:', 'popover:', 'swatch:', 'option:', 'footer:', 'custom:', 'dropper:', 'clearable:']
                     )
                     ->dataKey('control')
                     ->merge([
+                        'variant' => 'subtle',
                         'id' => $id,
+                        'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                         'aria-invalid' => $invalid ? 'true' : null,
                         'data-invalid' => $invalid ? true : null,
                         TALLKit::dataKey('group-target') => true,
                     ])
+                    ->mergeDefined(['aria-label' => ! $label && ! $attributes->has('trigger:tooltip') ? 'Pick color' : null])
                     ->classes(
                         TALLKit::roundedSize(size: $size, mode: 'large'),
                         TALLKit::widthHeight(size: $size, mode: 'large'),
@@ -91,12 +91,11 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
                 :$size
                 :$disabled
                 :$keepOpen
-                variant="subtle"
             />
         @else
             <tk:field.control
                 :$size
-                :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
+                :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
                     ->classes(
                         'tk-control-wrapper-expanded',
                         TALLKit::roundedSize(size: $size, mode: 'large'),
@@ -108,10 +107,8 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
                     {{ $prepend ?? '' }}
 
                     <tk:color-picker.button
-                        :attributes="TALLKit::attributesAfter(
-                                attributes: $attributes,
-                                prefix: 'trigger:',
-                                prepend: ['dropdown:', 'popover:', 'swatch:', 'option:', 'footer:', 'custom:', 'dropper:', 'clearable:']
+                        :attributes="$attributes->prefixed('trigger:',
+                                with: ['dropdown:', 'popover:', 'swatch:', 'option:', 'footer:', 'custom:', 'dropper:', 'clearable:']
                             )
                             ->classes(
                                 'shrink-0',
@@ -121,6 +118,7 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
                             ->merge([
                                 TALLKit::dataKey('group-target') => false,
                             ])
+                            ->mergeDefined(['aria-label' => ! $attributes->has('trigger:tooltip') ? 'Pick color' : null])
                         "
                         :icon="false"
                         :$swatches
@@ -150,12 +148,12 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
                                 'id' => $id,
                                 'value' => in_livewire() ? null : $value,
                                 'wire:model' => $wireModel,
-                                'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
+                                'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                                 'aria-invalid' => $invalid ? 'true' : null,
                                 'data-invalid' => $invalid ? true : null,
                             ])
                             ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: [
-                                'picker:', 'copyable:',
+                                'picker:', 'trigger:', 'copyable:',
                                 'dropdown:', 'popover:', 'swatch:', 'option:', 'footer:', 'custom:', 'dropper:', 'clearable:',
                             ]))
                             ->except('class')
@@ -179,7 +177,7 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
 
                         @if ($clearable)
                             <tk:clearable
-                                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'clearable:')"
+                                :attributes="$attributes->prefixed('clearable:')"
                                 :$size
                                 :label="is_string($clearable) ? $clearable : null"
                             />
@@ -187,7 +185,7 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
 
                         @if ($copyable)
                             <tk:copyable
-                                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'copyable:')"
+                                :attributes="$attributes->prefixed('copyable:')"
                                 :$size
                                 :label="is_string($copyable) ? $copyable : null"
                             />

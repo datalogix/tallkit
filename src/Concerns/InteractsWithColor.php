@@ -12,126 +12,115 @@ trait InteractsWithColor
 
     public function isColor(?string $color): bool
     {
-        return in_array($color, $this->colors, true);
+        return $color !== null && in_array($color, $this->colors(), true);
     }
 
     public function colors(): array
     {
-        return $this->colors;
+        return array_values(array_unique([...$this->colors, ...(array) config('tallkit.colors', [])]));
     }
 
     private function colorClass(?string $color, \Closure $build): ?string
     {
-        return $this->isColor($color) ? $build($color) : null;
+        return $this->isColor($color) ? "tk-color-{$color} ".$build() : null;
     }
 
     public function controlFocusRing(?string $color, bool $expanded = false): ?string
     {
-        return $this->colorClass($color, function ($color) use ($expanded) {
+        return $this->colorClass($color, function () use ($expanded) {
             $selector = $expanded ? '[&:is(:focus-visible,[aria-expanded=true])]:' : 'focus-visible:';
 
-            return "
-                {$selector}outline-{$color}-700! dark:{$selector}outline-{$color}-300!
-                {$selector}ring-{$color}-700/20! dark:{$selector}ring-{$color}-300/20!
-            ";
+            return "{$selector}outline-(--tk-ring)! {$selector}ring-(--tk-ring-soft)!";
         });
     }
 
     public function controlFocusRingNested(?string $color, bool $expanded = false): ?string
     {
-        return $this->colorClass($color, function ($color) use ($expanded) {
+        return $this->colorClass($color, function () use ($expanded) {
             $selector = $expanded
                 ? 'has-[[data-tallkit-control]:is(:focus-visible,[aria-expanded=true])]:'
                 : 'has-[[data-tallkit-control]:focus-visible]:';
 
-            return "
-                {$selector}outline-{$color}-700! dark:{$selector}outline-{$color}-300!
-                {$selector}ring-{$color}-700/20! dark:{$selector}ring-{$color}-300/20!
-            ";
+            return "{$selector}outline-(--tk-ring)! {$selector}ring-(--tk-ring-soft)!";
         });
     }
 
-    public function uploadRing(?string $color): ?string
+    public function ring(?string $color): ?string
     {
-        return $this->colorClass($color, fn ($color) => "ring-{$color}-700 dark:ring-{$color}-300");
+        return $this->colorClass($color, fn () => 'ring-(--tk-ring)');
     }
 
-    public function uploadBg(?string $color): ?string
+    public function faintBackground(?string $color): ?string
     {
-        return $this->colorClass($color, fn ($color) => "bg-{$color}-500/10 dark:bg-{$color}-300/10");
+        return $this->colorClass($color, fn () => 'bg-(--tk-faint)');
     }
 
-    public function uploadBorder(?string $color): ?string
+    public function ringBorder(?string $color): ?string
     {
-        return $this->colorClass($color, fn ($color) => "border-{$color}-700 dark:border-{$color}-300");
-    }
-
-    public function uploadText(?string $color): ?string
-    {
-        return $this->colorClass($color, fn ($color) => "text-{$color}-700 dark:text-{$color}-300");
+        return $this->colorClass($color, fn () => 'border-(--tk-ring)');
     }
 
     public function checkedBackground(?string $color, bool $wrapped = false): ?string
     {
-        return $this->colorClass($color, function ($color) use ($wrapped) {
-            $prefix = $wrapped ? 'has-[input:checked]:' : 'checked:';
+        return $this->colorClass($color, fn () => ($wrapped ? 'has-[input:checked]:' : 'checked:').'bg-(--tk-fill)');
+    }
 
-            return "{$prefix}bg-{$color}-600 dark:{$prefix}bg-{$color}-500";
-        });
+    public function checkedForeground(?string $color): ?string
+    {
+        return $this->colorClass($color, fn () => 'text-(--tk-on-fill)');
+    }
+
+    public function checkedDot(?string $color): ?string
+    {
+        return $this->colorClass($color, fn () => 'bg-(--tk-on-fill)');
     }
 
     public function background(?string $color): ?string
     {
-        return $this->colorClass($color, fn ($color) => "bg-{$color}-600 dark:bg-{$color}-700");
-    }
-
-    public function backgroundActive(?string $color): ?string
-    {
-        return $this->colorClass($color, fn ($color) => "bg-{$color}-500 dark:bg-{$color}-600");
+        return $this->colorClass($color, fn () => 'bg-(--tk-fill) text-(--tk-on-fill)');
     }
 
     public function border(?string $color): ?string
     {
-        return $this->colorClass($color, fn ($color) => "border-{$color}-600 dark:border-{$color}-700");
-    }
-
-    public function borderActive(?string $color): ?string
-    {
-        return $this->colorClass($color, fn ($color) => "border-{$color}-500 dark:border-{$color}-600");
+        return $this->colorClass($color, fn () => 'border-(--tk-fill)');
     }
 
     public function text(?string $color, ?string $prefix = null): ?string
     {
-        return $this->colorClass($color, function ($color) use ($prefix) {
-            $dark = in_array($color, ['amber', 'yellow', 'lime', 'green'], true) ? '500' : '400';
-            $value = "text-{$color}-600 dark:text-{$color}-{$dark}";
-
-            return $prefix ? str_replace('text-', "{$prefix}text-", $value) : $value;
-        });
+        return $this->colorClass($color, fn () => "{$prefix}text-(--tk-text)");
     }
 
     public function textStrong(?string $color): ?string
     {
-        return $this->colorClass($color, fn ($color) => "text-{$color}-600 dark:text-{$color}-700");
+        return $this->colorClass($color, fn () => 'text-(--tk-solid)');
     }
 
-    public function frameBackground(?string $color): ?string
+    protected function frameBackground(?string $color): ?string
     {
-        return $this->colorClass($color, fn ($color) => "bg-{$color}-700 dark:bg-{$color}-600 *:text-white");
+        return $this->colorClass($color, fn () => 'tk-frame bg-(--tk-frame) text-(--tk-on-frame)');
+    }
+
+    public function frameClasses(?string $variant): string
+    {
+        return match ($variant) {
+            'none' => '',
+            'accent' => 'bg-[var(--color-accent)] text-[var(--color-accent-foreground)]',
+            'inverse' => 'bg-zinc-800 dark:bg-zinc-100 [:where(&)]:text-white/85 dark:[:where(&)]:text-zinc-900',
+            'strong' => 'bg-zinc-200 dark:bg-zinc-950 [:where(&)]:text-zinc-900 dark:[:where(&)]:text-white',
+            'subtle' => 'bg-white dark:bg-zinc-900 [:where(&)]:text-zinc-700/70 dark:[:where(&)]:text-white/70',
+            'ghost' => 'bg-transparent [:where(&)]:text-zinc-800/85 dark:[:where(&)]:text-white/85',
+            default => $this->frameBackground($variant) ?? 'bg-zinc-50 dark:bg-zinc-800 [:where(&)]:text-zinc-800/85 dark:[:where(&)]:text-white/85',
+        };
     }
 
     public function mutedBackground(?string $color, string $as = 'a'): ?string
     {
-        return $this->colorClass($color, fn ($color) => "
-            bg-{$color}-400/20 dark:bg-{$color}-400/40
-            [&:is({$as})]:hover:bg-{$color}-400/30
-            dark:[&:is({$as})]:hover:bg-{$color}-400/50
-        ");
+        return $this->colorClass($color, fn () => "bg-(--tk-soft) [&:is({$as})]:hover:bg-(--tk-soft-hover)");
     }
 
     public function mutedText(?string $color): ?string
     {
-        return $this->colorClass($color, fn ($color) => "text-{$color}-700 dark:text-{$color}-200");
+        return $this->colorClass($color, fn () => 'text-(--tk-on-soft)');
     }
 
     public function textNeutral(?string $variant = null, ?string $prefix = null): string
@@ -140,7 +129,7 @@ trait InteractsWithColor
             'emphasis' => 'text-zinc-900 dark:text-white',
             'strong' => 'text-zinc-800 dark:text-white',
             'subtle' => 'text-zinc-500 dark:text-zinc-400',
-            'muted' => 'text-zinc-400 dark:text-zinc-500',
+            'muted' => 'text-zinc-500 dark:text-zinc-400',
             default => 'text-zinc-700 dark:text-white/80',
         };
 
@@ -160,44 +149,27 @@ trait InteractsWithColor
 
     public function interactiveBackground(?string $color): ?string
     {
-        return $this->colorClass($color, function ($color) {
-            [$darkBase, $darkHover] = match ($color) {
-                'amber' => ['500', '400'],
-                'yellow' => ['400', '300'],
-                default => ['600', '500'],
-            };
-
-            return "
-                bg-{$color}-500
-                hover:bg-{$color}-600
-                [&[data-active]]:bg-{$color}-600
-
-                dark:bg-{$color}-{$darkBase}
-                dark:hover:bg-{$color}-{$darkHover}
-                dark:[&[data-active]]:bg-{$color}-{$darkHover}
-            ";
-        });
+        return $this->colorClass($color, fn () => '
+            bg-(--tk-solid) text-(--tk-on-solid)
+            hover:bg-(--tk-solid-hover) [&[data-active]]:bg-(--tk-solid-hover)
+        ');
     }
 
     public function solidBackground(?string $color): ?string
     {
-        return $this->colorClass($color, fn ($color) => ($this->backgroundActive(color: $color) ?? '').' '."
-            text-white [&:is(button)]:hover:bg-{$color}-600 dark:[&:is(button)]:hover:bg-{$color}-500
-        ");
+        return $this->colorClass($color, fn () => 'bg-(--tk-solid) text-(--tk-on-solid) [&:is(button)]:hover:bg-(--tk-solid-hover)');
     }
 
     public function pastelBackground(?string $color): ?string
     {
-        return $this->colorClass($color, fn ($color) => "bg-{$color}-200 dark:bg-{$color}-800/40 text-{$color}-800 dark:text-{$color}-200");
+        return $this->colorClass($color, fn () => 'bg-(--tk-pastel) text-(--tk-on-pastel)');
     }
 
     public function sliderFocusRing(?string $color): ?string
     {
-        return $this->colorClass($color, fn ($color) => "
-            focus-visible:[&::-webkit-slider-thumb]:outline-{$color}-700 dark:focus-visible:[&::-webkit-slider-thumb]:outline-{$color}-300
-            focus-visible:[&::-webkit-slider-thumb]:ring-{$color}-700/20 dark:focus-visible:[&::-webkit-slider-thumb]:ring-{$color}-300/20
-            focus-visible:[&::-moz-range-thumb]:outline-{$color}-700 dark:focus-visible:[&::-moz-range-thumb]:outline-{$color}-300
-            focus-visible:[&::-moz-range-thumb]:ring-{$color}-700/20 dark:focus-visible:[&::-moz-range-thumb]:ring-{$color}-300/20
-        ");
+        return $this->colorClass($color, fn () => '
+            focus-visible:[&::-webkit-slider-thumb]:outline-(--tk-ring) focus-visible:[&::-webkit-slider-thumb]:ring-(--tk-ring-soft)
+            focus-visible:[&::-moz-range-thumb]:outline-(--tk-ring) focus-visible:[&::-moz-range-thumb]:ring-(--tk-ring-soft)
+        ');
     }
 }

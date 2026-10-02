@@ -1,16 +1,17 @@
 @props([
+    ...TALLKit::elementProps(),
     'label' => null,
     'size' => null,
     'variant' => null,
 ])
 @if ($slot->hasActualContent() || $label)
     <tk:element
-        name="kbd"
+        kind="kbd"
         as="kbd"
-        :attributes="$attributes->classes(
+        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->classes(
             TALLKit::fontSize(size: $size, weight: true),
             'pointer-events-none rounded',
-            TALLKit::textNeutral(variant: 'subtle'),
+            'text-zinc-600 dark:text-zinc-300',
             match ($variant) {
                 'text' => 'bg-transparent',
                 default => TALLKit::classes(

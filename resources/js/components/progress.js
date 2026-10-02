@@ -1,19 +1,19 @@
+import { clamp, toNumber } from '../utils'
+
 export function progress(percentage = null) {
   return {
     value: 0,
 
-    init () {
+    init() {
       this.updateValue(percentage ?? 0)
     },
 
-    updateValue (n) {
-      const num = Number(n)
+    updateValue(n) {
+      const num = toNumber(n)
 
-      if (Number.isNaN(num)) {
-        return
-      }
+      if (num === null) return
 
-      this.value = Math.max(0, Math.min(100, num))
+      this.value = clamp(num, 0, 100)
     }
-  };
+  }
 }

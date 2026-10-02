@@ -1,37 +1,18 @@
-import { initAlpine, setupAlpine } from './alpine'
-import { appearance } from './appearance'
-import { toast, closeToast } from './toast'
-import { loadScript, loadStyle } from './utils'
+import { bootAlpine } from './alpine'
+import { tallkit, exposeGlobals } from './core'
 
-export const tallkit = {
-  appearance,
-  toast,
-  closeToast,
-  loadScript,
-  loadStyle,
-  modal: (name) => {
-    return {
-      show: () => {
-        document.dispatchEvent(new CustomEvent('modal-show', { detail: { name } }))
-      },
+// document.currentScript is only set while the script runs.
+const script = document.currentScript
+const load = script?.dataset.loadAlpine !== 'false'
 
-      close: () => {
-        document.dispatchEvent(new CustomEvent('modal-close', { detail: { name } }))
-      }
-    }
-  },
+exposeGlobals()
 
-  modals: () => {
-    return {
-      close: () => {
-        document.dispatchEvent(new CustomEvent('modal-close', { detail: {} }))
-      }
-    }
-  }
+try {
+  if (script?.dataset.tooltip) tallkit.tooltip.configure(JSON.parse(script.dataset.tooltip))
+} catch {
+  console.warn('[tallkit] The tooltip defaults on the script tag are not valid JSON.')
 }
 
-window.TALLKit = window.TK = window.tk = window.tallkit = tallkit
-document.dispatchEvent(new CustomEvent('tallkit:init'))
+bootAlpine(tallkit, { load })
 
-initAlpine()
-document.addEventListener('alpine:init', () => setupAlpine(tallkit))
+export { tallkit }

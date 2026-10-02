@@ -5,7 +5,7 @@
     'size' => null,
     'color' => null,
     'multiple' => null,
-    'mode' => null,
+    'range' => null,
     'months' => null,
     'min' => null,
     'max' => null,
@@ -14,7 +14,7 @@
     'maxRange' => null,
     'static' => null,
     'navigation' => null,
-    'withToday' => null,
+    'today' => null,
     'selectableHeader' => null,
     'fixedWeeks' => null,
     'startDay' => null,
@@ -25,14 +25,31 @@
 ])
 @php
 
-[$name, , , , $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: false, id: $id);
+$locale = TALLKit::resolveLocale($locale);
+$startDay ??= TALLKit::localeFirstDay($locale);
+
+[$name, $fieldName, , , $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: false, id: $id);
+$value = TALLKit::fieldOldValue($fieldName, $value);
+
+$value = TALLKit::fieldDateValue($value);
+$min = TALLKit::fieldDateValue($min);
+$max = TALLKit::fieldDateValue($max);
+$unavailable = TALLKit::fieldDateValue($unavailable);
+$openTo = TALLKit::fieldDateValue($openTo);
+
+if (is_string($value) && $range) {
+    [$rangeStart, $rangeEnd] = array_pad(explode('/', $value, 2), 2, null);
+    $value = ['start' => $rangeStart, 'end' => $rangeEnd];
+} elseif (is_string($value) && $multiple) {
+    $value = array_values(array_filter(explode(',', $value)));
+}
 
 $monthsCount = max(1, (int) ($months ?? 1));
 $isStatic = (bool) $static;
 $canNavigate = ! $isStatic && $navigation !== false;
 
 $initialValueString = match (true) {
-    $mode === 'range' => is_array($value) && ($value['start'] ?? null)
+    $range => is_array($value) && ($value['start'] ?? null)
         ? (($value['end'] ?? null) ? $value['start'].'/'.$value['end'] : $value['start'])
         : '',
     (bool) $multiple => is_array($value) ? implode(',', $value) : ($value ?? ''),
@@ -43,10 +60,10 @@ $initialValueString = match (true) {
 <div
     @if ($standalone !== false)
         wire:ignore
-        x-data="calendar({{ Js::from([
+        x-data="calendar(@js([
             'value' => $value,
             'multiple' => (bool) $multiple,
-            'mode' => $mode,
+            'range' => (bool) $range,
             'months' => $monthsCount,
             'min' => $min,
             'max' => $max,
@@ -55,14 +72,14 @@ $initialValueString = match (true) {
             'maxRange' => $maxRange,
             'static' => $isStatic,
             'navigation' => $navigation !== false,
-            'withToday' => (bool) $withToday,
+            'today' => (bool) $today,
             'selectableHeader' => (bool) $selectableHeader,
             'fixedWeeks' => (bool) $fixedWeeks,
             'startDay' => $startDay,
             'openTo' => $openTo,
             'weekNumbers' => (bool) $weekNumbers,
             'locale' => $locale,
-        ]) }})"
+        ]))"
     @endif
     {{
         $attributes
@@ -87,7 +104,7 @@ $initialValueString = match (true) {
         <input
             type="hidden"
             {{
-                TALLKit::attributesAfter(attributes: $attributes, prefix: 'hidden:')
+                $attributes->prefixed('hidden:')
                     ->dataKey('calendar-field')
                     ->merge([
                         'name' => $name,
@@ -100,14 +117,14 @@ $initialValueString = match (true) {
 
     <div
         {{
-            TALLKit::attributesAfter(attributes: $attributes, prefix: 'header:')
+            $attributes->prefixed('header:')
                 ->classes('flex items-center justify-between gap-2')
         }}
     >
         <div class="flex items-center gap-2">
             @if ($selectableHeader && $canNavigate && $monthsCount === 1)
                 <tk:select
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'month-select:')->classes('border-none')"
+                    :attributes="$attributes->prefixed('month-select:')->classes('border-none min-w-32')->merge(['aria-label' => __('Month')])"
                     :size="TALLKit::adjustSize(size: $size, move: -2)"
                     :label="false"
                     :placeholder="false"
@@ -121,7 +138,7 @@ $initialValueString = match (true) {
                 </tk:select>
 
                 <tk:select
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'year-select:')->classes('border-none')"
+                    :attributes="$attributes->prefixed('year-select:')->classes('border-none')->merge(['aria-label' => __('Year')])"
                     :size="TALLKit::adjustSize(size: $size, move: -2)"
                     :label="false"
                     :placeholder="false"
@@ -135,40 +152,39 @@ $initialValueString = match (true) {
                 </tk:select>
             @elseif ($monthsCount === 1)
                 <div
-                    {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'month-label:')->classes(TALLKit::fontSize(size: $size, weight: true)) }}
+                    {{ $attributes->prefixed('month-label:')->classes(TALLKit::fontSize(size: $size, weight: true), TALLKit::textNeutral(variant: 'strong')) }}
                     x-text="monthLabel(0)"
                 ></div>
             @endif
         </div>
 
         <div class="flex items-center gap-px">
-            @if ($withToday && ! $isStatic)
+            @if ($today && ! $isStatic)
                 <tk:button
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'today:')->classes(TALLKit::roundedSize(size: $size, mode: 'large'))"
+                    :attributes="$attributes->prefixed('today:')->classes(TALLKit::roundedSize(size: $size, mode: 'large'))->merge(['tooltip' => 'Today'])"
                     :size="TALLKit::adjustSize(size: $size)"
                     variant="subtle"
                     icon="calendar-today"
-                    tooltip="Today"
                     @click="goToToday()"
                 />
             @endif
 
             @if ($canNavigate)
                 <tk:button
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'nav-prev:')->classes(TALLKit::roundedSize(size: $size, mode: 'large'))"
+                    :attributes="$attributes->prefixed('nav-prev:')->classes(TALLKit::roundedSize(size: $size, mode: 'large'))->merge(['tooltip' => 'Previous month'])"
                     :size="TALLKit::adjustSize(size: $size)"
                     variant="subtle"
                     icon="chevron-left"
-                    tooltip="Previous month"
+                    icon:class="rtl:-scale-x-100"
                     @click="prevMonth()"
                 />
 
                 <tk:button
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'nav-next:')->classes(TALLKit::roundedSize(size: $size, mode: 'large'))"
+                    :attributes="$attributes->prefixed('nav-next:')->classes(TALLKit::roundedSize(size: $size, mode: 'large'))->merge(['tooltip' => 'Next month'])"
                     :size="TALLKit::adjustSize(size: $size)"
                     variant="subtle"
                     icon="chevron-right"
-                    tooltip="Next month"
+                    icon:class="rtl:-scale-x-100"
                     @click="nextMonth()"
                 />
             @endif
@@ -177,7 +193,7 @@ $initialValueString = match (true) {
 
     <div
         {{
-            TALLKit::attributesAfter(attributes: $attributes, prefix: 'months:')
+            $attributes->prefixed('months:')
                 ->classes(
                     'flex flex-col sm:flex-row',
                     TALLKit::gap(size: $size)
@@ -187,22 +203,24 @@ $initialValueString = match (true) {
         @for ($m = 0; $m < $monthsCount; $m++)
             <div
                 role="grid"
-                aria-label="{{ __('Calendar') }}"
+                x-bind:aria-label="monthLabel({{ $m }})"
                 {{
-                    TALLKit::attributesAfter(attributes: $attributes, prefix: 'month:')
+                    $attributes->prefixed('month:')
                         ->classes(
                             'flex-1 flex flex-col',
                             TALLKit::gap(size: $size, mode: 'small')
                         )
+                        ->merge(['aria-label' => __('Calendar')])
                 }}
             >
                 @if ($monthsCount > 1)
                     <div
                         {{
-                            TALLKit::attributesAfter(attributes: $attributes, prefix: 'month-label:')
+                            $attributes->prefixed('month-label:')
                                 ->classes(
                                     'text-center',
                                     TALLKit::fontSize(size: $size, weight: true),
+                                    TALLKit::textNeutral(variant: 'strong'),
                                 )
                         }}
                         x-text="monthLabel({{ $m }})"
@@ -212,7 +230,7 @@ $initialValueString = match (true) {
                 <div
                     role="row"
                     {{
-                        TALLKit::attributesAfter(attributes: $attributes, prefix: 'weekdays:')
+                        $attributes->prefixed('weekdays:')
                             ->classes(
                                 'grid text-center',
                                 TALLKit::textNeutral(variant: 'muted'),
@@ -222,14 +240,14 @@ $initialValueString = match (true) {
                     }}
                 >
                     @if ($weekNumbers)
-                        <div></div>
+                        <div role="columnheader"><span class="sr-only">{{ __('Week') }}</span></div>
                     @endif
 
                     <template x-for="(label, index) in weekdayLabels()" :key="index">
                         <div
                             role="columnheader"
                             {{
-                                TALLKit::attributesAfter(attributes: $attributes, prefix: 'weekday:')
+                                $attributes->prefixed('weekday:')
                                     ->classes('py-1')
                             }}
                             x-text="label"
@@ -241,14 +259,15 @@ $initialValueString = match (true) {
                     <div
                         role="row"
                         {{
-                            TALLKit::attributesAfter(attributes: $attributes, prefix: 'week:')
+                            $attributes->prefixed('week:')
                                 ->classes('grid', $weekNumbers ? 'grid-cols-8' : 'grid-cols-7')
                         }}
                     >
                         @if ($weekNumbers)
                             <div
+                                role="rowheader"
                                 {{
-                                    TALLKit::attributesAfter(attributes: $attributes, prefix: 'week-number:')
+                                    $attributes->prefixed('week-number:')
                                         ->classes([
                                             'flex items-center justify-center',
                                             TALLKit::textNeutral(variant: 'muted'),
@@ -261,12 +280,9 @@ $initialValueString = match (true) {
 
                         <template x-for="day in week.days" :key="day.iso">
                             <tk:button
-                                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'day:')->classes([
+                                :attributes="$attributes->prefixed('day:')->classes([
                                     '
                                         relative z-10 tabular-nums
-
-                                        [&[data-active]]:bg-[var(--color-accent)]
-                                        [&[data-active]]:text-[var(--color-accent-foreground)]
 
                                         [&[data-today]]:font-semibold
                                         [&[data-today]]:after:content-[\'\'] [&[data-today]]:after:absolute
@@ -277,17 +293,25 @@ $initialValueString = match (true) {
                                         [&[data-unavailable]]:disabled:opacity-40
                                         [&[data-unavailable]]:disabled:line-through
 
-                                        [&[data-outside-month]]:opacity-60
+                                        [&[data-outside-month]]:opacity-75
                                         [&[data-active][data-outside-month]]:opacity-100
 
                                         [&[data-in-range]]:rounded-none
-                                        [&[data-in-range]]:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_90%)]
-                                        [&[data-in-range]]:hover:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_85%)]
 
                                         [&[data-range-start]]:rounded-e-none
                                         [&[data-range-end]]:rounded-s-none
                                         [&[data-range-start][data-range-end]]:rounded
                                     ',
+                                    'tk-color-'.$color.'
+                                        [&[data-active]]:bg-(--tk-fill) [&[data-active]]:text-(--tk-on-fill)
+                                        [&[data-in-range]]:bg-(--tk-faint) [&[data-in-range]]:enabled:hover:bg-(--tk-soft)
+                                    ' => TALLKit::isColor($color),
+                                    '
+                                        [&[data-active]]:bg-[var(--color-accent)]
+                                        [&[data-active]]:text-[var(--color-accent-foreground)]
+                                        [&[data-in-range]]:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_90%)]
+                                        [&[data-in-range]]:enabled:hover:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_85%)]
+                                    ' => ! TALLKit::isColor($color),
                                     'disabled:opacity-100' => $isStatic,
                                 ])"
                                 type="button"
@@ -305,7 +329,7 @@ $initialValueString = match (true) {
                                 ::data-in-range="isInRange(day.iso)"
                                 ::data-range-start="isRangeStart(day.iso)"
                                 ::data-range-end="isRangeEnd(day.iso)"
-                                ::tabindex="focused === day.iso ? 0 : -1"
+                                ::tabindex="day.inMonth && tabbableIso() === day.iso ? 0 : -1"
                                 ::disabled="isDayDisabled(day.iso)"
                                 ::data-unavailable="isUnavailable(day.iso)"
                                 @click="selectDate(day.iso)"

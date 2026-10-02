@@ -1,14 +1,19 @@
 @aware(['size', 'animation'])
-@props(['size' => null, 'animation' => null])
+@props([
+    ...TALLKit::elementProps(),
+    'size' => null,
+    'keepOpen' => null,
+    'animation' => null,
+])
 <div
     wire:ignore.self
     x-data="submenu"
     {{
-        TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')
+        $attributes->prefixed('container:')
     }}
 >
     <tk:menu.item
-        :attributes="$attributes->whereDoesntStartWith(['container:', 'menu:'])"
+        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->whereDoesntStartWith(['container:', 'menu:'])"
         :$size
         keepOpen
         iconTrailing="chevron-right"
@@ -16,8 +21,9 @@
     />
 
     <tk:menu
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'menu:')->classes('-ml-2')"
+        :attributes="$attributes->prefixed('menu:')"
         :$size
+        :$keepOpen
         :$animation
     >
         {{ $slot }}

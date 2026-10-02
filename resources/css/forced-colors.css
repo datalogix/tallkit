@@ -1,0 +1,103 @@
+@media (forced-colors: active) {
+  [data-tallkit-checkbox]:checked,
+  [data-tallkit-radio]:checked {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    border: 1px solid Highlight;
+  }
+
+  [data-tallkit-checkbox]:checked ~ *,
+  [data-tallkit-radio]:checked ~ * {
+    forced-color-adjust: none;
+    color: HighlightText;
+  }
+
+  [data-tallkit-radio]:checked ~ * > * {
+    forced-color-adjust: none;
+    background-color: HighlightText;
+  }
+
+  label:has(> [data-tallkit-switch]) {
+    border: 1px solid CanvasText;
+  }
+
+  label:has(> [data-tallkit-switch]:checked) {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    border-color: Highlight;
+  }
+
+  [data-tallkit-switch] + span {
+    forced-color-adjust: none;
+    background-color: CanvasText;
+  }
+
+  [data-tallkit-switch]:checked + span {
+    background-color: HighlightText;
+  }
+
+  label:has(> [data-tallkit-toggle]:checked),
+  [data-tallkit-button][role='tab'][aria-selected='true'] {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    border-color: Highlight;
+    color: HighlightText;
+  }
+
+  [data-tallkit-stepper-step][data-status='completed'] > :first-child {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    border-color: Highlight;
+    color: HighlightText;
+  }
+
+  [data-tallkit-stepper-step][data-status='active'] > :first-child {
+    forced-color-adjust: none;
+    border-color: Highlight;
+    color: CanvasText;
+  }
+
+  [role='progressbar']:has(> [data-tallkit-progress-bar]) {
+    border: 1px solid CanvasText;
+  }
+
+  [data-tallkit-progress-bar] {
+    forced-color-adjust: none;
+    background-color: Highlight;
+  }
+
+  [data-tallkit-calendar] [data-iso][data-active] {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    border-color: Highlight;
+    color: HighlightText;
+  }
+
+  [data-tallkit-calendar] [data-iso][data-in-range]:not([data-active]) {
+    outline: 1px dashed CanvasText;
+    outline-offset: -4px;
+  }
+
+  [data-tallkit-calendar] [data-iso][data-today]::after {
+    forced-color-adjust: none;
+    background-color: currentColor;
+  }
+
+  [role='option'] > [data-active] {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    color: HighlightText;
+  }
+
+  [data-tallkit-nav-item][data-current],
+  [data-tallkit-button][aria-current='page'] {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    border-color: Highlight;
+    color: HighlightText;
+  }
+
+  [data-tallkit-badge] {
+    border: 1px solid CanvasText;
+  }
+}

@@ -1,10 +1,10 @@
 <?php
 
-namespace TALLKit\Livewire;
+namespace TALLKit\Livewire\Mixins;
 
 use TALLKit\Facades\TALLKit;
 
-trait InteractsWithModal
+class ModalMixin
 {
     public function modal()
     {

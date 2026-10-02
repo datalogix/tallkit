@@ -1,4 +1,4 @@
-import { dataKey, bind, setFieldValue } from '../utils'
+import { queryData, bind, setFieldValue, focusOnLabelClick } from '../utils'
 import { popover } from './popover'
 import { listbox } from './listbox'
 import { bindableField } from '../mixins/bindable-field'
@@ -7,16 +7,22 @@ export function combobox(
   {
     value = null,
     multiple = false,
-    type = null
+    trigger = null
   } = {}
 ) {
-  const isInputTrigger = type === 'input'
+  const isInputTrigger = trigger === 'input'
   const _popover = popover({ mode: 'manual', position: 'bottom', align: 'start', matchTriggerWidth: true })
   const _listbox = listbox({ hideEmpty: false, clearOnSelect: !multiple })
   const _bindableField = bindableField({
     key: 'combobox-field',
     serialize() { return this.valueString() },
-    deserialize(raw) { return multiple ? (raw ? raw.split(',').filter(Boolean) : []) : raw },
+    deserialize(raw) {
+      if (!multiple) return raw
+      if (Array.isArray(raw)) return [...raw]
+
+      return raw ? String(raw).split(',').filter(Boolean) : []
+    },
+    toWire: multiple ? function () { return [...(this.value ?? [])] } : null,
   })
 
   return {
@@ -26,6 +32,7 @@ export function combobox(
 
     value: value ?? (multiple ? [] : null),
     combobox: null,
+    _stopLabelFocus: null,
 
     selectedLabel() {
       if (multiple || this.value == null) return null
@@ -36,15 +43,26 @@ export function combobox(
     },
 
     selectedCount() {
-      return this.items.filter((item) => this.isSelected(this.getElementValue(item.el))).length;
+      return this.items.filter((item) => this.isSelected(this.getElementValue(item.el))).length
     },
 
-    selectedOrder(v) {
-      return this.value.map(String).indexOf(String(v))
+    selectedValues() {
+      return multiple && Array.isArray(this.value) ? this.value : []
+    },
+
+    optionLabel(v) {
+      const item = this.items.find((i) => String(this.getElementValue(i.el)) === String(v))
+      const el = item?.el ?? this.$root.querySelector(`[role=option] [value="${CSS.escape(String(v))}"]`)
+
+      return el?.querySelector('[data-item-content]')?.textContent?.trim() || String(v)
     },
 
     isDisabled() {
       return this.combobox.hasAttribute('disabled')
+    },
+
+    isReadonly() {
+      return this.combobox.getAttribute('aria-readonly') === 'true'
     },
 
     valueString() {
@@ -57,13 +75,24 @@ export function combobox(
       setFieldValue(this.input, multiple ? '' : (this.selectedLabel() ?? ''))
     },
 
+    // Both halves: spread one after the other, the listbox's destroy() replaces the popover's.
+    destroy() {
+      _popover.destroy.call(this)
+      _listbox.destroy.call(this)
+      this._stopLabelFocus?.()
+    },
+
     init() {
       _popover.init.call(this)
       _listbox.init.call(this)
 
-      this.combobox = isInputTrigger ? this.input : this.$root.querySelector(dataKey('combobox'))
+      this.combobox = isInputTrigger ? this.input : queryData(this.$root, 'combobox')
 
       _bindableField.init.call(this)
+
+      if (this.combobox && !('labels' in this.combobox)) {
+        this._stopLabelFocus = focusOnLabelClick(this.combobox, () => this.isDisabled() || this.combobox.focus())
+      }
 
       if (isInputTrigger) {
         bind(this.input, {
@@ -77,7 +106,7 @@ export function combobox(
           },
 
           ['@keydown.backspace']() {
-            if (this.isDisabled()) return
+            if (this.isDisabled() || this.isReadonly()) return
             if (!multiple || this.input.value || this.value.length === 0) return
             this.remove(this.value.at(-1))
           },
@@ -86,6 +115,14 @@ export function combobox(
         this.syncInputDisplay()
       } else {
         bind(this.combobox, {
+          ['@keydown.backspace.prevent']() {
+            this.clearFromKeyboard()
+          },
+
+          ['@keydown.delete.prevent']() {
+            this.clearFromKeyboard()
+          },
+
           ['@click']() {
             if (this.isDisabled()) return
             this.combobox.focus()
@@ -126,18 +163,28 @@ export function combobox(
         },
       })
 
+      bind(this.input, {
+        ['@keydown.enter.prevent']() {},
+      })
+
       bind(this.$root, {
         ['@click.outside']() {
           this.close()
         },
 
-        ['@listbox-item-selected']({
+        ['@focusout'](event) {
+          const to = event.relatedTarget
+
+          if (to instanceof Element && !this.$root.contains(to) && this.isOpened()) this.close()
+        },
+
+        ['@selected']({
           detail
         }) {
           this.pick(this.getElementValue(detail.button))
         },
 
-        ['@listbox-items-changed']() {
+        ['@filtered']() {
           this.syncChecked()
         },
       })
@@ -151,13 +198,20 @@ export function combobox(
 
       _popover.open.call(this, false)
 
-      const target = multiple ? this.value.at(-1) : this.value
-      const index = this.filteredItems.findIndex((item) => String(this.getElementValue(item.el)) === String(target))
-      this.index = index === -1 ? null : index
+      const highlightChosen = () => {
+        const target = multiple ? this.value.at(-1) : this.value
+        const index = this.filteredItems.findIndex((item) => String(this.getElementValue(item.el)) === String(target))
+        this.index = index === -1 ? null : index
+      }
 
+      highlightChosen()
+
+      // Once the popover is on screen: a hidden element can't take focus. Its search clears the highlight, so set after
+      // it.
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           this.input?.focus()
+          if (this.input) highlightChosen()
         })
       })
     },
@@ -195,19 +249,32 @@ export function combobox(
           this.search()
         }
       } else {
-        this.value = this.isSelected(v) ? null : v
+        this.value = v
         if (isInputTrigger) this.syncInputDisplay()
         this.closeAndFocus()
       }
+
+      this.dispatchPicked(this.value)
     },
 
     remove(v) {
-      if (!multiple) return
+      if (!multiple || this.isReadonly()) return
       this.value = this.value.filter((x) => String(x) !== String(v))
+      this.dispatchPicked(this.value)
+    },
+
+    clearFromKeyboard() {
+      if (this.isDisabled() || this.isReadonly() || this.opened) return
+
+      if (multiple) {
+        if (this.value.length) this.remove(this.value.at(-1))
+      } else {
+        this.clearValue()
+      }
     },
 
     clearValue() {
-      if (this.isDisabled()) return
+      if (this.isDisabled() || this.isReadonly()) return
 
       this.value = multiple ? [] : null
       this.syncInputDisplay()
@@ -216,7 +283,7 @@ export function combobox(
     syncChecked() {
       this.items.forEach((item) => {
         const selected = this.isSelected(this.getElementValue(item.el))
-        const mark = item.el.querySelector(dataKey('checkmark'))
+        const mark = queryData(item.el, 'checkmark')
         if (mark) mark.classList.toggle('invisible', !selected)
         item.li.setAttribute('aria-selected', String(selected))
       })
@@ -225,5 +292,5 @@ export function combobox(
     getElementValue(el) {
       return el.getAttribute('value') ?? el.textContent?.trim() ?? null
     }
-  };
+  }
 }

@@ -2,7 +2,7 @@
     'size' => null,
     'vertical' => null,
     'current' => null,
-    'steps' => null,
+    'items' => null,
     'iconCompleted' => null,
     'iconActive' => null,
     'color' => null,
@@ -11,8 +11,8 @@
 
 $vertical = (bool) $vertical;
 $currentStep = (int) $current;
-$steps = collect($steps)->filter()->values();
-$totalSteps = $steps->count();
+$items = collect($items)->filter()->values();
+$totalSteps = $items->count();
 
 @endphp
 <div
@@ -29,11 +29,11 @@ $totalSteps = $steps->count();
     }}
     role="list"
 >
-    @foreach ($steps as $index => $step)
+    @foreach ($items as $index => $step)
         <tk:stepper.step
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'step:')
-                ->merge(is_array($step) ? $step : ['label' => $step], false)
-                ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId(prefix: 'stepper-step', name: (string) $index)] : [], false)
+            :attributes="$attributes->prefixed('step:')
+                ->merge(TALLKit::attributesFromItem($step), false)
+                ->wireKey(TALLKit::generateId(prefix: 'stepper-step', name: (string) $index))
             "
             :index="$index + 1"
             :total="$totalSteps"
@@ -48,3 +48,4 @@ $totalSteps = $steps->count();
 
     {{ $slot }}
 </div>
+@php(TALLKit::stepperReset())

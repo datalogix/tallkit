@@ -23,7 +23,10 @@ export function colorPicker({ value = null, format = null } = {}) {
 
       const normalized = color ? (normalizeColor(color, this.format) ?? color) : null
 
+      if (normalized === this.value) return
+
       this.value = normalized
+      this.dispatchPicked(normalized)
     },
 
     commitTyped(raw) {
@@ -50,7 +53,6 @@ export function colorPicker({ value = null, format = null } = {}) {
         const result = await new window.EyeDropper().open()
         this.pick(result.sRGBHex)
       } catch {
-        //
       }
     },
 

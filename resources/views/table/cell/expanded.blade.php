@@ -4,16 +4,11 @@
 >
     @if ($slot->isEmpty())
         <tk:button
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'open:')->classes('hidden! group-data-[expanded=close]:flex!')"
+            :attributes="TALLKit::attributesMerge($attributes->prefixed('open:'), $attributes->prefixed('close:'))->merge(['aria-label' => 'Row details'])"
             data-role="row-expanded"
+            aria-expanded="false"
             icon="chevron-down"
-            size="xs"
-            variant="subtle"
-        />
-        <tk:button
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'close:')->classes('hidden! group-data-[expanded=open]:flex!')"
-            data-role="row-expanded"
-            icon="chevron-up"
+            icon:class="transition-transform group-data-[expanded=open]:rotate-180"
             size="xs"
             variant="subtle"
         />

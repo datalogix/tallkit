@@ -26,15 +26,15 @@
             ->when($multiple, fn ($attrs) => $attrs->merge(['aria-multiselectable' => 'true']))
     }}
     role="listbox"
-    x-bind:tabindex="filteredItems.length > 0 ? 0 : -1"
+    x-bind:tabindex="input || filteredItems.length === 0 ? -1 : 0"
 >
     {{ $slot }}
 
     @foreach (collect($items) as $index => $item)
         <tk:listbox.item
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'item:')
-                ->merge(is_array($item) ? $item : ['label' => $item], false)
-                ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId(prefix: 'listbox-item', name: (string) data_get($item, 'value', $index))] : [], false)
+            :attributes="$attributes->prefixed('item:')
+                ->merge(TALLKit::attributesFromItem($item), false)
+                ->wireKey(TALLKit::generateId(prefix: 'listbox-item', name: (string) data_get($item, 'value', $index)))
             "
             :$size
         />

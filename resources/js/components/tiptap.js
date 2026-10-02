@@ -1,23 +1,14 @@
-import { loadRemoteModule } from '../utils'
+import { dataKey, queryData, loadRemoteModule, uploadEditorFile, reportUploadFailed, emit, isRtl, isRendered } from '../utils'
 import { dataOptions } from '../mixins/data-options'
-import { EDITOR_GROUP_ORDER, editorField, parseMode } from '../mixins/editor'
+import { EDITOR_GROUP_ORDER, editorField, parseToolbar } from '../mixins/editor'
 import { loadable } from './loadable'
 
 const DEFAULT_TIPTAP_VERSION = '3.30.3'
-const esm = (pkg, version) => `https://esm.sh/${pkg}@${version}`
+// Pinned to one version: two copies of @tiptap/core on a page break it.
+const esm = (pkg, version) => {
+  const deps = ['@tiptap/core', '@tiptap/pm'].filter((dep) => dep !== pkg).map((dep) => `${dep}@${version}`)
 
-function readAsDataURL(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result)
-    reader.onerror = () => reject(reader.error)
-    reader.readAsDataURL(file)
-  });
-}
-
-function getCsrfToken() {
-  const match = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]*)/)
-  return match ? decodeURIComponent(match[1]) : null
+  return `https://esm.sh/${pkg}@${version}?deps=${deps.join(',')}`
 }
 
 const GROUPS = {
@@ -63,7 +54,7 @@ const GROUPS = {
               default: null,
               renderHTML: (attrs) => (attrs.width ? { style: `width: ${attrs.width}` } : {}),
             },
-          };
+          }
         },
 
         parseHTML() {
@@ -81,7 +72,7 @@ const GROUPS = {
             setVideo: (options) => ({
               commands
             }) => commands.insertContent({ type: this.name, attrs: options }),
-          };
+          }
         },
       }),
     ],
@@ -98,9 +89,11 @@ export function tiptap(
   {
     options = {},
     scripts = [],
-    mode = null,
+    toolbar = null,
     upload = {},
-    version = null
+    version = null,
+    messages = {},
+    labelledBy = null,
   } = {}
 ) {
   const _loadable = loadable()
@@ -109,6 +102,13 @@ export function tiptap(
 
   let editor = null
 
+  const message = (key, replace = {}) => Object.entries(replace).reduce(
+    (text, [name, value]) => text.replaceAll(`:${name}`, value),
+    messages[key] ?? {
+      linkUrl: 'Link URL',
+    }[key],
+  )
+
   return {
     ..._loadable,
     ...dataOptions(),
@@ -116,12 +116,19 @@ export function tiptap(
 
     groups: [],
     extraModules: [],
+
+    // The editor isn't reactive: tick makes Alpine read its state again.
     tick: 0,
+
+    // Out of Alpine's reactive data: called through its proxy, the editor breaks.
+    getEditor() {
+      return editor
+    },
 
     init() {
       this.initField()
 
-      const groups = parseMode(mode, EDITOR_GROUP_ORDER) ?? EDITOR_GROUP_ORDER
+      const groups = parseToolbar(toolbar, EDITOR_GROUP_ORDER) ?? EDITOR_GROUP_ORDER
       this.groups = groups
 
       this.load(async () => {
@@ -166,8 +173,11 @@ export function tiptap(
       else if (command === 'heading3') chain.toggleHeading({ level: 3 })
       else if (command.startsWith('align')) chain.setTextAlign(command.slice(5).toLowerCase())
       else if (command === 'link') {
-        const url = window.prompt('URL', editor.getAttributes('link').href ?? '')
-        url ? chain.setLink({ href: url }) : chain.unsetLink()
+        const url = window.prompt(message('linkUrl'), editor.getAttributes('link').href ?? '')
+
+        if (url === null) return
+
+        url.trim() ? chain.setLink({ href: url.trim() }) : chain.unsetLink()
       } else if (command === 'image') {
         this.$refs.imageInput?.click()
       } else if (command === 'video') {
@@ -181,38 +191,8 @@ export function tiptap(
       chain.run()
     },
 
-    async handleUpload(file, type) {
-      if (!upload) {
-        return readAsDataURL(file)
-      }
-
-      const limit = upload.maxSize?.[type]
-
-      if (limit && file.size > limit * 1024) {
-        throw new Error(`File is larger than the ${(limit / 1024).toFixed(1)}MB limit.`)
-      }
-
-      const body = new FormData()
-      body.append('file', file)
-      if (limit) body.append('max_size', String(limit))
-      if (upload.disk) body.append('disk', upload.disk)
-      if (upload.directory) body.append('directory', upload.directory)
-
-      const response = await fetch(upload.url, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {
-          Accept: 'application/json',
-          'X-XSRF-TOKEN': getCsrfToken() ?? '',
-        },
-        body,
-      })
-
-      if (!response.ok) {
-        throw new Error(`Upload failed with status ${response.status}`)
-      }
-
-      return (await response.json()).url
+    handleUpload(file, type) {
+      return uploadEditorFile(file, type, upload, messages)
     },
 
     async insertImage(event) {
@@ -226,8 +206,7 @@ export function tiptap(
         const src = await this.handleUpload(file, 'image')
         editor.chain().focus().setImage({ src, alt: file.name }).run()
       } catch (e) {
-        console.error(e)
-        window.alert(e instanceof Error ? e.message : 'Failed to upload image.')
+        this.uploadFailed(e, file, 'image')
       }
     },
 
@@ -242,9 +221,12 @@ export function tiptap(
         const src = await this.handleUpload(file, 'video')
         editor.chain().focus().setVideo({ src }).run()
       } catch (e) {
-        console.error(e)
-        window.alert(e instanceof Error ? e.message : 'Failed to upload video.')
+        this.uploadFailed(e, file, 'video')
       }
+    },
+
+    uploadFailed(error, file, type) {
+      reportUploadFailed(this.input ?? this.$root, error, file, type, messages)
     },
 
     textStyle(attr) {
@@ -278,36 +260,92 @@ export function tiptap(
     },
 
     mount(EditorClass, extensions) {
-      try {
-        editor = new EditorClass({
-          element: this.$refs.root,
-          extensions,
-          content: this.input.value ?? '',
-          editorProps: {
-            attributes: {
-              class: 'tiptap-content',
-              'data-tallkit-control': '',
-            },
-          },
-          onUpdate: ({
-            editor
-          }) => { this.sync(editor.getHTML()) },
-          onSelectionUpdate: () => { this.tick++ },
-          onTransaction: () => { this.tick++ },
-          ...options,
-          ...this.getDataOptions(this.$refs.root),
-        })
+      if (this.isDestroyed()) return
 
-        this.$dispatch('rendered', { editor })
-      } catch (e) {
-        this.fail(e)
+      // Not caught here: load() shows it, and its completion would hide it.
+      editor = new EditorClass({
+        element: this.$refs.root,
+        extensions,
+        content: this.input.value ?? '',
+        editorProps: {
+          attributes: {
+            class: 'tiptap-content',
+            [dataKey('control')]: '',
+            // Given here: Tiptap only adds its own on the first draw, and setEditable() draws these again.
+            role: 'textbox',
+            'aria-multiline': 'true',
+            ...(labelledBy ? { 'aria-labelledby': labelledBy } : {}),
+          },
+        },
+        // An empty editor holds "<p></p>": sent as nothing, or a required field counts as filled.
+        onUpdate: ({
+          editor
+        }) => { this.sync(editor.isEmpty ? '' : editor.getHTML()) },
+        onSelectionUpdate: () => { this.tick++ },
+        onTransaction: () => { this.tick++ },
+        ...options,
+        ...this.getDataOptions(this.$refs.root),
+      })
+
+      this.followLockState((locked) => {
+        if (editor && editor.isEditable === locked) editor.setEditable(!locked)
+      }, () => queryData(this.$root, 'editor-toolbar'))
+
+      this.initToolbarKeys()
+
+      emit(this.input, 'rendered', { editor }, { later: true })
+    },
+
+    pressedState(command) {
+      if (['link', 'image', 'video', 'table'].includes(command)) return null
+
+      return this.isActive(command) ? 'true' : 'false'
+    },
+
+    initToolbarKeys() {
+      const toolbar = queryData(this.$root, 'editor-toolbar')
+      if (!toolbar) return
+
+      const items = () => Array.from(toolbar.querySelectorAll('button'))
+        .filter((el) => !el.closest('[popover]') && !el.disabled && isRendered(el))
+
+      const makeCurrent = (current) => {
+        items().forEach((el) => el.setAttribute('tabindex', el === current ? '0' : '-1'))
       }
+
+      makeCurrent(items()[0])
+
+      toolbar.addEventListener('focusin', (event) => {
+        if (items().includes(event.target)) makeCurrent(event.target)
+      })
+
+      toolbar.addEventListener('keydown', (event) => {
+        const list = items()
+        const index = list.indexOf(event.target)
+
+        if (index === -1) return
+
+        const rtl = isRtl(toolbar)
+        const step = { ArrowRight: rtl ? -1 : 1, ArrowLeft: rtl ? 1 : -1 }[event.key]
+        let next = null
+
+        if (step) next = list[(index + step + list.length) % list.length]
+        else if (event.key === 'Home') next = list[0]
+        else if (event.key === 'End') next = list.at(-1)
+
+        if (!next) return
+
+        event.preventDefault()
+        makeCurrent(next)
+        next.focus()
+      })
     },
 
     destroy() {
       _loadable.destroy.call(this)
+      this.stopFollowingLockState()
       editor?.destroy()
       editor = null
     }
-  };
+  }
 }

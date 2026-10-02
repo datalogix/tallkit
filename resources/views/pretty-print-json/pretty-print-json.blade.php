@@ -4,7 +4,7 @@
 ])
 <tk:loadable
     x-data="prettyPrintJson"
-    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'loadable:')"
+    :attributes="$attributes->prefixed('loadable:')"
 >
     <pre
         {{ $attributes->whereDoesntStartWith(['loadable:']) }}

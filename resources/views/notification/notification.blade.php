@@ -7,33 +7,40 @@
     'compact' => null,
     'tabs' => null,
     'markAll' => null,
+    'guard' => null,
+    'echo' => null,
+    'limit' => 50,
 ])
 @php
 
-if ($items !== null) {
-    $all = collect($items);
-    $isRead = fn ($notification) => ! is_null(data_get($notification, 'data.read_at') ?? data_get($notification, 'read_at'));
-    $unread = $all->reject($isRead)->values();
-    $read = $all->filter($isRead)->values();
-} else {
-    $unread = collect(auth()->user()?->unreadNotifications ?? []);
-    $read = collect(auth()->user()?->readNotifications ?? []);
-}
+$user = $items === null ? auth($guard)->user() : null;
+$own = $user && method_exists($user, 'notifications');
+$all = collect($items ?? ($own ? $user->notifications()->latest()->when($limit, fn ($query, $limit) => $query->limit((int) $limit))->get() : []));
+$isRead = fn ($notification) => ! is_null(data_get($notification, 'data.read_at') ?? data_get($notification, 'read_at'));
+$unread = $all->reject($isRead)->values();
+$read = $all->filter($isRead)->values();
+$unreadCount = $own ? $user->unreadNotifications()->count() : $unread->count();
+$markAllIds = $items === null ? null : $unread->map(fn ($notification) => data_get($notification, 'data.id') ?? data_get($notification, 'id'))->filter()->values()->all();
 
-$unreadCount = $unread->count();
-$broadcasting = config('broadcasting.default') && config('broadcasting.default') !== 'null';
+$component = TALLKit::livewireComponent();
+$actions = (bool) $component;
+
+$echoUser = $echo && $component ? auth($guard)->user() : null;
+$channel = match (true) {
+    ! $echoUser => null,
+    method_exists($echoUser, 'receivesBroadcastNotificationsOn') => $echoUser->receivesBroadcastNotificationsOn(),
+    default => str_replace('\\', '.', $echoUser::class).'.'.$echoUser->getKey(),
+};
 
 @endphp
 <div
-    x-data="notification({ channel: @js($broadcasting ? auth()->user()?->receivesBroadcastNotificationsOn() : null) })"
-    @unless($broadcasting)
-        wire:poll.{{ $interval ?? 30 }}s
-    @endunless
+    x-data="notification({ channel: @js($channel) })"
+    @if ($component && $interval) wire:poll.{{ max(1, (int) $interval) }}s @endif
     {{
         $attributes
             ->whereDoesntStartWith([
-                'dropdown:', 'button:', 'popover:',
-                'tab-', 'section:', 'list-unread:', 'list-read:',
+                'dropdown:', 'trigger:', 'popover:',
+                'tab-', 'tabs:', 'section:', 'list-unread:', 'list-read:',
                 'mark-all:'
             ])
             ->classes('contents')
@@ -41,7 +48,7 @@ $broadcasting = config('broadcasting.default') && config('broadcasting.default')
 >
     @if ($variant === 'inline')
         <tk:notification.panel
-            :attributes="$attributes"
+            :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), ['unreadCount' => null, 'markAll' => null, 'actions' => null, 'markAllIds' => null])"
             :$size
             :$unread
             :$read
@@ -52,9 +59,13 @@ $broadcasting = config('broadcasting.default') && config('broadcasting.default')
             :$markAll
         />
     @else
-        <tk:dropdown :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'dropdown:')">
+        <tk:dropdown :attributes="$attributes->prefixed('dropdown:')">
             <tk:button
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'button:')"
+                :attributes="$attributes->prefixed('trigger:')->merge([
+                    'aria-label' => $unreadCount
+                        ? __('Notifications (:count unread)', ['count' => $unreadCount])
+                        : __('Notifications'),
+                ])"
                 :$size
                 variant="subtle"
                 icon="bell-outline"
@@ -64,7 +75,7 @@ $broadcasting = config('broadcasting.default') && config('broadcasting.default')
             />
 
             <tk:popover
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'popover:')
+                :attributes="$attributes->prefixed('popover:')
                     ->classes(
                         'w-full p-0 ',
                         $compact ? '[:where(&)]:max-w-xs' : '[:where(&)]:max-w-sm',
@@ -75,7 +86,7 @@ $broadcasting = config('broadcasting.default') && config('broadcasting.default')
                 keep-open
             >
                 <tk:notification.panel
-                    :attributes="$attributes"
+                    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), ['unreadCount' => null, 'markAll' => null, 'actions' => null, 'markAllIds' => null])"
                     :$size
                     :$unread
                     :$read

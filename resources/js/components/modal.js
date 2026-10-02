@@ -1,11 +1,12 @@
-import { dataKey, bind, bindShortcut } from '../utils'
+import { dataSelector, bind, bindShortcut, isEscapeHandled, emit, eventName } from '../utils'
 
 export function modal(
   {
     name = null,
     dismissible = null,
     persist = null,
-    shortcut = null
+    shortcut = null,
+    open = false
   } = {}
 ) {
   return {
@@ -13,7 +14,7 @@ export function modal(
       const dialog = this.$el
 
       bind(dialog, {
-        ['@modal-show.document'](event) {
+        [`@${eventName('modal-show')}.document`](event) {
           if (event.detail.name === name && !event.detail.scope) {
             dialog.showModal()
             return
@@ -25,7 +26,7 @@ export function modal(
           }
         },
 
-        ['@modal-close.document'](event) {
+        [`@${eventName('modal-close')}.document`](event) {
           if (!event.detail.name || (event.detail.name === name && !event.detail.scope)) {
             dialog.close()
             return
@@ -38,11 +39,29 @@ export function modal(
         },
       })
 
+      // A nested modal's clicks and keys bubble up here too.
+      const fromInnerModal = (event) => event.target instanceof Element && event.target.closest('dialog') !== dialog
+
+      // Where the press began: a selection ending over the backdrop is a click on the dialog.
+      let pressedOn = null
+
       const handleCloseAttempt = (event, checkTarget = true) => {
+        if (checkTarget) {
+          const target = event.target
+          const started = pressedOn
+
+          pressedOn = null
+
+          if (target !== dialog || started !== dialog) {
+            return
+          }
+        }
+
         event.preventDefault()
 
         if (persist) {
           const persistAnimation = typeof persist === 'string' ? persist : 'tilt-shaking'
+          // Taken off and put back next tick, so the animation replays.
           dialog.classList.remove(persistAnimation)
           dialog.focus()
 
@@ -55,29 +74,38 @@ export function modal(
           return
         }
 
-        const target = event.target
-
-        if (checkTarget && target !== dialog && target.getAttribute('tabindex') !== '0') {
-          return
-        }
-
         dialog.close()
       }
 
       bind(dialog, {
         ['@toggle'](event) {
           if (event.newState === 'open') {
-            dialog.querySelector('[tabindex="0"]')?.focus()
-            this.$dispatch('opened', event)
+            const autofocus = Array.from(dialog.querySelectorAll('[autofocus]')).find((el) => el.closest('dialog') === dialog)
+            const title = dialog.getAttribute('aria-labelledby') ? document.getElementById(dialog.getAttribute('aria-labelledby')) : null
+            const start = autofocus ?? (title && dialog.contains(title) ? title : dialog)
+
+            if (!autofocus && !start.hasAttribute('tabindex')) {
+              start.setAttribute('tabindex', '-1')
+              start.style.outline = 'none'
+            }
+
+            start.focus()
+            emit(dialog, 'opened', { name })
           }
 
           if (event.newState === 'closed') {
-            this.$dispatch('closed', event)
+            emit(dialog, 'closed', { name })
           }
         },
 
+        ['@pointerdown'](event) {
+          pressedOn = event.target
+        },
+
         ['@click'](event) {
-          if ((event.target).closest(`${dataKey('modal-close')},${dataKey('modal-auto-close')}`)) {
+          if (fromInnerModal(event)) return
+
+          if ((event.target).closest(`${dataSelector('modal-close')},${dataSelector('modal-auto-close')}`)) {
             dialog.close()
             return
           }
@@ -86,21 +114,33 @@ export function modal(
         },
 
         ['@keydown.escape.prevent'](event) {
+          // .prevent keeps the browser from closing the dialog.
+          if (fromInnerModal(event) || isEscapeHandled(event)) return
+
+          handleCloseAttempt(event, false)
+        },
+
+        // Android's back button cancels without an Escape: the same rules apply.
+        ['@cancel'](event) {
+          if (event.target !== dialog) return
+
           handleCloseAttempt(event, false)
         },
       })
 
       if (shortcut) {
-        bindShortcut(dialog, shortcut, () => this.$dispatch('modal-show', { name }))
+        bindShortcut(dialog, shortcut, () => this.$dispatch(eventName('modal-show'), { name }))
       }
+
+      if (open) this.$nextTick(() => dialog.isConnected && !dialog.open && dialog.showModal())
     },
 
     show() {
-      this.$dispatch('modal-show', { name })
+      this.$dispatch(eventName('modal-show'), { name })
     },
 
     close() {
-      this.$dispatch('modal-close', { name })
+      this.$dispatch(eventName('modal-close'), { name })
     }
-  };
+  }
 }

@@ -1,17 +1,20 @@
 @props([
-    'mode' => null,
+    'marker' => null,
     'items' => null,
 ])
+@php
+$tag = $marker === 'decimal' ? 'ol' : 'ul';
+@endphp
 @if (collect($items)->isNotEmpty() || $slot->isNotEmpty())
-    <ul
+    <{{ $tag }}
         {{
             $attributes
                 ->dataKey('list')
                 ->whereDoesntStartWith(['li:', 'item:'])
-                ->when($mode === 'none', fn ($attrs) => $attrs->merge(['role' => 'list']))
+                ->when($marker === 'none', fn ($attrs) => $attrs->merge(['role' => 'list']))
                 ->classes(
                     'list-inside',
-                    match ($mode) {
+                    match ($marker) {
                         'none' => 'list-none',
                         default => 'list-disc',
                         'decimal' => 'list-decimal',
@@ -24,16 +27,16 @@
         @foreach (collect($items) as $index => $item)
             <li
                 {{
-                    TALLKit::attributesAfter(attributes: $attributes, prefix: 'li:')
-                        ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId(prefix: 'list-item', name: (string) $index)] : [], false)
+                    $attributes->prefixed('li:')
+                        ->wireKey(TALLKit::generateId(prefix: 'list-item', name: (string) $index))
                 }}
             >
                 <tk:text
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'item:')"
+                    :attributes="$attributes->prefixed('item:')"
                     :label="$item"
                     as="span"
                 />
             </li>
         @endforeach
-    </ul>
+    </{{ $tag }}>
 @endif

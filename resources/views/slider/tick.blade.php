@@ -1,10 +1,11 @@
 @props([
+    ...TALLKit::elementProps(),
     'label' => null,
     'value' => null,
     'size' => null,
 ])
 <tk:text
-    :attributes="$attributes
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())
         ->dataKey('slider-tick')
         ->classes(
             'flex items-center justify-center pointer-events-none',

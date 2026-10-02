@@ -1,11 +1,16 @@
 @props([
     'size' => null,
     'method' => null,
+    'resendUrl' => null,
 ])
+@php
+
+$resendUrl ??= route_detect(['two-factor.resend', 'auth.two-factor.resend'], default: null);
+
+@endphp
 <tk:form.section
-    :attributes="$attributes->whereDoesntStartWith(['code:', 'submit:', 'resend:'])"
+    :attributes="$attributes->whereDoesntStartWith(['code:', 'recovery-code:', 'recovery-toggle:', 'submit:', 'resend:'])->merge(['title' => 'Two-factor authentication'])"
     :$size
-    title="Two-factor authentication"
     :subtitle="match ($method) {
         'totp' => 'Enter the 6-digit authentication code from your authenticator app or a recovery code.',
         'email' => 'Enter the 6-digit authentication code sent to your email or a recovery code.',
@@ -14,17 +19,40 @@
     }"
 >
     @if (in_array($method, ['totp', 'email', 'sms'], true))
-        <tk:otp
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'code:')"
-            :$size
-            label="Authentication or recovery code"
-            name="code"
-        />
+        <div x-data="{ recovery: false }" class="space-y-6">
+            <template x-if="! recovery">
+                <tk:otp
+                    :attributes="$attributes->prefixed('code:')->merge(['label' => 'Authentication code'])"
+                    :$size
+                    name="code"
+                />
+            </template>
+
+            <template x-if="recovery">
+                <tk:input
+                    :attributes="$attributes->prefixed('recovery-code:')->merge(['label' => 'Recovery code'])"
+                    :$size
+                    name="recovery_code"
+                    maxlength="64"
+                    autocomplete="off"
+                    x-init="$el.focus()"
+                />
+            </template>
+
+            <tk:button
+                :attributes="$attributes->prefixed('recovery-toggle:')"
+                :$size
+                variant="ghost"
+                x-on:click="recovery = ! recovery"
+            >
+                <span x-show="! recovery">{{ __('Use a recovery code') }}</span>
+                <span x-show="recovery" x-cloak>{{ __('Use an authentication code') }}</span>
+            </tk:button>
+        </div>
     @else
         <tk:input
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'code:')"
+            :attributes="$attributes->prefixed('code:')->merge(['label' => 'Authentication or recovery code'])"
             :$size
-            label="Authentication or recovery code"
             name="code"
             maxlength="64"
             autocomplete="one-time-code"
@@ -34,18 +62,30 @@
     {{ $slot }}
 
     <tk:submit
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'submit:')->classes('w-full')"
+        :attributes="$attributes->prefixed('submit:')->classes('w-full')->merge(['label' => 'Verify code'])"
         :$size
-        label="Verify code"
         variant="accent"
     />
 
     @if (in_array($method, ['email', 'sms'], true))
-        <tk:button
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'resend:')"
-            :$size
-            label="Resend code"
-            action="resend"
-        />
+        @if (in_livewire())
+            <tk:button
+                :attributes="$attributes->prefixed('resend:')->merge(['label' => 'Resend code'])"
+                :$size
+                action="resend"
+            />
+        @else
+            <tk:button
+                :attributes="$attributes->prefixed('resend:')->merge(array_filter([
+                    'formaction' => $resendUrl,
+                    'formnovalidate' => true,
+                    'name' => $resendUrl ? null : 'resend',
+                    'value' => $resendUrl ? null : '1',
+                ]))
+                    ->merge(['label' => 'Resend code'])"
+                :$size
+                type="submit"
+            />
+        @endif
     @endif
 </tk:form.section>

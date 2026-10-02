@@ -5,21 +5,22 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
 $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
+$checked = TALLKit::fieldOldChecked($fieldName, $checked, $value);
 
 @endphp
 <tk:field.wrapper
     inline
     :$align
     :$name
-    :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
     :label="$slot->isEmpty() ? $label : $slot"
 >
     <div
         {{ $attributes->only('disabled')->dataKey('control') }}
         {{
-            TALLKit::attributesAfter(attributes: $attributes, prefix: 'control:')
+            $attributes->prefixed('control:')
                 ->classes(
                     'flex outline-offset-2 relative',
                     TALLKit::widthHeight(size: $size),
@@ -37,7 +38,7 @@ $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
                         'id' => $id,
                         'value' => $value,
                         'wire:model' => $wireModel,
-                        'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
+                        'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                         'aria-invalid' => $invalid ? 'true' : null,
                         'data-invalid' => $invalid ? true : null,
                         'aria-label' => $label ? null : __('Radio'),
@@ -76,7 +77,7 @@ $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
 
         <div
             {{
-                TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-area:')
+                $attributes->prefixed('icon-area:')
                     ->classes(
                         '
                             absolute
@@ -100,12 +101,12 @@ $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
         >
             <div
                 {{
-                    TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')->classes(
+                    $attributes->prefixed('icon:')->classes(
                         'rounded-full',
                         TALLKit::widthHeight(size: $size, mode: 'smallest'),
                         match (true) {
                             $color === 'accent' => 'bg-[var(--color-accent-foreground)]',
-                            TALLKit::isColor(color: $color) => 'bg-white',
+                            TALLKit::isColor(color: $color) => TALLKit::checkedDot(color: $color),
                             default => 'bg-white dark:bg-zinc-700',
                         },
                     )

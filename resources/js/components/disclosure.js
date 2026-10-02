@@ -12,16 +12,16 @@ export function disclosure() {
     init() {
       _toggleable.init.call(this, this.$root.hasAttribute('data-open'))
 
-      const panel = this.$root.querySelector(':scope > button + *')
+      const panel = this.$root.querySelector(':scope > button + *, :scope > [role="heading"] + *')
 
       if (panel && !panel.id) {
         panel.id = generateId('disclosure')
       }
 
-      this.observer = new MutationObserver(() => { this.opened = this.$root.hasAttribute('data-open') })
+      this.observer = new MutationObserver(() => this.setOpened(this.$root.hasAttribute('data-open')))
       this.observer.observe(this.$root, { attributeFilter: ['data-open'] })
 
-      bind(this.$root.querySelectorAll(':scope > button'), {
+      bind(this.$root.querySelectorAll(':scope > button, :scope > [role="heading"] > button'), {
         [':aria-controls']() {
           return panel?.id ?? null
         },

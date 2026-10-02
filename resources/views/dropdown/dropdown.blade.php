@@ -1,6 +1,5 @@
 @props([
-    'mode' => null,
-    'hover' => null,
+    'open' => null,
     'position' => null,
     'align' => null,
     'animation' => null,
@@ -8,7 +7,7 @@
 <div
     wire:ignore.self
     x-data="popover({
-        mode: @js($mode ?? ($hover ? 'hover' : 'dropdown')),
+        mode: @js(match ($open) { null, 'click' => 'dropdown', default => $open }),
         position: @js($position ?? 'bottom'),
         align: @js($align ?? 'start'),
     })"

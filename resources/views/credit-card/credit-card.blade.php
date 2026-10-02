@@ -78,23 +78,21 @@ $types = [
 @endphp
 <div
     x-data="creditCard(@js($types), @js($options))"
-    tabindex="0"
-    role="button"
-    aria-label="{{ __('Flip card') }}"
+    role="group"
     {{ $attributes->classes(
         '
             relative mx-auto max-w-[400px] h-[260px]
             w-full cursor-pointer transition duration-700 text-zinc-700 transform-3d
 
-            focus-visible:outline-2
-            focus-visible:outline-blue-700
-            dark:focus-visible:outline-blue-300
-            focus-visible:outline-offset-2
+            has-[[data-tallkit-credit-card-flip]:focus-visible]:tk-focus-outline
         '
-    ) }}
+    )
+            ->merge(['aria-label' => __('Credit card')]) }}
 >
+    <button type="button" class="sr-only" {{ TALLKit::dataKey('credit-card-flip') }}>{{ __('Flip card') }}</button>
+
     <div class="absolute w-full backface-hidden">
-        <div class="absolute right-4 top-5 w-20 h-14 flex" x-html="typeOptions().icon"></div>
+        <div class="absolute right-4 top-5 w-20 h-14 flex" x-html="typeIcon()"></div>
         @isset ($frontSvg)
             {{ $frontSvg }}
         @else
@@ -126,29 +124,29 @@ $types = [
                     <text
                         transform="matrix(1 0 0 1 54.1064 428.1723)"
                         class="fill-white font-mono font-normal uppercase text-3xl"
-                        x-text="options.holderName ? options.holderName : @js(__('card_holder_name'))"
+                        x-text="options.holderName ? options.holderName : @js(__('Cardholder name'))"
                     ></text>
 
                     <text
                         transform="matrix(1 0 0 1 54.1074 389.8793)"
                         class="fill-white opacity-60 font-mono font-normal text-2xl"
-                    >{{ __('card_holder_name') }}</text>
+                    >{{ __('Cardholder name') }}</text>
 
                     <text
                         transform="matrix(1 0 0 1 479.7754 388.8793)"
                         class="fill-white opacity-60 font-mono font-normal text-2xl"
-                    >{{ __('validity') }}</text>
+                    >{{ __('Expiration') }}</text>
 
                     <text
                         transform="matrix(1 0 0 1 65.1054 241.5)"
                         class="fill-white opacity-60 font-mono font-normal text-2xl"
-                    >{{ __('card_number') }}</text>
+                    >{{ __('Card number') }}</text>
 
                     <g>
                         <text
                             transform="matrix(1 0 0 1 574.4219 433.8095)"
                             class="fill-white font-mono text-3xl font-normal"
-                            x-text="options.expirationDate ? options.expirationDate : 'MM/YYYY'"
+                            x-text="options.expirationDate ? options.expirationDate : @js(__('MM/YYYY'))"
                         ></text>
 
                         <text
@@ -256,7 +254,7 @@ $types = [
                         transform="matrix(1 0 0 1 59.5073 228.6099)"
                         class="text-4xl"
                         style="font-family: cursive"
-                        x-text="options.holderName ? options.holderName : @js(__('card_holder_name'))"
+                        x-text="options.holderName ? options.holderName : @js(__('Cardholder name'))"
                     ></text>
                 </g>
             </svg>

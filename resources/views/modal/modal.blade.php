@@ -10,7 +10,6 @@
     'backdrop' => null,
     'trigger' => null,
 
-    // section
     'prepend' => null,
     'title' => null,
     'subtitle' => null,
@@ -22,13 +21,16 @@
 ])
 @php
 
-$name ??= TALLKit::generateId(prefix: 'modal');
+$name ??= TALLKit::stableId('modal');
 $closable ??= $variant === 'bare' ? false : true;
+
+$titleId = TALLKit::generateId(prefix: 'modal', name: $name, suffix: 'title');
+$subtitleId = TALLKit::generateId(prefix: 'modal', name: $name, suffix: 'subtitle');
 
 @endphp
 @isset ($trigger)
     <tk:modal.trigger
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'trigger:')"
+        :attributes="$attributes->prefixed('trigger:')"
         :$name
     >
         {{ $trigger }}
@@ -36,7 +38,7 @@ $closable ??= $variant === 'bare' ? false : true;
 @endisset
 <dialog
     wire:ignore.self
-    x-data="modal({ name: @js($name), dismissible: @js($dismissible), persist: @js($persist), shortcut: @js($shortcut) })"
+    x-data="modal({ name: @js($name), dismissible: @js($dismissible), persist: @js($persist), shortcut: @js($shortcut), open: @js(TALLKit::modalFlashed($name)) })"
     closedby="none"
     {{
         $attributes->whereDoesntStartWith([
@@ -64,13 +66,13 @@ $closable ??= $variant === 'bare' ? false : true;
                 starting:opacity-0
                 starting:backdrop:opacity-0
             ',
-            match ($backdrop) { // Backdrop...
+            match ($backdrop) {
                 'strong' => 'backdrop:bg-black/90',
                 'subtle' => 'backdrop:bg-black/10',
                 false, 'ghost' => 'backdrop:hidden',
                 default => 'backdrop:bg-black/50',
             },
-            match ($variant) { // Min-Max width...
+            match ($variant) {
                 default => 'fixed m-auto overflow-auto [:where(&)]:max-w-xl [:where(&)]:min-w-xs',
                 'flyout' => match ($position) {
                     'top' => 'fixed m-0 min-w-[100vw] border-b',
@@ -85,7 +87,7 @@ $closable ??= $variant === 'bare' ? false : true;
                 },
                 'bare' => '',
             },
-            match ($variant) { // Positions...
+            match ($variant) {
                  default => 'starting:transform-[scale(0.95)]',
                 'flyout', 'floating' => match ($position) {
                     'top' => '
@@ -117,31 +119,29 @@ $closable ??= $variant === 'bare' ? false : true;
                     ',
                 },
             },
-            match ($variant) { // Border color, Rings...
+            match ($variant) {
                 default => 'ring ring-black/5 dark:ring-zinc-700',
                 'flyout' => 'border-transparent dark:border-zinc-700',
                 'bare' => '',
             },
-            match ($variant) { // Background color...
+            match ($variant) {
                 default => '[:where(&)]:bg-white dark:[:where(&)]:bg-zinc-800',
                 'bare' => '[:where(&)]:bg-transparent',
             },
-            match ($variant) { // Shadows...
+            match ($variant) {
                 default => 'shadow-lg rounded-xl',
                 'flyout', 'bare' => '',
             },
         )
         ->merge([
             TALLKit::dataKey(name: 'modal') => $name,
-            'aria-labelledby' => $title ? $name.'-title' : null,
-            'aria-describedby' => $subtitle ? $name.'-subtitle' : null,
+            'aria-labelledby' => $title ? $titleId : null,
+            'aria-describedby' => $subtitle ? $subtitleId : null,
         ])
     }}
 >
-    <span tabindex="0" class="sr-only"></span>
-
     <tk:section
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'section:', prepend: [
+        :attributes="$attributes->prefixed('section:', with: [
                 'icon', 'badge',
                 'container:', 'title:', 'subtitle:', 'list:', 'actions:', 'separator:', 'content:',
             ])
@@ -150,9 +150,10 @@ $closable ??= $variant === 'bare' ? false : true;
         :$size
         :$prepend
         :$title
-        title:id="{{ $name.'-title' }}"
+        title:id="{{ $titleId }}"
+        title:level="2"
         :$subtitle
-        subtitle:id="{{ $name.'-subtitle' }}"
+        subtitle:id="{{ $subtitleId }}"
         :$description
         :$append
         :$content
@@ -167,13 +168,13 @@ $closable ??= $variant === 'bare' ? false : true;
                 {{ $close }}
             @elseif ($closable !== false)
                 <tk:modal.close
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'close:')
+                    :attributes="$attributes->prefixed('close:')
                         ->classes('absolute top-0 end-0 mt-4 me-4')
                         ->merge(['size' => TALLKit::adjustSize(size: $size)])
+                        ->merge(['tooltip' => 'Close'])
                     "
                     variant="ghost"
                     icon="close"
-                    tooltip="Close"
                 />
             @endif
         </x-slot:actions>

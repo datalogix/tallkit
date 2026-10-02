@@ -5,16 +5,14 @@
     'identifierValue' => null,
 ])
 <tk:form.section
-    :attributes="$attributes->whereDoesntStartWith(['token:', 'identifier:', 'new-password:', 'new-password-confirmation:', 'submit:'])"
+    :attributes="$attributes->whereDoesntStartWith(['token:', 'identifier:', 'new-password:', 'new-password-confirmation:', 'submit:'])->merge(['title' => 'Reset password', 'subtitle' => 'Please enter your new password below:'])"
     :$size
-    title="Reset password"
-    subtitle="Please enter your new password below:"
 >
     <input
         type="hidden"
         name="token"
         {{
-            TALLKit::attributesAfter(attributes: $attributes, prefix: 'token:')
+            $attributes->prefixed('token:')
                 ->when(
                     in_livewire(),
                     fn ($attrs) => $attrs->merge(['wire:model' => 'token']),
@@ -26,36 +24,31 @@
     {{ $slot }}
 
     <tk:page.auth.identifier
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'identifier:')"
+        :attributes="$attributes->prefixed('identifier:')"
         :$size
         :$identifier
-        :value="$identifierValue ?? old($identifier, request($identifier))"
+        :value="$identifierValue ?? old($identifier ?? 'email', request($identifier ?? 'email'))"
     />
 
     <tk:password
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'new-password:')"
+        :attributes="$attributes->prefixed('new-password:')->merge(['placeholder' => true])->merge(['label' => 'New password'])"
         :$size
-        label="New password"
         name="password"
         required
         autocomplete="new-password"
-        placeholder
     />
 
     <tk:password
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'new-password-confirmation:')"
+        :attributes="$attributes->prefixed('new-password-confirmation:')->merge(['placeholder' => true])->merge(['label' => 'New password confirmation'])"
         :$size
-        label="New password confirmation"
         name="password_confirmation"
         required
         autocomplete="new-password"
-        placeholder
     />
 
     <tk:submit
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'submit:')->classes('w-full')"
+        :attributes="$attributes->prefixed('submit:')->classes('w-full')->merge(['label' => 'Reset password'])"
         :$size
-        label="Reset password"
         variant="accent"
     />
 </tk:form.section>

@@ -1,10 +1,10 @@
-import { bind } from '../utils'
+import { dataSelector, bind, emit, eventName, isEscapeHandled, FOCUSABLE, isRendered } from '../utils'
 import { toggleable } from '../mixins/toggleable'
-import { sticky as stickyComponent } from '../mixins/sticky'
+import { stickable } from '../mixins/stickable'
 
 export function sidebar(name, sticky, stashable) {
   const _toggleable = toggleable()
-  const _sticky = stickyComponent()
+  const _sticky = stickable()
 
   return {
     ..._toggleable,
@@ -19,6 +19,7 @@ export function sidebar(name, sticky, stashable) {
 
       if (stashable) {
         this.$el.removeAttribute('data-mobile-cloak')
+
         this.screenLg = window.innerWidth >= 1024
 
         bind(this.$el, {
@@ -26,20 +27,25 @@ export function sidebar(name, sticky, stashable) {
             return !this.screenLg
           },
 
+          // Moved off screen is still reachable by Tab and screen readers: inert while closed.
+          [':inert']() {
+            return !this.screenLg && !this.isOpened()
+          },
+
           ['x-resize.document']() {
             this.screenLg = window.innerWidth >= 1024
           },
 
-          [`@sidebar-${name ?? ''}-close.window`]() {
-            this.close()
+          [`@${eventName('sidebar-close')}.window`](event) {
+            if ((event.detail?.name ?? null) === (name ?? null)) this.close()
           },
 
-          [`@sidebar-${name ?? ''}-toggle.window`]() {
-            this.toggle()
+          [`@${eventName('sidebar-toggle')}.window`](event) {
+            if ((event.detail?.name ?? null) === (name ?? null)) this.toggle()
           },
 
-          ['@keydown.escape.window']() {
-            if (this.isOpened()) this.close()
+          ['@keydown.escape.window'](event) {
+            if (this.isOpened() && !isEscapeHandled(event)) this.close()
           },
         })
 
@@ -48,19 +54,60 @@ export function sidebar(name, sticky, stashable) {
     },
 
     open() {
+      const wasOpened = this.isOpened()
+
       this.$el.setAttribute('data-show-stashed-sidebar', '')
       _toggleable.open.call(this)
       this._dispatchState()
+
+      if (!wasOpened) this._focusInside()
     },
 
     close() {
+      const wasOpened = this.isOpened()
+
       this.$el.removeAttribute('data-show-stashed-sidebar')
       _toggleable.close.call(this)
       this._dispatchState()
+
+      if (wasOpened) this._focusBack()
+    },
+
+    _focusInside() {
+      if (!stashable || this.screenLg) return
+
+      this._returnFocus = document.activeElement
+
+      this.$nextTick(() => {
+        const first = Array.from(this.$el.querySelectorAll(FOCUSABLE)).find(isRendered)
+
+        if (first) {
+          first.focus()
+          return
+        }
+
+        if (!this.$el.hasAttribute('tabindex')) this.$el.setAttribute('tabindex', '-1')
+        this.$el.focus()
+      })
+    },
+
+    _focusBack() {
+      if (!stashable || this.screenLg) return
+
+      const active = document.activeElement
+
+      if (active && active !== document.body && !this.$el.contains(active)) return
+
+      const target = this._returnFocus?.isConnected && this._returnFocus !== document.body
+        ? this._returnFocus
+        : document.querySelector(`${dataSelector('sidebar-toggle', name ?? '')} button, ${dataSelector('sidebar-toggle', name ?? '')}`)
+
+      this._returnFocus = null
+      target?.focus?.()
     },
 
     _dispatchState() {
-      window.dispatchEvent(new CustomEvent(`sidebar-${name ?? ''}-state`, { detail: { opened: this.opened } }))
+      emit(window, eventName('sidebar-state'), { name: name ?? null, opened: this.opened })
     },
 
     destroy() {

@@ -13,30 +13,31 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
 $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
+$checked = TALLKit::fieldOldChecked($fieldName, $checked, $value);
 $hasStateLabel = $labelOn || $labelOff;
 
-$wireModelDirective = $attributes->wire('model');
-$isLiveModel = $wireModelDirective?->directive && $wireModelDirective->hasModifier('live');
+$liveModel = TALLKit::livewireLiveModel($attributes);
+$isLiveModel = $liveModel !== null;
 $hasWireChange = $attributes->whereStartsWith('wire:change')->isNotEmpty();
 
 $loading ??= $hasWireChange || $isLiveModel;
 $loadingAction = $hasWireChange ? $attributes->whereStartsWith('wire:change')->first() : null;
-$loadingModel = $isLiveModel ? $wireModelDirective->value() : null;
+$loadingModel = $liveModel;
 
 @endphp
 <tk:field.wrapper
     :inline="! $hasStateLabel"
     :$align
     :$name
-    :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
     :label="$slot->isEmpty() ? $label : $slot"
 >
     @if ($hasStateLabel)
         <div
             {{
-                TALLKit::attributesAfter(attributes: $attributes, prefix: 'state-group:')
+                $attributes->prefixed('state-group:')
                     ->classes([
                         'flex items-center has-[input:disabled]:cursor-not-allowed',
                         '[&_.label-checked]:hidden [&_.label-unchecked]:inline has-[input:checked]:[&_.label-checked]:inline has-[input:checked]:[&_.label-unchecked]:hidden',
@@ -47,7 +48,7 @@ $loadingModel = $isLiveModel ? $wireModelDirective->value() : null;
     @endif
     <label
         {{
-            TALLKit::attributesAfter(attributes: $attributes, prefix: 'control:')
+            $attributes->prefixed('control:')
                 ->dataKey('control')
                 ->merge([
                     'x-data' => $loading ? 'toggle('.Js::from(array_filter([
@@ -56,7 +57,7 @@ $loadingModel = $isLiveModel ? $wireModelDirective->value() : null;
                         'delay' => $loadingDelay,
                         'minDuration' => $loadingMinDuration,
                     ], fn ($value) => $value !== null)).')' : null,
-                    'disabled' => $attributes->get('disabled'),
+                    'disabled' => TALLKit::isAttributeEnabled($attributes->get('disabled')) ?: null,
                 ])
                 ->classes(
                     '
@@ -117,7 +118,7 @@ $loadingModel = $isLiveModel ? $wireModelDirective->value() : null;
                         'wire:model' => $wireModel,
                         TALLKit::dataKey(name: 'switch-group') => $group,
                         'aria-label' => ($label || $hasStateLabel) ? null : __('Switch'),
-                        'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
+                        'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                         'aria-invalid' => $invalid ? 'true' : null,
                         'data-invalid' => $invalid ? true : null,
                     ])
@@ -130,7 +131,7 @@ $loadingModel = $isLiveModel ? $wireModelDirective->value() : null;
         <span
             aria-hidden="true"
             {{
-                TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')
+                $attributes->prefixed('icon:')
                     ->classes(
                         '
                             bg-white
@@ -167,7 +168,7 @@ $loadingModel = $isLiveModel ? $wireModelDirective->value() : null;
                 <tk:icon
                     :$size
                     :icon="$iconOn"
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-on:')
+                    :attributes="$attributes->prefixed('icon-on:')
                         ->classes('checked')
                         ->when($loading, fn ($attrs) => $attrs->merge(['x-show' => '!busy']))
                     "
@@ -178,7 +179,7 @@ $loadingModel = $isLiveModel ? $wireModelDirective->value() : null;
                 <tk:icon
                     :$size
                     :icon="$iconOff"
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-off:')
+                    :attributes="$attributes->prefixed('icon-off:')
                         ->classes('unchecked')
                         ->when($loading, fn ($attrs) => $attrs->merge(['x-show' => '!busy']))
                     "
@@ -187,7 +188,7 @@ $loadingModel = $isLiveModel ? $wireModelDirective->value() : null;
 
             @if ($loading)
                 <tk:loading
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'loading:')"
+                    :attributes="$attributes->prefixed('loading:')"
                     x-show="busy"
                     x-cloak
                     :size="TALLKit::adjustSize(size: $size)"
@@ -199,7 +200,7 @@ $loadingModel = $isLiveModel ? $wireModelDirective->value() : null;
     @if ($hasStateLabel)
             <label
                 {{
-                    TALLKit::attributesAfter(attributes: $attributes, prefix: 'state:')
+                    $attributes->prefixed('state:')
                         ->merge([
                             'for' => $id,
                         ])
@@ -210,11 +211,11 @@ $loadingModel = $isLiveModel ? $wireModelDirective->value() : null;
                 }}
             >
                 <tk:element
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'label-checked:')->classes('label-checked')"
+                    :attributes="$attributes->prefixed('label-checked:')->classes('label-checked')"
                     :label="$labelOn"
                 />
                 <tk:element
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'label-unchecked:')->classes('label-unchecked')"
+                    :attributes="$attributes->prefixed('label-unchecked:')->classes('label-unchecked')"
                     :label="$labelOff"
                 />
             </label>

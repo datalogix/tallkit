@@ -12,16 +12,17 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
+$value = TALLKit::fieldOldValue($fieldName, $value);
 
 @endphp
 <tk:field.wrapper
     :$name
-    :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
 >
     <div
         wire:ignore
-        x-data="composer({ submit: @js($submit), placeholder: @js($placeholder ? __($placeholder) : null) })"
+        x-data="composer({ submit: @js($submit) })"
         x-modelable="value"
         role="group"
         {{
@@ -29,8 +30,7 @@
                 ->dataKey('control')
                 ->dataKey('group-target')
                 ->merge([
-                    'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
-                    'aria-invalid' => $invalid ? 'true' : null,
+                    'aria-labelledby' => $label ? $id.'-label' : null,
                     'data-invalid' => $invalid ? true : null,
                     'data-inline' => $inline ? true : null,
                 ])
@@ -64,7 +64,7 @@
         <input
             type="hidden"
             {{
-                TALLKit::attributesAfter(attributes: $attributes, prefix: 'hidden:')
+                $attributes->prefixed('hidden:')
                     ->dataKey('composer')
                     ->merge([
                         'name' => $name,
@@ -75,7 +75,7 @@
         />
 
         @if ($header && ! $inline)
-            <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'header:')->classes(
+            <div {{ $attributes->prefixed('header:')->classes(
                 'flex items-center col-span-3',
                 TALLKit::marginBottom(size: $size),
                 TALLKit::gap(size: $size, mode: 'smallest'),
@@ -86,7 +86,7 @@
 
         <tk:field.control
             :$size
-            :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
+            :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
                 ->classes(
                     '
                         col-span-4
@@ -114,8 +114,14 @@
                 {{ $input }}
             @else
                 <tk:textarea
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'textarea:')"
-                    counter:class="flex-1"
+                    :attributes="$attributes->prefixed('textarea:')
+                        ->merge(array_filter([
+                            'disabled' => TALLKit::isAttributeEnabled($attributes->get('disabled')),
+                            'readonly' => TALLKit::isAttributeEnabled($attributes->get('readonly')),
+                            'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
+                            'aria-invalid' => $invalid ? 'true' : null,
+                        ]))"
+                    area:class="flex-1"
                     :$id
                     :$size
                     :$placeholder
@@ -128,7 +134,7 @@
         </tk:field.control>
 
         @if ($footer && ! $inline)
-            <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'footer:')->classes(
+            <div {{ $attributes->prefixed('footer:')->classes(
                 'flex items-center col-span-3',
                 TALLKit::marginTop(size: $size),
                 TALLKit::gap(size: $size, mode: 'smallest'),
@@ -138,7 +144,7 @@
         @endif
 
         @isset ($actionsLeading)
-            <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'actions-leading:')->classes(
+            <div {{ $attributes->prefixed('actions-leading:')->classes(
                 '
                     flex items-start col-span-2
                     [[data-inline]_&]:col-span-1
@@ -152,7 +158,7 @@
         @endisset
 
         @isset ($actionsTrailing)
-            <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'actions-trailing:')->classes(
+            <div {{ $attributes->prefixed('actions-trailing:')->classes(
                 '
                     flex items-start justify-end col-span-2
                     [[data-inline]_&]:col-span-1

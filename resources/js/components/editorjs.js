@@ -1,6 +1,6 @@
-import { loadRemoteAssets } from '../utils'
+import { loadRemoteAssets, emit } from '../utils'
 import { dataOptions } from '../mixins/data-options'
-import { EDITOR_GROUP_ORDER, editorField, parseMode } from '../mixins/editor'
+import { EDITOR_GROUP_ORDER, editorField, parseToolbar } from '../mixins/editor'
 import { loadable } from './loadable'
 
 const GROUPS = {
@@ -79,21 +79,42 @@ const GROUPS = {
   },
 }
 
-export function editorjs({ options = {}, scripts = [], styles = [], mode = null } = {}) {
+function parseData(value) {
+  if (!value) return undefined
+
+  try {
+    const data = typeof value === 'string' ? JSON.parse(value) : value
+
+    if (data && Array.isArray(data.blocks)) return data
+  } catch {
+  }
+
+  console.warn('[tallkit] The Editor.js value is not Editor.js data (JSON with "blocks"): it starts empty.', value)
+
+  return undefined
+}
+
+export function editorjs({ options = {}, scripts = [], styles = [], toolbar = null, i18n = null } = {}) {
   const _loadable = loadable()
+
+  // Out of Alpine's reactive data: called through its proxy, the editor breaks.
+  let editor = null
 
   return {
     ..._loadable,
     ...dataOptions(),
     ...editorField(),
 
-    editor: null,
     _saveToken: 0,
+
+    getEditor() {
+      return editor
+    },
 
     init() {
       this.initField()
 
-      const groups = parseMode(mode, EDITOR_GROUP_ORDER) ?? EDITOR_GROUP_ORDER
+      const groups = parseToolbar(toolbar, EDITOR_GROUP_ORDER) ?? EDITOR_GROUP_ORDER
 
       this.load(() => loadRemoteAssets(() => !!window.EditorJS, [
         'https://cdn.jsdelivr.net/npm/@editorjs/editorjs@2',
@@ -103,38 +124,49 @@ export function editorjs({ options = {}, scripts = [], styles = [], mode = null 
     },
 
     applyExternalValue(value) {
-      this.editor.render(value ? JSON.parse(value) : { blocks: [] })
+      editor.render(parseData(value) ?? { blocks: [] })
     },
 
     mount(groups) {
-      try {
-        this.editor = new window.EditorJS({
-          holder: this.$refs.root,
-          tools: groups.reduce((tools, group) => ({ ...tools, ...GROUPS[group]?.tools() }), {}),
-          inlineToolbar: groups.flatMap((group) => GROUPS[group]?.inline ?? []),
-          data: this.input.value ? JSON.parse(this.input.value) : undefined,
-          onChange: async (api) => {
-            const token = ++this._saveToken
-            const output = await api.saver.save()
+      if (this.isDestroyed()) return
 
-            if (token !== this._saveToken) return
+      // Not caught here: load() shows it, and its completion would hide it.
+      editor = new window.EditorJS({
+        holder: this.$refs.root,
+        tools: groups.reduce((tools, group) => ({ ...tools, ...GROUPS[group]?.tools() }), {}),
+        inlineToolbar: groups.flatMap((group) => GROUPS[group]?.inline ?? []),
+        ...(i18n ? { i18n: { messages: i18n } } : {}),
+        data: parseData(this.input.value),
+        readOnly: this.lockState() !== null,
+        onChange: async (api) => {
+          const token = ++this._saveToken
+          const output = await api.saver.save()
 
-            this.sync(JSON.stringify(output))
-          },
-          ...options,
-          ...this.getDataOptions(this.$refs.root),
+          if (token !== this._saveToken) return
+
+          this.sync(output.blocks?.length ? JSON.stringify(output) : '')
+        },
+        ...options,
+        ...this.getDataOptions(this.$refs.root),
+      })
+
+      return editor.isReady.then(() => {
+        const instance = editor
+
+        this.followLockState((locked) => {
+          if (instance?.readOnly && instance.readOnly.isEnabled !== locked) instance.readOnly.toggle(locked)
         })
 
-        this.editor.isReady.then(() => this.$dispatch('rendered', { editor: this.editor }))
-      } catch (e) {
-        this.fail(e)
-      }
+        emit(this.input, 'rendered', { editor }, { later: true })
+      })
     },
 
     async destroy() {
       _loadable.destroy.call(this)
-      await this.editor?.destroy()
-      this.editor = null
+      this.stopFollowingLockState()
+      const instance = editor
+      editor = null
+      await instance?.destroy()
     }
-  };
+  }
 }

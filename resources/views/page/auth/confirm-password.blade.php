@@ -2,26 +2,22 @@
     'size' => null,
 ])
 <tk:form.section
-    :attributes="$attributes->whereDoesntStartWith(['password:', 'submit:'])"
+    :attributes="$attributes->whereDoesntStartWith(['password:', 'submit:'])->merge(['title' => 'Confirm password', 'subtitle' => 'This is a secure area of the application. Please confirm your password before continuing.'])"
     :$size
-    title="Confirm password"
-    subtitle="This is a secure area of the application. Please confirm your password before continuing."
 >
     {{ $slot }}
 
     <tk:password
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'password:')"
+        :attributes="$attributes->prefixed('password:')->merge(['placeholder' => true])"
         :$size
         name="password"
         required
-        autocomplete="new-password"
-        placeholder
+        autocomplete="current-password"
     />
 
     <tk:submit
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'submit:')->classes('w-full')"
+        :attributes="$attributes->prefixed('submit:')->classes('w-full')->merge(['label' => 'Confirm'])"
         :$size
-        label="Confirm"
         variant="accent"
     />
 </tk:form.section>

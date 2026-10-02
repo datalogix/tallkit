@@ -1,46 +1,46 @@
-export function cache(name, {
+import { storageKey } from './naming'
+import { browserStorage } from './storage'
+
+export function createCache(name, {
   ttl = 1000 * 60 * 60, // 1h
-  persist = true
+  persist = true,
+  storage = 'local',
 } = {}) {
   const memory = new Map()
+  const store = persist ? browserStorage(storage) : null
+
+  const isFresh = (entry) => entry !== null && typeof entry === 'object' && Date.now() <= entry.exp
 
   return {
     getStorageKey(key) {
-      return ['tallkit', 'cache', name, key].filter(Boolean).join(':')
+      return storageKey('cache', name, key)
     },
 
     get(key) {
       const mem = memory.get(key)
 
       if (mem) {
-        if (Date.now() < mem.exp) {
+        if (isFresh(mem)) {
           return mem.data
         }
 
         memory.delete(key)
       }
 
-      if (persist) {
-        try {
-          const raw = localStorage.getItem(this.getStorageKey(key))
-          if (!raw) return null
+      if (!store) return null
 
-          const parsed = JSON.parse(raw)
+      const stored = store.get(this.getStorageKey(key))
 
-          if (Date.now() > parsed.exp) {
-            localStorage.removeItem(this.getStorageKey(key))
-            return null
-          }
+      if (stored === null) return null
 
-          memory.set(key, parsed)
-
-          return parsed.data
-        } catch (e) {
-          return null
-        }
+      if (!isFresh(stored)) {
+        store.remove(this.getStorageKey(key))
+        return null
       }
 
-      return null
+      memory.set(key, stored)
+
+      return stored.data
     },
 
     set(key, data) {
@@ -51,13 +51,18 @@ export function cache(name, {
 
       memory.set(key, entry)
 
-      if (persist) {
-        try {
-          localStorage.setItem(this.getStorageKey(key), JSON.stringify(entry))
-        } catch (e) {
-          //
-        }
+      if (store) {
+        this.prune()
+        store.set(this.getStorageKey(key), entry)
       }
     },
-  };
+
+    prune() {
+      if (!store) return
+
+      for (const key of store.keys(`${storageKey('cache', name)}.`)) {
+        if (!isFresh(store.get(key))) store.remove(key)
+      }
+    },
+  }
 }

@@ -7,11 +7,10 @@
         {{ $slot }}
     @else
         <tk:checkbox
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'checkbox:')"
+            :attributes="$attributes->prefixed('checkbox:')->merge(['aria-label' => __('Select all rows')])"
             x-model="selectAllChecked"
             x-on:change="toggleAll"
             :label="false"
-            aria-label="{{ __('Select all rows') }}"
             size="sm"
         />
     @endif

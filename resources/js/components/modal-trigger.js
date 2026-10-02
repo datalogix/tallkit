@@ -1,21 +1,25 @@
-import { bind, bindShortcut } from '../utils'
+import { bind, bindShortcut, eventName } from '../utils'
 
 export function modalTrigger({ name = null, shortcut = null } = {}) {
   return {
     init() {
       bind(this.$el, {
         ['@click']() {
-          if (this.$el.querySelector('button[disabled]')) {
-            return
-          }
-
-          this.$dispatch('modal-show', { name })
+          this.show()
         },
       })
 
       if (shortcut) {
-        bindShortcut(this.$el, shortcut, () => this.$dispatch('modal-show', { name }))
+        bindShortcut(this.$el, shortcut, () => this.show())
       }
+    },
+
+    show() {
+      if (this.$root.querySelector('button[disabled]')) {
+        return false
+      }
+
+      this.$dispatch(eventName('modal-show'), { name })
     }
   }
 }

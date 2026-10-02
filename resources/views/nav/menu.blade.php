@@ -1,12 +1,15 @@
 @aware(['size'])
 @props([
+    ...TALLKit::elementProps(),
     'size' => null,
     'items' => null,
     'animate' => null,
+    'keepOpen' => null,
+    'animation' => null,
 ])
-<tk:dropdown :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'dropdown:')">
+<tk:dropdown :attributes="$attributes->prefixed('dropdown:')">
     <tk:nav.item
-        :attributes="$attributes->except(['href'])
+        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->except(['href'])
             ->whereDoesntStartWith(['dropdown:', 'menu:'])
             ->when($animate !== false, fn ($attrs) => $attrs->merge([
                 'icon-trailing:class' => 'transition-transform',
@@ -21,9 +24,11 @@
     </tk:nav.item>
 
     <tk:menu
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'menu:')"
+        :attributes="$attributes->prefixed('menu:')"
         :$items
         :$size
+        :$keepOpen
+        :$animation
     >
         {{ $slot }}
     </tk:menu>

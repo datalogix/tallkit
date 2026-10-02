@@ -1,5 +1,6 @@
-@aware(['size', 'vertical'])
+@aware(['size', 'vertical', 'current'])
 @props([
+    ...TALLKit::elementProps(),
     'size' => null,
     'vertical' => null,
     'index' => null,
@@ -13,6 +14,25 @@
 ])
 @php
 
+if ($index === null && $current !== null) {
+    $position = TALLKit::stepperNextPosition();
+    $status ??= match (true) {
+        $position < (int) $current => 'completed',
+        $position === (int) $current => 'active',
+        default => 'pending',
+    };
+}
+
+$stepName = collect([
+    $index && $total ? __('Step :current of :total', ['current' => $index, 'total' => $total]) : null,
+    is_string($label) && $label !== '' ? __($label) : null,
+])->filter()->implode(': ');
+$stepName = $stepName !== '' ? $stepName.' ('.__(match ($status) {
+    'completed' => 'completed',
+    'active' => 'current',
+    default => 'pending',
+}).')' : null;
+
 $vertical = (bool) $vertical;
 $iconClass = TALLKit::classes(
     '
@@ -23,9 +43,9 @@ $iconClass = TALLKit::classes(
     match ($status) {
         'completed' => match ($color) {
             'accent' => 'border-[var(--color-accent)] bg-[var(--color-accent)]',
-            default =>
-                (TALLKit::borderActive(color: $color) ?? 'border-zinc-900 dark:border-white') . ' ' .
-                (TALLKit::solidBackground(color: $color) ?? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900')
+            default => TALLKit::isColor($color)
+                ? TALLKit::background(color: $color).' '.TALLKit::border(color: $color)
+                : 'border-zinc-900 dark:border-white bg-zinc-900 dark:bg-white text-white dark:text-zinc-900',
         },
         'active' => match ($color) {
             'accent' => 'border-[var(--color-accent)]',
@@ -33,16 +53,14 @@ $iconClass = TALLKit::classes(
         },
         default => match ($color) {
             'accent' => 'border-[var(--color-accent)]/30',
-            default =>
-                (TALLKit::borderActive(color: $color) ?? 'border-zinc-200 dark:border-zinc-600') . ' ' .
-                (TALLKit::solidBackground(color: $color) ?? 'bg-transparent')
+            default => 'border-zinc-200 dark:border-zinc-600 bg-transparent',
         }
     },
 );
 
 @endphp
 <tk:element
-    :attributes="$attributes->whereDoesntStartWith(['icon:', 'bullet:'])
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->whereDoesntStartWith(['icon:', 'bullet:', 'line:'])
         ->classes([
             '
                 flex flex-col items-center gap-2
@@ -53,10 +71,9 @@ $iconClass = TALLKit::classes(
             TALLKit::fontSize(size: $size),
         ])
         ->merge([
-            'aria-label' => trim(
-                ($index && $total ? __('Step :current of :total', ['current' => $index, 'total' => $total]) : '').
-                (is_string($label) && $label !== '' ? ': '.$label : '')
-            ) ?: null,
+            'aria-label' => $stepName,
+            TALLKit::dataKey('stepper-step') => true,
+            'data-status' => $status ?? 'pending',
         ])
     "
     :content:class="match ($status) {
@@ -73,7 +90,7 @@ $iconClass = TALLKit::classes(
     <x-slot:icon>
         @if ($icon)
             <tk:icon
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')"
+                :attributes="$attributes->prefixed('icon:')"
                 size="sm"
                 :icon="match ($status) {
                     'completed' => $iconCompleted,
@@ -83,9 +100,9 @@ $iconClass = TALLKit::classes(
             />
         @elseif ($index)
             {{ $index }}
-        @else
-            <span {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'bullet:')->classes(
-                'bg-white rounded-full',
+        @elseif ($status !== 'pending')
+            <span {{ $attributes->prefixed('bullet:')->classes(
+                'bg-current rounded-full',
                 TALLKit::widthHeight(size: $size, mode: 'smallest')
             ) }}></span>
         @endif
@@ -94,7 +111,7 @@ $iconClass = TALLKit::classes(
 
 @if ($slot->hasActualContent())
     <tk:stepper.line
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'line:')
+        :attributes="$attributes->prefixed('line:')
             ->classes(match ($status) {
                 'completed' => match ($color) {
                     'accent' => 'bg-[var(--color-accent)]',
@@ -111,7 +128,7 @@ $iconClass = TALLKit::classes(
 {{ $slot }}
 
 <tk:stepper.line
-    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'line:')
+    :attributes="$attributes->prefixed('line:')
         ->classes([
             'py-2' => $slot->hasActualContent(),
             match ($status) {

@@ -1,5 +1,5 @@
-import { groupAll } from '../mixins/group-all'
+import { checkAll } from '../mixins/check-all'
 
 export function checkboxAll({ group = '' } = {}) {
-  return groupAll('checkbox', group)
+  return checkAll('checkbox', group)
 }

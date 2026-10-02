@@ -1,24 +1,24 @@
 @props([
-    'mode' => null,
+    'control' => null,
     'items' => null,
 ])
-@if ($mode === 'toggle' || (($mode === null || $mode === true) && !($items || $slot->isNotEmpty())))
+@if ($control === 'toggle' || (($control === null || $control === true) && !($items || $slot->isNotEmpty())))
     <tk:appearance.toggle
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'toggle:')"
+        :attributes="$attributes->prefixed('toggle:')"
     />
 @endif
 
 @if ($items || $slot->isNotEmpty())
     <tk:avatar.menu
-        :attributes="$attributes->whereDoesntStartWith(['toggle:', 'menu-item:'])"
+        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), ['keepOpen' => null])->whereDoesntStartWith(['toggle:', 'menu-item:'])"
         :$items
     >
         {{ $slot ?? '' }}
 
-        @if ($mode === 'selector' || $mode === null || $mode === true)
+        @if ($control === 'selector' || $control === null || $control === true)
             <x-slot:prepend>
                 <tk:appearance.menu-item
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'menu-item:')"
+                    :attributes="$attributes->prefixed('menu-item:')"
                 />
 
                 <tk:menu.separator />

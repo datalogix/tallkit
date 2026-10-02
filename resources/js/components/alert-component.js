@@ -1,15 +1,16 @@
-import { dataKey, timeout as _timeout, bind } from '../utils'
+import { queryData, eventName, startTimeout, toMilliseconds, bind } from '../utils'
 import { dismissible } from '../mixins/dismissible'
 
-export function alertComponent({ timeout = 0, pauseOnHover = false } = {}) {
+export function alertComponent({ duration: given = 0, pauseOnHover = false } = {}) {
   const _dismissible = dismissible('collapse')
+  const duration = given === true ? 7000 : toMilliseconds(given)
 
   return {
     ..._dismissible,
 
     timeoutId: null,
 
-    remaining: timeout,
+    remaining: duration,
     startedAt: 0,
 
     pauseReasons: new Set(),
@@ -21,7 +22,7 @@ export function alertComponent({ timeout = 0, pauseOnHover = false } = {}) {
 
     init() {
       _dismissible.init.call(this)
-      this.progressEl = this.$root.querySelector(dataKey('alert-progress'))
+      this.progressEl = queryData(this.$root, 'alert-progress')
 
       this.startTimer()
       this.initProgress()
@@ -29,34 +30,42 @@ export function alertComponent({ timeout = 0, pauseOnHover = false } = {}) {
       this.visibilityHandler = this.handleVisibility.bind(this)
       document.addEventListener('visibilitychange', this.visibilityHandler)
 
+      if (document.hidden) this.pause('visibility')
+
       bind(this.$root, {
         ...(pauseOnHover ? {
           ['@mouseenter']: () => this.pause('hover'),
           ['@mouseleave']: () => this.resume('hover'),
         } : {}),
 
-        ['@pause']: () => this.pause('external'),
-        ['@resume']: () => this.resume('external'),
+        ['@focusin']: () => this.pause('focus'),
+        ['@focusout']: (event) => {
+          if (!this.$root.contains(event.relatedTarget)) this.resume('focus')
+        },
+
+        [`@${eventName('pause')}`]: () => this.pause('external'),
+        [`@${eventName('resume')}`]: () => this.resume('external'),
+
+        ['@restored.self']: () => this.$nextTick(() => this.restart()),
       })
     },
 
     startTimer() {
-      if (!timeout || this.remaining <= 0) return
+      if (!duration || this.remaining <= 0 || this.timeoutId || this.state === 'dismissing') return
 
       this.state = 'running'
       this.startedAt = Date.now()
 
-      this.timeoutId = _timeout(
+      this.timeoutId = startTimeout(
         () => this.dismiss('timeout'),
         this.remaining,
-        7000
+        duration
       )
     },
 
     pause(reason = 'manual') {
       this.pauseReasons.add(reason)
 
-      if (this.pauseReasons.size > 1) return
       if (!this.timeoutId) return
 
       const elapsed = Date.now() - this.startedAt
@@ -71,19 +80,15 @@ export function alertComponent({ timeout = 0, pauseOnHover = false } = {}) {
     },
 
     resume(reason = 'manual') {
-      this.pauseReasons.delete(reason)
+      if (!this.pauseReasons.delete(reason)) return
 
       if (this.pauseReasons.size > 0) return
-      if (this.remaining <= 0) return
-
-      this.state = 'running'
+      if (this.state !== 'paused' || this.remaining <= 0) return
 
       if (this.progressEl) {
-        this.progressEl.style.transitionDuration = '150ms'
-
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            if (!this.progressEl) return
+            if (!this.progressEl || this.state !== 'running') return
 
             this.progressEl.style.transitionTimingFunction = 'linear'
             this.progressEl.style.transitionDuration = `${this.remaining}ms`
@@ -94,6 +99,24 @@ export function alertComponent({ timeout = 0, pauseOnHover = false } = {}) {
       }
 
       this.startTimer()
+    },
+
+    restart() {
+      if (this.timeoutId) clearTimeout(this.timeoutId)
+
+      this.timeoutId = null
+      this.remaining = duration
+      this.state = 'idle'
+      this.pauseReasons.clear()
+
+      this.progressEl = queryData(this.$root, 'alert-progress')
+
+      if (this.progressEl) this.progressEl.style.transitionDuration = '0ms'
+
+      this.startTimer()
+      this.initProgress()
+
+      if (document.hidden) this.pause('visibility')
     },
 
     handleVisibility() {
@@ -111,7 +134,9 @@ export function alertComponent({ timeout = 0, pauseOnHover = false } = {}) {
       this.applyProgress(100)
 
       requestAnimationFrame(() => {
-        if (!this.progressEl) return
+        if (!this.progressEl || this.state !== 'running') return
+
+        void this.progressEl.offsetWidth
 
         this.progressEl.style.transitionDuration = `${this.remaining}ms`
         this.applyProgress(0)
@@ -127,8 +152,7 @@ export function alertComponent({ timeout = 0, pauseOnHover = false } = {}) {
     freezeProgress() {
       if (!this.progressEl) return
 
-      const computed = getComputedStyle(this.progressEl)
-      const size = computed.backgroundSize
+      const size = getComputedStyle(this.progressEl).backgroundSize
 
       this.progressEl.style.transitionDuration = '0ms'
       this.progressEl.style.backgroundSize = size
@@ -136,6 +160,7 @@ export function alertComponent({ timeout = 0, pauseOnHover = false } = {}) {
 
     beforeDismiss() {
       this.state = 'dismissing'
+      this.remaining = 0
 
       if (this.timeoutId) {
         clearTimeout(this.timeoutId)
@@ -159,5 +184,5 @@ export function alertComponent({ timeout = 0, pauseOnHover = false } = {}) {
       this.pauseReasons.clear()
       this.state = 'idle'
     },
-  };
+  }
 }

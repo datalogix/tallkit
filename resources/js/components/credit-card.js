@@ -1,4 +1,4 @@
-import { bind } from '../utils'
+import { bind, generateId } from '../utils'
 import { toggleable } from '../mixins/toggleable'
 
 export function creditCard(types = {}, options = {}) {
@@ -8,6 +8,7 @@ export function creditCard(types = {}, options = {}) {
     ..._toggleable,
 
     types,
+    _iconUid: generateId('card-icon'),
     options: {
       opened: true,
       holderName: null,
@@ -27,18 +28,22 @@ export function creditCard(types = {}, options = {}) {
         ['@click']() {
           this.toggle()
         },
-        ['@keydown.enter.prevent']() {
-          this.toggle()
-        },
-        ['@keydown.space.prevent']() {
-          this.toggle()
-        },
         [':class']() {
           return {
             'rotate-y-180': !this.isOpened()
           }
         }
       })
+    },
+
+    // Ids of its own: shared ids would make two cards share their gradients.
+    typeIcon() {
+      const uid = this._iconUid
+
+      return (this.typeOptions().icon ?? '')
+        .replace(/id="([^"]+)"/g, `id="$1-${uid}"`)
+        .replace(/url\(#([^)]+)\)/g, `url(#$1-${uid})`)
+        .replace(/href="#([^"]+)"/g, `href="#$1-${uid}"`)
     },
 
     typeOptions() {

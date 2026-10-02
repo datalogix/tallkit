@@ -1,10 +1,12 @@
 @aware(['size'])
 @props([
+    ...TALLKit::elementProps(),
     'size' => null,
     'separator' => null,
     'label' => null,
+    'current' => null,
 ])
-<li {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')->classes(
+<li {{ $attributes->prefixed('container:')->classes(
     '
         flex items-center group/breadcrumb
         opacity-75 [&:has(a,button)]:opacity-100
@@ -13,7 +15,7 @@
     @if ($slot->isEmpty())
         <tk:element
             :$label
-            :attributes="$attributes->whereDoesntStartWith(['container:', 'separator:'])"
+            :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->whereDoesntStartWith(['container:', 'separator:'])->merge(['aria-current' => $current ? 'page' : null])"
             :icon:size="TALLKit::adjustSize(size: $size)"
             :$size
         />
@@ -22,7 +24,7 @@
     @endif
 
     <tk:breadcrumb.separator
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'separator:')"
+        :attributes="$attributes->prefixed('separator:')"
         :icon="$separator"
         :$size
     />

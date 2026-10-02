@@ -1,15 +1,17 @@
 @props([
+    'name' => null,
     'size' => null,
     'shortcut' => null,
     'focusOnOpen' => null,
     'closeOnSelect' => null,
 ])
 <tk:modal
-    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'modal:')
+    :attributes="$attributes->prefixed('modal:')
         ->classes('fixed mt-20 mx-auto')
-        ->merge($focusOnOpen !== false ? ['x-on:opened' => '$el.querySelector(\'[data-tallkit-input]\')?.focus()'] : [])
+        ->mergeDefined(['x-on:opened' => $focusOnOpen !== false ? '$el.querySelector(\''.TALLKit::dataSelector('input').'\')?.focus()' : null])
     "
     variant="bare"
+    :$name
     :$size
     :$shortcut
     aria-label="{{ __('Search') }}"
@@ -17,9 +19,8 @@
     <x-slot:trigger>
         @if ($slot->isEmpty())
             <tk:button
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'trigger:')"
+                :attributes="$attributes->prefixed('trigger:')->merge(['label' => 'Search'])"
                 :$size
-                label="Search"
                 icon="search"
                 variant="filled"
             />
@@ -31,7 +32,7 @@
     <tk:command
         :attributes="$attributes->whereDoesntStartWith(['trigger:', 'modal:'])
             ->classes('[:where(&)]:w-md')
-            ->merge($closeOnSelect !== false ? ['x-on:listbox-item-selected' => 'close'] : [])
+            ->mergeDefined(['x-on:selected' => $closeOnSelect !== false ? 'close' : null])
         "
         :$size
         search:x-on:keydown.escape.prevent="close"

@@ -1,17 +1,20 @@
-export function timeout(callback, milliseconds, defaultMilliseconds = 500) {
-  const ms = !milliseconds || isNaN(parseInt(milliseconds.toString()))
-    ? defaultMilliseconds
-    : parseInt(milliseconds.toString())
+import { toNumber } from './number'
 
-  return setTimeout(callback, ms)
+// A bare number is milliseconds; a CSS time ('0.3s', '300ms') by its unit. 0 is a time too: only an unreadable value takes the fallback.
+export function toMilliseconds(value, fallback = 0) {
+  const parsed = toNumber(value)
+
+  if (parsed === null) return fallback
+
+  return Math.max(/\ds$/.test(String(value).trim()) ? parsed * 1000 : parsed, 0)
 }
 
-export function interval(callback, milliseconds, defaultMilliseconds = 500) {
-  const ms = !milliseconds || isNaN(parseInt(milliseconds.toString()))
-    ? defaultMilliseconds
-    : parseInt(milliseconds.toString())
+export function startTimeout(callback, milliseconds, defaultMilliseconds = 500) {
+  return setTimeout(callback, toMilliseconds(milliseconds, defaultMilliseconds))
+}
 
-  return setInterval(callback, ms)
+export function startInterval(callback, milliseconds, defaultMilliseconds = 500) {
+  return setInterval(callback, toMilliseconds(milliseconds, defaultMilliseconds))
 }
 
 export function debounce(callback, delay = 300) {

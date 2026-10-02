@@ -1,4 +1,5 @@
 @props([
+    ...TALLKit::elementProps(),
     'size' => null,
     'name' => null,
     'logo' => null,
@@ -8,18 +9,18 @@
 ])
 @php
 
-$logo ??= find_image('logo');
-$logoDark ??= find_image('logo-dark');
+$logo ??= TALLKit::findImage('logo', exts: ['svg', 'webp', 'png', 'jpg', 'jpeg']);
+$logoDark ??= TALLKit::findImage('logo-dark', exts: ['svg', 'webp', 'png', 'jpg', 'jpeg']);
 $name = $name === true ? config('app.name') : $name;
 $alt ??= $name ? '' : config('app.name');
 $href ??= route_detect('home');
 
 @endphp
 <tk:element
-    name="brand"
+    kind="brand"
     as="div"
     :$href
-    :attributes="$attributes->whereDoesntStartWith(['logo:', 'image:', 'image-dark:', 'name:'])
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->whereDoesntStartWith(['logo:', 'image:', 'image-dark:', 'name:'])
         ->classes(
             'justify-center',
             TALLKit::paddingBlock(size: $size),
@@ -47,9 +48,9 @@ $href ??= route_detect('home');
                     <img
                         src="{{ $logoDark }}"
                         {{
-                            TALLKit::attributesAfter(attributes: $attributes, prefix: 'image-dark:')
+                            $attributes->prefixed('image-dark:')
                                 ->classes('hidden dark:block h-full')
-                                ->merge($alt !== null ? ['alt' => $alt] : [])
+                                ->mergeDefined(['alt' => $alt])
                         }}
                     />
                 @endif
@@ -59,7 +60,7 @@ $href ??= route_detect('home');
         </div>
     @elseif ($logo || $logoDark || $slot->isNotEmpty())
         <div {{
-            TALLKit::attributesAfter(attributes: $attributes, prefix: 'logo:')
+            $attributes->prefixed('logo:')
                 ->classes(
                     '
                         flex items-center justify-center
@@ -75,9 +76,9 @@ $href ??= route_detect('home');
                 <img
                     src="{{ $logoDark }}"
                     {{
-                        TALLKit::attributesAfter(attributes: $attributes, prefix: 'image-dark:')
+                        $attributes->prefixed('image-dark:')
                             ->classes('hidden dark:block h-full')
-                            ->merge($alt !== null ? ['alt' => $alt] : [])
+                            ->mergeDefined(['alt' => $alt])
                     }}
                 />
             @endif
@@ -86,9 +87,9 @@ $href ??= route_detect('home');
                 <img
                     src="{{ $logo }}"
                     {{
-                        TALLKit::attributesAfter(attributes: $attributes, prefix: 'image:')
+                        $attributes->prefixed('image:')
                             ->classes(['block dark:hidden' => !!$logoDark, 'h-full'])
-                            ->merge($alt !== null ? ['alt' => $alt] : [])
+                            ->mergeDefined(['alt' => $alt])
                     }}
                 />
             @else
@@ -98,7 +99,7 @@ $href ??= route_detect('home');
     @endif
 
     <tk:heading
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'name:')->classes('truncate')"
+        :attributes="$attributes->prefixed('name:')->classes('truncate')"
         :$size
         :label="$name"
         as="span"

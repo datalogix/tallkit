@@ -14,31 +14,33 @@
     }}
 >
     <tk:button
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'prev:')
+        :attributes="$attributes->prefixed('prev:')
             ->classes(match ($position) {
                 'overlap' => 'pointer-events-auto',
                 'outside' => '',
                 default => 'pointer-events-auto bg-white/80 dark:bg-zinc-800/80 backdrop-blur'
             }, 'rounded-full')
+            ->merge(['tooltip' => 'Previous slide'])
         "
         variant="subtle"
         icon="chevron-left"
-        tooltip="Previous slide"
+        icon:class="rtl:-scale-x-100"
         ::disabled="isFirst()"
         @click="prev()"
     />
 
     <tk:button
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'next:')
+        :attributes="$attributes->prefixed('next:')
             ->classes(match ($position) {
                 'overlap' => 'pointer-events-auto',
                 'outside' => '',
                 default => 'pointer-events-auto bg-white/80 dark:bg-zinc-800/80 backdrop-blur'
             }, 'rounded-full')
+            ->merge(['tooltip' => 'Next slide'])
         "
         variant="subtle"
         icon="chevron-right"
-        tooltip="Next slide"
+        icon:class="rtl:-scale-x-100"
         ::disabled="isLast()"
         @click="next()"
     />

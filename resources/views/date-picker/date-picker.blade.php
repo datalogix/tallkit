@@ -2,15 +2,15 @@
     ...TALLKit::fieldProps(),
     ...TALLKit::fieldControlProps(),
     'multiple' => null,
-    'mode' => null,
-    'type' => null,
+    'range' => null,
+    'trigger' => null,
     'months' => null,
     'min' => null,
     'max' => null,
     'unavailable' => null,
     'minRange' => null,
     'maxRange' => null,
-    'withToday' => null,
+    'today' => null,
     'selectableHeader' => null,
     'fixedWeeks' => null,
     'startDay' => null,
@@ -20,65 +20,76 @@
     'locale' => null,
     'clearable' => null,
     'format' => null,
-    'withInputs' => null,
-    'withConfirmation' => null,
-    'withPresets' => null,
+    'inputs' => null,
+    'confirm' => null,
     'presets' => null,
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
+$locale = TALLKit::resolveLocale($locale);
+$startDay ??= TALLKit::localeFirstDay($locale);
+
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
+$value = TALLKit::fieldOldValue($fieldName, $value);
+
+$value = TALLKit::fieldDateValue($value);
+$min = TALLKit::fieldDateValue($min);
+$max = TALLKit::fieldDateValue($max);
+$unavailable = TALLKit::fieldDateValue($unavailable);
+$openTo = TALLKit::fieldDateValue($openTo);
+
+if (is_string($value) && $range) {
+    [$rangeStart, $rangeEnd] = array_pad(explode('/', $value, 2), 2, null);
+    $value = ['start' => $rangeStart, 'end' => $rangeEnd];
+} elseif (is_string($value) && $multiple) {
+    $value = array_values(array_filter(explode(',', $value)));
+}
 
 $placeholderText = __(is_string($placeholder) ? $placeholder : 'Select date');
-$disabled = (bool) $attributes->get('disabled');
-$describedBy = TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError);
+$disabled = TALLKit::isAttributeEnabled($attributes->get('disabled'));
+$readonly = TALLKit::isAttributeEnabled($attributes->get('readonly'));
+$describedBy = TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError);
 $innerSize = TALLKit::adjustSize(size: $size);
 
 $initialCommittedString = match (true) {
-    $mode === 'range' => is_array($value) && ($value['start'] ?? null)
+    $range => is_array($value) && ($value['start'] ?? null)
         ? (($value['end'] ?? null) ? $value['start'].'/'.$value['end'] : $value['start'])
         : '',
     (bool) $multiple => is_array($value) ? implode(',', $value) : ($value ?? ''),
     default => is_array($value) ? '' : ($value ?? ''),
 };
 
-$showInputs = (bool) $withInputs && ! $multiple;
-$presetLabels = [
-    'today' => 'Today',
-    'yesterday' => 'Yesterday',
-    'thisWeek' => 'This week',
-    'last7Days' => 'Last 7 days',
-    'last14Days' => 'Last 14 days',
-    'last30Days' => 'Last 30 days',
-    'thisMonth' => 'This month',
-    'lastMonth' => 'Last month',
-    'thisYear' => 'This year',
-    'lastYear' => 'Last year',
-];
-$presetKeys = $withPresets && $mode === 'range'
-    ? array_values(array_filter(explode(' ', $presets ?? implode(' ', array_keys($presetLabels)))))
+$showInputs = (bool) $inputs && ! $multiple;
+$presetLabels = collect(\TALLKit\Livewire\DateRangePreset::cases())
+    ->reject(fn ($preset) => in_array($preset, [\TALLKit\Livewire\DateRangePreset::AllTime, \TALLKit\Livewire\DateRangePreset::Custom], true))
+    ->mapWithKeys(fn ($preset) => [$preset->value => $preset->label()])
+    ->all();
+$defaultPresets = 'today yesterday thisWeek last7Days last14Days last30Days thisMonth lastMonth thisYear lastYear';
+$presetKeys = $presets && $range
+    ? array_values(array_filter(explode(' ', is_string($presets) ? $presets : $defaultPresets), fn ($key) => isset($presetLabels[$key])))
     : [];
 $showPresets = count($presetKeys) > 0;
 
 @endphp
 <tk:field.wrapper
     :$name
-    :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
 >
     <div
         wire:ignore
-        x-data="datePicker({{ Js::from([
+        x-data="datePicker(@js([
             'value' => $value,
             'multiple' => (bool) $multiple,
-            'mode' => $mode,
-            'type' => $type,
+            'range' => (bool) $range,
+            'dateRange' => $range && $wireModel && TALLKit::livewirePropertyIs($wireModel, \TALLKit\Livewire\DateRange::class),
+            'trigger' => $trigger,
             'months' => $months,
             'min' => $min,
             'max' => $max,
             'unavailable' => $unavailable,
             'minRange' => $minRange,
             'maxRange' => $maxRange,
-            'withToday' => (bool) $withToday,
+            'today' => (bool) $today,
             'selectableHeader' => (bool) $selectableHeader,
             'fixedWeeks' => (bool) $fixedWeeks,
             'startDay' => $startDay,
@@ -87,23 +98,23 @@ $showPresets = count($presetKeys) > 0;
             'weekNumbers' => (bool) $weekNumbers,
             'locale' => $locale,
             'format' => $format,
-            'withConfirmation' => (bool) $withConfirmation,
-        ]) }})"
+            'confirm' => (bool) $confirm,
+        ]))"
         {{
-            TALLKit::attributesAfter(attributes: $attributes, prefix: 'picker:')
+            $attributes->prefixed('picker:')
                 ->classes('flex-1')
         }}
     >
         <tk:field.control
             :$size
-            :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
+            :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
                 ->classes(
                     'tk-control-wrapper-expanded',
                     TALLKit::roundedSize(size: $size, mode: 'large'),
                     TALLKit::controlFocusRingNested(color: $color, expanded: true),
                 )
+                ->merge(['icon' => 'calendar'])
             "
-            :icon="$icon ?? 'calendar'"
             :icon:size="$innerSize"
             icon-trailing="chevron-down"
             :icon-trailing:size="$innerSize"
@@ -126,23 +137,26 @@ $showPresets = count($presetKeys) > 0;
                 }}
             />
 
-            @if ($type === 'input')
+            @if ($trigger === 'input')
                 <input
                     {{
-                        TALLKit::attributesAfter(attributes: $attributes, prefix: 'trigger:')
+                        $attributes->prefixed('trigger:')
                             ->dataKey('input')
                             ->dataKey('control')
                             ->dataKey('group-target')
                             ->merge([
                                 'type' => 'text',
+                                'role' => 'combobox',
+                                'aria-haspopup' => 'dialog',
                                 'autocomplete' => 'off',
                                 'id' => $id,
                                 'placeholder' => $placeholderText,
                                 'aria-describedby' => $describedBy,
                                 'aria-invalid' => $invalid ? 'true' : null,
+                                'aria-readonly' => $readonly ? 'true' : null,
                                 'data-invalid' => $invalid ? true : null,
                                 'disabled' => $disabled ?: null,
-                                'readonly' => $multiple ?: null,
+                                'readonly' => ($multiple || $readonly) ?: null,
                             ])
                             ->classes(
                                 'tk-field-control-base w-full',
@@ -164,12 +178,14 @@ $showPresets = count($presetKeys) > 0;
                 />
             @else
                 <tk:button
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'trigger:')
+                    :attributes="$attributes->prefixed('trigger:')
                         ->dataKey('control')
                         ->merge([
                             'id' => $id,
+                            'aria-labelledby' => trim(($label ? $id.'-label ' : '').$id.'-value'),
                             'aria-describedby' => $describedBy,
                             'aria-invalid' => $invalid ? 'true' : null,
+                            'aria-readonly' => $readonly ? 'true' : null,
                             'data-invalid' => $invalid ? true : null,
                         ])
                         ->classes(
@@ -192,7 +208,7 @@ $showPresets = count($presetKeys) > 0;
                     <span
                         x-show="!formatted()"
                         {{
-                            TALLKit::attributesAfter(attributes: $attributes, prefix: 'placeholder:')
+                            $attributes->prefixed('placeholder:')
                                 ->classes(TALLKit::textNeutral(variant: 'muted'))
                         }}
                     >{{ $placeholderText }}</span>
@@ -200,7 +216,8 @@ $showPresets = count($presetKeys) > 0;
                         x-show="formatted()"
                         x-text="formatted()"
                         {{
-                            TALLKit::attributesAfter(attributes: $attributes, prefix: 'formatted:')
+                            $attributes->prefixed('formatted:')
+                                ->merge(['id' => $id.'-value'])
                                 ->classes('overflow-hidden text-ellipsis')
                         }}
                     ></span>
@@ -209,25 +226,26 @@ $showPresets = count($presetKeys) > 0;
         </tk:field.control>
 
         <tk:popover
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'popover:')->classes('p-0 max-h-full')"
+            :attributes="$attributes->prefixed('popover:')->classes('p-0 max-h-full')"
             :$size
             animation="none"
             keep-open
         >
             <div
                 {{
-                    TALLKit::attributesAfter(attributes: $attributes, prefix: 'layout:')
+                    $attributes->prefixed('layout:')
                         ->classes(['flex divide-x divide-zinc-100 dark:divide-white/10' => $showPresets])
                 }}
             >
                 @if ($showPresets)
-                    <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'presets:')->classes('flex flex-col gap-0.5 p-1') }}>
+                    <div {{ $attributes->prefixed('presets:')->classes('flex flex-col gap-0.5 p-1') }}>
                         @foreach ($presetKeys as $key)
                             <tk:button
-                                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'preset:')->classes('w-full justify-start')"
+                                :attributes="$attributes->prefixed('preset:')->classes('w-full justify-start')"
                                 :size="$innerSize"
-                                :label="$presetLabels[$key] ?? $key"
+                                :label="$presetLabels[$key]"
                                 ::data-active="isPresetActive('{{ $key }}')"
+                                ::disabled="!presetAvailable('{{ $key }}')"
                                 type="button"
                                 variant="ghost"
                                 @click="applyPreset('{{ $key }}')"
@@ -238,11 +256,11 @@ $showPresets = count($presetKeys) > 0;
 
                 <div class="min-w-0 flex-1">
                     <tk:calendar
-                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'calendar:')->classes(TALLKit::padding(size: $size))"
+                        :attributes="$attributes->prefixed('calendar:')->classes(TALLKit::padding(size: $size))"
                         :$size
                         :$color
                         :$months
-                        :$withToday
+                        :$today
                         :$selectableHeader
                         :$weekNumbers
                         :static="false"
@@ -250,11 +268,11 @@ $showPresets = count($presetKeys) > 0;
                     />
 
                     @if ($showInputs)
-                        <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'inputs:')->classes('flex items-center gap-2 border-t border-zinc-100 p-2 dark:border-white/10') }}>
-                            @if ($mode === 'range')
+                        <div {{ $attributes->prefixed('inputs:')->classes('flex items-center gap-2 border-t border-zinc-100 p-2 dark:border-white/10') }}>
+                            @if ($range)
                                 <input
                                     {{
-                                        TALLKit::attributesAfter(attributes: $attributes, prefix: 'start-date:')
+                                        $attributes->prefixed('start-date:')
                                             ->classes(
                                                 '
                                                     flex-1
@@ -272,22 +290,22 @@ $showPresets = count($presetKeys) > 0;
                                                 'max' => $max ?? null,
                                                 'disabled' => $disabled ?: null,
                                             ])
+                                            ->merge(['aria-label' => __('Start date')])
                                     }}
                                     type="date"
-                                    aria-label="{{ __('Start date') }}"
                                     x-bind:value="value?.start ?? ''"
                                     @change="setRangeBound('start', $event.target.value)"
                                 />
                                 <span
                                     aria-hidden="true"
                                     {{
-                                        TALLKit::attributesAfter(attributes: $attributes, prefix: 'divider:')
+                                        $attributes->prefixed('divider:')
                                             ->classes(TALLKit::textNeutral(variant: 'muted'))
                                     }}
                                 >&ndash;</span>
                                 <input
                                     {{
-                                        TALLKit::attributesAfter(attributes: $attributes, prefix: 'end-date:')
+                                        $attributes->prefixed('end-date:')
                                             ->classes(
                                                 '
                                                     flex-1
@@ -305,16 +323,16 @@ $showPresets = count($presetKeys) > 0;
                                                 'max' => $max ?? null,
                                                 'disabled' => $disabled ?: null,
                                             ])
+                                            ->merge(['aria-label' => __('End date')])
                                     }}
                                     type="date"
-                                    aria-label="{{ __('End date') }}"
                                     x-bind:value="value?.end ?? ''"
                                     @change="setRangeBound('end', $event.target.value)"
                                 />
                             @else
                                 <input
                                     {{
-                                        TALLKit::attributesAfter(attributes: $attributes, prefix: 'single-date:')
+                                        $attributes->prefixed('single-date:')
                                             ->classes(
                                                 '
                                                     w-full
@@ -332,9 +350,9 @@ $showPresets = count($presetKeys) > 0;
                                                 'max' => $max ?? null,
                                                 'disabled' => $disabled ?: null,
                                             ])
+                                            ->merge(['aria-label' => __('Date')])
                                     }}
                                     type="date"
-                                    aria-label="{{ __('Date') }}"
                                     x-bind:value="value ?? ''"
                                     @change="setSingleValue($event.target.value)"
                                 />
@@ -344,10 +362,10 @@ $showPresets = count($presetKeys) > 0;
                 </div>
             </div>
 
-            @if ($clearable !== false || $withConfirmation)
+            @if ($clearable !== false || $confirm)
                 <div
                     {{
-                        TALLKit::attributesAfter(attributes: $attributes, prefix: 'footer:')
+                        $attributes->prefixed('footer:')
                             ->classes(
                                 '
                                     p-2
@@ -359,27 +377,25 @@ $showPresets = count($presetKeys) > 0;
                 >
                     @if ($clearable !== false)
                         <tk:clearable
-                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'clearable:')->classes(['me-auto' => $withConfirmation])"
+                            :attributes="$attributes->prefixed('clearable:')->classes(['me-auto' => $confirm])"
                             :size="$innerSize"
                             :label="is_string($clearable) ? $clearable : 'Clear'"
                             :icon="false"
                         />
                     @endif
 
-                    @if ($withConfirmation)
+                    @if ($confirm)
                         <tk:button
-                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'cancel:')"
+                            :attributes="$attributes->prefixed('cancel:')->merge(['label' => 'Cancel'])"
                             :size="$innerSize"
                             @click="cancel()"
-                            label="Cancel"
                             variant="none"
                         />
 
                         <tk:button
-                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'apply:')"
+                            :attributes="$attributes->prefixed('apply:')->merge(['label' => 'Apply'])"
                             :size="$innerSize"
                             @click="apply()"
-                            label="Apply"
                             variant="filled"
                             :$color
                         />

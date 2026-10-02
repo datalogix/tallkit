@@ -7,11 +7,9 @@
     'circle' => null,
     'square' => null,
     'variant' => null,
-    'label' => null,
     'tooltip' => null,
-    'iconTrailing' => null,
-    'badge' => null,
     'color' => null,
+    ...TALLKit::elementProps(),
 ])
 @php
 
@@ -20,6 +18,11 @@ $isColored = $color
     && TALLKit::isColor($color)
     && ! in_array($color, ['slate', 'gray', 'zinc', 'stone'], true)
     && in_array($variant, ['filled', 'outline', 'ghost', 'subtle'], true);
+$solidColor = match (true) {
+    $variant === 'primary' && TALLKit::isColor($color) => $color,
+    in_array($variant, ['info', 'success', 'danger', 'warning'], true) => ['info' => 'blue', 'success' => 'green', 'danger' => 'red', 'warning' => 'yellow'][$variant],
+    default => null,
+};
 $hasContent = $slot->hasActualContent() || $label !== null;
 $square ??= ! $circle && !($hasContent || $badge !== null);
 $isTypeSubmitAndNotDisabledOnRender = $type === 'submit' && ! $attributes->has('disabled');
@@ -38,26 +41,22 @@ if ($loading && $type !== 'submit' && ! $isJsMethod) {
 
 @endphp
 <tk:element
-    name="button"
-    :$href
-    :$label
-    :$tooltip
-    :$iconTrailing
-    :$badge
+    kind="button"
     :type="$type ?? 'button'"
     :icon:size="TALLKit::adjustSize(size: $size)"
     :icon-trailing:size="TALLKit::adjustSize(size: $size)"
     :badge:size="TALLKit::adjustSize(size: $size)"
     :content:class="$loading && $hasContent ? 'flex-1' : ($badge !== null || $iconTrailing !== null ? 'flex-1' : null)"
-    :attributes="$attributes
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps(), ['href' => null, 'tooltip' => null])
         ->whereDoesntStartWith(['loading-indicator:', 'loading:'])
         ->classes([
             '
-                [:where(&)]:relative [:where(&)]:justify-center
+                [:where(&)]:relative [:where(&)]:justify-center [:where(&)]:align-middle
                 [:where(&)]:font-medium [:where(&)]:whitespace-nowrap
-                [:where(&)]:disabled:opacity-disabled
-                [:where(&)]:disabled:cursor-default [:where(&)]:disabled:pointer-events-none
+                [:where(&)]:disabled:opacity-disabled [:where(&)]:aria-disabled:opacity-disabled
+                [:where(&)]:aria-disabled:cursor-default [:where(&)]:disabled:cursor-default
                 [:where(&)]:transition [:where(&)]:overflow-hidden
+                forced-colors:border
             ',
             TALLKit::fontSize(size: $size),
             TALLKit::gap(size: $size),
@@ -71,195 +70,150 @@ if ($loading && $type !== 'submit' && ! $isJsMethod) {
                         : TALLKit::paddingInline(size: $size, mode: 'largest'),
                 ],
             },
-            match (true) { // Text color...
-                $isColored && in_array($variant, ['filled', 'outline']) => TALLKit::mutedText(color: $color),
-                $isColored && $variant === 'ghost' => TALLKit::text(color: $color),
-                $isColored && $variant === 'subtle' => '
-                    [:where(&)]:text-'.$color.'-400
-                    [:where(&)]:hover:text-'.$color.'-600
-                    [:where(&)]:[&[data-active]]:text-'.$color.'-600
-
-                    dark:[:where(&)]:text-'.$color.'-300
-                    dark:[:where(&)]:hover:text-'.$color.'-400
-                    dark:[:where(&)]:[&[data-active]]:text-'.$color.'-400
+            $isColored ? 'tk-color-'.$color : null,
+            ! $isColored && in_array($variant, ['ghost', 'subtle', 'none'], true) ? 'tk-plain' : null,
+            match (true) {
+                $isColored && in_array($variant, ['filled', 'outline']) => '[:where(&)]:text-(--tk-on-soft)',
+                $isColored && in_array($variant, ['ghost', 'subtle']) => '
+                    [:where(&)]:text-(--tk-text)
+                    [:where(&:not(:disabled,[aria-disabled=true]))]:hover:text-(--tk-on-soft) [:where(&)]:[&[data-active]]:text-(--tk-on-soft)
                 ',
-                $variant === 'primary' && ! $color => '[:where(&)]:text-[var(--color-accent-foreground)]',
+                $solidColor !== null => null,
+                $variant === 'primary' => '[:where(&)]:text-[var(--color-accent-foreground)]',
                 default => match ($variant) {
                     'accent' => '[:where(&)]:text-[var(--color-accent-foreground)]',
                     'filled', 'outline', 'ghost' => TALLKit::textNeutral(variant: 'strong', prefix: '[:where(&)]:'),
                     'inverse' => '[:where(&)]:text-white dark:[:where(&)]:text-zinc-800',
                     'subtle', 'none' => '
-                        [:where(&)]:text-zinc-500
-                        [:where(&)]:hover:text-zinc-800
+                        [:where(&)]:text-zinc-600
+                        [:where(&:not(:disabled,[aria-disabled=true]))]:hover:text-zinc-800
                         [:where(&)]:[&[data-active]]:text-zinc-800
 
-                        dark:[:where(&)]:text-zinc-400
-                        dark:[:where(&)]:hover:text-white
+                        dark:[:where(&)]:text-zinc-300
+                        dark:[:where(&:not(:disabled,[aria-disabled=true]))]:hover:text-white
                         dark:[:where(&)]:[&[data-active]]:text-white
                     ',
-                    'amber', 'yellow', 'warning' => '[:where(&)]:text-white dark:[:where(&)]:text-zinc-950',
                     default => '[:where(&)]:text-white',
                 },
             },
-            match (true) { // Border color...
-                $isColored && $variant === 'outline' => '[:where(&)]:border [:where(&)]:border-'.$color.'-400/40 dark:[:where(&)]:border-'.$color.'-400/20',
+            match (true) {
+                $isColored && $variant === 'outline' => '[:where(&)]:border [:where(&)]:border-(--tk-border)',
                 default => match ($variant) {
                     'outline' => '
                         [:where(&)]:border
                         [:where(&)]:border-b-zinc-300/80
 
                         [:where(&)]:border-zinc-200
-                        [:where(&)]:hover:border-zinc-200
+                        [:where(&:not(:disabled,[aria-disabled=true]))]:hover:border-zinc-200
                         [:where(&)]:[&[data-active]]:border-zinc-200
 
                         dark:[:where(&)]:border-white/10
-                        dark:[:where(&)]:hover:border-white/10
+                        dark:[:where(&:not(:disabled,[aria-disabled=true]))]:hover:border-white/10
                         dark:[:where(&)]:[&[data-active]]:border-white/10
                     ',
                     'inverse', 'filled', 'subtle', 'ghost', 'none' => '',
                     default => '[:where(&)]:border [:where(&)]:border-black/10',
                 },
             },
-            match (true) { // Background color...
+            match (true) {
                 $isColored && $variant === 'filled' => TALLKit::mutedBackground(color: $color, as: $href ? 'a' : 'button'),
                 $isColored && $variant === 'outline' => '
-                    [:where(&)]:bg-white
-                    [:where(&)]:hover:bg-'.$color.'-400/20
-                    [:where(&)]:[&[data-active]]:bg-'.$color.'-400/20
-
-                    dark:[:where(&)]:bg-zinc-700
-                    dark:[:where(&)]:hover:bg-'.$color.'-400/40
-                    dark:[:where(&)]:[&[data-active]]:bg-'.$color.'-400/40
+                    [:where(&)]:bg-white dark:[:where(&)]:bg-zinc-700
+                    [:where(&:not(:disabled,[aria-disabled=true]))]:hover:bg-(--tk-soft) [:where(&)]:[&[data-active]]:bg-(--tk-soft)
                 ',
                 $isColored && $variant === 'ghost' => '
                     [:where(&)]:bg-transparent
-                    [:where(&)]:hover:bg-'.$color.'-400/20
-                    [:where(&)]:[&[data-active]]:bg-'.$color.'-400/20
-
-                    dark:[:where(&)]:bg-transparent
-                    dark:[:where(&)]:hover:bg-'.$color.'-400/40
-                    dark:[:where(&)]:[&[data-active]]:bg-'.$color.'-400/40
+                    [:where(&:not(:disabled,[aria-disabled=true]))]:hover:bg-(--tk-soft) [:where(&)]:[&[data-active]]:bg-(--tk-soft)
                 ',
                 $isColored && $variant === 'subtle' => '
                     [:where(&)]:bg-transparent
-                    [:where(&)]:hover:bg-'.$color.'-400/10
-                    [:where(&)]:[&[data-active]]:bg-'.$color.'-400/10
-
-                    dark:[:where(&)]:bg-transparent
-                    dark:[:where(&)]:hover:bg-'.$color.'-400/20
-                    dark:[:where(&)]:[&[data-active]]:bg-'.$color.'-400/20
+                    [:where(&:not(:disabled,[aria-disabled=true]))]:hover:bg-(--tk-faint) [:where(&)]:[&[data-active]]:bg-(--tk-faint)
                 ',
-                $variant === 'primary' => TALLKit::interactiveBackground(color: $color) ?? '
+                $solidColor !== null => TALLKit::interactiveBackground(color: $solidColor),
+                $variant === 'primary' => '
                     [:where(&)]:bg-[var(--color-accent)]
-                    [:where(&)]:hover:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_30%)]
+                    [:where(&:not(:disabled,[aria-disabled=true]))]:hover:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_30%)]
                     [:where(&)]:[&[data-active]]:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_30%)]
                 ',
                 default => match ($variant) {
                     'accent' => '
                         [:where(&)]:bg-[var(--color-accent)]
-                        [:where(&)]:hover:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_30%)]
+                        [:where(&:not(:disabled,[aria-disabled=true]))]:hover:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_30%)]
                         [:where(&)]:[&[data-active]]:bg-[color-mix(in_oklab,_var(--color-accent),_transparent_30%)]
                     ',
                     'inverse' => '
                         [:where(&)]:bg-zinc-700
-                        [:where(&)]:hover:bg-zinc-600/75
+                        [:where(&:not(:disabled,[aria-disabled=true]))]:hover:bg-zinc-600/75
                         [:where(&)]:[&[data-active]]:bg-zinc-600/75
 
                         dark:[:where(&)]:bg-zinc-200
-                        dark:[:where(&)]:hover:bg-zinc-300/75
+                        dark:[:where(&:not(:disabled,[aria-disabled=true]))]:hover:bg-zinc-300/75
                         dark:[:where(&)]:[&[data-active]]:bg-zinc-300/75
-                    ',
-                    'info' => '
-                        [:where(&)]:bg-blue-600
-                        [:where(&)]:hover:bg-blue-700
-                        [:where(&)]:[&[data-active]]:bg-blue-700
-
-                        dark:[:where(&)]:bg-blue-700
-                        dark:[:where(&)]:hover:bg-blue-600
-                        dark:[:where(&)]:[&[data-active]]:bg-blue-600
-                    ',
-                    'success' => '
-                        [:where(&)]:bg-green-600
-                        [:where(&)]:hover:bg-green-700
-                        [:where(&)]:[&[data-active]]:bg-green-700
-
-                        dark:[:where(&)]:bg-green-700
-                        dark:[:where(&)]:hover:bg-green-600
-                        dark:[:where(&)]:[&[data-active]]:bg-green-600
-                    ',
-                    'danger' => '
-                        [:where(&)]:bg-red-600
-                        [:where(&)]:hover:bg-red-700
-                        [:where(&)]:[&[data-active]]:bg-red-700
-
-                        dark:[:where(&)]:bg-red-700
-                        dark:[:where(&)]:hover:bg-red-600
-                        dark:[:where(&)]:[&[data-active]]:bg-red-600
                     ',
                     'outline' => '
                         [:where(&)]:bg-white
-                        [:where(&)]:hover:bg-zinc-800/5
+                        [:where(&:not(:disabled,[aria-disabled=true]))]:hover:bg-zinc-800/5
                         [:where(&)]:[&[data-active]]:bg-zinc-800/5
 
                         dark:[:where(&)]:bg-zinc-700
-                        dark:[:where(&)]:hover:bg-zinc-600/85
+                        dark:[:where(&:not(:disabled,[aria-disabled=true]))]:hover:bg-zinc-600/85
                         dark:[:where(&)]:[&[data-active]]:bg-zinc-600/85
                     ',
                     'filled' => '
                         [:where(&)]:bg-zinc-800/5
-                        [:where(&)]:hover:bg-zinc-800/15
+                        [:where(&:not(:disabled,[aria-disabled=true]))]:hover:bg-zinc-800/15
                         [:where(&)]:[&[data-active]]:bg-zinc-800/15
 
                         dark:[:where(&)]:bg-white/10
-                        dark:[:where(&)]:hover:bg-white/20
+                        dark:[:where(&:not(:disabled,[aria-disabled=true]))]:hover:bg-white/20
                         dark:[:where(&)]:[&[data-active]]:bg-white/20
                     ',
                     'subtle', 'ghost' => '
                         [:where(&)]:bg-transparent
-                        [:where(&)]:hover:bg-zinc-800/10
+                        [:where(&:not(:disabled,[aria-disabled=true]))]:hover:bg-zinc-800/10
                         [:where(&)]:[&[data-active]]:bg-zinc-800/10
 
                         dark:[:where(&)]:bg-transparent
-                        dark:[:where(&)]:hover:bg-white/10
+                        dark:[:where(&:not(:disabled,[aria-disabled=true]))]:hover:bg-white/10
                         dark:[:where(&)]:[&[data-active]]:bg-white/10
                     ',
                     'none' => 'bg-transparent',
-                    default => TALLKit::interactiveBackground(color: $variant === 'warning' ? 'yellow' : $variant) ?? '
+                    default => '
                         [:where(&)]:border
                         [:where(&)]:border-b-zinc-300/80
 
                         [:where(&)]:text-zinc-800
                         [:where(&)]:bg-white
                         [:where(&)]:border-zinc-200
-                        [:where(&)]:hover:bg-zinc-800/5
-                        [:where(&)]:hover:border-zinc-200
+                        [:where(&:not(:disabled,[aria-disabled=true]))]:hover:bg-zinc-800/5
+                        [:where(&:not(:disabled,[aria-disabled=true]))]:hover:border-zinc-200
                         [:where(&)]:[&[data-active]]:bg-zinc-800/5
                         [:where(&)]:[&[data-active]]:border-zinc-200
 
                         dark:[:where(&)]:text-white
                         dark:[:where(&)]:bg-zinc-700
                         dark:[:where(&)]:border-white/10
-                        dark:[:where(&)]:hover:bg-zinc-600/85
-                        dark:[:where(&)]:hover:border-white/10
+                        dark:[:where(&:not(:disabled,[aria-disabled=true]))]:hover:bg-zinc-600/85
+                        dark:[:where(&:not(:disabled,[aria-disabled=true]))]:hover:border-white/10
                         dark:[:where(&)]:[&[data-active]]:bg-zinc-600/85
                         dark:[:where(&)]:[&[data-active]]:border-white/10
                     ',
                 },
             },
-            match ($variant) { // Shadows...
+            match ($variant) {
                 'accent' => 'shadow-[inset_0px_1px_--theme(--color-white/.2)]',
                 'filled', 'ghost', 'subtle', 'none' => '',
                 default => 'shadow',
             },
-            match ($variant) { // Grouped border treatments...
-                'accent' => '[[data-tallkit-button-group]_&]:border-e-0 [:is([data-tallkit-button-group]>&:last-child,_[data-tallkit-button-group]_:last-child>&)]:border-e-[1px] dark:[:is([data-tallkit-button-group]>&:last-child,_[data-tallkit-button-group]_:last-child>&)]:border-e-0 dark:[:is([data-tallkit-button-group]>&:last-child,_[data-tallkit-button-group]_:last-child>&)]:border-s-[1px] [:is([data-tallkit-button-group]>&:not(:first-child),_[data-tallkit-button-group]_:not(:first-child)>&)]:border-s-[color-mix(in_srgb,var(--color-accent-foreground),transparent_85%)]',
+            match ($variant) {
+                'accent' => '[:is([data-tallkit-button-group]>&:not(:last-child),_[data-tallkit-button-group]_:not(:last-child)>&)]:border-e-[color-mix(in_srgb,var(--color-accent-foreground),transparent_70%)]',
                 'filled' => '[[data-tallkit-button-group]_&]:border-e [:is([data-tallkit-button-group]>&:last-child,_[data-tallkit-button-group]_:last-child>&)]:border-e-0 [[data-tallkit-button-group]_&]:border-zinc-200/80 dark:[[data-tallkit-button-group]_&]:border-zinc-800',
                 'inverse', 'outline' => '[[data-tallkit-button-group]_&]:border-s-0 [:is([data-tallkit-button-group]>&:first-child,_[data-tallkit-button-group]_:first-child>&)]:border-s-[1px]',
                 'danger' => '[[data-tallkit-button-group]_&]:border-e [:is([data-tallkit-button-group]>&:last-child,_[data-tallkit-button-group]_:last-child>&)]:border-e-0 [[data-tallkit-button-group]_&]:border-red-200/80 dark:[[data-tallkit-button-group]_&]:border-red-800',
                 default => '',
             },
         ])
-        ->when($loading, fn ($attrs) => $attrs->classes( // Loading states...
+        ->when($loading, fn ($attrs) => $attrs->classes(
            '*:transition-opacity',
            $type === 'submit' ? '[&[disabled]>:not([data-tallkit-button-loading-indicator])]:opacity-0' : '[&[data-tallkit-button-loading]>:not([data-tallkit-button-loading-indicator])]:opacity-0',
            $type === 'submit' ? '[&[disabled]>[data-tallkit-button-loading-indicator]]:opacity-100' : '[&[data-tallkit-button-loading]>[data-tallkit-button-loading-indicator]]:opacity-100',
@@ -272,16 +226,19 @@ if ($loading && $type !== 'submit' && ! $isJsMethod) {
         <x-slot:prepend>
             <div
                 {{
-                    TALLKit::attributesAfter(attributes: $attributes, prefix: 'loading-indicator:')
+                    $attributes->prefixed('loading-indicator:')
                         ->dataKey('button-loading-indicator')
                         ->classes('absolute inset-0 flex items-center justify-center opacity-0')
+                        ->merge(['aria-hidden' => 'true'])
                 }}
             >
                 <tk:loading
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'loading:')->when(is_string($loading), fn ($attrs, $value) => $attrs->merge(['variant' => $value]))"
-                    :$size
+                    :attributes="$attributes->prefixed('loading:')->when(is_string($loading), fn ($attrs, $value) => $attrs->merge(['variant' => $value]))"
+                    :size="TALLKit::adjustSize(size: $size)"
                 />
             </div>
+
+            {{ $prepend }}
         </x-slot:prepend>
     @endif
 

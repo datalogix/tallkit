@@ -1,4 +1,12 @@
-import { dataKey, bind, fadeOut, collapse, getTransitionTimeout } from '../utils'
+import { dataSelector, bind, fadeOut, collapse, getTransitionTimeout, keepDismissed, hasLivewire, focusTargetOutside, emit, eventName } from '../utils'
+
+function closestDismissible(el) {
+  for (let node = el; node; node = node.parentElement) {
+    if (node.__tallkitDismissible) return node
+  }
+
+  return null
+}
 
 export function dismissible(animation) {
   return {
@@ -7,40 +15,43 @@ export function dismissible(animation) {
     _dismissTimeout: null,
 
     init() {
-      bind(this.$root.querySelectorAll(dataKey('dismissible')), {
-        ['@click.stop']: () => {
-          this.dismiss('manual')
-        }
-      })
+      // A property, not an attribute: Livewire's morph would remove an attribute.
+      this.$root.__tallkitDismissible = true
 
       bind(this.$root, {
-        ['@dismiss']: (e) => {
-          const detail = (e).detail || {}
+        ['@click']: (event) => {
+          const trigger = event.target.closest?.(dataSelector('dismissible'))
+
+          if (!trigger || !this.$root.contains(trigger)) return
+          if (closestDismissible(trigger) !== this.$root) return
+
+          event.stopPropagation()
+          this.dismiss('manual')
+        },
+
+        [`@${eventName('dismiss')}`]: (e) => {
+          const detail = e.detail || {}
           this.dismiss(detail.reason || 'programmatic')
         },
       })
     },
 
     beforeDismiss() {
-      // Placeholder for any preparation logic before dismissal
     },
 
     dismiss(reason = 'programmatic') {
       if (this.isDismissing) return
 
-      const event = new CustomEvent('before-dismiss', {
-        detail: { reason },
-        cancelable: true
-      })
+      const event = emit(this.$root, 'before-dismiss', { reason }, { cancelable: true })
 
-      this.$root.dispatchEvent(event)
-
-      if (event.defaultPrevented) {
+      if (event?.defaultPrevented) {
         return
       }
 
       this.isDismissing = true
       this.beforeDismiss()
+
+      const focusTarget = this.$root.contains(document.activeElement) ? focusTargetOutside(this.$root) : null
 
       this.cancelDismiss?.()
       this.cancelDismiss = null
@@ -48,9 +59,16 @@ export function dismissible(animation) {
       const onDone = () => {
         this.isDismissing = false
         this.cancelDismiss = null
-        this.$dispatch('dismissed', { reason })
+        emit(this.$root, 'dismissed', { reason })
 
-        if (this.$root.isConnected) {
+        focusTarget?.isConnected && focusTarget.focus({ preventScroll: true })
+
+        if (!this.$root.isConnected) return
+
+        // Hidden, not removed, inside Livewire: the next update would bring it back.
+        if (hasLivewire() && this.$root.closest('[wire\\:id]')) {
+          keepDismissed(this.$root)
+        } else {
           this.$root.remove()
         }
       }
@@ -83,5 +101,5 @@ export function dismissible(animation) {
         this._dismissTimeout = null
       }
     },
-  };
+  }
 }

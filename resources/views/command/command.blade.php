@@ -2,7 +2,7 @@
     'size' => null,
 ])
 <tk:listbox
-    :attributes="$attributes->classes(
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), ['clearOnSelect' => null, 'fuseOptions' => null, 'hideEmpty' => null, 'noRecords' => null])->classes(
         '
             [:where(&)]:bg-white dark:[:where(&)]:bg-zinc-700
             [:where(&)]:border [:where(&)]:border-zinc-200 dark:[:where(&)]:border-zinc-600

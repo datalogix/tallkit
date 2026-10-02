@@ -1,4 +1,4 @@
-import { dataKey, bind, getWireModelInfo, setFieldValue } from '../utils'
+import { queryData, queryAllData, bind, getWireModelInfo, setFieldValue, onFormReset, toNumber } from '../utils'
 
 export function slider() {
   return {
@@ -6,7 +6,7 @@ export function slider() {
     value: null,
 
     init() {
-      this.input = this.$root.querySelector(dataKey('control'))
+      this.input = queryData(this.$root, 'control')
       this.$nextTick(() => this.updateRange())
 
       if (this.$wire) {
@@ -17,13 +17,24 @@ export function slider() {
         }
       }
 
+      // A range ignores readonly: kept by hand.
+      if (this.isReadonly()) this.input.setAttribute('aria-readonly', 'true')
+
+      onFormReset(this.$root, this.input.form, () => this.updateRange())
+
       bind(this.input, {
-        ['@input']: () => this.updateRange()
+        ['@input']: () => this.updateRange(),
+        ['@keydown']: (e) => {
+          if (this.isReadonly() && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown'].includes(e.key)) e.preventDefault()
+        },
+        ['@pointerdown']: (e) => {
+          if (this.isReadonly()) e.preventDefault()
+        },
       })
 
-      bind(this.$root.querySelector(dataKey('slider-ticks')), {
+      bind(queryData(this.$root, 'slider-ticks'), {
         ['@click']: (e) => {
-          const ticks = [...this.$root.querySelectorAll(dataKey('slider-tick'))]
+          const ticks = queryAllData(this.$root, 'slider-tick')
           const clickX = e.clientX
 
           let closestTick = null
@@ -41,35 +52,39 @@ export function slider() {
           })
 
           if (closestTick) {
-            let value = parseInt((closestTick).getAttribute('data-value') ?? '')
+            const value = toNumber(closestTick.getAttribute('data-value')) ?? toNumber(closestTick.textContent)
 
-            if (isNaN(value)) {
-              value = parseInt((closestTick).textContent?.trim() ?? '')
-            }
-
-            if (! isNaN(value)) {
-              this.setValue(value)
-            }
+            if (value !== null) this.setValue(value)
           }
         }
       })
     },
 
+    isReadonly() {
+      return this.input.hasAttribute('readonly')
+    },
+
     setValue(value) {
-      if (this.input.disabled) return
+      if (this.input.disabled || this.isReadonly()) return
 
       setFieldValue(this.input, value)
     },
 
     updateRange() {
-      const min = Number(this.input.min || 0)
-      const max = Number(this.input.max || 100)
-      const val = Number(this.input.value)
+      const min = toNumber(this.input.min, 0)
+      const max = toNumber(this.input.max, 100)
+      const val = toNumber(this.input.value, min)
       const p = max === min ? 0 : ((val - min) * 100) / (max - min)
 
       this.value = this.input.value
+
+      if (this.input.id) {
+        queryAllData(document, 'slider-value', this.input.id)
+          .forEach((el) => { el.textContent = this.input.value })
+      }
+
       this.input.style.setProperty('--range-percent', `${p}%`)
-      this.input.classList.toggle('before:rounded-r-none', p < 50)
+      this.input.toggleAttribute('data-low', p < 50)
     }
-  };
+  }
 }

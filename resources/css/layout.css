@@ -1,6 +1,5 @@
 *:has(>[data-tallkit-main]) {
     display: grid;
-    grid-area: body;
     grid-template-rows: auto 1fr auto;
     grid-template-columns: min-content minmax(0, 1fr) min-content;
     grid-template-areas:
@@ -15,3 +14,12 @@
         "sidebar main    aside"
         "sidebar footer  aside";
 }
+
+html:has(dialog[open]:modal) {
+  overflow: hidden;
+  scrollbar-gutter: stable;
+}
+
+/* TALLKit::frameClasses(): built in PHP, not in the views for Tailwind to find. */
+@source inline('bg-[var(--color-accent)] text-[var(--color-accent-foreground)] bg-zinc-800 dark:bg-zinc-100 bg-zinc-200 dark:bg-zinc-950 bg-white dark:bg-zinc-900 bg-transparent bg-zinc-50 dark:bg-zinc-800');
+@source inline('[:where(&)]:text-{white/85,zinc-900,zinc-700/70,white/70,zinc-800/85,white} dark:[:where(&)]:text-{zinc-900,white,white/70,white/85}');

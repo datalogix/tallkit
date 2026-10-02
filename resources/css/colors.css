@@ -1,121 +1,799 @@
-/* background()/backgroundActive()/frameBackground()/interactiveBackground() (default) — plain bg */
-@source inline('bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{500,600,700}');
-@source inline('dark:bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{400,500,600,700}');
+@layer base {
+    .tk-color-red {
+        --tk-solid: var(--color-red-600);
+        --tk-solid-hover: var(--color-red-700);
+        --tk-on-solid: var(--color-white);
+        --tk-text: var(--color-red-700);
+        --tk-soft: color-mix(in oklab, var(--color-red-400) 20%, transparent);
+        --tk-soft-hover: color-mix(in oklab, var(--color-red-400) 30%, transparent);
+        --tk-on-soft: var(--color-red-800);
+        --tk-faint: color-mix(in oklab, var(--color-red-500) 10%, transparent);
+        --tk-border: color-mix(in oklab, var(--color-red-400) 40%, transparent);
+        --tk-fill: var(--color-red-600);
+        --tk-on-fill: var(--color-white);
+        --tk-ring: var(--color-red-700);
+        --tk-ring-soft: color-mix(in oklab, var(--color-red-700) 20%, transparent);
+        --tk-pastel: var(--color-red-200);
+        --tk-on-pastel: var(--color-red-800);
+        --tk-frame: var(--color-red-700);
+        --tk-on-frame: var(--color-white);
 
-/*
- * interactiveBackground() (hover:/[&[data-active]]:), checkedBackground()
- * (checked:/has-[input:checked]:), and solidBackground()'s [&:is(button)]:hover:
- * fragment — all five states share the same shade 600 light / up to {300,400,500}
- * dark (checkedBackground/solidBackground always resolve to 500 dark; the wider
- * {300,400,500} is interactiveBackground's amber/yellow special-casing), so
- * they're safelisted together instead of as three separate blocks.
- */
-@source inline('{hover:,[&[data-active]]:,checked:,has-[input:checked]:,[&:is(button)]:hover:}bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-600');
-@source inline('dark:{hover:,[&[data-active]]:,checked:,has-[input:checked]:,[&:is(button)]:hover:}bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{300,400,500}');
+        @variant dark {
+            --tk-text: var(--color-red-400);
+            --tk-soft: color-mix(in oklab, var(--color-red-500) 20%, transparent);
+            --tk-soft-hover: color-mix(in oklab, var(--color-red-500) 25%, transparent);
+            --tk-on-soft: var(--color-red-100);
+            --tk-faint: color-mix(in oklab, var(--color-red-300) 10%, transparent);
+            --tk-border: color-mix(in oklab, var(--color-red-400) 20%, transparent);
+            --tk-fill: var(--color-red-500);
+            --tk-on-fill: var(--color-white);
+            --tk-ring: var(--color-red-300);
+            --tk-ring-soft: color-mix(in oklab, var(--color-red-300) 20%, transparent);
+            --tk-pastel: color-mix(in oklab, var(--color-red-800) 40%, transparent);
+            --tk-on-pastel: var(--color-red-200);
+        }
+    }
 
-/* mutedBackground() — status ([&:is(a)]), badge muted ([&:is(button)]), and button.blade.php's 'filled' isColored background (as: 'a'|'button'), shade fixed at 400 */
-@source inline('bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-400/20');
-@source inline('dark:bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-400/40');
-@source inline('{[&:is(a)]:hover:,[&:is(button)]:hover:}bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-400/30');
-@source inline('dark:{[&:is(a)]:hover:,[&:is(button)]:hover:}bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-400/50');
+    .tk-color-orange {
+        --tk-solid: var(--color-orange-700);
+        --tk-solid-hover: var(--color-orange-800);
+        --tk-on-solid: var(--color-white);
+        --tk-text: var(--color-orange-700);
+        --tk-soft: color-mix(in oklab, var(--color-orange-400) 20%, transparent);
+        --tk-soft-hover: color-mix(in oklab, var(--color-orange-400) 30%, transparent);
+        --tk-on-soft: var(--color-orange-800);
+        --tk-faint: color-mix(in oklab, var(--color-orange-500) 10%, transparent);
+        --tk-border: color-mix(in oklab, var(--color-orange-400) 40%, transparent);
+        --tk-fill: var(--color-orange-600);
+        --tk-on-fill: var(--color-white);
+        --tk-ring: var(--color-orange-700);
+        --tk-ring-soft: color-mix(in oklab, var(--color-orange-700) 20%, transparent);
+        --tk-pastel: var(--color-orange-200);
+        --tk-on-pastel: var(--color-orange-800);
+        --tk-frame: var(--color-orange-700);
+        --tk-on-frame: var(--color-white);
 
-/* button.blade.php isColored hover/active tint — outline/ghost/subtle variants stay transparent (or white) at rest, tint on hover/active; 'subtle' uses half the opacity of 'outline'/'ghost' (10/20 vs 20/40) */
-@source inline('[:where(&)]:{hover:,[&[data-active]]:}bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-400/{10,20}');
-@source inline('dark:[:where(&)]:{hover:,[&[data-active]]:}bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-400/{20,40}');
+        @variant dark {
+            --tk-text: var(--color-orange-400);
+            --tk-soft: color-mix(in oklab, var(--color-orange-500) 20%, transparent);
+            --tk-soft-hover: color-mix(in oklab, var(--color-orange-500) 25%, transparent);
+            --tk-on-soft: var(--color-orange-100);
+            --tk-faint: color-mix(in oklab, var(--color-orange-300) 10%, transparent);
+            --tk-border: color-mix(in oklab, var(--color-orange-400) 20%, transparent);
+            --tk-fill: var(--color-orange-500);
+            --tk-on-fill: var(--color-orange-950);
+            --tk-ring: var(--color-orange-300);
+            --tk-ring-soft: color-mix(in oklab, var(--color-orange-300) 20%, transparent);
+            --tk-pastel: color-mix(in oklab, var(--color-orange-800) 40%, transparent);
+            --tk-on-pastel: var(--color-orange-200);
+        }
+    }
 
-/* uploadBg() — dropzone/chip/tile/list-item drag-over background */
-@source inline('bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-500/10');
-@source inline('dark:bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-300/10');
+    .tk-color-amber {
+        --tk-solid: var(--color-amber-400);
+        --tk-solid-hover: var(--color-amber-300);
+        --tk-on-solid: var(--color-amber-950);
+        --tk-text: var(--color-amber-700);
+        --tk-soft: color-mix(in oklab, var(--color-amber-400) 20%, transparent);
+        --tk-soft-hover: color-mix(in oklab, var(--color-amber-400) 30%, transparent);
+        --tk-on-soft: var(--color-amber-800);
+        --tk-faint: color-mix(in oklab, var(--color-amber-500) 10%, transparent);
+        --tk-border: color-mix(in oklab, var(--color-amber-400) 40%, transparent);
+        --tk-fill: var(--color-amber-600);
+        --tk-on-fill: var(--color-white);
+        --tk-ring: var(--color-amber-700);
+        --tk-ring-soft: color-mix(in oklab, var(--color-amber-700) 20%, transparent);
+        --tk-pastel: var(--color-amber-200);
+        --tk-on-pastel: var(--color-amber-800);
+        --tk-frame: var(--color-amber-700);
+        --tk-on-frame: var(--color-white);
 
-/*
- * text()/textStrong()/mutedText()/uploadText() — plain text color, optionally
- * prefixed with data-active: (menu item danger variant) or [:where(&)]: (error
- * message). All three forms share shade 600 light / {400,500} dark (the pair
- * text() itself can produce); 700 light and 200/300/700 dark are the extra
- * shades used only by the un-prefixed textStrong()/mutedText()/uploadText() —
- * which also covers button.blade.php's isColored text ('ghost' → text(),
- * 'filled'/'outline' → mutedText(), both called unprefixed).
- */
-@source inline('{,data-active:,[:where(&)]:}text-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-600');
-@source inline('text-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-700');
-@source inline('dark:{,data-active:,[:where(&)]:}text-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{400,500}');
-@source inline('dark:text-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{200,300,700}');
+        @variant dark {
+            --tk-text: var(--color-amber-400);
+            --tk-soft: color-mix(in oklab, var(--color-amber-500) 20%, transparent);
+            --tk-soft-hover: color-mix(in oklab, var(--color-amber-500) 25%, transparent);
+            --tk-on-soft: var(--color-amber-100);
+            --tk-faint: color-mix(in oklab, var(--color-amber-300) 10%, transparent);
+            --tk-border: color-mix(in oklab, var(--color-amber-400) 20%, transparent);
+            --tk-fill: var(--color-amber-500);
+            --tk-on-fill: var(--color-amber-950);
+            --tk-ring: var(--color-amber-300);
+            --tk-ring-soft: color-mix(in oklab, var(--color-amber-300) 20%, transparent);
+            --tk-pastel: color-mix(in oklab, var(--color-amber-800) 40%, transparent);
+            --tk-on-pastel: var(--color-amber-200);
+        }
+    }
 
-/* button.blade.php isColored 'subtle' text — resting lighter (400 light/300 dark), intensifies to match the 'ghost' variant's constant strength (600 light/400 dark) on hover/active */
-@source inline('[:where(&)]:{,hover:,[&[data-active]]:}text-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{400,600}');
-@source inline('dark:[:where(&)]:{,hover:,[&[data-active]]:}text-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{300,400}');
+    .tk-color-yellow {
+        --tk-solid: var(--color-yellow-400);
+        --tk-solid-hover: var(--color-yellow-300);
+        --tk-on-solid: var(--color-yellow-950);
+        --tk-text: var(--color-yellow-700);
+        --tk-soft: color-mix(in oklab, var(--color-yellow-400) 20%, transparent);
+        --tk-soft-hover: color-mix(in oklab, var(--color-yellow-400) 30%, transparent);
+        --tk-on-soft: var(--color-yellow-800);
+        --tk-faint: color-mix(in oklab, var(--color-yellow-500) 10%, transparent);
+        --tk-border: color-mix(in oklab, var(--color-yellow-400) 40%, transparent);
+        --tk-fill: var(--color-yellow-700);
+        --tk-on-fill: var(--color-white);
+        --tk-ring: var(--color-yellow-700);
+        --tk-ring-soft: color-mix(in oklab, var(--color-yellow-700) 20%, transparent);
+        --tk-pastel: var(--color-yellow-200);
+        --tk-on-pastel: var(--color-yellow-800);
+        --tk-frame: var(--color-yellow-700);
+        --tk-on-frame: var(--color-white);
 
-/* toggle.blade.php isColored — active icon/label color (checked state), text() called with the has-[input:checked]: prefix */
-@source inline('has-[input:checked]:text-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-600');
-@source inline('dark:has-[input:checked]:text-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{400,500}');
+        @variant dark {
+            --tk-text: var(--color-yellow-400);
+            --tk-soft: color-mix(in oklab, var(--color-yellow-500) 20%, transparent);
+            --tk-soft-hover: color-mix(in oklab, var(--color-yellow-500) 25%, transparent);
+            --tk-on-soft: var(--color-yellow-100);
+            --tk-faint: color-mix(in oklab, var(--color-yellow-300) 10%, transparent);
+            --tk-border: color-mix(in oklab, var(--color-yellow-400) 20%, transparent);
+            --tk-fill: var(--color-yellow-500);
+            --tk-on-fill: var(--color-yellow-950);
+            --tk-ring: var(--color-yellow-300);
+            --tk-ring-soft: color-mix(in oklab, var(--color-yellow-300) 20%, transparent);
+            --tk-pastel: color-mix(in oklab, var(--color-yellow-800) 40%, transparent);
+            --tk-on-pastel: var(--color-yellow-200);
+        }
+    }
 
-/*
- * textNeutral() — fixed zinc/white shades, independent of the 21-color loop above.
- * Covers the no-prefix and [:where(&)]: forms (heading, text, label, button, table,
- * avatar, kbd, pagination, calendar, time-picker, toast, date-picker, menu, nav, upload, ...)
- * plus the single-variant ('strong') prefixed forms used by menu/nav active & current states
- * and the table footer heading, and the ('muted') *:[data-tallkit-icon]: prefix used by
- * the menu item icon, and the hover:[:where(&)]: prefix used by the date-picker/
- * time-picker trigger button.
- */
+    .tk-color-lime {
+        --tk-solid: var(--color-lime-400);
+        --tk-solid-hover: var(--color-lime-300);
+        --tk-on-solid: var(--color-lime-950);
+        --tk-text: var(--color-lime-700);
+        --tk-soft: color-mix(in oklab, var(--color-lime-400) 20%, transparent);
+        --tk-soft-hover: color-mix(in oklab, var(--color-lime-400) 30%, transparent);
+        --tk-on-soft: var(--color-lime-800);
+        --tk-faint: color-mix(in oklab, var(--color-lime-500) 10%, transparent);
+        --tk-border: color-mix(in oklab, var(--color-lime-400) 40%, transparent);
+        --tk-fill: var(--color-lime-600);
+        --tk-on-fill: var(--color-white);
+        --tk-ring: var(--color-lime-700);
+        --tk-ring-soft: color-mix(in oklab, var(--color-lime-700) 20%, transparent);
+        --tk-pastel: var(--color-lime-200);
+        --tk-on-pastel: var(--color-lime-800);
+        --tk-frame: var(--color-lime-700);
+        --tk-on-frame: var(--color-white);
+
+        @variant dark {
+            --tk-text: var(--color-lime-400);
+            --tk-soft: color-mix(in oklab, var(--color-lime-500) 20%, transparent);
+            --tk-soft-hover: color-mix(in oklab, var(--color-lime-500) 25%, transparent);
+            --tk-on-soft: var(--color-lime-100);
+            --tk-faint: color-mix(in oklab, var(--color-lime-300) 10%, transparent);
+            --tk-border: color-mix(in oklab, var(--color-lime-400) 20%, transparent);
+            --tk-fill: var(--color-lime-500);
+            --tk-on-fill: var(--color-lime-950);
+            --tk-ring: var(--color-lime-300);
+            --tk-ring-soft: color-mix(in oklab, var(--color-lime-300) 20%, transparent);
+            --tk-pastel: color-mix(in oklab, var(--color-lime-800) 40%, transparent);
+            --tk-on-pastel: var(--color-lime-200);
+        }
+    }
+
+    .tk-color-green {
+        --tk-solid: var(--color-green-700);
+        --tk-solid-hover: var(--color-green-800);
+        --tk-on-solid: var(--color-white);
+        --tk-text: var(--color-green-700);
+        --tk-soft: color-mix(in oklab, var(--color-green-400) 20%, transparent);
+        --tk-soft-hover: color-mix(in oklab, var(--color-green-400) 30%, transparent);
+        --tk-on-soft: var(--color-green-800);
+        --tk-faint: color-mix(in oklab, var(--color-green-500) 10%, transparent);
+        --tk-border: color-mix(in oklab, var(--color-green-400) 40%, transparent);
+        --tk-fill: var(--color-green-600);
+        --tk-on-fill: var(--color-white);
+        --tk-ring: var(--color-green-700);
+        --tk-ring-soft: color-mix(in oklab, var(--color-green-700) 20%, transparent);
+        --tk-pastel: var(--color-green-200);
+        --tk-on-pastel: var(--color-green-800);
+        --tk-frame: var(--color-green-700);
+        --tk-on-frame: var(--color-white);
+
+        @variant dark {
+            --tk-text: var(--color-green-400);
+            --tk-soft: color-mix(in oklab, var(--color-green-500) 20%, transparent);
+            --tk-soft-hover: color-mix(in oklab, var(--color-green-500) 25%, transparent);
+            --tk-on-soft: var(--color-green-100);
+            --tk-faint: color-mix(in oklab, var(--color-green-300) 10%, transparent);
+            --tk-border: color-mix(in oklab, var(--color-green-400) 20%, transparent);
+            --tk-fill: var(--color-green-500);
+            --tk-on-fill: var(--color-green-950);
+            --tk-ring: var(--color-green-300);
+            --tk-ring-soft: color-mix(in oklab, var(--color-green-300) 20%, transparent);
+            --tk-pastel: color-mix(in oklab, var(--color-green-800) 40%, transparent);
+            --tk-on-pastel: var(--color-green-200);
+        }
+    }
+
+    .tk-color-emerald {
+        --tk-solid: var(--color-emerald-700);
+        --tk-solid-hover: var(--color-emerald-800);
+        --tk-on-solid: var(--color-white);
+        --tk-text: var(--color-emerald-700);
+        --tk-soft: color-mix(in oklab, var(--color-emerald-400) 20%, transparent);
+        --tk-soft-hover: color-mix(in oklab, var(--color-emerald-400) 30%, transparent);
+        --tk-on-soft: var(--color-emerald-800);
+        --tk-faint: color-mix(in oklab, var(--color-emerald-500) 10%, transparent);
+        --tk-border: color-mix(in oklab, var(--color-emerald-400) 40%, transparent);
+        --tk-fill: var(--color-emerald-600);
+        --tk-on-fill: var(--color-white);
+        --tk-ring: var(--color-emerald-700);
+        --tk-ring-soft: color-mix(in oklab, var(--color-emerald-700) 20%, transparent);
+        --tk-pastel: var(--color-emerald-200);
+        --tk-on-pastel: var(--color-emerald-800);
+        --tk-frame: var(--color-emerald-700);
+        --tk-on-frame: var(--color-white);
+
+        @variant dark {
+            --tk-text: var(--color-emerald-400);
+            --tk-soft: color-mix(in oklab, var(--color-emerald-500) 20%, transparent);
+            --tk-soft-hover: color-mix(in oklab, var(--color-emerald-500) 25%, transparent);
+            --tk-on-soft: var(--color-emerald-100);
+            --tk-faint: color-mix(in oklab, var(--color-emerald-300) 10%, transparent);
+            --tk-border: color-mix(in oklab, var(--color-emerald-400) 20%, transparent);
+            --tk-fill: var(--color-emerald-500);
+            --tk-on-fill: var(--color-emerald-950);
+            --tk-ring: var(--color-emerald-300);
+            --tk-ring-soft: color-mix(in oklab, var(--color-emerald-300) 20%, transparent);
+            --tk-pastel: color-mix(in oklab, var(--color-emerald-800) 40%, transparent);
+            --tk-on-pastel: var(--color-emerald-200);
+        }
+    }
+
+    .tk-color-teal {
+        --tk-solid: var(--color-teal-700);
+        --tk-solid-hover: var(--color-teal-800);
+        --tk-on-solid: var(--color-white);
+        --tk-text: var(--color-teal-700);
+        --tk-soft: color-mix(in oklab, var(--color-teal-400) 20%, transparent);
+        --tk-soft-hover: color-mix(in oklab, var(--color-teal-400) 30%, transparent);
+        --tk-on-soft: var(--color-teal-800);
+        --tk-faint: color-mix(in oklab, var(--color-teal-500) 10%, transparent);
+        --tk-border: color-mix(in oklab, var(--color-teal-400) 40%, transparent);
+        --tk-fill: var(--color-teal-600);
+        --tk-on-fill: var(--color-white);
+        --tk-ring: var(--color-teal-700);
+        --tk-ring-soft: color-mix(in oklab, var(--color-teal-700) 20%, transparent);
+        --tk-pastel: var(--color-teal-200);
+        --tk-on-pastel: var(--color-teal-800);
+        --tk-frame: var(--color-teal-700);
+        --tk-on-frame: var(--color-white);
+
+        @variant dark {
+            --tk-text: var(--color-teal-400);
+            --tk-soft: color-mix(in oklab, var(--color-teal-500) 20%, transparent);
+            --tk-soft-hover: color-mix(in oklab, var(--color-teal-500) 25%, transparent);
+            --tk-on-soft: var(--color-teal-100);
+            --tk-faint: color-mix(in oklab, var(--color-teal-300) 10%, transparent);
+            --tk-border: color-mix(in oklab, var(--color-teal-400) 20%, transparent);
+            --tk-fill: var(--color-teal-500);
+            --tk-on-fill: var(--color-teal-950);
+            --tk-ring: var(--color-teal-300);
+            --tk-ring-soft: color-mix(in oklab, var(--color-teal-300) 20%, transparent);
+            --tk-pastel: color-mix(in oklab, var(--color-teal-800) 40%, transparent);
+            --tk-on-pastel: var(--color-teal-200);
+        }
+    }
+
+    .tk-color-cyan {
+        --tk-solid: var(--color-cyan-700);
+        --tk-solid-hover: var(--color-cyan-800);
+        --tk-on-solid: var(--color-white);
+        --tk-text: var(--color-cyan-700);
+        --tk-soft: color-mix(in oklab, var(--color-cyan-400) 20%, transparent);
+        --tk-soft-hover: color-mix(in oklab, var(--color-cyan-400) 30%, transparent);
+        --tk-on-soft: var(--color-cyan-800);
+        --tk-faint: color-mix(in oklab, var(--color-cyan-500) 10%, transparent);
+        --tk-border: color-mix(in oklab, var(--color-cyan-400) 40%, transparent);
+        --tk-fill: var(--color-cyan-600);
+        --tk-on-fill: var(--color-white);
+        --tk-ring: var(--color-cyan-700);
+        --tk-ring-soft: color-mix(in oklab, var(--color-cyan-700) 20%, transparent);
+        --tk-pastel: var(--color-cyan-200);
+        --tk-on-pastel: var(--color-cyan-800);
+        --tk-frame: var(--color-cyan-700);
+        --tk-on-frame: var(--color-white);
+
+        @variant dark {
+            --tk-text: var(--color-cyan-400);
+            --tk-soft: color-mix(in oklab, var(--color-cyan-500) 20%, transparent);
+            --tk-soft-hover: color-mix(in oklab, var(--color-cyan-500) 25%, transparent);
+            --tk-on-soft: var(--color-cyan-100);
+            --tk-faint: color-mix(in oklab, var(--color-cyan-300) 10%, transparent);
+            --tk-border: color-mix(in oklab, var(--color-cyan-400) 20%, transparent);
+            --tk-fill: var(--color-cyan-500);
+            --tk-on-fill: var(--color-cyan-950);
+            --tk-ring: var(--color-cyan-300);
+            --tk-ring-soft: color-mix(in oklab, var(--color-cyan-300) 20%, transparent);
+            --tk-pastel: color-mix(in oklab, var(--color-cyan-800) 40%, transparent);
+            --tk-on-pastel: var(--color-cyan-200);
+        }
+    }
+
+    .tk-color-sky {
+        --tk-solid: var(--color-sky-700);
+        --tk-solid-hover: var(--color-sky-800);
+        --tk-on-solid: var(--color-white);
+        --tk-text: var(--color-sky-700);
+        --tk-soft: color-mix(in oklab, var(--color-sky-400) 20%, transparent);
+        --tk-soft-hover: color-mix(in oklab, var(--color-sky-400) 30%, transparent);
+        --tk-on-soft: var(--color-sky-800);
+        --tk-faint: color-mix(in oklab, var(--color-sky-500) 10%, transparent);
+        --tk-border: color-mix(in oklab, var(--color-sky-400) 40%, transparent);
+        --tk-fill: var(--color-sky-600);
+        --tk-on-fill: var(--color-white);
+        --tk-ring: var(--color-sky-700);
+        --tk-ring-soft: color-mix(in oklab, var(--color-sky-700) 20%, transparent);
+        --tk-pastel: var(--color-sky-200);
+        --tk-on-pastel: var(--color-sky-800);
+        --tk-frame: var(--color-sky-700);
+        --tk-on-frame: var(--color-white);
+
+        @variant dark {
+            --tk-text: var(--color-sky-400);
+            --tk-soft: color-mix(in oklab, var(--color-sky-500) 20%, transparent);
+            --tk-soft-hover: color-mix(in oklab, var(--color-sky-500) 25%, transparent);
+            --tk-on-soft: var(--color-sky-100);
+            --tk-faint: color-mix(in oklab, var(--color-sky-300) 10%, transparent);
+            --tk-border: color-mix(in oklab, var(--color-sky-400) 20%, transparent);
+            --tk-fill: var(--color-sky-500);
+            --tk-on-fill: var(--color-sky-950);
+            --tk-ring: var(--color-sky-300);
+            --tk-ring-soft: color-mix(in oklab, var(--color-sky-300) 20%, transparent);
+            --tk-pastel: color-mix(in oklab, var(--color-sky-800) 40%, transparent);
+            --tk-on-pastel: var(--color-sky-200);
+        }
+    }
+
+    .tk-color-blue {
+        --tk-solid: var(--color-blue-600);
+        --tk-solid-hover: var(--color-blue-700);
+        --tk-on-solid: var(--color-white);
+        --tk-text: var(--color-blue-700);
+        --tk-soft: color-mix(in oklab, var(--color-blue-400) 20%, transparent);
+        --tk-soft-hover: color-mix(in oklab, var(--color-blue-400) 30%, transparent);
+        --tk-on-soft: var(--color-blue-800);
+        --tk-faint: color-mix(in oklab, var(--color-blue-500) 10%, transparent);
+        --tk-border: color-mix(in oklab, var(--color-blue-400) 40%, transparent);
+        --tk-fill: var(--color-blue-600);
+        --tk-on-fill: var(--color-white);
+        --tk-ring: var(--color-blue-700);
+        --tk-ring-soft: color-mix(in oklab, var(--color-blue-700) 20%, transparent);
+        --tk-pastel: var(--color-blue-200);
+        --tk-on-pastel: var(--color-blue-800);
+        --tk-frame: var(--color-blue-700);
+        --tk-on-frame: var(--color-white);
+
+        @variant dark {
+            --tk-text: var(--color-blue-400);
+            --tk-soft: color-mix(in oklab, var(--color-blue-500) 20%, transparent);
+            --tk-soft-hover: color-mix(in oklab, var(--color-blue-500) 25%, transparent);
+            --tk-on-soft: var(--color-blue-100);
+            --tk-faint: color-mix(in oklab, var(--color-blue-300) 10%, transparent);
+            --tk-border: color-mix(in oklab, var(--color-blue-400) 20%, transparent);
+            --tk-fill: var(--color-blue-500);
+            --tk-on-fill: var(--color-white);
+            --tk-ring: var(--color-blue-300);
+            --tk-ring-soft: color-mix(in oklab, var(--color-blue-300) 20%, transparent);
+            --tk-pastel: color-mix(in oklab, var(--color-blue-800) 40%, transparent);
+            --tk-on-pastel: var(--color-blue-200);
+        }
+    }
+
+    .tk-color-indigo {
+        --tk-solid: var(--color-indigo-600);
+        --tk-solid-hover: var(--color-indigo-700);
+        --tk-on-solid: var(--color-white);
+        --tk-text: var(--color-indigo-700);
+        --tk-soft: color-mix(in oklab, var(--color-indigo-400) 20%, transparent);
+        --tk-soft-hover: color-mix(in oklab, var(--color-indigo-400) 30%, transparent);
+        --tk-on-soft: var(--color-indigo-800);
+        --tk-faint: color-mix(in oklab, var(--color-indigo-500) 10%, transparent);
+        --tk-border: color-mix(in oklab, var(--color-indigo-400) 40%, transparent);
+        --tk-fill: var(--color-indigo-600);
+        --tk-on-fill: var(--color-white);
+        --tk-ring: var(--color-indigo-700);
+        --tk-ring-soft: color-mix(in oklab, var(--color-indigo-700) 20%, transparent);
+        --tk-pastel: var(--color-indigo-200);
+        --tk-on-pastel: var(--color-indigo-800);
+        --tk-frame: var(--color-indigo-700);
+        --tk-on-frame: var(--color-white);
+
+        @variant dark {
+            --tk-text: var(--color-indigo-400);
+            --tk-soft: color-mix(in oklab, var(--color-indigo-500) 20%, transparent);
+            --tk-soft-hover: color-mix(in oklab, var(--color-indigo-500) 25%, transparent);
+            --tk-on-soft: var(--color-indigo-100);
+            --tk-faint: color-mix(in oklab, var(--color-indigo-300) 10%, transparent);
+            --tk-border: color-mix(in oklab, var(--color-indigo-400) 20%, transparent);
+            --tk-fill: var(--color-indigo-500);
+            --tk-on-fill: var(--color-white);
+            --tk-ring: var(--color-indigo-300);
+            --tk-ring-soft: color-mix(in oklab, var(--color-indigo-300) 20%, transparent);
+            --tk-pastel: color-mix(in oklab, var(--color-indigo-800) 40%, transparent);
+            --tk-on-pastel: var(--color-indigo-200);
+        }
+    }
+
+    .tk-color-violet {
+        --tk-solid: var(--color-violet-600);
+        --tk-solid-hover: var(--color-violet-700);
+        --tk-on-solid: var(--color-white);
+        --tk-text: var(--color-violet-700);
+        --tk-soft: color-mix(in oklab, var(--color-violet-400) 20%, transparent);
+        --tk-soft-hover: color-mix(in oklab, var(--color-violet-400) 30%, transparent);
+        --tk-on-soft: var(--color-violet-800);
+        --tk-faint: color-mix(in oklab, var(--color-violet-500) 10%, transparent);
+        --tk-border: color-mix(in oklab, var(--color-violet-400) 40%, transparent);
+        --tk-fill: var(--color-violet-600);
+        --tk-on-fill: var(--color-white);
+        --tk-ring: var(--color-violet-700);
+        --tk-ring-soft: color-mix(in oklab, var(--color-violet-700) 20%, transparent);
+        --tk-pastel: var(--color-violet-200);
+        --tk-on-pastel: var(--color-violet-800);
+        --tk-frame: var(--color-violet-700);
+        --tk-on-frame: var(--color-white);
+
+        @variant dark {
+            --tk-text: var(--color-violet-400);
+            --tk-soft: color-mix(in oklab, var(--color-violet-500) 20%, transparent);
+            --tk-soft-hover: color-mix(in oklab, var(--color-violet-500) 25%, transparent);
+            --tk-on-soft: var(--color-violet-100);
+            --tk-faint: color-mix(in oklab, var(--color-violet-300) 10%, transparent);
+            --tk-border: color-mix(in oklab, var(--color-violet-400) 20%, transparent);
+            --tk-fill: var(--color-violet-500);
+            --tk-on-fill: var(--color-white);
+            --tk-ring: var(--color-violet-300);
+            --tk-ring-soft: color-mix(in oklab, var(--color-violet-300) 20%, transparent);
+            --tk-pastel: color-mix(in oklab, var(--color-violet-800) 40%, transparent);
+            --tk-on-pastel: var(--color-violet-200);
+        }
+    }
+
+    .tk-color-purple {
+        --tk-solid: var(--color-purple-600);
+        --tk-solid-hover: var(--color-purple-700);
+        --tk-on-solid: var(--color-white);
+        --tk-text: var(--color-purple-700);
+        --tk-soft: color-mix(in oklab, var(--color-purple-400) 20%, transparent);
+        --tk-soft-hover: color-mix(in oklab, var(--color-purple-400) 30%, transparent);
+        --tk-on-soft: var(--color-purple-800);
+        --tk-faint: color-mix(in oklab, var(--color-purple-500) 10%, transparent);
+        --tk-border: color-mix(in oklab, var(--color-purple-400) 40%, transparent);
+        --tk-fill: var(--color-purple-600);
+        --tk-on-fill: var(--color-white);
+        --tk-ring: var(--color-purple-700);
+        --tk-ring-soft: color-mix(in oklab, var(--color-purple-700) 20%, transparent);
+        --tk-pastel: var(--color-purple-200);
+        --tk-on-pastel: var(--color-purple-800);
+        --tk-frame: var(--color-purple-700);
+        --tk-on-frame: var(--color-white);
+
+        @variant dark {
+            --tk-text: var(--color-purple-400);
+            --tk-soft: color-mix(in oklab, var(--color-purple-500) 20%, transparent);
+            --tk-soft-hover: color-mix(in oklab, var(--color-purple-500) 25%, transparent);
+            --tk-on-soft: var(--color-purple-100);
+            --tk-faint: color-mix(in oklab, var(--color-purple-300) 10%, transparent);
+            --tk-border: color-mix(in oklab, var(--color-purple-400) 20%, transparent);
+            --tk-fill: var(--color-purple-500);
+            --tk-on-fill: var(--color-white);
+            --tk-ring: var(--color-purple-300);
+            --tk-ring-soft: color-mix(in oklab, var(--color-purple-300) 20%, transparent);
+            --tk-pastel: color-mix(in oklab, var(--color-purple-800) 40%, transparent);
+            --tk-on-pastel: var(--color-purple-200);
+        }
+    }
+
+    .tk-color-fuchsia {
+        --tk-solid: var(--color-fuchsia-600);
+        --tk-solid-hover: var(--color-fuchsia-700);
+        --tk-on-solid: var(--color-white);
+        --tk-text: var(--color-fuchsia-700);
+        --tk-soft: color-mix(in oklab, var(--color-fuchsia-400) 20%, transparent);
+        --tk-soft-hover: color-mix(in oklab, var(--color-fuchsia-400) 30%, transparent);
+        --tk-on-soft: var(--color-fuchsia-800);
+        --tk-faint: color-mix(in oklab, var(--color-fuchsia-500) 10%, transparent);
+        --tk-border: color-mix(in oklab, var(--color-fuchsia-400) 40%, transparent);
+        --tk-fill: var(--color-fuchsia-600);
+        --tk-on-fill: var(--color-white);
+        --tk-ring: var(--color-fuchsia-700);
+        --tk-ring-soft: color-mix(in oklab, var(--color-fuchsia-700) 20%, transparent);
+        --tk-pastel: var(--color-fuchsia-200);
+        --tk-on-pastel: var(--color-fuchsia-800);
+        --tk-frame: var(--color-fuchsia-700);
+        --tk-on-frame: var(--color-white);
+
+        @variant dark {
+            --tk-text: var(--color-fuchsia-400);
+            --tk-soft: color-mix(in oklab, var(--color-fuchsia-500) 20%, transparent);
+            --tk-soft-hover: color-mix(in oklab, var(--color-fuchsia-500) 25%, transparent);
+            --tk-on-soft: var(--color-fuchsia-100);
+            --tk-faint: color-mix(in oklab, var(--color-fuchsia-300) 10%, transparent);
+            --tk-border: color-mix(in oklab, var(--color-fuchsia-400) 20%, transparent);
+            --tk-fill: var(--color-fuchsia-500);
+            --tk-on-fill: var(--color-white);
+            --tk-ring: var(--color-fuchsia-300);
+            --tk-ring-soft: color-mix(in oklab, var(--color-fuchsia-300) 20%, transparent);
+            --tk-pastel: color-mix(in oklab, var(--color-fuchsia-800) 40%, transparent);
+            --tk-on-pastel: var(--color-fuchsia-200);
+        }
+    }
+
+    .tk-color-pink {
+        --tk-solid: var(--color-pink-600);
+        --tk-solid-hover: var(--color-pink-700);
+        --tk-on-solid: var(--color-white);
+        --tk-text: var(--color-pink-700);
+        --tk-soft: color-mix(in oklab, var(--color-pink-400) 20%, transparent);
+        --tk-soft-hover: color-mix(in oklab, var(--color-pink-400) 30%, transparent);
+        --tk-on-soft: var(--color-pink-800);
+        --tk-faint: color-mix(in oklab, var(--color-pink-500) 10%, transparent);
+        --tk-border: color-mix(in oklab, var(--color-pink-400) 40%, transparent);
+        --tk-fill: var(--color-pink-600);
+        --tk-on-fill: var(--color-white);
+        --tk-ring: var(--color-pink-700);
+        --tk-ring-soft: color-mix(in oklab, var(--color-pink-700) 20%, transparent);
+        --tk-pastel: var(--color-pink-200);
+        --tk-on-pastel: var(--color-pink-800);
+        --tk-frame: var(--color-pink-700);
+        --tk-on-frame: var(--color-white);
+
+        @variant dark {
+            --tk-text: var(--color-pink-400);
+            --tk-soft: color-mix(in oklab, var(--color-pink-500) 20%, transparent);
+            --tk-soft-hover: color-mix(in oklab, var(--color-pink-500) 25%, transparent);
+            --tk-on-soft: var(--color-pink-100);
+            --tk-faint: color-mix(in oklab, var(--color-pink-300) 10%, transparent);
+            --tk-border: color-mix(in oklab, var(--color-pink-400) 20%, transparent);
+            --tk-fill: var(--color-pink-500);
+            --tk-on-fill: var(--color-white);
+            --tk-ring: var(--color-pink-300);
+            --tk-ring-soft: color-mix(in oklab, var(--color-pink-300) 20%, transparent);
+            --tk-pastel: color-mix(in oklab, var(--color-pink-800) 40%, transparent);
+            --tk-on-pastel: var(--color-pink-200);
+        }
+    }
+
+    .tk-color-rose {
+        --tk-solid: var(--color-rose-600);
+        --tk-solid-hover: var(--color-rose-700);
+        --tk-on-solid: var(--color-white);
+        --tk-text: var(--color-rose-700);
+        --tk-soft: color-mix(in oklab, var(--color-rose-400) 20%, transparent);
+        --tk-soft-hover: color-mix(in oklab, var(--color-rose-400) 30%, transparent);
+        --tk-on-soft: var(--color-rose-800);
+        --tk-faint: color-mix(in oklab, var(--color-rose-500) 10%, transparent);
+        --tk-border: color-mix(in oklab, var(--color-rose-400) 40%, transparent);
+        --tk-fill: var(--color-rose-600);
+        --tk-on-fill: var(--color-white);
+        --tk-ring: var(--color-rose-700);
+        --tk-ring-soft: color-mix(in oklab, var(--color-rose-700) 20%, transparent);
+        --tk-pastel: var(--color-rose-200);
+        --tk-on-pastel: var(--color-rose-800);
+        --tk-frame: var(--color-rose-700);
+        --tk-on-frame: var(--color-white);
+
+        @variant dark {
+            --tk-text: var(--color-rose-400);
+            --tk-soft: color-mix(in oklab, var(--color-rose-500) 20%, transparent);
+            --tk-soft-hover: color-mix(in oklab, var(--color-rose-500) 25%, transparent);
+            --tk-on-soft: var(--color-rose-100);
+            --tk-faint: color-mix(in oklab, var(--color-rose-300) 10%, transparent);
+            --tk-border: color-mix(in oklab, var(--color-rose-400) 20%, transparent);
+            --tk-fill: var(--color-rose-500);
+            --tk-on-fill: var(--color-white);
+            --tk-ring: var(--color-rose-300);
+            --tk-ring-soft: color-mix(in oklab, var(--color-rose-300) 20%, transparent);
+            --tk-pastel: color-mix(in oklab, var(--color-rose-800) 40%, transparent);
+            --tk-on-pastel: var(--color-rose-200);
+        }
+    }
+
+    .tk-color-slate {
+        --tk-solid: var(--color-slate-600);
+        --tk-solid-hover: var(--color-slate-700);
+        --tk-on-solid: var(--color-white);
+        --tk-text: var(--color-slate-700);
+        --tk-soft: color-mix(in oklab, var(--color-slate-400) 20%, transparent);
+        --tk-soft-hover: color-mix(in oklab, var(--color-slate-400) 30%, transparent);
+        --tk-on-soft: var(--color-slate-800);
+        --tk-faint: color-mix(in oklab, var(--color-slate-500) 10%, transparent);
+        --tk-border: color-mix(in oklab, var(--color-slate-400) 40%, transparent);
+        --tk-fill: var(--color-slate-600);
+        --tk-on-fill: var(--color-white);
+        --tk-ring: var(--color-slate-700);
+        --tk-ring-soft: color-mix(in oklab, var(--color-slate-700) 20%, transparent);
+        --tk-pastel: var(--color-slate-200);
+        --tk-on-pastel: var(--color-slate-800);
+        --tk-frame: var(--color-slate-700);
+        --tk-on-frame: var(--color-white);
+
+        @variant dark {
+            --tk-text: var(--color-slate-400);
+            --tk-soft: color-mix(in oklab, var(--color-slate-500) 20%, transparent);
+            --tk-soft-hover: color-mix(in oklab, var(--color-slate-500) 25%, transparent);
+            --tk-on-soft: var(--color-slate-100);
+            --tk-faint: color-mix(in oklab, var(--color-slate-300) 10%, transparent);
+            --tk-border: color-mix(in oklab, var(--color-slate-400) 20%, transparent);
+            --tk-fill: var(--color-slate-500);
+            --tk-on-fill: var(--color-white);
+            --tk-ring: var(--color-slate-300);
+            --tk-ring-soft: color-mix(in oklab, var(--color-slate-300) 20%, transparent);
+            --tk-pastel: color-mix(in oklab, var(--color-slate-800) 40%, transparent);
+            --tk-on-pastel: var(--color-slate-200);
+        }
+    }
+
+    .tk-color-gray {
+        --tk-solid: var(--color-gray-600);
+        --tk-solid-hover: var(--color-gray-700);
+        --tk-on-solid: var(--color-white);
+        --tk-text: var(--color-gray-700);
+        --tk-soft: color-mix(in oklab, var(--color-gray-400) 20%, transparent);
+        --tk-soft-hover: color-mix(in oklab, var(--color-gray-400) 30%, transparent);
+        --tk-on-soft: var(--color-gray-800);
+        --tk-faint: color-mix(in oklab, var(--color-gray-500) 10%, transparent);
+        --tk-border: color-mix(in oklab, var(--color-gray-400) 40%, transparent);
+        --tk-fill: var(--color-gray-600);
+        --tk-on-fill: var(--color-white);
+        --tk-ring: var(--color-gray-700);
+        --tk-ring-soft: color-mix(in oklab, var(--color-gray-700) 20%, transparent);
+        --tk-pastel: var(--color-gray-200);
+        --tk-on-pastel: var(--color-gray-800);
+        --tk-frame: var(--color-gray-700);
+        --tk-on-frame: var(--color-white);
+
+        @variant dark {
+            --tk-text: var(--color-gray-400);
+            --tk-soft: color-mix(in oklab, var(--color-gray-500) 20%, transparent);
+            --tk-soft-hover: color-mix(in oklab, var(--color-gray-500) 25%, transparent);
+            --tk-on-soft: var(--color-gray-100);
+            --tk-faint: color-mix(in oklab, var(--color-gray-300) 10%, transparent);
+            --tk-border: color-mix(in oklab, var(--color-gray-400) 20%, transparent);
+            --tk-fill: var(--color-gray-500);
+            --tk-on-fill: var(--color-white);
+            --tk-ring: var(--color-gray-300);
+            --tk-ring-soft: color-mix(in oklab, var(--color-gray-300) 20%, transparent);
+            --tk-pastel: color-mix(in oklab, var(--color-gray-800) 40%, transparent);
+            --tk-on-pastel: var(--color-gray-200);
+        }
+    }
+
+    .tk-color-zinc {
+        --tk-solid: var(--color-zinc-600);
+        --tk-solid-hover: var(--color-zinc-700);
+        --tk-on-solid: var(--color-white);
+        --tk-text: var(--color-zinc-700);
+        --tk-soft: color-mix(in oklab, var(--color-zinc-400) 20%, transparent);
+        --tk-soft-hover: color-mix(in oklab, var(--color-zinc-400) 30%, transparent);
+        --tk-on-soft: var(--color-zinc-800);
+        --tk-faint: color-mix(in oklab, var(--color-zinc-500) 10%, transparent);
+        --tk-border: color-mix(in oklab, var(--color-zinc-400) 40%, transparent);
+        --tk-fill: var(--color-zinc-600);
+        --tk-on-fill: var(--color-white);
+        --tk-ring: var(--color-zinc-700);
+        --tk-ring-soft: color-mix(in oklab, var(--color-zinc-700) 20%, transparent);
+        --tk-pastel: var(--color-zinc-200);
+        --tk-on-pastel: var(--color-zinc-800);
+        --tk-frame: var(--color-zinc-700);
+        --tk-on-frame: var(--color-white);
+
+        @variant dark {
+            --tk-text: var(--color-zinc-400);
+            --tk-soft: color-mix(in oklab, var(--color-zinc-500) 20%, transparent);
+            --tk-soft-hover: color-mix(in oklab, var(--color-zinc-500) 25%, transparent);
+            --tk-on-soft: var(--color-zinc-100);
+            --tk-faint: color-mix(in oklab, var(--color-zinc-300) 10%, transparent);
+            --tk-border: color-mix(in oklab, var(--color-zinc-400) 20%, transparent);
+            --tk-fill: var(--color-zinc-500);
+            --tk-on-fill: var(--color-white);
+            --tk-ring: var(--color-zinc-300);
+            --tk-ring-soft: color-mix(in oklab, var(--color-zinc-300) 20%, transparent);
+            --tk-pastel: color-mix(in oklab, var(--color-zinc-800) 40%, transparent);
+            --tk-on-pastel: var(--color-zinc-200);
+        }
+    }
+
+    .tk-color-stone {
+        --tk-solid: var(--color-stone-600);
+        --tk-solid-hover: var(--color-stone-700);
+        --tk-on-solid: var(--color-white);
+        --tk-text: var(--color-stone-700);
+        --tk-soft: color-mix(in oklab, var(--color-stone-400) 20%, transparent);
+        --tk-soft-hover: color-mix(in oklab, var(--color-stone-400) 30%, transparent);
+        --tk-on-soft: var(--color-stone-800);
+        --tk-faint: color-mix(in oklab, var(--color-stone-500) 10%, transparent);
+        --tk-border: color-mix(in oklab, var(--color-stone-400) 40%, transparent);
+        --tk-fill: var(--color-stone-600);
+        --tk-on-fill: var(--color-white);
+        --tk-ring: var(--color-stone-700);
+        --tk-ring-soft: color-mix(in oklab, var(--color-stone-700) 20%, transparent);
+        --tk-pastel: var(--color-stone-200);
+        --tk-on-pastel: var(--color-stone-800);
+        --tk-frame: var(--color-stone-700);
+        --tk-on-frame: var(--color-white);
+
+        @variant dark {
+            --tk-text: var(--color-stone-400);
+            --tk-soft: color-mix(in oklab, var(--color-stone-500) 20%, transparent);
+            --tk-soft-hover: color-mix(in oklab, var(--color-stone-500) 25%, transparent);
+            --tk-on-soft: var(--color-stone-100);
+            --tk-faint: color-mix(in oklab, var(--color-stone-300) 10%, transparent);
+            --tk-border: color-mix(in oklab, var(--color-stone-400) 20%, transparent);
+            --tk-fill: var(--color-stone-500);
+            --tk-on-fill: var(--color-white);
+            --tk-ring: var(--color-stone-300);
+            --tk-ring-soft: color-mix(in oklab, var(--color-stone-300) 20%, transparent);
+            --tk-pastel: color-mix(in oklab, var(--color-stone-800) 40%, transparent);
+            --tk-on-pastel: var(--color-stone-200);
+        }
+    }
+}
+
+/* Outside the layers: a utility in @layer utilities would win over it. */
+.tk-frame :is(
+    [data-tallkit-nav], [data-tallkit-nav-item],
+    [data-tallkit-brand], [data-tallkit-brand] [data-tallkit-heading],
+    [data-tallkit-button].tk-plain
+) {
+    color: inherit;
+}
+
+/* Built in PHP, not in the views: listed for Tailwind to generate. */
+@source inline('focus-visible:outline-(--tk-ring)!');
+@source inline('focus-visible:ring-(--tk-ring-soft)!');
+@source inline('[&:is(:focus-visible,[aria-expanded=true])]:outline-(--tk-ring)!');
+@source inline('[&:is(:focus-visible,[aria-expanded=true])]:ring-(--tk-ring-soft)!');
+@source inline('has-[[data-tallkit-control]:focus-visible]:outline-(--tk-ring)!');
+@source inline('has-[[data-tallkit-control]:focus-visible]:ring-(--tk-ring-soft)!');
+@source inline('has-[[data-tallkit-control]:is(:focus-visible,[aria-expanded=true])]:outline-(--tk-ring)!');
+@source inline('has-[[data-tallkit-control]:is(:focus-visible,[aria-expanded=true])]:ring-(--tk-ring-soft)!');
+@source inline('ring-(--tk-ring)');
+@source inline('bg-(--tk-faint)');
+@source inline('border-(--tk-ring)');
+@source inline('text-(--tk-text)');
+@source inline('checked:bg-(--tk-fill)');
+@source inline('has-[input:checked]:bg-(--tk-fill)');
+@source inline('text-(--tk-on-fill)');
+@source inline('bg-(--tk-on-fill)');
+@source inline('bg-(--tk-fill)');
+@source inline('border-(--tk-fill)');
+@source inline('has-[input:checked]:text-(--tk-text)');
+@source inline('[:where(&)]:text-(--tk-text)');
+@source inline('text-(--tk-solid)');
+@source inline('bg-(--tk-frame)');
+@source inline('text-(--tk-on-frame)');
+@source inline('bg-(--tk-soft)');
+@source inline('[&:is(a)]:hover:bg-(--tk-soft-hover)');
+@source inline('[&:is(button)]:hover:bg-(--tk-soft-hover)');
+@source inline('text-(--tk-on-soft)');
+@source inline('bg-(--tk-solid)');
+@source inline('text-(--tk-on-solid)');
+@source inline('hover:bg-(--tk-solid-hover)');
+@source inline('[&[data-active]]:bg-(--tk-solid-hover)');
+@source inline('[&:is(button)]:hover:bg-(--tk-solid-hover)');
+@source inline('bg-(--tk-pastel)');
+@source inline('text-(--tk-on-pastel)');
+@source inline('focus-visible:[&::-webkit-slider-thumb]:outline-(--tk-ring)');
+@source inline('focus-visible:[&::-webkit-slider-thumb]:ring-(--tk-ring-soft)');
+@source inline('focus-visible:[&::-moz-range-thumb]:outline-(--tk-ring)');
+@source inline('focus-visible:[&::-moz-range-thumb]:ring-(--tk-ring-soft)');
+
 @source inline('{,[:where(&)]:,hover:[:where(&)]:}text-zinc-{400,500,700,800,900}');
 @source inline('dark:{,[:where(&)]:,hover:[:where(&)]:}text-white{,/80}');
 @source inline('dark:{,[:where(&)]:}text-zinc-{400,500}');
 @source inline('{data-active:,data-current:,[&:is(a,button)]:hover:,*:}text-zinc-800');
 @source inline('dark:{data-active:,data-current:,[&:is(a,button)]:hover:,*:}text-white');
-@source inline('*:[data-tallkit-icon]:text-zinc-400');
-@source inline('dark:*:[data-tallkit-icon]:text-zinc-500');
+@source inline('*:[data-tallkit-icon]:text-zinc-500');
+@source inline('dark:*:[data-tallkit-icon]:text-zinc-400');
 
-/* toggle.blade.php default (no color) — checked strengthens from the idle 'subtle' shade to 'strong', has-[input:checked]: prefix on textNeutral('strong') */
 @source inline('has-[input:checked]:text-zinc-800');
 @source inline('dark:has-[input:checked]:text-white');
 
-/*
- * backgroundNeutral() — fixed zinc/white overlay shades for subtle surfaces
- * (kbd, avatar filled, field group side, tabs segmented, separator, nav
- * group line, nav indicator/item hover & current).
- */
 @source inline('{,[:where(&)]:,[&:is(a,button)]:hover:,data-current:}bg-zinc-800/{5,10,20}');
 @source inline('dark:{,[:where(&)]:,[&:is(a,button)]:hover:,data-current:}bg-white/{10,20}');
-
-/*
- * uploadRing()/uploadBorder() (plain shades 300-700) and button.blade.php's
- * 'outline' isColored border (the [:where(&)]: prefix and the 400/20, 400/40
- * opacity shades exist only for this button border treatment).
- */
-@source inline('{,[:where(&)]:}{ring,border}-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{300,400,500,600,700,400/20,400/40}');
-@source inline('dark:{,[:where(&)]:}{ring,border}-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-{300,400,500,600,700,400/20,400/40}');
-
-/* pastelBackground() — avatar (dark:text-*-200 reuses the text()/mutedText() safelist above) */
-@source inline('bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-200');
-@source inline('dark:bg-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-800/40');
-@source inline('text-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-800');
-
-/* controlFocusRing()/controlFocusRingNested() — textarea/select/listbox focus ring (important) */
-@source inline('{focus-visible:,has-[[data-tallkit-control]:focus-visible]:}outline-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-700!');
-@source inline('dark:{focus-visible:,has-[[data-tallkit-control]:focus-visible]:}outline-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-300!');
-@source inline('{focus-visible:,has-[[data-tallkit-control]:focus-visible]:}ring-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-700/20!');
-@source inline('dark:{focus-visible:,has-[[data-tallkit-control]:focus-visible]:}ring-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-300/20!');
-
-/*
- * controlFocusRing()/controlFocusRingNested() with expanded:true — combobox's popover-open ring.
- * Written as standalone lines (not merged into the group above) because the `:is(...)` selector
- * contains a literal comma, which would be misread as a brace-alternation separator if combined.
- */
-@source inline('[&:is(:focus-visible,[aria-expanded=true])]:outline-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-700!');
-@source inline('dark:[&:is(:focus-visible,[aria-expanded=true])]:outline-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-300!');
-@source inline('[&:is(:focus-visible,[aria-expanded=true])]:ring-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-700/20!');
-@source inline('dark:[&:is(:focus-visible,[aria-expanded=true])]:ring-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-300/20!');
-@source inline('has-[[data-tallkit-control]:is(:focus-visible,[aria-expanded=true])]:outline-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-700!');
-@source inline('dark:has-[[data-tallkit-control]:is(:focus-visible,[aria-expanded=true])]:outline-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-300!');
-@source inline('has-[[data-tallkit-control]:is(:focus-visible,[aria-expanded=true])]:ring-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-700/20!');
-@source inline('dark:has-[[data-tallkit-control]:is(:focus-visible,[aria-expanded=true])]:ring-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-300/20!');
-
-/* sliderFocusRing() — same shape as above, no !important, dual vendor-thumb selector */
-@source inline('focus-visible:[&::-{webkit-slider,moz-range}-thumb]:outline-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-700');
-@source inline('dark:focus-visible:[&::-{webkit-slider,moz-range}-thumb]:outline-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-300');
-@source inline('focus-visible:[&::-{webkit-slider,moz-range}-thumb]:ring-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-700/20');
-@source inline('dark:focus-visible:[&::-{webkit-slider,moz-range}-thumb]:ring-{red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose,slate,gray,zinc,stone}-300/20');
-
-/* frameBackground()/solidBackground() — static (non-color) fragments: unprefixed (solidBackground()) and *: (frameBackground()) */
-@source inline('{,*:}text-white');

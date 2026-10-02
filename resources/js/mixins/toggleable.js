@@ -1,42 +1,42 @@
-import { timeout } from '../utils'
+import { emit } from '../utils'
 
 export function toggleable() {
   return {
     opened: false,
-    lastOpened: null,
 
-    init (opened = false) {
-      if (Number.isInteger(opened)) {
-        return timeout(() => this.open(), opened)
-      }
-
+    init(opened = false) {
       this.opened = Boolean(opened)
     },
 
-    open (storage = true) {
-      this.opened = true
-      if (storage) this.lastOpened = this.opened
+    open() {
+      this.setOpened(true)
     },
 
-    close (storage = true) {
-      this.opened = false
-      if (storage) this.lastOpened = this.opened
+    close() {
+      this.setOpened(false)
     },
 
-    toggle (storage = true) {
+    setOpened(opened) {
+      if (this.opened === opened) return
+
+      this.opened = opened
+      emit(this.$root, opened ? 'opened' : 'closed')
+    },
+
+    toggle(...args) {
       if (this.isOpened()) {
-        this.close(storage)
+        this.close(...args)
       } else {
-        this.open(storage)
+        this.open(...args)
       }
     },
 
-    isOpened () {
+    isOpened() {
       return this.opened === true
     },
 
-    isClosed () {
+    isClosed() {
       return this.opened === false
     }
-  };
+  }
 }

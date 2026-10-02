@@ -1,7 +1,7 @@
 import Fuse from 'fuse.js'
-import { dataKey, bind, debounce, normalize, setFieldValue, onLivewireCommit } from '../utils'
+import { queryData, bind, debounce, normalizeText, setFieldValue, onLivewireCommit, generateId, emit, toNumber } from '../utils'
 
-export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptions } = {}) {
+export function listbox({ hideEmpty = false, clearOnSelect = false, autoHighlight = true, tabSelects = true, ...fuseOptions } = {}) {
   return {
     input: null,
     list: null,
@@ -14,18 +14,22 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
     fuse: null,
     lastInteraction: null,
     debouncedSearch: null,
-    livewireCommitCleanup: null,
+    // Its own name: the combobox and the autocomplete are popovers too, whose hook is livewireCommitCleanup.
+    listboxCommitCleanup: null,
+    _itemsByElement: null,
 
     init() {
-      this.input = this.$root.querySelector(dataKey('input'))
+      this.input = queryData(this.$root, 'input')
       this.list = this.$root.querySelector('[role=listbox]')
-      this.noRecords = this.$root.querySelector('[role=status]')
+      this.noRecords = queryData(this.$root, 'listbox-no-records')
 
       this.refreshItems()
 
-      this.livewireCommitCleanup = onLivewireCommit(({ succeed }) => {
+      this.listboxCommitCleanup = onLivewireCommit(({ component, succeed }) => {
         succeed(() => {
           if (!this.$root?.isConnected) return
+
+          if (component?.el && !component.el.contains(this.$root)) return
 
           this.refreshItems()
           this.search()
@@ -41,7 +45,7 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
       bind(this.input, {
         ['@input']() {
           this.lastInteraction = 'keyboard'
-          this.$dispatch('listbox-search-updated', { query: this.input.value })
+          emit(this.$root, 'searched', { query: this.input.value })
           this.debouncedSearch()
         },
 
@@ -67,40 +71,38 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
           this.next()
         },
 
-        ['@keydown.home.prevent']() {
-          this.lastInteraction = 'keyboard'
-          this.first()
-        },
+        // No Home/End: in a text field they move the caret.
 
-        ['@keydown.end.prevent']() {
-          this.lastInteraction = 'keyboard'
-          this.last()
-        },
+        // Only with an option highlighted: otherwise Enter submits the form, as in any field.
+        ['@keydown.enter'](e) {
+          if (this.index === null || !this.filteredItems[this.index]) return
 
-        ['@keydown.enter.prevent']() {
+          e.preventDefault()
           this.select(this.index)
         },
 
         ['@keydown.tab']() {
-          this.select(this.index)
+          if (tabSelects) this.select(this.index)
         }
       })
 
       bind(this.list, {
         ['@mouseleave']: () => this.clear(),
 
+        // On mousedown, not click: the field's blur would close the list first.
         ['@mousedown']: (e) => {
           const item = (e.target).closest('[role=option]')
           if (!item) return
 
-          const index = Number(item.dataset.index)
+          const index = toNumber(item.dataset.index)
 
-          if (!Number.isNaN(index)) {
+          if (index !== null) {
             this.select(index)
           }
         },
 
         ['@mousemove']: (e) => {
+          // A mousemove with no movement is the list scrolling under the pointer.
           if (
             this.lastInteraction === 'keyboard' &&
             e.movementX === 0 &&
@@ -114,9 +116,9 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
           const item = (e.target).closest('[role=option]')
           if (!item) return
 
-          const index = Number(item.dataset.index)
+          const index = toNumber(item.dataset.index)
 
-          if (Number.isNaN(index)) return
+          if (index === null) return
           if (this.isDisabled(this.filteredItems[index])) return
 
           if (this.index !== index) {
@@ -159,32 +161,43 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
 
       this.$nextTick(() => {
         this.search()
-        this.$dispatch('listbox-initialized')
+        emit(this.$root, 'ready')
       })
     },
 
     destroy() {
-      this.livewireCommitCleanup?.()
+      this.listboxCommitCleanup?.()
     },
 
     refreshItems() {
-      this.items = Array.from(
+      const items = Array.from(
         this.list.querySelectorAll('[role=option]')
       ).map((item) => {
         item.hidden = true
 
-        if (item?.firstElementChild?.disabled) {
+        if (item?.firstElementChild?.hasAttribute('disabled')) {
           item.setAttribute('aria-disabled', 'true')
         } else {
           item.removeAttribute('aria-disabled')
         }
 
         return {
-          title: normalize(item.querySelector('[data-item-content]')?.textContent, { removeSpaces: true }),
+          title: normalizeText(item.querySelector('[data-item-content]')?.textContent, { removeSpaces: true }),
           el: item.firstElementChild,
           li: item,
         }
       })
+
+      const key = (item) => `${item.title}\u0000${item.li.hasAttribute('aria-disabled')}`
+      const previous = this._itemsByElement
+
+      if (this.fuse && previous && previous.size === items.length
+        && items.every((item) => previous.get(item.li) === key(item))) {
+        return
+      }
+
+      this.items = items
+      this._itemsByElement = new Map(items.map((item) => [item.li, key(item)]))
 
       const fuseIndex = Fuse.createIndex(['title'], this.items)
 
@@ -236,13 +249,13 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
 
       this.list.appendChild(fragment)
 
-      this.$dispatch('listbox-items-changed', {
+      emit(this.$root, 'filtered', {
         list: this.list,
         items: this.items,
         filteredItems: this.filteredItems,
       })
 
-      if (this.filteredItems.length && query.length) {
+      if (autoHighlight && this.filteredItems.length && query.length) {
         this.$nextTick(() => {
           this.index = 0
         })
@@ -326,7 +339,7 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
         setFieldValue(this.input, '')
       }
 
-      this.$dispatch('listbox-item-selected', { index, item, button })
+      emit(this.$root, 'selected', { index, item, button })
     },
 
     setActive(index) {
@@ -337,27 +350,28 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
       const item = this.filteredItems[index]
       if (!item) return
 
+      // aria-selected is what is chosen: the highlighted one is told by aria-activedescendant.
       item.el.dataset.active = 'true'
-      item.li.setAttribute('aria-selected', 'true')
 
-      if (item.li.hasAttribute('id')) {
-        this.list.setAttribute('aria-activedescendant', item.li.getAttribute('id'))
-      }
+      if (!item.li.id) item.li.id = generateId('listbox-option')
+
+      this.list.setAttribute('aria-activedescendant', item.li.id)
+      this.input?.setAttribute('aria-activedescendant', item.li.id)
 
       item.li.scrollIntoView({
         block: 'nearest',
       })
 
-      this.$dispatch('listbox-active-changed', { index, item })
+      emit(this.$root, 'highlighted', { index, item })
     },
 
     clearActive() {
       this.filteredItems.forEach((item) => {
         delete item.el.dataset.active
-        item.li.removeAttribute('aria-selected')
       })
 
       this.list.removeAttribute('aria-activedescendant')
+      this.input?.removeAttribute('aria-activedescendant')
     },
 
     clear() {
@@ -377,5 +391,5 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, ...fuseOptio
         this.list.removeAttribute('hidden')
       }
     },
-  };
+  }
 }

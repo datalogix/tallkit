@@ -1,17 +1,16 @@
 @props([
+    ...TALLKit::elementProps(),
     'target' => null,
     'content' => null,
-    'variant' => 'none',
 ])
 <tk:button
-    wire:replace.self
+    wire:ignore.self
     x-cloak
     x-data="copyable({{ Js::from($target) }}, {{ Js::from($content) }})"
-    :$attributes
-    :$variant
-    label="Copy to clipboard"
-    tooltip="Copied"
-    tooltip:mode="manual"
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->merge(['variant' => 'none'])->classes('min-w-6 min-h-6')->merge(['tooltip' => 'Copied'])"
+    :aria-label="__('Copy')"
+    ::aria-label="copied ? {{ Js::from(__('Copied')) }} : {{ Js::from(__('Copy')) }}"
+    tooltip:open="manual"
     icon="clipboard-multiple"
     icon:class="hidden"
     icon::class="{ 'hidden': copied }"

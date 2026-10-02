@@ -1,22 +1,28 @@
 @props([
     'size' => null,
-    'variant' => null,
     'align' => null,
     'label' => null,
+    'description' => null,
     'value' => null,
 ])
 @php
 
-[$name, $fieldName, $label, , , $wireModel] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label);
-$wireModel = $attributes->whereStartsWith('wire:model')->first() ?: $wireModel;
+[$name, $fieldName, $label, , , $wireModel, $groupId] = TALLKit::fieldContext(attributes: $attributes, label: $label);
+
+$optionId = fn ($value) => $groupId.'-'.TALLKit::idPart($value);
+// The group's binding goes on each option, whole: on the fieldset it checks nothing and loses its modifiers.
+$modelAttributes = $attributes->whereStartsWith(['wire:model', 'x-model'])->getAttributes() ?: array_filter(['wire:model' => $wireModel]);
 $options = TALLKit::parseOptions(attributes: $attributes);
+$required = TALLKit::isAttributeEnabled($attributes->get('required')) ?: null;
+$errorId = $fieldName && filled(TALLKit::errorMessage(name: $fieldName, bag: TALLKit::fieldErrorBag($groupId))) ? $groupId.'-error' : null;
 
 @endphp
 @if ($slot->isNotEmpty() || filled($options))
     <tk:fieldset
         :$label
         :$size
-        :attributes="$attributes->whereDoesntStartWith(['heading:', 'radio:', 'error:'])
+        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), ['description' => null])->whereDoesntStartWith(['heading:', 'radio:', 'error:', 'wire:model', 'x-model'])->except('required')
+            ->mergeDefined(['aria-describedby' => $errorId])
             ->classes('[&_[data-tallkit-heading]]:mb-2 [&>[data-tallkit-heading]:not(:first-of-type)]:pt-2')
         "
     >
@@ -25,49 +31,50 @@ $options = TALLKit::parseOptions(attributes: $attributes);
         @foreach ($options as $optionItemValue => $optionItemLabel)
             @if (is_array($optionItemLabel))
                 <tk:heading
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'heading:')"
+                    :attributes="$attributes->prefixed('heading:')"
                     :size="TALLKit::adjustSize(size: $size)"
                     :label="$optionItemValue"
                 />
 
                 @foreach ($optionItemLabel as $optionItemGroupValue => $optionItemGroupLabel)
                     <tk:radio
-                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'radio:')
-                            ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId(prefix: 'field', name: $fieldName, suffix: (string) $optionItemGroupValue)] : [], false)
-                            ->merge(['wire:model' => $wireModel], false)
+                        :attributes="$attributes->prefixed('radio:')
+                            ->wireKey($optionId($optionItemGroupValue))
+                            ->merge($modelAttributes, false)
+                        ->merge(['required' => $required], false)
                         "
                         :label="$optionItemGroupLabel"
                         :value="$optionItemGroupValue"
                         :checked="(string) $optionItemGroupValue === (string) $value"
                         :show-error="false"
-                        :id="TALLKit::generateId(prefix: 'field', name: $fieldName, suffix: (string) $optionItemGroupValue)"
+                        :id="$optionId($optionItemGroupValue)"
                         :$name
                         :$size
-                        :$variant
                         :$align
                     />
                 @endforeach
             @else
                 <tk:radio
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'radio:')
-                        ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId(prefix: 'field', name: $fieldName, suffix: (string) $optionItemValue)] : [], false)
-                        ->merge(['wire:model' => $wireModel], false)
+                    :attributes="$attributes->prefixed('radio:')
+                        ->wireKey($optionId($optionItemValue))
+                        ->merge($modelAttributes, false)
+                        ->merge(['required' => $required], false)
                     "
                     :label="$optionItemLabel"
                     :value="$optionItemValue"
                     :checked="(string) $optionItemValue === (string) $value"
                     :show-error="false"
-                    :id="TALLKit::generateId(prefix: 'field', name: $fieldName, suffix: (string) $optionItemValue)"
+                    :id="$optionId($optionItemValue)"
                     :$name
                     :$size
-                    :$variant
                     :$align
                 />
             @endif
         @endforeach
 
         <tk:error
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'error:')"
+            :attributes="$attributes->prefixed('error:')->merge(['id' => $groupId.'-error'])"
+            :bag="TALLKit::fieldErrorBag($groupId)"
             :name="$fieldName"
             :$size
         />

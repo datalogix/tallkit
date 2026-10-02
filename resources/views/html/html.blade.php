@@ -28,45 +28,57 @@
     'toast' => true,
     'livewire' => null,
     'appearance' => true,
+    'nonce' => null,
+    'consent' => true,
 ])
 @php
 
-$lang ??= app()->getLocale();
-$lang = Str::replace($lang, '_', '-');
+$lang = TALLKit::resolveLocale($lang);
 $dir = in_array(Str::before($lang, '-'), config('app.rtl_locales', ['ar', 'fa', 'he', 'ur'])) ? 'rtl' : 'ltr';
 $title ??= config('app.name');
-$favicon = $favicon === true ? find_asset(['favicon.ico', 'favicon.svg', 'favicon.png']) : $favicon;
+$favicon = $favicon === true ? TALLKit::findAsset(['favicon.ico', 'favicon.svg', 'favicon.png']) : $favicon;
 $vite = collect($vite)->unique()->filter(fn ($path) => file_exists(base_path($path)))->toArray();
 $googleFonts = is_string($googleFonts) ? ['families' => $googleFonts] : $googleFonts;
-$livewire ??= class_exists(\Livewire\Livewire::class);
+$livewire ??= TALLKit::livewireInstalled();
+$nonce ??= Vite::cspNonce();
+
+// Unescaped: <x-dynamic-component> escapes bound attributes, and a bag's are escaped already.
+$componentAttributes = new \Illuminate\View\ComponentAttributeBag(array_map(
+    fn ($value) => is_string($value) ? htmlspecialchars_decode($value, ENT_QUOTES) : $value,
+    $attributes->prefixed('components:')->getAttributes(),
+));
 
 @endphp
 <!DOCTYPE html>
 <html
     {{
-        TALLKit::attributesAfter(attributes: $attributes, prefix: 'html:')
+        $attributes->prefixed('html:')
             ->merge([
                 'lang' => $lang,
                 'dir' => $dir,
             ])
     }}
 >
-<head {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'head:') }}>
+<head {{ $attributes->prefixed('head:') }}>
     @if ($charset) <meta charset="{{ $charset }}"> @endif
     @if ($viewport) <meta name="viewport" content="{{ $viewport }}"> @endif
     @if ($favicon) <link rel="icon" href="{{ $favicon }}"> @endif
     @if ($themeColor) <meta name="theme-color" content="{{ $themeColor }}"> @endif
     @if ($csrfToken && session()->isStarted()) <meta name="csrf-token" content="{{ csrf_token() }}"> @endif
     @foreach ($metaTags as $metaName => $metaContent) <meta name="{{ $metaName }}" content="{{ $metaContent }}"> @endforeach
-    @if ($meta) <tk:html.meta :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'meta:')->merge(is_array($meta) ? $meta : [])" /> @endif
-    @if ($googleFonts) <tk:google.fonts :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'google-fonts:')->merge($googleFonts)->merge(['noscript' => false])" /> @endif
+    @if ($meta) <tk:html.meta :attributes="$attributes->prefixed('meta:')->merge(is_array($meta) ? $meta : [])->merge(['title' => $title])" /> @endif
+    {{-- The nonce too: its loader is an inline script, blocked by a nonce-based Content-Security-Policy. --}}
+    @if ($googleFonts) <tk:google.fonts :attributes="$attributes->prefixed('google-fonts:')->merge($googleFonts)->merge(['noscript' => false, 'nonce' => $nonce])" /> @endif
     <title>{{ $title }}</title>
     {{ $head ?? '' }}
-    @if ($appearance) <tk:appearance :nonce="is_string($appearance) ? $appearance : null" /> @endif
-    @if ($gtag) <tk:google.gtag :id="$gtag" /> @endif
-    @if ($gtm) <tk:google.gtm :id="$gtm" /> @endif
-    @if ($typekit) <link href="https://use.typekit.net/{{ $typekit }}.css" rel="stylesheet"> @endif
-    @foreach ($styles as $style) <link href="{{ $style }}" rel="stylesheet"> @endforeach
+    @if ($appearance) <tk:appearance :nonce="is_string($appearance) ? $appearance : $nonce" /> @endif
+    @if ($consent && (($gtag === true ? config('services.google.gtag') : $gtag) || ($gtm === true ? config('services.google.gtm') : $gtm)))
+        <tk:google.consent :$nonce />
+    @endif
+    @if ($gtag) <tk:google.gtag :id="$gtag" :$nonce /> @endif
+    @if ($gtm) <tk:google.gtm :id="$gtm" :$nonce /> @endif
+    @if ($typekit) <link href="https://use.typekit.net/{{ $typekit }}.css" rel="stylesheet" @if ($nonce) nonce="{{ $nonce }}" @endif> @endif
+    @foreach ($styles as $style) <link href="{{ $style }}" rel="stylesheet" @if ($nonce) nonce="{{ $nonce }}" @endif> @endforeach
     @if ($stackStyles) @stack($stackStyles) @endif
     @if (Vite::isRunningHot() || Vite::manifestHash($viteBuildDirectory) !== null) @vite($vite, $viteBuildDirectory) @endif
 </head>
@@ -80,13 +92,15 @@ $livewire ??= class_exists(\Livewire\Livewire::class);
             'antialiased',
         )
 }}>
-    @if ($googleFonts) <tk:google.fonts :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'google-fonts:')->merge($googleFonts)->merge(['noscript' => true])" /> @endif
-    @if ($gtm) <tk:google.gtm :id="$gtm" noscript /> @endif
+    @if ($googleFonts) <tk:google.fonts :attributes="$attributes->prefixed('google-fonts:')->merge($googleFonts)->merge(['noscript' => true])" /> @endif
+    {{-- Not with consent on: a <noscript> iframe can't wait for consent. --}}
+    @if ($gtm && ! $consent) <tk:google.gtm :id="$gtm" noscript /> @endif
     {{ $slot }}
-    @foreach ($components as $c => $component) <x-dynamic-component :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'components:')" :$component /> @endforeach
-    @if ($toast && $livewire) @persist('toast') <tk:toast :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'toast:')" /> @endpersist @endif
-    @if ($toast && ! $livewire) <tk:toast :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'toast:')" /> @endif
-    @foreach ($scripts as $script) <script src="{{ $script }}"></script> @endforeach
+    @foreach ($components as $c => $component) <x-dynamic-component :attributes="$componentAttributes" :$component /> @endforeach
+    @if ($toast && $livewire) @persist('toast') <tk:toast :flashed="false" :attributes="$attributes->prefixed('toast:')" /> @endpersist <tk:toast.flashed :$nonce /> @endif
+    @if ($toast && ! $livewire) <tk:toast :attributes="$attributes->prefixed('toast:')" /> @endif
+    {!! TALLKit::scripts(['nonce' => $nonce]) !!}
+    @foreach ($scripts as $script) <script src="{{ $script }}" @if ($nonce) nonce="{{ $nonce }}" @endif></script> @endforeach
     @if ($stackScripts) @stack($stackScripts) @endif
 </body>
 </html>

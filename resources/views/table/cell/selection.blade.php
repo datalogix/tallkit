@@ -6,9 +6,8 @@
         {{ $slot }}
     @else
         <tk:checkbox
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'checkbox:')"
+            :attributes="$attributes->prefixed('checkbox:')->merge(['aria-label' => __('Select row')])"
             data-role="row-selection"
-            aria-label="{{ __('Select row') }}"
             size="sm"
         />
     @endif

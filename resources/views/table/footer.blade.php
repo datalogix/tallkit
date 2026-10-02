@@ -1,18 +1,19 @@
+@php($slotHas = fn (string $tag) => Str::contains($slot, '<'.$tag, true))
 <tfoot {{ $attributes
     ->whereDoesntStartWith(['row:', 'cell:'])
     ->classes('*:font-semibold', TALLKit::textNeutral(variant: 'strong', prefix: '*:'))
 }}>
-    @if (Str::contains($slot, '<tr', true))
+    @if ($slotHas('tr'))
         {{ $slot }}
     @else
         <tk:table.row
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'row:')"
+            :attributes="$attributes->prefixed('row:')"
             data-role="row-foot"
         >
-            @if (Str::contains($slot, '<td', true))
+            @if ($slotHas('td'))
                 {{ $slot }}
             @else
-                <tk:table.cell :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'cell:')">
+                <tk:table.cell :attributes="$attributes->prefixed('cell:')">
                     {{ $slot }}
                 </tk:table.cell>
             @endif

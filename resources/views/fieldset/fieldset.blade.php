@@ -2,17 +2,17 @@
     'id' => null,
     'size' => null,
     'label' => null,
-    'legend' => null,
     'description' => null,
 ])
 @php
 
-$id ??= TALLKit::generateId(prefix: 'fieldset');
+$id ??= TALLKit::stableId('fieldset');
 $descriptionId = "{$id}-description";
 
 @endphp
 <fieldset {{
     $attributes
+        ->whereDoesntStartWith(['label:', 'badge', 'info', 'description:'])
         ->classes(
             '
                 min-w-0
@@ -27,17 +27,19 @@ $descriptionId = "{$id}-description";
             '
         )
         ->merge(['id' => $id])
-        ->when($description, fn ($attrs) => $attrs->merge(['aria-describedby' => $descriptionId]))
+        // Both its description and the one given: merge() would keep only the one given.
+        ->except('aria-describedby')
+        ->merge(['aria-describedby' => collect([$attributes->get('aria-describedby'), $description ? $descriptionId : null])->filter()->implode(' ') ?: null])
 }}>
-    @if ($label || $legend || $description)
+    @if ($label || $description)
         <tk:legend
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'label:', prepend: ['legend:', 'badge', 'info'])"
-            :label="$label ?: $legend"
+            :attributes="$attributes->prefixed('label:', with: ['badge', 'info'])"
+            :$label
             :$size
         />
 
         <tk:text
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'description:')
+            :attributes="$attributes->prefixed('description:')
                 ->classes('mb-4')
                 ->when($description, fn ($attrs) => $attrs->merge(['id' => $descriptionId]))
             "

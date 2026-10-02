@@ -1,7 +1,7 @@
-import { sticky } from '../mixins/sticky'
+import { stickable } from '../mixins/stickable'
 
 export function aside() {
   return {
-    ...sticky()
+    ...stickable()
   }
 }

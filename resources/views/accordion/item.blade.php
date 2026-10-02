@@ -6,39 +6,44 @@
     'border' => null,
     'expanded' => null,
     'disabled' => null,
-    'heading' => null,
+    'label' => null,
+    'level' => 3,
 ])
 <div
+    wire:ignore.self
     x-data="disclosure"
     {{
         $attributes
             ->dataKey('disclosure-item')
-            ->whereDoesntStartWith(['heading:', 'content:'])
+            ->whereDoesntStartWith(['trigger:', 'content:'])
             ->classes('group/disclosure')
             ->merge(['data-open' => $expanded])
     }}
 >
+    @if ($level)<div role="heading" aria-level="{{ $level }}">@endif
     <tk:button
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'heading:')->classes(
+        :attributes="$attributes->prefixed('trigger:')->classes(
             TALLKit::paddingInline(size: $border ? $size : 'none', mode: 'largest'),
             TALLKit::paddingBlock(size: $size, mode: 'largest'),
             'w-full [&_[data-tallkit-icon]]:ml-auto',
         )"
         :$size
         :$disabled
-        :label="$heading"
+        :$label
         variant="none"
         content:class="flex-1 justify-start"
         :icon="$reversed ? 'chevron-right' : false"
-        icon::class="{ 'transition': {{ $collapse !== false ? 'true' : 'false' }}, 'rotate-90': opened }"
+        icon:class="rtl:-scale-x-100"
+        icon::class="{ 'transition': {{ $collapse !== false ? 'true' : 'false' }}, 'rotate-90 rtl:-rotate-90': opened }"
         :iconTrailing="$reversed ? false : 'chevron-down'"
         icon-trailing::class="{ 'transition': {{ $collapse !== false ? 'true' : 'false' }}, 'rotate-180': opened }"
     />
+    @if ($level)</div>@endif
 
     <div
         x-cloak
         {{
-            TALLKit::attributesAfter(attributes: $attributes, prefix: 'content:')
+            $attributes->prefixed('content:')
                 ->classes(
                     TALLKit::fontSize(size: $size),
                     TALLKit::paddingInline(size: $border ? $size : 'none', mode: 'largest'),

@@ -1,12 +1,13 @@
 @props([
     'underline' => null,
+    ...TALLKit::elementProps(),
 ])
 <tk:text
-    name="link"
-    :attributes="$attributes
+    kind="link"
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())
         ->classes(
-            match ((bool) $underline) {
-            true => 'underline hover:no-underline',
+            match ($underline !== false) {
+            true => 'underline underline-offset-2 hover:no-underline',
             default => 'no-underline hover:underline',
         })
         ->when(

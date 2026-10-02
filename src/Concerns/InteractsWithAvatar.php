@@ -6,9 +6,11 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
+use function Illuminate\Support\defer;
+
 trait InteractsWithAvatar
 {
-    public function findAvatar($value, $ttl = null)
+    public function avatarUrl($value, $ttl = null): ?string
     {
         if (! $value) {
             return null;
@@ -18,47 +20,76 @@ trait InteractsWithAvatar
             return $value;
         }
 
-        return Cache::store()->remember("tallkit-avatar-{$value}", $ttl ?? 60 * 60 * 24 * 30, function () use ($value) {
-            try {
-                $response = Http::timeout(3)
-                    ->retry(2, 200)
-                    ->get("https://unavatar.io/{$value}?json");
+        // Sends the email/username to unavatar.io, a third party.
+        if (! config('tallkit.avatar.unavatar', true)) {
+            return null;
+        }
 
-                if (! $response->successful()) {
-                    return '';
-                }
+        $store = Cache::store();
+        // Hashed: an email may hold what a store refuses in a key (Memcached: spaces, over 250 characters).
+        $hash = hash('xxh128', (string) $value);
+        $key = $this->storageKey('avatar', $hash);
+        $cached = $store->get($key);
 
-                $url = $response->json('url');
+        if ($cached !== null) {
+            return $cached !== '' ? $cached : null;
+        }
 
-                if (Str::contains($url, 'fallback', true)) {
-                    return '';
-                }
+        if ($store->add($this->storageKey('avatar', 'pending', $hash), true, 60)) {
+            defer(function () use ($store, $key, $value, $ttl) {
+                [$url, $answered] = $this->avatarLookup($value);
 
-                return $url;
-            } catch (\Throwable $e) {
-                report($e);
+                $store->put($key, $url ?? '', $answered ? ($ttl ?? 60 * 60 * 24 * 30) : 60 * 60);
+            });
+        }
 
-                return '';
-            }
-        });
+        return null;
     }
 
-    public function generateInitials($value, $singleInitials = null)
+    protected function avatarLookup(string $value): array
     {
-        $parts = Str::of($value)->title()->ucsplit()->filter();
+        try {
+            $response = Http::connectTimeout(2)
+                ->timeout(3)
+                ->get('https://unavatar.io/'.rawurlencode($value).'?json');
+        } catch (\Throwable $e) {
+            report($e);
+
+            return [null, false];
+        }
+
+        if ($response->notFound()) {
+            return [null, true];
+        }
+
+        if (! $response->successful()) {
+            return [null, false];
+        }
+
+        $url = (string) $response->json('url');
+
+        return [$url !== '' && ! Str::contains($url, 'fallback', true) ? $url : null, true];
+    }
+
+    public function avatarInitials($value, $singleInitials = null): ?string
+    {
+        $value = Str::contains((string) $value, '@') ? Str::of($value)->before('@')->replace(['.', '_', '-'], ' ') : $value;
+        $parts = Str::of($value)->title()->ucsplit()->map(fn ($part) => trim($part))->filter()->values();
 
         if ($parts->isEmpty()) {
             return null;
         }
 
-        if ($singleInitials || ($parts->count() === 1 && strlen($parts->first()) === 1)) {
-            return strtoupper($parts[0][0]);
+        $first = $parts[0];
+
+        if ($singleInitials || ($parts->count() === 1 && mb_strlen($first) === 1)) {
+            return mb_strtoupper(mb_substr($first, 0, 1));
         }
 
         if ($parts->count() > 1) {
-            return strtoupper($parts[0][0].$parts[1][0]);
+            return mb_strtoupper(mb_substr($first, 0, 1).mb_substr($parts->last(), 0, 1));
         }
 
-        return strtoupper($parts[0][0]).strtolower($parts[0][1]);
+        return mb_strtoupper(mb_substr($first, 0, 1)).mb_strtolower(mb_substr($first, 1, 1));
     }
 }

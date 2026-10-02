@@ -1,45 +1,22 @@
 @aware(['size'])
 @props([
-    'as' => null,
+    ...TALLKit::elementProps(),
     'variant' => null,
     'size' => null,
     'keepOpen' => null,
-
-    // element
-    'label' => null,
-    'icon' => null,
-    'prefix' => null,
-    'suffix' => null,
-    'iconTrailing' => null,
-    'info' => null,
-    'badge' => null,
-    'prepend' => null,
-    'append' => null,
-    'kbd' => null,
 ])
 <tk:element
-    name="menu-item"
+    kind="menu-item"
     role="menuitem"
-    :$label
-    :$icon
-    :$prefix
-    :$suffix
-    :$iconTrailing
-    :$info
-    :$badge
-    :$prepend
-    :$append
-    :$kbd
-    :as="$as ?? 'button'"
     :icon:size="TALLKit::adjustSize(size: $size)"
     :icon-trailing:size="TALLKit::adjustSize(size: $size)"
     :icon-trailing:class="'text-zinc-400 [[data-tallkit-icon]:hover_&]:text-current'"
     :badge:size="TALLKit::adjustSize(size: $size)"
     :content:class="TALLKit::classes(
-        'flex-1 leading-none whitespace-nowrap justify-start text-start',
+        'block flex-1 min-w-0 truncate leading-none text-start',
         TALLKit::fontSize(size: $size, weight: true),
     )"
-    :attributes="$attributes->classes(
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->classes(
         '
             w-full focus:outline-hidden
             [[disabled]_&]:opacity-disabled [&[disabled]]:opacity-disabled
@@ -53,8 +30,7 @@
         match ($variant) {
             'danger' => TALLKit::classes(
                 TALLKit::textNeutral(),
-                TALLKit::text(color: 'red', prefix: 'data-active:'),
-                'data-active:bg-red-50 dark:data-active:bg-red-400/20',
+                'tk-color-red data-active:text-(--tk-on-soft) data-active:bg-(--tk-soft)',
             ),
             default => TALLKit::classes(
                 TALLKit::textNeutral(),
@@ -62,10 +38,10 @@
                 'data-active:bg-zinc-100 dark:data-active:bg-white/10',
             ),
         },
-    )->merge(['data-keep-open' => $keepOpen])"
+    )->merge(['as' => 'button', 'data-keep-open' => $keepOpen])"
 >
     <x-slot:icon-empty>
-        <div class="w-5 hidden [[data-tallkit-menu]:has(>[data-tallkit-menu-item-has-icon])_&]:block"></div>
+        <span class="w-5 hidden [[data-tallkit-menu]:has(>[data-tallkit-menu-item-has-icon])_&]:block"></span>
     </x-slot:icon-empty>
 
     {{ $slot }}

@@ -1,21 +1,36 @@
-import { dataKey, getTransitionTimeout } from '../utils'
+import { dataSelector, getTransitionTimeout } from '../utils'
 
 export function navIndicator({ mode = null } = {}) {
   return {
     _visibilityTimeout: null,
+    _frame: null,
 
-    init () {
+    init() {
       this._onMove = this.move.bind(this)
 
       document.addEventListener('livewire:navigated', this._onMove)
       window.addEventListener('resize', this._onMove)
 
+      const nav = this.findNav(this.$el)
+
+      if (nav) {
+        this._resizeObserver = new ResizeObserver(this._onMove)
+        this._resizeObserver.observe(nav)
+        nav.querySelectorAll('a').forEach((link) => this._resizeObserver.observe(link))
+
+        this._mutationObserver = new MutationObserver(this._onMove)
+        this._mutationObserver.observe(nav, { subtree: true, childList: true, attributeFilter: ['data-current'] })
+      }
+
       this.$nextTick(() => this.move())
     },
 
-    destroy () {
+    destroy() {
       document.removeEventListener('livewire:navigated', this._onMove)
       window.removeEventListener('resize', this._onMove)
+      this._resizeObserver?.disconnect()
+      this._mutationObserver?.disconnect()
+      cancelAnimationFrame(this._frame)
       clearTimeout(this._visibilityTimeout)
     },
 
@@ -25,7 +40,7 @@ export function navIndicator({ mode = null } = {}) {
       while (node) {
         const sibling = node.previousElementSibling
 
-        if (sibling?.matches(dataKey('nav'))) {
+        if (sibling?.matches(dataSelector('nav'))) {
           return sibling
         }
 
@@ -35,8 +50,12 @@ export function navIndicator({ mode = null } = {}) {
       return null
     },
 
-    move () {
-      requestAnimationFrame(() => {
+    move() {
+      if (this._frame) return
+
+      this._frame = requestAnimationFrame(() => {
+        this._frame = null
+
         const indicator = this.$el
         const nav = this.findNav(indicator)
         const link = nav?.querySelector('a[data-current]')
@@ -85,5 +104,5 @@ export function navIndicator({ mode = null } = {}) {
         indicator.style.borderRadius = style.borderRadius
       })
     }
-  };
+  }
 }

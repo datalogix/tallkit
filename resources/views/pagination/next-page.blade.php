@@ -1,5 +1,10 @@
 @aware(['paginator'])
-@props(['paginator'])
+@props([
+    ...TALLKit::elementProps(),
+    'paginator',
+    'icon' => 'chevron-right',
+    'tooltip' => 'Next page',
+])
 @php
 
 $disabled = ! $paginator->hasMorePages();
@@ -14,7 +19,7 @@ $action = method_exists($paginator, 'getCursorName')
 
 @endphp
 <tk:button
-    :$attributes
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps(), ['tooltip' => null])"
     :aria-disabled="$disabled"
     :disabled="$disabled"
     :rel="in_livewire() ? false : 'next'"
@@ -22,8 +27,6 @@ $action = method_exists($paginator, 'getCursorName')
     :action="$action"
     :wire:key="$wireKey"
     :wire:loading.attr="in_livewire() ? 'disabled' : false"
-    icon="chevron-right"
-    tooltip="pagination.next"
 >
     {{ $slot }}
 </tk:button>

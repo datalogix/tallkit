@@ -1,4 +1,5 @@
 @props([
+    ...TALLKit::elementProps(),
     'as' => null,
     'label' => null,
     'labelPrepend' => null,
@@ -17,7 +18,7 @@ $tag = $as ?? ($for ? 'label' : 'span');
     @if ($hasPrependOrAppend)
         <div
             {{
-                TALLKit::attributesAfter(attributes: $attributes, prefix: 'area:')
+                $attributes->prefixed('area:')
                     ->dataKey('label')
                     ->classes(
                         'flex items-center gap-4',
@@ -30,7 +31,7 @@ $tag = $as ?? ($for ? 'label' : 'span');
     @endif
 
     @if ($labelPrepend)
-        <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'label-prepend:')->classes('me-auto') }}>
+        <div {{ $attributes->prefixed('label-prepend:')->classes('me-auto') }}>
             {{ $labelPrepend }}
         </div>
     @endif
@@ -38,7 +39,11 @@ $tag = $as ?? ($for ? 'label' : 'span');
     <{{ $tag }}
         x-data="label"
         {{
-            TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')
+            $attributes->prefixed('container:')
+                ->mergeDefined([
+                    'id' => $for ? $for.'-label' : null,
+                    'for' => $for && $tag === 'label' ? $for : null,
+                ])
                 ->dataKey($hasPrependOrAppend ? null : 'label')
                 ->classes([
                     'cursor-default inline-flex',
@@ -46,15 +51,16 @@ $tag = $as ?? ($for ? 'label' : 'span');
                     'sr-only' => $srOnly && ! $hasPrependOrAppend,
                 ])
         }}
-        @if ($for && $tag === 'label') for="{{ $for }}" @endif
     >
         <tk:element
             :$label
             :icon:size="TALLKit::adjustSize(size: $size)"
             :icon-trailing:size="TALLKit::adjustSize(size: $size)"
             :badge:size="TALLKit::adjustSize(size: $size)"
-            :attributes="$attributes->whereDoesntStartWith(['area:', 'label-prepend:', 'label-append:', 'container:', 'info:'])
-                ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'info:', prepend: 'icon-trailing:')->getAttributes())
+            :attributes="TALLKit::attributesMerge(
+                    TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->whereDoesntStartWith(['area:', 'label-prepend:', 'label-append:', 'container:', 'info:']),
+                    $attributes->prefixed('info:', keepPrefix: 'icon-trailing:'),
+                )
                 ->classes(
                     TALLKit::textNeutral(variant: 'strong', prefix: '[:where(&)]:'),
                     TALLKit::fontSize(size: $size, weight: true)
@@ -66,7 +72,7 @@ $tag = $as ?? ($for ? 'label' : 'span');
     </{{ $tag }}>
 
     @if ($labelAppend)
-        <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'label-append:')->classes('ms-auto') }}>
+        <div {{ $attributes->prefixed('label-append:')->classes('ms-auto') }}>
             {{ $labelAppend }}
         </div>
     @endif

@@ -2,7 +2,6 @@
 
 namespace TALLKit\Livewire;
 
-use Carbon\Carbon;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 
 class DateRangeSynth extends Synth
@@ -11,7 +10,7 @@ class DateRangeSynth extends Synth
 
     public static function match($target)
     {
-        return is_object($target) && $target instanceof DateRange;
+        return $target instanceof DateRange;
     }
 
     public static function matchByType($type)
@@ -21,87 +20,105 @@ class DateRangeSynth extends Synth
 
     public static function unwrapForValidation($target)
     {
-        $data = [
-            'start' => $target->start()?->format('Y-m-d'),
-            'end' => $target->end()?->format('Y-m-d'),
-        ];
-
-        $preset = $target->preset();
-
-        $preset && $data['preset'] = $preset->value;
-
-        return $data;
+        return static::toArray($target);
     }
 
     public static function hydrateFromType($type, $value)
     {
-        if ($value === '' || $value === null) {
-            return null;
-        }
-
-        $preset = $value['preset'] ?? null;
-
-        if ($preset) {
-            if ($preset === DateRangePreset::AllTime->value) {
-                return DateRange::allTime($value['start']);
-            }
-
-            return DateRange::fromPreset(DateRangePreset::from($preset));
-        }
-
-        return new DateRange($value['start'] ?? null, $value['end'] ?? null);
+        return static::fromArray($value);
     }
 
     public function dehydrate($target, $dehydrateChild)
     {
-        $data = [
-            'start' => $target->start()?->format('Y-m-d'),
-            'end' => $target->end()?->format('Y-m-d'),
-        ];
-
-        $preset = $target->preset();
-
-        $preset && $data['preset'] = $preset->value;
-
-        return [$data, []];
+        return [static::toArray($target), []];
     }
 
     public function hydrate($value, $meta)
     {
-        if ($value === '' || $value === null) {
-            return null;
-        }
-
-        $preset = $value['preset'] ?? null;
-
-        if ($preset) {
-            if ($preset === DateRangePreset::AllTime->value) {
-                return DateRange::allTime($value['start']);
-            }
-
-            return DateRange::fromPreset(DateRangePreset::from($preset));
-        }
-
-        return new DateRange($value['start'] ?? null, $value['end'] ?? null);
+        return static::fromArray($value);
     }
 
-    public function set(&$target, $key, $value)
+    public function set(&$target, $key, $value, $property = null)
     {
         $target = match ($key) {
-            'start' => new DateRange($value, $target->end()),
-            'end' => new DateRange($target->start(), Carbon::parse($value)->endOfDay()),
-            'preset' => $value === DateRangePreset::AllTime->value
-                ? DateRange::allTime($target->start())
-                : DateRange::fromPreset(DateRangePreset::from($value)),
+            'start' => static::unreadable($value) ? $target : DateRange::between($value, $target->end()),
+            'end' => static::unreadable($value) ? $target : DateRange::between($target->start(), $value),
+            'preset' => $this->withPreset($target, $value, $property),
+            default => $target,
         };
+    }
+
+    // From the browser only text is a date: a number would be read as a timestamp (123 → 1970-01-01).
+    protected static function unreadable($value): bool
+    {
+        return filled($value) && (! is_string($value) || DateRange::parseDate($value) === null);
+    }
+
+    protected static function text(mixed $value): ?string
+    {
+        return is_string($value) ? $value : null;
     }
 
     public function unset(&$target, $key)
     {
         $target = match ($key) {
-            'start' => new DateRange(null, $target->end()),
-            'end' => new DateRange($target->start(), null),
-            'preset' => new DateRange($target->start(), $target->end()),
+            'start' => null,
+            'end' => DateRange::between($target->start()),
+            'preset' => DateRange::between($target->start(), $target->end()),
+            default => $target,
         };
+    }
+
+    protected static function toArray(DateRange $target): array
+    {
+        $data = [
+            'start' => $target->start()?->format('Y-m-d'),
+            'end' => $target->end()?->format('Y-m-d'),
+        ];
+
+        if ($preset = $target->preset()) {
+            $data['preset'] = $preset->value;
+        }
+
+        return $data;
+    }
+
+    protected static function fromArray($value): ?DateRange
+    {
+        if (is_string($value)) {
+            [$start, $end] = array_pad(explode('/', $value, 2), 2, null);
+            $value = ['start' => $start, 'end' => $end];
+        }
+
+        if (! is_array($value)) {
+            return null;
+        }
+
+        $start = static::text($value['start'] ?? null);
+        $end = static::text($value['end'] ?? null);
+
+        return match ($preset = DateRangePreset::tryFrom(static::text($value['preset'] ?? null) ?? '')) {
+            null => DateRange::between($start, $end),
+            DateRangePreset::Custom => DateRange::custom($start, $end),
+            DateRangePreset::AllTime => blank($start) ? null : DateRange::allTime($start),
+            default => DateRange::fromPreset($preset),
+        };
+    }
+
+    protected function withPreset(DateRange $target, $value, $property): ?DateRange
+    {
+        return match ($preset = DateRangePreset::tryFrom(static::text($value) ?? '')) {
+            null => $target,
+            DateRangePreset::Custom => DateRange::custom($target->start(), $target->end()),
+            DateRangePreset::AllTime => DateRange::allTime($this->allTimeStart($property) ?? $target->start()),
+            default => DateRange::fromPreset($preset),
+        };
+    }
+
+    protected function allTimeStart($property)
+    {
+        $component = $this->context->component;
+
+        return method_exists($component, 'dateRangeAllTimeStart') ? $component->dateRangeAllTimeStart($property) : null;
     }
 }

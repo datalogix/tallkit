@@ -3,7 +3,9 @@
     'variable' => null,
     'size' => null,
     'variant' => null,
+    'color' => null,
     'position' => null,
+    'label' => null,
 ])
 @php
 
@@ -12,8 +14,9 @@ $displayValue = $variable ? "Math.max(0, Math.min(100, Number({$variable}) || 0)
 @endphp
 <div
     {{
-        TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')
-            ->unless($variable, fn ($attrs) => $attrs->merge(['x-data' => "progress(@js($value ?? 0))"]))
+        $attributes->prefixed('container:')
+            // Js::from(), not Blade's js directive: a directive isn't compiled inside a PHP string.
+            ->unless($variable, fn ($attrs) => $attrs->merge(['x-data' => 'progress('.Js::from($value ?? 0).')']))
             ->classes(
                 'flex items-center',
                 TALLKit::gap(size: $size),
@@ -44,18 +47,19 @@ $displayValue = $variable ? "Math.max(0, Math.min(100, Number({$variable}) || 0)
                     ',
                     TALLKit::generateClassBySize(size: $size, name: 'h', values: ['px', '0.5', '1', '1.5', '2', '2.5', '3']),
                 )
+                ->merge(['aria-label' => __($label ?? 'Progress')])
         }}
     >
         <div
             {{
-                TALLKit::attributesAfter(attributes: $attributes, prefix: 'bar:')
+                $attributes->prefixed('bar:')
                     ->dataKey('progress-bar')
                     ->merge(['x-bind:style' => "{ width: ({$displayValue}) + '%' }"])
                     ->classes(
                         'w-0 h-full transition-[width] rounded-full ease-linear',
                         match ($variant) {
                             'accent' => 'bg-[var(--color-accent)]',
-                            default => TALLKit::background(color: $variant) ?? 'bg-zinc-800/95 dark:bg-white/95',
+                            default => TALLKit::background(color: $color) ?? 'bg-zinc-800/95 dark:bg-white/95',
                         },
                     )
             }}
@@ -64,7 +68,7 @@ $displayValue = $variable ? "Math.max(0, Math.min(100, Number({$variable}) || 0)
 
     @if ($position !== 'none')
         <tk:text
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'percent:')->dataKey('progress-percent')"
+            :attributes="$attributes->prefixed('percent:')->dataKey('progress-percent')"
             :$size
             :label="($value ?? 0).'%'"
             x-text="Math.round({{ $displayValue }}) + '%'"

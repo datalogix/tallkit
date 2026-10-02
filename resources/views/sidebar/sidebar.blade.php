@@ -6,11 +6,12 @@
 ])
 @if ($stashable)
     <tk:sidebar.backdrop
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'backdrop:')"
+        :attributes="$attributes->prefixed('backdrop:')"
         :$name
     />
 @endif
-<nav
+<div
+    wire:ignore.self
     x-data="sidebar(@js($name), @js($sticky), @js($stashable))"
     data-mobile-cloak
     {{
@@ -18,8 +19,9 @@
             ->dataKey('sidebar')
             ->whereDoesntStartWith(['backdrop:'])
             ->merge([
-                'id' => TALLKit::generateId(prefix: 'sidebar', name: $name),
-                'aria-label' => __($ariaLabel ?? 'Sidebar'),
+                'id' => TALLKit::generateId(prefix: 'sidebar', name: $name ?? 'main'),
+                'role' => $ariaLabel ? 'region' : null,
+                'aria-label' => $ariaLabel ? __($ariaLabel) : null,
             ])
             ->classes(
                 '
@@ -42,4 +44,4 @@
     }}
 >
     {{ $slot }}
-</nav>
+</div>

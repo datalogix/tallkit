@@ -1,7 +1,15 @@
 @props([
     'size' => null,
     'variable' => 'file',
+    'showError' => true,
 ])
+@php
+
+$fallbackTypes = ['doc', 'xls', 'ppt', 'archive', 'text', 'csv', 'code'];
+$knownTypes = ['image', 'video', 'audio', 'pdf', ...$fallbackTypes];
+$unknown = "!['".implode("', '", $knownTypes)."'].includes({$variable}.type)";
+
+@endphp
 <div
     {{
         $attributes->whereDoesntStartWith([
@@ -11,90 +19,100 @@
         ])->classes('relative min-h-0 flex-1 overflow-hidden')
     }}
 >
-    <template x-if="{{ $variable }}.type === 'image'">
+    <template x-if="{{ $variable }}.type === 'image' && {{ $variable }}.url">
         <img
-            {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'image:')->classes('size-full object-contain') }}
+            {{ $attributes->prefixed('image:')->classes('size-full object-contain') }}
             :src="{{ $variable }}.url"
+            :alt="{{ $variable }}.name"
             @load="{{ $variable }}.previewLoaded = true"
-            @@error="{{ $variable }}.previewLoaded = true"
+            @@error="{{ $variable }}.previewFailed = true"
         />
     </template>
 
-    <template x-if="{{ $variable }}.type === 'video'">
+    <template x-if="{{ $variable }}.type === 'video' && {{ $variable }}.url">
         <video
-            {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'video:')->classes('size-full') }}
+            {{ $attributes->prefixed('video:')->classes('size-full') }}
             :src="{{ $variable }}.url"
             controls
             @loadeddata="{{ $variable }}.previewLoaded = true"
-            @@error="{{ $variable }}.previewLoaded = true"
+            @@error="{{ $variable }}.previewFailed = true"
         ></video>
     </template>
 
-    <template x-if="{{ $variable }}.type === 'audio'">
+    <template x-if="{{ $variable }}.type === 'audio' && {{ $variable }}.url">
         <audio
-            {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'audio:')->classes('size-full') }}
+            {{ $attributes->prefixed('audio:')->classes('size-full') }}
             :src="{{ $variable }}.url"
             controls
             @loadeddata="{{ $variable }}.previewLoaded = true"
-            @@error="{{ $variable }}.previewLoaded = true"
+            @@error="{{ $variable }}.previewFailed = true"
         ></audio>
     </template>
 
-    <template x-if="{{ $variable }}.type === 'pdf'">
+    <template x-if="{{ $variable }}.type === 'pdf' && {{ $variable }}.url">
         <iframe
-            {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'pdf:')->classes('size-full pointer-events-none') }}
+            {{ $attributes->prefixed('pdf:')->classes('size-full pointer-events-none') }}
             :src="{{ $variable }}.url + '#toolbar=0'"
             @load="{{ $variable }}.previewLoaded = true"
-            @@error="{{ $variable }}.previewLoaded = true"
+            @@error="{{ $variable }}.previewFailed = true"
         ></iframe>
     </template>
 
-    @foreach (['doc', 'xls', 'ppt', 'archive', 'text', 'csv', 'code', 'unknown'] as $fallbackType)
-        <template x-if="{{ $variable }}.type === '{{ $fallbackType }}'">
+    @foreach (['image', 'video', 'audio', 'pdf', ...$fallbackTypes, 'unknown'] as $fallbackType)
+        <template x-if="{{ match (true) {
+            $fallbackType === 'unknown' => $unknown,
+            in_array($fallbackType, $fallbackTypes, true) => "{$variable}.type === '{$fallbackType}'",
+            default => "{$variable}.type === '{$fallbackType}' && !{$variable}.url",
+        } }}">
             <div
                 {{
-                    TALLKit::attributesAfter(attributes: $attributes, prefix: 'file-' . $fallbackType . ':')
+                    $attributes->prefixed('file-' . $fallbackType . ':')
                         ->classes('size-full flex items-center justify-center p-2')
                 }}
             >
                 <tk:icon
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'file-' . $fallbackType . '-icon:')"
+                    :attributes="$attributes->prefixed('file-' . $fallbackType . '-icon:')"
                     :size="TALLKit::adjustSize(size: $size, move: 1)"
-                    name="ph:file-{{ $fallbackType }}"
+                    name="{{ $fallbackType === 'unknown' ? 'ph:file' : 'ph:file-'.$fallbackType }}"
                 />
             </div>
         </template>
     @endforeach
 
-    <div
-        {{
-            TALLKit::attributesAfter(attributes: $attributes, prefix: 'loading:')
-                ->classes('absolute inset-0 z-10 flex items-center justify-center bg-black/10')
-        }}
-        x-show="{{ $variable }}.url && !{{ $variable }}.previewLoaded && {{ $variable }}.status !== 'error'"
-    >
-        <tk:loading
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'loading-icon:')->classes('text-white')"
-            :size="TALLKit::adjustSize(size: $size, move: 1)"
-        />
-    </div>
-
-    <div
-        {{
-            TALLKit::attributesAfter(attributes: $attributes, prefix: 'error:')
-                ->classes('absolute inset-0 z-10 flex items-center justify-center bg-red-500/10')
-        }}
-        x-show="{{ $variable }}.status === 'error'"
-    >
-        <span
+    <template x-if="['image', 'video', 'audio', 'pdf'].includes({{ $variable }}.type) && {{ $variable }}.url && !{{ $variable }}.previewLoaded && !{{ $variable }}.previewFailed && {{ $variable }}.status !== 'error'">
+        <div
             {{
-                TALLKit::attributesAfter(attributes: $attributes, prefix: 'error-message:')
-                    ->classes(
-                        'bg-red-500 text-center text-white rounded p-2',
-                        TALLKit::fontSize(size: $size)
-                    )
+                $attributes->prefixed('loading:')
+                    ->classes('absolute inset-0 z-10 flex items-center justify-center bg-black/10')
             }}
-            x-text="{{ $variable }}.error"
-        ></span>
-    </div>
+        >
+            <tk:loading
+                :attributes="$attributes->prefixed('loading-icon:')->classes('text-white')"
+                :size="TALLKit::adjustSize(size: $size, move: 1)"
+            />
+        </div>
+    </template>
+
+    @if ($showError)
+    <template x-if="{{ $variable }}.status === 'error'">
+        <div
+            {{
+                $attributes->prefixed('error:')
+                    ->classes('absolute inset-0 z-10 flex items-center justify-center bg-red-500/10')
+            }}
+        >
+            <span
+                {{
+                    $attributes->prefixed('error-message:')
+                        ->classes(
+                            'bg-red-500 text-center text-white rounded p-2',
+                            TALLKit::fontSize(size: $size)
+                        )
+                }}
+                role="alert"
+                x-text="{{ $variable }}.error"
+            ></span>
+        </div>
+    </template>
+    @endif
 </div>

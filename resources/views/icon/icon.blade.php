@@ -13,33 +13,40 @@ $iconName = $name ?? $icon;
 if (Str::isUrl($iconName)) {
     $image ??= $iconName;
 } else {
-    $svg ??= TALLKit::getOrFetchSvgIcon(name: $iconName);
+    $svg ??= TALLKit::iconSvg(name: $iconName);
 }
 
-$isDecorative = ! $tooltip && ! $attributes->has('aria-label') && ! $attributes->has('aria-labelledby');
-$ariaLabel = ! $attributes->has('aria-label') && ! $attributes->has('aria-labelledby') ? $tooltip : null;
+$named = $attributes->has('aria-label') || $attributes->has('aria-labelledby');
+$tip = TALLKit::tooltip($tooltip, $attributes, name: $named ? $attributes->get('aria-label') : null, isName: ! $named);
+$tipText = $tip['attributes'][TALLKit::dataKey('tooltip')] ?? null;
+$isDecorative = ! $tipText && ! $named;
+$ariaLabel = ! $named ? $tipText : null;
+$focusable = $tipText && ! $attributes->has('tabindex')
+    ? ['tabindex' => '0', 'class' => 'rounded-sm outline-offset-2 focus-visible:outline-2 focus-visible:outline-current']
+    : [];
+$own = fn ($attrs) => TALLKit::withTooltip($attrs, $tip, describe: (bool) $named)->merge($focusable);
 
 @endphp
 @if ($image || $svg || $slot->isNotEmpty())
-    <tk:tooltip.wrapper :$attributes :$tooltip>
-        @if ($image)
-            <img
-                src="{{ $image }}"
-                {{
-                    $attributes
-                        ->dataKey('icon')
-                        ->classes('object-cover rounded', TALLKit::widthHeight(size: $size))
-                        ->when($isDecorative, fn ($attrs) => $attrs->merge(['aria-hidden' => 'true', 'alt' => '']))
-                        ->when($ariaLabel, fn ($attrs, $value) => $attrs->merge(['aria-label' => __($value)]))
-                }}
-            />
-        @elseif($svg)
-            {!! Str::of($svg)->replaceFirst('<svg', '<svg '
-                .($isDecorative ? 'aria-hidden="true" focusable="false" ' : 'role="img" ')
-                .$attributes->dataKey('icon')->classes('text-current', TALLKit::widthHeight(size: $size))
-                    ->when($ariaLabel, fn ($attrs, $value) => $attrs->merge(['aria-label' => __($value)]))) !!}
-        @else
-            {{ $slot }}
-        @endif
-    </tk:tooltip.wrapper>
+    @if ($image)
+        <img
+            src="{{ $image }}"
+            {{
+                $own($attributes
+                    ->dataKey('icon')
+                    ->classes('object-cover rounded', TALLKit::widthHeight(size: $size))
+                    ->when($isDecorative, fn ($attrs) => $attrs->merge(['aria-hidden' => 'true', 'alt' => '']))
+                    ->when($ariaLabel, fn ($attrs, $value) => $attrs->merge(['aria-label' => $value])))
+            }}
+        />
+    @elseif($svg)
+        {!! Str::of($svg)->replaceFirst('<svg', '<svg '
+            .($isDecorative ? 'aria-hidden="true" focusable="false" ' : 'role="img" ')
+            .$own($attributes->dataKey('icon')->classes('text-current', TALLKit::widthHeight(size: $size))
+                ->when($ariaLabel, fn ($attrs, $value) => $attrs->merge(['aria-label' => $value])))) !!}
+    @elseif ($tipText)
+        <span {{ $own($attributes->dataKey('icon')->merge(['role' => 'img', 'aria-label' => $ariaLabel])->classes('inline-flex')) }}>{{ $slot }}</span>
+    @else
+        {{ $slot }}
+    @endif
 @endif

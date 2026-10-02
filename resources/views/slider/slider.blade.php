@@ -2,35 +2,37 @@
     ...TALLKit::fieldProps(),
     ...TALLKit::fieldControlProps(),
     'ticks' => null,
-    'displayValue' => null,
+    'showValue' => null,
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
+$value = TALLKit::fieldOldValue($fieldName, $value);
 $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd || $attributes->has('class');
 
 @endphp
 <tk:field.wrapper
     :$name
-    :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
     :prefix="false"
     :suffix="false"
 >
-    @if ($displayValue)
+    @if ($showValue)
         <x-slot:labelAppend>
             {{ $labelAppend ?? '' }}
 
-            <tk:text
-                x-text="value"
-                :size="TALLKit::adjustSize(size: $size)"
-                variant="subtle"
-            >{{ $value }}</tk:text>
+            <span
+                {{ TALLKit::dataKey('slider-value') }}="{{ $id }}"
+                wire:ignore
+                aria-hidden="true"
+                {{ $attributes->prefixed('value:')->classes(TALLKit::fontSize(size: TALLKit::adjustSize(size: $size)), TALLKit::textNeutral(variant: 'subtle'), 'tabular-nums') }}
+            >{{ $value }}</span>
         </x-slot:labelAppend>
     @endif
 
     <tk:field.control
         :$size
-        :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
+        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
             ->when(
                 $hasControl,
                 fn ($attrs) => $attrs->classes(
@@ -48,7 +50,7 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
         <div
             wire:ignore
             x-data="slider"
-            {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'slider:')->classes('w-full block space-y-1.5') }}
+            {{ $attributes->prefixed('slider:')->classes('w-full block space-y-1.5') }}
         >
             <input
                 type="range"
@@ -62,11 +64,11 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
                             'id' => $id,
                             'value' => in_livewire() ? null : $value,
                             'wire:model' => $wireModel,
-                            'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
+                            'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                             'aria-invalid' => $invalid ? 'true' : null,
                             'data-invalid' => $invalid ? true : null,
                         ])
-                        ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: ['slider:', 'ticks:', 'tick:']))
+                        ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: ['slider:', 'ticks:', 'tick:', 'value:']))
                         ->classes(
                             '
                                 [--range-active:rgb(0_0_0_/_.8)]
@@ -108,7 +110,7 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
 
                                 before:absolute
                                 before:inset-y-0
-                                before:left-0
+                                before:start-0
                                 before:w-[var(--range-percent)]
                                 before:bg-[var(--range-active)]
                                 before:pointer-events-none
@@ -116,6 +118,7 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
                                 before:z-0
 
                                 disabled:before:opacity-0
+                                data-low:before:rounded-e-none!
 
                                 [&::-webkit-slider-thumb]:relative
                                 [&::-webkit-slider-thumb]:z-10
@@ -176,15 +179,15 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
             @if ($slot->hasActualContent() || $ticks)
                 <div
                     {{
-                        TALLKit::attributesAfter(attributes: $attributes, prefix: 'ticks:')
+                        $attributes->prefixed('ticks:')
                             ->dataKey('slider-ticks')
                             ->classes('flex justify-between')
                     }}
                 >
                     @foreach (collect($ticks) as $tick)
                         <tk:slider.tick
-                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'tick:')
-                                ->merge(is_array($tick) ? $tick : ['label' => $tick], false)
+                            :attributes="$attributes->prefixed('tick:')
+                                ->merge(TALLKit::attributesFromItem($tick), false)
                             "
                             :$size
                         />

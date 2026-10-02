@@ -1,17 +1,17 @@
 @props([
+    ...TALLKit::elementProps(),
     'name' => null,
 ])
 <tk:button
     x-data="{ expanded: false }"
-    x-on:click="$dispatch('sidebar-{{ $name }}-toggle')"
-    :attributes="$attributes->classes('shrink-0')->merge([
-        TALLKit::dataKey(name: 'sidebar-toggle') => $name,
-        'x-on:sidebar-'.$name.'-state.window' => 'expanded = $event.detail.opened',
+    x-on:click="$dispatch({{ Js::from(TALLKit::eventName('sidebar-toggle')) }}, { name: {{ Js::from($name) }} })"
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->classes('shrink-0')->dataKey('sidebar-toggle', $name)->merge([
+        'variant' => 'subtle',
+        'tooltip' => 'Toggle sidebar',
+        'x-on:'.TALLKit::eventName('sidebar-state').'.window' => '($event.detail.name ?? null) === '.Js::from($name).' && (expanded = $event.detail.opened)',
         ':aria-expanded' => 'expanded',
-        'aria-controls' => TALLKit::generateId(prefix: 'sidebar', name: $name),
+        'aria-controls' => TALLKit::generateId(prefix: 'sidebar', name: $name ?? 'main'),
     ])"
-    variant="subtle"
-    tooltip="Toggle sidebar"
     icon="menu"
 >
     {{ $slot }}

@@ -7,7 +7,7 @@
 ])
 @php
 
-$message ??= TALLKit::getError(name: $name, slot: $slot, bag: $bag);
+$message ??= TALLKit::errorMessage(name: $name, slot: $slot, bag: $bag);
 
 @endphp
 @if (filled($message))
@@ -30,7 +30,7 @@ $message ??= TALLKit::getError(name: $name, slot: $slot, bag: $bag);
     >
         @if ($message && $icon !== false)
             <tk:icon
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')"
+                :attributes="$attributes->prefixed('icon:')"
                 :icon="is_string($icon) ? $icon : 'alert-outline'"
             />
         @endif

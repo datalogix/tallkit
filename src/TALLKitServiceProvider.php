@@ -2,22 +2,24 @@
 
 namespace TALLKit;
 
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\View\ComponentAttributeBag;
-use Livewire\Component;
 use Livewire\Livewire;
 use TALLKit\Assets\AssetManager;
 use TALLKit\Http\Controllers\UploadController;
-use TALLKit\Livewire\ComponentMixin;
+use TALLKit\Livewire\ComponentMixins;
 use TALLKit\Livewire\DateRangeSynth;
+use TALLKit\Livewire\NotificationActions;
+use TALLKit\Livewire\ToastRedirects;
 use TALLKit\View\BladeDirectives;
 use TALLKit\View\Compilers\ComponentTagCompiler;
+use TALLKit\View\Compilers\PropsCompiler;
 use TALLKit\View\ComponentAttributeBagMixin;
-
-use function Livewire\on;
 
 class TALLKitServiceProvider extends ServiceProvider
 {
@@ -26,30 +28,44 @@ class TALLKitServiceProvider extends ServiceProvider
         $this->app->alias(TALLKit::class, 'tallkit');
         $this->app->singleton(TALLKit::class);
 
-        $loader = AliasLoader::getInstance();
-        $loader->alias('TALLKit', Facades\TALLKit::class);
+        $this->app->scoped('tallkit.ids', fn () => new \ArrayObject);
+        $this->app->scoped('tallkit.field-bags', fn () => new \ArrayObject);
+        $this->app->scoped('tallkit.uploads', fn () => new \ArrayObject);
+        $this->app->scoped('tallkit.icons', fn () => new \ArrayObject);
+
+        AliasLoader::getInstance()->alias('TALLKit', Facades\TALLKit::class);
 
         $this->mergeConfigFrom(__DIR__.'/../config/tallkit.php', 'tallkit');
     }
 
     public function boot()
     {
-        if (class_exists(Livewire::class)) {
-            Component::mixin(new ComponentMixin);
+        if ($this->app->make(TALLKit::class)->livewireInstalled()) {
+            ComponentMixins::register();
 
             Livewire::propertySynthesizer(DateRangeSynth::class);
 
-            $this->bootMagicActions();
+            NotificationActions::register();
+            ToastRedirects::register();
         }
 
         BladeDirectives::register();
+
+        $this->loadJsonTranslationsFrom(__DIR__.'/../lang');
 
         $this->bootComponentPath();
         $this->bootTagCompiler();
         $this->bootMacros();
         $this->bootRoutes();
+        $this->bootLivewireUploads();
 
         AssetManager::boot();
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([Console\IconsCommand::class, Console\PruneUploadsCommand::class]);
+
+            $this->optimizes(optimize: 'tallkit:icons', key: 'tallkit-icons');
+        }
 
         $this->publishes([
             __DIR__.'/../config/tallkit.php' => config_path('tallkit.php'),
@@ -69,19 +85,48 @@ class TALLKitServiceProvider extends ServiceProvider
     {
         $bladeCompiler = app('blade.compiler');
 
-        $compiler = new ComponentTagCompiler(
+        app()->bind('tallkit.compiler', fn () => new ComponentTagCompiler(
             $bladeCompiler->getClassComponentAliases(),
             $bladeCompiler->getClassComponentNamespaces(),
-            $bladeCompiler
-        );
+            $bladeCompiler,
+        ));
 
-        app()->bind('tallkit.compiler', fn () => $compiler);
-        $bladeCompiler->precompiler(fn ($value) => $compiler->compile($value));
+        $bladeCompiler->precompiler(fn ($value) => app('tallkit.compiler')->compile($value));
+
+        $packageViews = array_filter([realpath(__DIR__.'/../resources/views'), realpath(resource_path('views/tallkit'))]);
+
+        $bladeCompiler->precompiler(function ($value) use ($bladeCompiler, $packageViews) {
+            $path = realpath((string) $bladeCompiler->getPath());
+
+            foreach ($path ? $packageViews : [] as $directory) {
+                if (str_starts_with($path, $directory.DIRECTORY_SEPARATOR)) {
+                    return PropsCompiler::compile($value);
+                }
+            }
+
+            return $value;
+        });
     }
 
     protected function bootMacros()
     {
         ComponentAttributeBag::mixin(new ComponentAttributeBagMixin);
+
+        $this->app->terminating(fn () => View\ClassCache::persist());
+    }
+
+    protected function bootLivewireUploads()
+    {
+        if (! config('tallkit.upload.livewire_max_size', true)
+            || ! class_exists(Livewire::class)
+            || config('livewire.temporary_file_upload.rules') !== null) {
+            return;
+        }
+
+        $sizes = config('tallkit.upload.max_size', 20480);
+        $largest = max(array_map('intval', (array) $sizes) ?: [20480]);
+
+        config(['livewire.temporary_file_upload.rules' => ['required', 'file', 'max:'.max($largest, 12288)]]);
     }
 
     protected function bootRoutes()
@@ -90,23 +135,12 @@ class TALLKitServiceProvider extends ServiceProvider
             return;
         }
 
-        Route::middleware(config('tallkit.upload.middleware', ['web']))
+        RateLimiter::for('tallkit.uploads', fn ($request) => Limit::perMinute(60)->by(
+            ($id = $request->user(config('tallkit.upload.guard'))?->getAuthIdentifier()) !== null ? 'user:'.$id : 'ip:'.$request->ip()
+        ));
+
+        Route::middleware(config('tallkit.upload.middleware', ['web', 'throttle:tallkit.uploads']))
             ->post(config('tallkit.upload.route', '/tallkit/upload'), [UploadController::class, 'store'])
             ->name('tallkit.upload');
-    }
-
-    protected function bootMagicActions()
-    {
-        // Methods added via `Component::mixin()` aren't visible to Livewire's
-        // "public method" check when called directly from the browser (eg.
-        // `wire:click="markNotificationAsRead(...)"`), so they need to be
-        // dispatched manually through the `call` hook instead.
-        on('call', function ($component, $method, $params, $componentContext, $returnEarly) {
-            if (! in_array($method, ['markNotificationAsRead', 'markAllNotificationsAsRead', 'deleteNotification'])) {
-                return;
-            }
-
-            $returnEarly($component->{$method}(...$params));
-        });
     }
 }

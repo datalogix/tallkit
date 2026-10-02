@@ -1,30 +1,25 @@
 <tk:button.group
     :attributes="$attributes->whereDoesntStartWith(['system:', 'light:', 'dark:'])"
     role="radiogroup"
-    x-data
+    :aria-label="__('Theme')"
+    x-data="appearanceSelector"
 >
     <tk:button
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'system:')"
-        x-on:click="$tallkit.appearance.apply('system')"
+        :attributes="$attributes->prefixed('system:')->merge(['tooltip' => 'System'])->classes('aria-checked:bg-current/10! dark:aria-checked:bg-current/30!')"
         icon="ph:monitor"
-        ::class="{ 'bg-current/10! dark:bg-current/30!': $tallkit.appearance.mode === 'system' }"
         role="radio"
-        :aria-checked="$tallkit.appearance.mode === 'system'"
+        data-mode="system"
     />
     <tk:button
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'light:')"
-        x-on:click="$tallkit.appearance.apply('light')"
+        :attributes="$attributes->prefixed('light:')->merge(['tooltip' => 'Light'])->classes('aria-checked:bg-current/10! dark:aria-checked:bg-current/30!')"
         icon="ph:sun"
-        ::class="{ 'bg-current/10! dark:bg-current/30!': $tallkit.appearance.mode === 'light' }"
         role="radio"
-        :aria-checked="$tallkit.appearance.mode === 'light'"
+        data-mode="light"
     />
     <tk:button
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'dark:')"
-        x-on:click="$tallkit.appearance.apply('dark')"
+        :attributes="$attributes->prefixed('dark:')->merge(['tooltip' => 'Dark'])->classes('aria-checked:bg-current/10! dark:aria-checked:bg-current/30!')"
         icon="ph:moon"
-        ::class="{ 'bg-current/10! dark:bg-current/30!': $tallkit.appearance.mode === 'dark' }"
         role="radio"
-        :aria-checked="$tallkit.appearance.mode === 'dark'"
+        data-mode="dark"
     />
 </tk:button.group>

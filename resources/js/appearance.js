@@ -1,8 +1,14 @@
+import { storageKey, getStoredText, setStoredText, removeStored, prefersReducedMotion } from './utils'
+
+// Stored as the plain word: the inline head script (appearance.blade.php) reads it as it is.
+const STORAGE_KEY = storageKey('appearance')
+
 export const appearance = {
-  mode: window.localStorage.getItem('tallkit.appearance') || 'system',
+  mode: getStoredText(STORAGE_KEY) || 'system',
 
   init() {
     this.apply(this.mode)
+
     document.addEventListener('livewire:navigated', () => this.apply(this.mode))
 
     const media = window.matchMedia('(prefers-color-scheme: dark)')
@@ -21,22 +27,22 @@ export const appearance = {
     return !this.isDark()
   },
 
-  applyDark(storage = true) {
+  applyDark(persist = true) {
     document.documentElement.classList.add('dark')
-    if (storage) window.localStorage.setItem('tallkit.appearance', 'dark')
+    if (persist) setStoredText(STORAGE_KEY, 'dark')
     this.mode = 'dark'
   },
 
-  applyLight(storage = true) {
+  applyLight(persist = true) {
     document.documentElement.classList.remove('dark')
-    if (storage) window.localStorage.setItem('tallkit.appearance', 'light')
+    if (persist) setStoredText(STORAGE_KEY, 'light')
     this.mode = 'light'
   },
 
   apply(appearance) {
     if (appearance === 'system') {
       const media = window.matchMedia('(prefers-color-scheme: dark)')
-      window.localStorage.removeItem('tallkit.appearance')
+      removeStored(STORAGE_KEY)
       if (media.matches) {
         this.applyDark(false)
       } else {
@@ -53,7 +59,7 @@ export const appearance = {
   toggle(event, options = {}) {
     const isAppearanceTransition = typeof document !== 'undefined'
       && typeof document.startViewTransition === 'function'
-      && !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      && !prefersReducedMotion()
 
     if (!isAppearanceTransition || !event) {
       return this.isDark() ? this.applyLight() : this.applyDark()

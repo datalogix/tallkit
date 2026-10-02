@@ -1,14 +1,14 @@
 @props([
-    'statuses' => null,
+    'items' => null,
     'size' => null,
 ])
 <div {{ $attributes->classes(
     'flex flex-wrap [&>*]:flex-1 [&>*]:basis-40',
     TALLKit::gap(size: $size),
 ) }}>
-    @foreach (collect($statuses) as $status)
+    @foreach (collect($items) as $status)
         <tk:status
-            :attributes="$status"
+            :attributes="TALLKit::attributesMerge(TALLKit::attributesFromItem($status, 'title'))"
             :$size
         />
     @endforeach

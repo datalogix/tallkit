@@ -1,7 +1,7 @@
-import { dataKey, bind, fetchWithRetry, debounce, setFieldValue, cache } from '../utils'
+import { queryData, bind, fetchWithRetry, debounce, setFieldValue, createCache, emit } from '../utils'
 
 export function addressForm(options = {}) {
-  const _cache = cache('zipcode', options)
+  const _cache = createCache('zipcode', { storage: 'session', ...options })
 
   return {
     abortController: null,
@@ -9,14 +9,14 @@ export function addressForm(options = {}) {
 
     init() {
       this.$els = {
-        loading: this.$root.querySelector(dataKey('loading')),
-        zipcode: this.$root.querySelector(dataKey('address-form-zipcode')),
-        address: this.$root.querySelector(dataKey('address-form-address')),
-        number: this.$root.querySelector(dataKey('address-form-number')),
-        complement: this.$root.querySelector(dataKey('address-form-complement')),
-        neighborhood: this.$root.querySelector(dataKey('address-form-neighborhood')),
-        city: this.$root.querySelector(dataKey('address-form-city')),
-        state: this.$root.querySelector(dataKey('address-form-state')),
+        loading: queryData(this.$root, 'loading'),
+        zipcode: queryData(this.$root, 'address-form-zipcode'),
+        address: queryData(this.$root, 'address-form-address'),
+        number: queryData(this.$root, 'address-form-number'),
+        complement: queryData(this.$root, 'address-form-complement'),
+        neighborhood: queryData(this.$root, 'address-form-neighborhood'),
+        city: queryData(this.$root, 'address-form-city'),
+        state: queryData(this.$root, 'address-form-state'),
       }
 
       const debouncedSearch = debounce(this.search.bind(this))
@@ -45,13 +45,13 @@ export function addressForm(options = {}) {
 
       if (el.tagName.toLowerCase() === 'input') return value ?? ''
 
-      const hasOption = value != null && Array.from((el).options ?? []).some((option) => option.value === value)
+      const hasOption = value != null && Array.from(el.options ?? []).some((option) => option.value === value)
 
       return hasOption ? value : (data.uf ?? '')
     },
 
     normalizeZipcode(value) {
-      return value.replace(/\D/g, '');
+      return value.replace(/\D/g, '')
     },
 
     async viaCep(zipcode, signal) {
@@ -114,7 +114,12 @@ export function addressForm(options = {}) {
 
     async search(value) {
       const zipcode = this.normalizeZipcode(value)
-      this.abortController?.abort()
+
+      if (this.abortController) {
+        this.abortController.abort()
+        this.abortController = null
+        this.setLoading(false)
+      }
 
       if (zipcode.length !== 8) return
 
@@ -130,13 +135,14 @@ export function addressForm(options = {}) {
         if (signal.aborted) return
 
         this.fill(cached)
-        this.$dispatch('loaded', { zipcode, data: cached, cached: true })
+        emit(this.$root, 'loaded', { zipcode, data: cached, cached: true })
         this.setLoading(false)
+        this.abortController = null
         return
       }
 
       this.setLoading(true)
-      this.$dispatch('loading', { zipcode })
+      emit(this.$root, 'loading', { zipcode })
 
       try {
         const data = await this.resolveAddress(zipcode, signal)
@@ -145,19 +151,20 @@ export function addressForm(options = {}) {
         _cache.set(zipcode, data)
         this.fill(data)
 
-        this.$dispatch('loaded', { zipcode, data, cached: false })
+        emit(this.$root, 'loaded', { zipcode, data, cached: false })
       } catch (e) {
         if (e.name === 'AbortError' || signal.aborted) return
 
-        this.$dispatch('error', { zipcode, error: e })
+        emit(this.$root, 'error', { zipcode, error: e })
         this.$els.zipcode?.focus()
       } finally {
         if (!signal.aborted) this.setLoading(false)
+        if (this.abortController === controller) this.abortController = null
       }
     },
 
     destroy() {
       this.abortController?.abort()
     }
-  };
+  }
 }

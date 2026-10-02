@@ -1,11 +1,15 @@
 @props([
     'items' => null,
     'size' => null,
+    'keepOpen' => null,
+    'animation' => null,
 ])
 <tk:popover
     x-data="menu"
     role="menu"
     :$size
+    :$keepOpen
+    :$animation
     {{
         $attributes
             ->dataKey('menu')
@@ -16,6 +20,7 @@
                     [&>[data-tallkit-menu-separator-container]:last-child]:hidden
                     [&_[data-tallkit-menu-separator-container]:has(+[data-tallkit-menu-separator-container])]:hidden
                 ',
+                '[:where(&)]:max-w-[min(24rem,calc(100vw-1rem))]',
             )
     }}
 >
@@ -24,15 +29,15 @@
     @foreach (collect($items) as $item)
         @if ($item)
             <tk:menu.item
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'item:')
-                    ->merge(is_array($item) ? $item : ['label' => $item], false)
+                :attributes="$attributes->prefixed('item:')
+                    ->merge(TALLKit::attributesFromItem($item), false)
                 "
                 :$size
             />
         @endif
 
         @if (empty($item) || data_get($item, 'separator') === true)
-            <tk:menu.separator :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'separator:')" />
+            <tk:menu.separator :attributes="$attributes->prefixed('separator:')" />
         @endif
     @endforeach
 

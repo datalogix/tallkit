@@ -1,6 +1,6 @@
 <tk:dropdown
     :$attributes
-    mode="context"
+    open="context"
 >
     {{ $slot }}
 </tk:dropdown>

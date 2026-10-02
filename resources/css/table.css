@@ -2,9 +2,29 @@
   @apply
     [:where(&)]:bg-white/95 dark:[:where(&)]:bg-zinc-800/95
     z-10
-    first:sticky first:left-0 last:sticky last:right-0
-    first:after:w-8 first:after:absolute first:after:inset-y-0 first:after:right-0 first:after:translate-x-full first:after:pointer-events-none
+    first:sticky first:start-0 last:sticky last:end-0
+    first:after:w-8 first:after:absolute first:after:inset-y-0 first:after:end-0 first:after:translate-x-full rtl:first:after:-translate-x-full first:after:pointer-events-none
     first:after:inset-shadow-[8px_0px_8px_-8px_rgba(0,0,0,0.05)] dark:first:after:inset-shadow-[8px_0px_8px_-8px_rgba(0,0,0,0.4)]
-    last:after:w-8 last:after:absolute last:after:inset-y-0 last:after:left-0 last:after:-translate-x-full last:after:pointer-events-none
-    last:after:inset-shadow-[-8px_0px_8px_-8px_rgba(0,0,0,0.05)] dark:last:after:inset-shadow-[-8px_0px_8px_-8px_rgba(0,0,0,0.4)];
+    rtl:first:after:inset-shadow-[-8px_0px_8px_-8px_rgba(0,0,0,0.05)] dark:rtl:first:after:inset-shadow-[-8px_0px_8px_-8px_rgba(0,0,0,0.4)]
+    last:after:w-8 last:after:absolute last:after:inset-y-0 last:after:start-0 last:after:-translate-x-full rtl:last:after:translate-x-full last:after:pointer-events-none
+    last:after:inset-shadow-[-8px_0px_8px_-8px_rgba(0,0,0,0.05)] dark:last:after:inset-shadow-[-8px_0px_8px_-8px_rgba(0,0,0,0.4)]
+    rtl:last:after:inset-shadow-[8px_0px_8px_-8px_rgba(0,0,0,0.05)] dark:rtl:last:after:inset-shadow-[8px_0px_8px_-8px_rgba(0,0,0,0.4)];
+}
+
+[data-column-pinned] {
+  @apply
+    sticky z-10
+    [:where(&)]:bg-white dark:[:where(&)]:bg-zinc-800
+    after:pointer-events-none after:absolute after:inset-y-0 after:end-0 after:w-2
+    after:bg-linear-to-l rtl:after:bg-linear-to-r after:from-black/5 after:to-transparent dark:after:from-black/40;
+}
+
+[data-column-dragging] {
+  background-color: color-mix(in srgb, currentColor 12%, transparent);
+  box-shadow: inset 1px 0 0 color-mix(in srgb, currentColor 30%, transparent), inset -1px 0 0 color-mix(in srgb, currentColor 30%, transparent);
+}
+
+/* Not the columns without a key: the dropdowns in the actions cell would be cut. */
+[data-column-resized] > * > tr > [data-column-key] {
+  overflow: hidden;
 }

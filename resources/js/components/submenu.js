@@ -1,11 +1,11 @@
 import { popover } from './popover'
-import { bind, isRtl } from '../utils'
 
 export function submenu() {
   const _popover = popover({
     mode: 'manual',
-    position: isRtl() ? 'left' : 'right',
-    align: 'start'
+    position: 'end',
+    align: 'start',
+    margin: -4
   })
 
   return {
@@ -15,42 +15,55 @@ export function submenu() {
 
     init() {
       _popover.init.call(this)
+    },
 
-      bind(this.popoverElement, {
-        ['@mouseenter']() {
-          this.inside = true
-          this.trigger.setAttribute('data-active', '')
-        },
+    bindPopoverTrigger() {
+      _popover.bindPopoverTrigger.call(this)
 
-        ['@mouseleave']() {
-          this.inside = false
-          this.timerToClose()
-        },
+      const trigger = this.trigger
+      const panel = this.popoverElement
+      const cleanups = []
+      const on = (target, type, handler) => {
+        target?.addEventListener(type, handler)
+        cleanups.push(() => target?.removeEventListener(type, handler))
+      }
+
+      on(panel, 'mouseenter', () => {
+        this.inside = true
+        this.trigger?.setAttribute('data-active', '')
       })
 
-      bind(this.trigger, {
-        ['@click']() {
-          this.toggle(false)
-        },
-
-        ['@mouseenter']() {
-          clearTimeout(this._i)
-          this.open(false)
-        },
-
-        ['@mouseleave']() {
-          this.timerToClose()
-        },
+      on(panel, 'mouseleave', () => {
+        this.inside = false
+        this.timerToClose()
       })
+
+      on(trigger, 'click', () => this.toggle(false))
+
+      on(trigger, 'mouseenter', () => {
+        clearTimeout(this._i)
+        this.open(false)
+      })
+
+      on(trigger, 'mouseleave', () => this.timerToClose())
+
+      const unbindBase = this._unbindTrigger
+
+      this._unbindTrigger = () => {
+        unbindBase?.()
+        cleanups.forEach((cleanup) => cleanup())
+      }
     },
 
     timerToClose() {
+      clearTimeout(this._i)
+
       this._i = setTimeout(() => {
         if (! this.inside) {
           this.close()
-          this.trigger.removeAttribute('data-active')
+          this.trigger?.removeAttribute('data-active')
         }
-      }, 10)
+      }, 100)
     },
 
     destroy() {

@@ -12,9 +12,9 @@
 ])
 @php
 
-[$user, $name, $email, $username] = TALLKit::resolveUserContext(attributes: $attributes);
-$initials = TALLKit::generateInitials(value: $initials ?? $name, singleInitials: $attributes->pluck('initials:single'));
-$src ??= TALLKit::findAvatar(value: $email ?? $username, ttl: $ttl);
+[$user, $name, $email, $username] = TALLKit::userContext(attributes: $attributes);
+$initials = TALLKit::avatarInitials(value: $initials ?? $name, singleInitials: $attributes->pluck('initials:single'));
+$src ??= TALLKit::avatarUrl(value: $email ?? $username, ttl: $ttl);
 
 if ($color === 'auto') {
     $colors = TALLKit::colors();
@@ -27,12 +27,15 @@ if ($tooltip === true) {
     $tooltip = $name ?? false;
 }
 
+$avatarName = $alt ?? $name ?? (is_string($tooltip) && $tooltip !== '' ? $tooltip : null);
+
 @endphp
 <tk:element
-    name="avatar"
+    kind="avatar"
     :$tooltip
-    :attributes="$attributes
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), ['ariaLabel' => null, 'iconDot' => null, 'iconTrailing' => null])
         ->whereDoesntStartWith(['image:', 'initials:', 'icon:'])
+        ->merge($alt === '' ? ['aria-hidden' => 'true'] : ($avatarName ? ['role' => 'img', 'aria-label' => (string) $avatarName] : []))
         ->classes(
             '
                 justify-center
@@ -59,18 +62,24 @@ if ($tooltip === true) {
     @if ($src)
         <img
             {{
-                TALLKit::attributesAfter(attributes: $attributes, prefix: 'image:')
+                $attributes->prefixed('image:')
                     ->classes(TALLKit::roundedSize(size: $square ? $size : 'full'))
-                    ->merge(['src' => $src, 'alt' => (string) ($alt ?? $name)])
+                    ->merge([
+                        'src' => $src,
+                        'alt' => $avatarName ? '' : (string) $alt,
+                        'x-data' => '',
+                        'x-init' => "const fail = () => { \$el.nextElementSibling?.removeAttribute('hidden'); \$el.remove() }; \$el.complete ? \$el.decode().catch(fail) : \$el.addEventListener('error', fail, { once: true })",
+                    ])
             }}
         />
-    @elseif (($initials || $slot->hasActualContent()) && ! $icon)
-        <span {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'initials:')->classes('select-none truncate m-px') }}>
+    @endif
+    @if (($initials || $slot->hasActualContent()) && ! $icon)
+        <span {{ $attributes->prefixed('initials:')->classes('select-none truncate m-px')->merge(['hidden' => (bool) $src]) }}>
             {{ $initials ?: $slot }}
         </span>
     @else
         <tk:icon
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')->classes('shrink-0 opacity-75')"
+            :attributes="$attributes->prefixed('icon:')->classes('shrink-0 opacity-75')->merge(['hidden' => (bool) $src])"
             :icon="is_string($icon) ? $icon : 'user'"
             :$size
         />

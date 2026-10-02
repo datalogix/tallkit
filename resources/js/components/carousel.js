@@ -1,4 +1,9 @@
-import { bind, dataKey, interval as createInterval } from '../utils'
+import { queryData, queryAllData, bind, isRtl, isTypingIn, startInterval, emit, clamp, prefersReducedMotion } from '../utils'
+
+// Reactive: controls set up before their carousel read it.
+function registry() {
+  return (window.__tallkitCarousels ??= window.Alpine.reactive({}))
+}
 
 export function carousel({ name = null, autoplay = false, interval = 5000, advance = 'slide', wrap = true, fade = false } = {}) {
   return {
@@ -7,13 +12,14 @@ export function carousel({ name = null, autoplay = false, interval = 5000, advan
     visibleCount: 1,
     _autoplayId: null,
     _paused: false,
+    _hovered: false,
+    _focused: false,
 
     init() {
       this._root = this.$root
 
       if (name) {
-        window.__tallkitCarousels ??= {}
-        window.__tallkitCarousels[name] = this
+        registry()[name] = this
       }
 
       this.measure()
@@ -21,28 +27,30 @@ export function carousel({ name = null, autoplay = false, interval = 5000, advan
       this.$nextTick(() => this.render())
 
       bind(this._root, {
-        ['@keydown.arrow-left']() {
-          this.prev()
+        ['@keydown.arrow-left'](event) {
+          if (isTypingIn(event.target)) return
+          isRtl(this._root) ? this.next() : this.prev()
         },
 
-        ['@keydown.arrow-right']() {
-          this.next()
+        ['@keydown.arrow-right'](event) {
+          if (isTypingIn(event.target)) return
+          isRtl(this._root) ? this.prev() : this.next()
         },
 
         ['@mouseenter']() {
-          this.pause()
+          this._hovered = true
         },
 
         ['@mouseleave']() {
-          this.resume()
+          this._hovered = false
         },
 
         ['@focusin']() {
-          this.pause()
+          this._focused = true
         },
 
-        ['@focusout']() {
-          this.resume()
+        ['@focusout'](event) {
+          if (!this._root.contains(event.relatedTarget)) this._focused = false
         },
 
         ['x-resize']() {
@@ -57,17 +65,17 @@ export function carousel({ name = null, autoplay = false, interval = 5000, advan
     destroy() {
       clearInterval(this._autoplayId)
 
-      if (name && window.__tallkitCarousels?.[name] === this) {
-        delete window.__tallkitCarousels[name]
+      if (name && registry()[name] === this) {
+        delete registry()[name]
       }
     },
 
     slides() {
-      return Array.from(this._root.querySelectorAll(dataKey('carousel-slide')))
+      return queryAllData(this._root, 'carousel-slide')
     },
 
     track() {
-      return this._root.querySelector(dataKey('carousel-track'))
+      return queryData(this._root, 'carousel-track')
     },
 
     measure() {
@@ -77,9 +85,6 @@ export function carousel({ name = null, autoplay = false, interval = 5000, advan
       this.slideCount = slides.length
 
       if (fade) {
-        // Fade mode stacks every slide in the same grid cell (`grid-area:1/1`), so
-        // they all share the same bounding rect — geometry-based counting below
-        // would count them all as "visible". Fade always shows exactly one slide.
         this.visibleCount = 1
         return
       }
@@ -89,15 +94,17 @@ export function carousel({ name = null, autoplay = false, interval = 5000, advan
         return
       }
 
+      const rtl = isRtl(this._root)
       const viewportWidth = track.parentElement.getBoundingClientRect().width
-      const trackLeft = slides[0].getBoundingClientRect().left
+      const first = slides[0].getBoundingClientRect()
+      const start = rtl ? first.right : first.left
 
       let count = 0
 
       for (const slide of slides) {
         const rect = slide.getBoundingClientRect()
 
-        if (rect.right - trackLeft > viewportWidth + 1) break
+        if ((rtl ? start - rect.left : rect.right - start) > viewportWidth + 1) break
 
         count++
       }
@@ -137,6 +144,10 @@ export function carousel({ name = null, autoplay = false, interval = 5000, advan
       return !wrap && this.current >= this.maxIndex()
     },
 
+    slideNumber(el) {
+      return this.slides().indexOf(el) + 1
+    },
+
     isSlideVisible(el) {
       const index = this.slides().indexOf(el)
 
@@ -161,13 +172,18 @@ export function carousel({ name = null, autoplay = false, interval = 5000, advan
 
     goTo(index) {
       const max = this.maxIndex()
+      const previous = this.current
 
       this.current = wrap && max > 0
         ? ((index % (max + 1)) + (max + 1)) % (max + 1)
-        : Math.max(0, Math.min(max, index))
+        : clamp(index, 0, max)
 
       this.render()
       this.resetAutoplay()
+
+      if (this.current !== previous) {
+        emit(queryData(this.$root, 'carousel-viewport'), 'changed', { index: this.current })
+      }
     },
 
     render() {
@@ -190,16 +206,23 @@ export function carousel({ name = null, autoplay = false, interval = 5000, advan
 
       if (!track || !target) return
 
-      const offset = target.getBoundingClientRect().left - track.getBoundingClientRect().left
+      const rtl = isRtl(this._root)
+      const trackRect = track.getBoundingClientRect()
+      const targetRect = target.getBoundingClientRect()
+      const offset = rtl ? trackRect.right - targetRect.right : targetRect.left - trackRect.left
 
-      track.style.transform = `translateX(-${offset}px)`
+      track.style.transform = `translateX(${rtl ? offset : -offset}px)`
+    },
+
+    autoplays() {
+      return autoplay && !prefersReducedMotion()
     },
 
     startAutoplay() {
-      if (!autoplay) return
+      if (!this.autoplays()) return
 
-      this._autoplayId = createInterval(() => {
-        if (!this._paused) this.next()
+      this._autoplayId = startInterval(() => {
+        if (!this._paused && !this._hovered && !this._focused) this.next()
       }, interval)
     },
 
@@ -217,13 +240,21 @@ export function carousel({ name = null, autoplay = false, interval = 5000, advan
     resume() {
       this._paused = false
     },
-  };
+
+    isPaused() {
+      return this._paused
+    },
+
+    togglePause() {
+      this._paused = !this._paused
+    },
+  }
 }
 
 export function carouselControls({ name = null } = {}) {
   return {
     target() {
-      return window.__tallkitCarousels?.[name] ?? null
+      return registry()[name] ?? null
     },
 
     next() {
@@ -253,5 +284,5 @@ export function carouselControls({ name = null } = {}) {
     isLast() {
       return this.target()?.isLast() ?? true
     },
-  };
+  }
 }

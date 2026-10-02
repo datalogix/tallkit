@@ -1,4 +1,4 @@
-import { hasLivewire, onLivewireCommit } from '../utils'
+import { dataSelector, hasLivewire, onLivewireCommit, prefersReducedMotion } from '../utils'
 
 export function form(
   {
@@ -14,7 +14,7 @@ export function form(
     livewireCommitCleanup: null,
 
     init() {
-      if (hasLivewire()) {
+      if (hasLivewire() && this.$el.closest('[wire\\:id]')) {
         this.watchLivewireCommits()
       } else if (focusError) {
         this.focusFirstInvalidField()
@@ -24,7 +24,11 @@ export function form(
     watchLivewireCommits() {
       this.livewireCommitCleanup = onLivewireCommit(({ component, commit, succeed }) => {
         if (component?.el !== this.$el && !component?.el?.contains(this.$el)) return
-        if (action && !commit?.calls?.some((call) => call.method === action)) return
+
+        const calls = commit?.calls ?? []
+        const method = action ?? this.submitMethod()
+
+        if (method ? !calls.some((call) => call.method === method) : calls.length === 0) return
 
         if (clearErrorsOnSubmit) {
           this.clearErrors()
@@ -63,26 +67,39 @@ export function form(
       })
     },
 
+    submitMethod() {
+      const form = this.$el.matches('form') ? this.$el : this.$el.querySelector('form')
+      const attribute = Array.from(form?.attributes ?? []).find((attr) => attr.name.startsWith('wire:submit'))
+      const method = attribute?.value.trim().split('(')[0].trim()
+
+      return method || null
+    },
+
     clearErrors() {
       this.$el.querySelectorAll('[data-invalid], [aria-invalid="true"]').forEach((field) => {
         field.removeAttribute('data-invalid')
         field.removeAttribute('aria-invalid')
       })
 
-      this.$el.querySelectorAll('[data-tallkit-error], [data-tallkit-error-group]').forEach((el) => el.remove())
+      this.$el.querySelectorAll(`${dataSelector('error')}, ${dataSelector('error-group')}`).forEach((el) => el.remove())
     },
 
     focusFirstInvalidField() {
-      const field = this.$el.querySelector('[data-invalid], [aria-invalid="true"]')
+      const focusable = 'input:not([type=hidden]):not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [contenteditable="true"], [tabindex]:not([tabindex="-1"])'
+      const field = Array.from(this.$el.querySelectorAll('[data-invalid], [aria-invalid="true"]'))
+        .map((marked) => marked.matches(focusable)
+          ? marked
+          : marked.querySelector(focusable) ?? marked.closest(`${dataSelector('field-control')}, ${dataSelector('field')}`)?.querySelector(focusable))
+        .find(Boolean)
 
       if (!(field instanceof HTMLElement)) return
 
-      field.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      field.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'center' })
       field.focus({ preventScroll: true })
     },
 
     destroy() {
       this.livewireCommitCleanup?.()
     }
-  };
+  }
 }

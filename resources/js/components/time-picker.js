@@ -1,4 +1,4 @@
-import { dataKey, parseCommaList, padDatePart, toMinutes, parseTimeToken } from '../utils'
+import { queryData, parseCommaList, padDatePart, timeToMinutes, parseTypedTime, resolveLocale, toNumber } from '../utils'
 import { popover } from './popover'
 import { bindableField } from '../mixins/bindable-field'
 
@@ -15,28 +15,28 @@ export function timePicker({
   max = null,
   unavailable = null,
   openTo = null,
-  type = null,
+  trigger = null,
 } = {}) {
   if (format && !FORMATS.includes(format)) {
     console.warn(`[tallkit] tk:time-picker received an invalid "format" ("${format}"). Expected one of: ${FORMATS.join(', ')}. Falling back to the locale default.`)
     format = null
   }
 
-  interval = Math.max(1, Number(interval) || 30)
-  min = min ? parseTimeToken(min) : null
-  max = max ? parseTimeToken(max) : null
-  openTo = openTo ? parseTimeToken(openTo) : null
+  interval = Math.max(1, toNumber(interval) || 30)
+  min = min ? parseTypedTime(min) : null
+  max = max ? parseTypedTime(max) : null
+  openTo = openTo ? parseTypedTime(openTo) : null
   multiple = Boolean(multiple)
 
   const unavailableRanges = parseCommaList(unavailable)
     .map((token) => {
       if (token.includes('-')) {
-        const [start, end] = token.split('-').map((part) => parseTimeToken(part))
+        const [start, end] = token.split('-').map((part) => parseTypedTime(part))
 
         return start && end ? [start, end] : null
       }
 
-      const single = parseTimeToken(token)
+      const single = parseTypedTime(token)
 
       return single ? [single, single] : null
     })
@@ -57,7 +57,7 @@ export function timePicker({
     typed: '',
     typing: false,
 
-    locale: locale || (typeof navigator !== 'undefined' ? navigator.language : 'en-US'),
+    locale: resolveLocale(locale),
 
     init() {
       _popover.init.call(this)
@@ -67,7 +67,10 @@ export function timePicker({
       _bindableField.init.call(this)
       this.syncTyped()
 
-      this.$watch('value', () => this.syncTyped())
+      // Not while typed in: a time read halfway ("09:30" before "PM") would be written over it.
+      this.$watch('value', () => {
+        if (!this.typing) this.syncTyped()
+      })
 
       this.$watch('typed', () => {
         if (!this.typing) return
@@ -77,7 +80,7 @@ export function timePicker({
     },
 
     isDisabled() {
-      return !!this.$root.querySelector(dataKey('control'))?.disabled
+      return !!queryData(this.$root, 'control')?.disabled
     },
 
     open(focus = true) {
@@ -97,13 +100,13 @@ export function timePicker({
 
         const list = Array.isArray(raw) ? raw : parseCommaList(raw)
 
-        return list.map((v) => parseTimeToken(v)).filter(Boolean)
+        return list.map((v) => parseTypedTime(v)).filter(Boolean)
       }
 
       if (!raw) return null
       if (Array.isArray(raw)) raw = raw[0]
 
-      return parseTimeToken(raw)
+      return parseTypedTime(raw)
     },
 
     slots() {
@@ -135,10 +138,12 @@ export function timePicker({
 
       if (multiple) {
         this.toggleMultiple(hhmm)
+        this.dispatchPicked(this.value)
         return
       }
 
       this.value = this.value === hhmm ? null : hhmm
+      this.dispatchPicked(this.value)
       this.close()
     },
 
@@ -148,6 +153,17 @@ export function timePicker({
       this.value = current.includes(hhmm)
         ? current.filter((v) => v !== hhmm)
         : [...current, hhmm].sort()
+    },
+
+    usesHour12() {
+      if (format === '12-hour') return true
+      if (format === '24-hour') return false
+
+      try {
+        return !!new Intl.DateTimeFormat(this.locale, { hour: 'numeric' }).resolvedOptions().hour12
+      } catch {
+        return false
+      }
     },
 
     formatter() {
@@ -176,17 +192,25 @@ export function timePicker({
     },
 
     typable() {
-      return type === 'input' && !multiple
+      return trigger === 'input' && !multiple
     },
 
     maskPattern() {
-      return '99:99'
+      return this.usesHour12() ? '99:99 aa' : '99:99'
+    },
+
+    editable(hhmm) {
+      if (!hhmm || !this.usesHour12()) return hhmm ?? ''
+
+      const [h, m] = hhmm.split(':').map(Number)
+
+      return `${padDatePart(h % 12 || 12)}:${padDatePart(m)} ${h < 12 ? 'AM' : 'PM'}`
     },
 
     syncTyped() {
       if (!this.typable()) return
 
-      this.typed = this.value ?? ''
+      this.typed = this.editable(this.value)
     },
 
     commitTyped() {
@@ -194,10 +218,11 @@ export function timePicker({
       if (!this.typable()) return
       if ((this.typed.match(/\d/g) ?? []).length < 4) return
 
-      const parsed = parseTimeToken(this.typed)
+      const parsed = parseTypedTime(this.typed)
 
-      if (parsed && !this.isTimeDisabled(parsed)) {
+      if (parsed && !this.isTimeDisabled(parsed) && parsed !== this.value) {
         this.value = parsed
+        this.dispatchPicked(parsed)
       }
     },
 
@@ -225,12 +250,32 @@ export function timePicker({
     },
 
     nearestSlot(hhmm) {
-      const target = toMinutes(hhmm)
+      const target = timeToMinutes(hhmm)
       const values = this.slots()
 
       return values.reduce((closest, slot) => (
-        Math.abs(toMinutes(slot) - target) < Math.abs(toMinutes(closest) - target) ? slot : closest
+        Math.abs(timeToMinutes(slot) - target) < Math.abs(timeToMinutes(closest) - target) ? slot : closest
       ), values[0])
+    },
+
+    moveSlotFocus(event) {
+      if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return
+
+      const options = [...event.currentTarget.querySelectorAll('[role=option]')].filter((option) => !option.disabled)
+
+      if (!options.length) return
+
+      event.preventDefault()
+
+      const index = options.indexOf(document.activeElement)
+      const next = {
+        ArrowDown: Math.min(index + 1, options.length - 1),
+        ArrowUp: Math.max(index - 1, 0),
+        Home: 0,
+        End: options.length - 1,
+      }[event.key]
+
+      options[index === -1 ? 0 : next].focus()
     },
 
     scrollToSelected() {

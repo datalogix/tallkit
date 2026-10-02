@@ -1,13 +1,16 @@
+@props([
+    ...TALLKit::elementProps(),
+    'label' => 'Theme',
+    'icon' => 'palette-outline',
+])
 <tk:menu.item
-    :attributes="$attributes->whereDoesntStartWith(['selector:'])->classes('data-active:bg-transparent!')"
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->whereDoesntStartWith(['selector:'])->classes('data-active:bg-transparent!')"
     as="div"
-    label="Theme"
-    icon="palette-outline"
     keepOpen
 >
     <x-slot:append>
         <tk:appearance.selector
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'selector:')->classes('ms-4')"
+            :attributes="$attributes->prefixed('selector:')->classes('ms-4')"
             size="xs"
         />
     </x-slot:append>

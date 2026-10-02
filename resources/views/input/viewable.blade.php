@@ -1,10 +1,15 @@
+@props([
+    ...TALLKit::elementProps(),
+])
 <tk:button
-    wire:replace.self
+    wire:ignore.self
     x-cloak
     x-data="inputViewable()"
-    :$attributes
-    :variant="$attributes->pluck('variant', 'none')"
-    tooltip="Toggle password visibility"
+    ::aria-pressed="viewed ? 'true' : 'false'"
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())
+        // Merged, not pluck(): a bound attribute runs more than once.
+        ->merge(['variant' => 'none', 'tooltip' => 'Toggle password visibility'])
+        ->classes('min-w-6 min-h-6')"
     icon="eye"
     icon:class="hidden"
     icon::class="{ 'hidden': !viewed }"

@@ -20,78 +20,70 @@ $signUpUrl ??= route_detect([
 
 @endphp
 <tk:form.section
-    :attributes="$attributes->whereDoesntStartWith(['identifier:', 'password:', 'forgot-password:', 'remember:', 'submit:', 'oauth:', 'sign-up:'])"
+    :attributes="$attributes->whereDoesntStartWith(['identifier:', 'password:', 'forgot-password:', 'remember:', 'submit:', 'oauth:', 'sign-up:'])->merge(['title' => 'Sign in to your account', 'subtitle' => 'Enter your access details below to sign in:'])"
     :$size
-    title="Sign in to your account"
-    subtitle="Enter your access details below to sign in:"
 >
     {{ $slot }}
 
     <tk:page.auth.identifier
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'identifier:')"
+        :attributes="$attributes->prefixed('identifier:')"
         :$size
         :$identifier
     />
 
     <tk:password
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'password:')"
+        :attributes="$attributes->prefixed('password:')->merge(['placeholder' => true])"
         :$size
         name="password"
         required
-        placeholder
     >
         @if ($forgotPasswordUrl)
             <x-slot:labelAppend>
                 <tk:link
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'forgot-password:')"
+                    :attributes="$attributes->prefixed('forgot-password:')->merge(['label' => 'Forgot your password?'])"
                     :href="$forgotPasswordUrl"
                     :$size
-                    label="Forgot your password?"
                 />
             </x-slot:labelAppend>
         @endif
     </tk:password>
 
     <tk:checkbox
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'remember:')"
+        :attributes="$attributes->prefixed('remember:')->merge(['label' => 'Remember me'])"
         :$size
         name="remember"
-        label="Remember me"
     />
 
     <tk:submit
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'submit:')->classes('w-full')"
+        :attributes="$attributes->prefixed('submit:')->classes('w-full')->merge(['label' => 'Sign in'])"
         :$size
-        label="Sign in"
         variant="accent"
     />
 
     <tk:page.auth.oauth
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'oauth:')"
+        :attributes="$attributes->prefixed('oauth:')"
         :$size
-        :providers="$oauth"
+        :items="$oauth"
     />
 
     @if ($signUpUrl)
-        <tk:separator :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'separator:')" />
+        <tk:separator :attributes="$attributes->prefixed('sign-up:separator:')" />
 
         <div
             {{
-                TALLKit::attributesAfter(attributes: $attributes, prefix: 'sign-up:container:')
-                    ->classes('space-x-1 rtl:space-x-reverse flex justify-center')
+                $attributes->prefixed('sign-up:container:')
+                    ->classes('space-x-1 flex justify-center')
             }}
         >
             <tk:text
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'sign-up:label:')"
+                :attributes="$attributes->prefixed('sign-up:label:')->merge(['label' => 'Don\'t have an account?'])"
                 :$size
-                label="Don't have an account?"
             />
 
             <tk:link
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'sign-up:link:')"
+                :attributes="$attributes->prefixed('sign-up:link:')->merge(['label' => 'Sign up'])"
                 :href="$signUpUrl"
                 :$size
-                label="Sign up"
             />
         </div>
     @endif

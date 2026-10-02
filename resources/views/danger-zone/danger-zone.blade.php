@@ -1,11 +1,18 @@
 @props([
-    'title' => null,
-    'message' => null,
+    'prepend' => null,
+    'actions' => null,
 ])
+@php
+$titleId = ($attributes->get('id') ?? TALLKit::stableId('danger-zone')).'-title';
+@endphp
 <tk:alert
-    :attributes="$attributes->whereDoesntStartWith(['modal:', 'trigger:'])"
-    :title="$title ?? 'Danger Zone'"
-    :message="$message ?? 'By deleting this record, all associated data will be permanently lost and cannot be recovered.'"
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), ['prepend' => null, 'actions' => null, 'pauseOnHover' => null])->whereDoesntStartWith(['modal:', 'trigger:'])
+        ->merge([
+            'title' => 'Danger Zone',
+            'title:id' => $titleId,
+            'aria-labelledby' => $titleId,
+            'message' => 'By deleting this record, all associated data will be permanently lost and cannot be recovered.',
+        ])"
     type="danger"
     role="group"
     aria-live="off"
@@ -13,13 +20,12 @@
     <x-slot:append>
         @if ($slot->isEmpty())
             <tk:modal.confirm
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'modal:')"
+                :attributes="$attributes->prefixed('modal:')"
                 variant="delete"
             >
                 <tk:button
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'trigger:')->classes('mt-4')"
+                    :attributes="$attributes->prefixed('trigger:')->classes('mt-4')->merge(['label' => 'Delete'])"
                     variant="danger"
-                    label="Delete"
                 />
             </tk:modal.confirm>
         @else

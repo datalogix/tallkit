@@ -1,11 +1,6 @@
 @props([
     'size' => null,
-    'prepend' => null,
-    'append' => null,
-    'icon' => null,
-    'iconTrailing' => null,
-    'kbd' => null,
-    'loading' => null,
+    ...TALLKit::fieldControlProps(),
 ])
 @php
 
@@ -13,11 +8,11 @@ $innerSize = TALLKit::adjustSize(size: $size);
 $wireTarget = null;
 
 if (is_string($loading) || $loading === true) {
-    $wireModel = $attributes->wire('model');
+    $liveModel = TALLKit::livewireLiveModel($attributes);
 
-    if ($wireModel?->directive && $wireModel->hasModifier('live')) {
+    if ($liveModel !== null) {
         $loading = true;
-        $wireTarget = $wireModel->value();
+        $wireTarget = $liveModel;
     } else {
         $wireTarget = $loading;
         $loading = (bool) $loading;
@@ -28,7 +23,7 @@ if (is_string($loading) || $loading === true) {
 @if ($prepend || $icon || $append || $loading || $iconTrailing || $kbd || $attributes->has('class'))
     <div
         {{
-            TALLKit::attributesAfter(attributes: $attributes, prefix: 'control:')
+            $attributes->prefixed('control:')
                 ->dataKey('field-control')
                 ->classes(
                     '
@@ -48,7 +43,7 @@ if (is_string($loading) || $loading === true) {
         @if ($prepend || $icon)
             <div
                 {{
-                    TALLKit::attributesAfter(attributes: $attributes, prefix: 'prepend:')
+                    $attributes->prefixed('prepend:')
                         ->dataKey('field-control-prepend')
                         ->classes(
                             'flex items-center justify-center gap-x-1.5 ps-3',
@@ -60,13 +55,13 @@ if (is_string($loading) || $loading === true) {
 
                 @if (is_string($icon) && $icon !== '')
                     <tk:icon
-                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')->classes('pointer-events-none')"
+                        :attributes="$attributes->prefixed('icon:')->classes('pointer-events-none')"
                         :size="$innerSize"
                         :$icon
                     />
                 @elseif ($icon)
                     <tk:element
-                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')"
+                        :attributes="$attributes->prefixed('icon:')"
                         :label="$icon"
                     />
                 @endif
@@ -78,7 +73,7 @@ if (is_string($loading) || $loading === true) {
         @if ($append || $loading || $iconTrailing || $kbd)
             <div
                 {{
-                    TALLKit::attributesAfter(attributes: $attributes, prefix: 'append:')
+                    $attributes->prefixed('append:')
                         ->dataKey('field-control-append')
                         ->classes([
                             'flex items-center justify-center gap-x-1.5 pe-3',
@@ -89,7 +84,7 @@ if (is_string($loading) || $loading === true) {
             >
                 @if ($loading)
                     <tk:loading
-                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'loading:')->classes('hidden')->merge([
+                        :attributes="$attributes->prefixed('loading:')->classes('hidden')->merge([
                             'wire:loading.class.remove' => 'hidden',
                             'wire:target' => $wireTarget
                         ])"
@@ -99,20 +94,20 @@ if (is_string($loading) || $loading === true) {
 
                 @if (is_string($iconTrailing) && $iconTrailing !== '')
                     <tk:icon
-                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-trailing:')->classes('pointer-events-none')"
+                        :attributes="$attributes->prefixed('icon-trailing:')->classes('pointer-events-none')"
                         :size="$innerSize"
                         :icon="$iconTrailing"
                     />
                 @elseif ($iconTrailing)
                     <tk:element
-                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-trailing:')"
+                        :attributes="$attributes->prefixed('icon-trailing:')"
                         :label="$iconTrailing"
                     />
                 @endif
 
                 @if (isset($kbd) && $kbd !== '')
                     <tk:kbd
-                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'kbd:')"
+                        :attributes="$attributes->prefixed('kbd:')"
                         :size="$innerSize"
                         :label="$kbd"
                     />

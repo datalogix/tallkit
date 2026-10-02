@@ -6,36 +6,45 @@
     'clearable' => null,
     'copyable' => null,
     'viewable' => null,
+    'old' => null,
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
-$type ??= TALLKit::detectInputType(name: $name);
-$mask = TALLKit::detectInputMask(name: $name, mask: $mask, type: $type);
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
+$type ??= TALLKit::fieldType(name: $name);
+$mask = TALLKit::fieldMask(name: $name, mask: $mask, type: $type);
 $viewable ??= $type === 'password';
+$value = $old === false ? $value : TALLKit::fieldOldValue($fieldName, $value, $type);
+$value = match ($type) {
+    'date' => TALLKit::fieldDateValue($value),
+    'datetime-local' => TALLKit::fieldDateValue($value, 'Y-m-d\TH:i'),
+    'time' => TALLKit::fieldDateValue($value, 'H:i'),
+    'month' => TALLKit::fieldDateValue($value, 'Y-m'),
+    default => $value,
+};
 $hasControl = $clearable || $copyable || $viewable || $prepend || $icon || $append || $loading || $iconTrailing || $kbd || $attributes->has('class');
 
 @endphp
 @if ($type === 'file')
-    <tk:upload :$attributes>{{ $slot }}</tk:upload>
+    <tk:upload :attributes="TALLKit::fieldWithProps($attributes, get_defined_vars())">{{ $slot }}</tk:upload>
 @elseif ($type === 'checkbox')
-    <tk:checkbox :$attributes>{{ $slot }}</tk:checkbox>
+    <tk:checkbox :attributes="TALLKit::fieldWithProps($attributes, get_defined_vars())">{{ $slot }}</tk:checkbox>
 @elseif ($type === 'radio')
-    <tk:radio :$attributes>{{ $slot }}</tk:radio>
+    <tk:radio :attributes="TALLKit::fieldWithProps($attributes, get_defined_vars())">{{ $slot }}</tk:radio>
 @elseif ($type === 'reset' || $type === 'button')
-    <tk:button :$attributes :$type>{{ $slot }}</tk:button>
+    <tk:button :attributes="TALLKit::fieldWithProps($attributes, get_defined_vars())" :$type>{{ $slot }}</tk:button>
 @elseif ($type === 'submit')
-    <tk:submit :$attributes>{{ $slot }}</tk:submit>
+    <tk:submit :attributes="TALLKit::fieldWithProps($attributes, get_defined_vars())">{{ $slot }}</tk:submit>
 @elseif ($type === 'range')
-    <tk:slider :$attributes>{{ $slot }}</tk:slider>
+    <tk:slider :attributes="TALLKit::fieldWithProps($attributes, get_defined_vars())">{{ $slot }}</tk:slider>
 @else
     <tk:field.wrapper
         :$name
-        :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
     >
         <tk:field.control
             :$size
-            :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
+            :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
                 ->when(
                     $hasControl,
                     fn ($attrs) => $attrs->classes(
@@ -61,7 +70,8 @@ $hasControl = $clearable || $copyable || $viewable || $prepend || $icon || $appe
                             'wire:model' => $wireModel,
                             'x-data' => $mask ? true : null,
                             'x-mask' => $mask,
-                            'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
+                            'inputmode' => $mask && $type === 'text' && preg_match('/^[^a-zA-Z*]*$/', $mask) ? 'numeric' : null,
+                            'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                             'aria-invalid' => $invalid ? 'true' : null,
                             'data-invalid' => $invalid ? true : null,
                         ])
@@ -99,7 +109,7 @@ $hasControl = $clearable || $copyable || $viewable || $prepend || $icon || $appe
 
                     @if ($clearable)
                         <tk:clearable
-                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'clearable:')"
+                            :attributes="$attributes->prefixed('clearable:')"
                             :$size
                             :label="is_string($clearable) ? $clearable : null"
                         />
@@ -107,7 +117,7 @@ $hasControl = $clearable || $copyable || $viewable || $prepend || $icon || $appe
 
                     @if ($copyable)
                         <tk:copyable
-                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'copyable:')"
+                            :attributes="$attributes->prefixed('copyable:')"
                             :$size
                             :label="is_string($copyable) ? $copyable : null"
                         />
@@ -115,7 +125,7 @@ $hasControl = $clearable || $copyable || $viewable || $prepend || $icon || $appe
 
                     @if ($viewable)
                         <tk:input.viewable
-                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'viewable:')"
+                            :attributes="$attributes->prefixed('viewable:')"
                             :$size
                             :label="is_string($viewable) ? $viewable : null"
                         />

@@ -1,4 +1,4 @@
-<div
+<main
     {{
         $attributes->whereDoesntStartWith(['appearance:', 'brand:', 'container:'])
             ->classes(
@@ -16,16 +16,16 @@
         {{ $brand }}
     @else
         <tk:brand
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'brand:')"
+            :attributes="$attributes->prefixed('brand:')"
             :href="false"
             size="xl"
         />
     @endisset
 
     <tk:container
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')"
+        :attributes="$attributes->prefixed('container:')"
         size="xs"
     >
         {{ $slot }}
     </tk:container>
-</div>
+</main>

@@ -1,5 +1,6 @@
 @aware(['size', 'variant', 'orientation'])
 @props([
+    ...TALLKit::elementProps(),
     'size' => null,
     'variant' => null,
     'name' => null,
@@ -9,11 +10,14 @@
 ])
 @php
 
-$name ??= TALLKit::generateId(prefix: 'tab');
+$name ??= TALLKit::stableId('tab');
+
+$tabId = TALLKit::stableId('tab', $name);
+$panelId = $tabId.'-panel';
 
 @endphp
 <tk:button
-    :attributes="$attributes
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())
         ->classes(
             'shrink-0',
             TALLKit::padding(size: $size),
@@ -61,10 +65,10 @@ $name ??= TALLKit::generateId(prefix: 'tab');
         )
         ->merge([
             'data-selected' => $selected ? '' : false,
-            'wire:key' => $name,
+            'wire:key' => $tabId,
             'data-name' => $name,
-            'id' => TALLKit::generateId(prefix: 'tab', name: $name),
-            'aria-controls' => TALLKit::generateId(prefix: 'tabpanel', name: $name),
+            'id' => $tabId,
+            'aria-controls' => $panelId,
             'role' => 'tab',
             ':tabindex' => 'isSelected(' . Js::from($name) . ') ? 0 : -1',
             ':aria-selected' => 'isSelected(' . Js::from($name) . ')',

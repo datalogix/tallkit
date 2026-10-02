@@ -10,7 +10,6 @@ $id = $id === true ? config('services.google.gtm') : $id;
 @endphp
 @if ($id)
     @if ($noscript)
-        <!-- Google Tag Manager (noscript) -->
         <noscript>
             <iframe
                 src="https://www.googletagmanager.com/ns.html?id={{ $id }}"
@@ -19,9 +18,7 @@ $id = $id === true ? config('services.google.gtm') : $id;
                 style="display:none;visibility:hidden"
             ></iframe>
         </noscript>
-        <!-- End Google Tag Manager (noscript) -->
     @else
-        <!-- Google Tag Manager -->
         <script @if ($nonce) nonce="{{ $nonce }}" @endif>
             (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
             new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -29,6 +26,5 @@ $id = $id === true ? config('services.google.gtm') : $id;
             'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
             })(window,document,'script','dataLayer',@js($id));
         </script>
-        <!-- End Google Tag Manager -->
     @endif
 @endif

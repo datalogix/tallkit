@@ -14,7 +14,7 @@
 ])
 @php
 
-$scrollIntoViewJsSnippet = ($scrollTo !== false) ? '($el.closest('.Js::from($scrollTo).') || document.querySelector('.Js::from($scrollTo).')).scrollIntoView()' : false;
+$scrollIntoViewJsSnippet = ($scrollTo !== false) ? '($el.closest('.Js::from($scrollTo).') || document.querySelector('.Js::from($scrollTo).'))?.scrollIntoView()' : false;
 $isPaginator = $paginator instanceof \Illuminate\Contracts\Pagination\Paginator || $paginator instanceof \Illuminate\Contracts\Pagination\CursorPaginator;
 $isArrayable = Arr::arrayable($paginator);
 $textColors = TALLKit::classes(TALLKit::textNeutral());
@@ -29,10 +29,10 @@ $textColors = TALLKit::classes(TALLKit::textNeutral());
         ->classes($textColors)
     }}>
         @if ($separator !== false)
-            <tk:separator :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'separator:')" />
+            <tk:separator :attributes="$attributes->prefixed('separator:')" />
         @endif
 
-        <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')->classes([
+        <div {{ $attributes->prefixed('container:')->classes([
             'py-4 px-6' => ! $dense,
             'p-2.5' => $dense,
         ]) }}>
@@ -40,41 +40,40 @@ $textColors = TALLKit::classes(TALLKit::textNeutral());
                 {{ $results($paginator) }}
             @elseif ($paginator instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator && $paginator->hasPages())
                 <nav
-                    {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'nav:')->classes('flex gap-1 items-center justify-between') }}
+                    {{ $attributes->prefixed('nav:')->classes('flex gap-1 items-center justify-between')->merge(['aria-label' => __('Pagination Navigation')]) }}
                     role="navigation"
-                    aria-label="{{ __('Pagination Navigation') }}"
                 >
                     @if (isset($results))
                         {{ $results($paginator) }}
                     @elseif ($total !== false || $perPage)
-                        <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'summary:')->classes('flex items-center gap-3') }}>
+                        <div {{ $attributes->prefixed('summary:')->classes('flex items-center gap-3') }}>
                             @if ($total !== false)
                                 <tk:text
-                                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'results:')->classes('hidden sm:block', $textColors)"
+                                    :attributes="$attributes->prefixed('results:')->classes('hidden sm:block', $textColors)"
                                     :$size
                                 >
-                                    <span>{!! __('Showing') !!}</span>
-                                    <span class="font-medium">{{ $paginator->firstItem() }}</span>
-                                    <span>{!! __('to') !!}</span>
-                                    <span class="font-medium">{{ $paginator->lastItem() }}</span>
-                                    <span>{!! __('of') !!}</span>
-                                    <span class="font-medium">{{ $paginator->total() }}</span>
-                                    <span>{!! trans_choice('pagination.results', $paginator->total()) !!}</span>
+                                    {{-- One sentence to translate: word by word, a language can't reorder them. --}}
+                                    {!! __('Showing :first to :last of :total :results', [
+                                        'first' => '<span class="font-medium">'.e($paginator->firstItem()).'</span>',
+                                        'last' => '<span class="font-medium">'.e($paginator->lastItem()).'</span>',
+                                        'total' => '<span class="font-medium">'.e($paginator->total()).'</span>',
+                                        'results' => e(trans_choice('result|results', $paginator->total())),
+                                    ]) !!}
                                 </tk:text>
 
                                 <tk:text
-                                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'total:')->classes('sm:hidden', $textColors)"
+                                    :attributes="$attributes->prefixed('total:')->classes('sm:hidden', $textColors)"
                                     :$size
                                 >
                                     <span>{!! __('Total:') !!}</span>
                                     <span class="font-medium">{{ $paginator->total() }}</span>
-                                    <span>{!! trans_choice('pagination.results', $paginator->total()) !!}</span>
+                                    <span>{!! trans_choice('result|results', $paginator->total()) !!}</span>
                                 </tk:text>
                             @endif
 
                             @if ($perPage)
                                 <tk:pagination.per-page
-                                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'per-page:')"
+                                    :attributes="$attributes->prefixed('per-page:')"
                                     :options="$perPage"
                                     :name="$perPageName"
                                     :$size
@@ -83,20 +82,20 @@ $textColors = TALLKit::classes(TALLKit::textNeutral());
                         </div>
                     @endif
 
-                    <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'pages:')->classes('
+                    <div {{ $attributes->prefixed('pages:')->classes('
                             flex-1 flex flex-wrap rtl:flex-row-reverse
                             items-center justify-end gap-1
                     ') }}>
                         @if ($firstPage !== false)
                             <tk:pagination.first-page
-                                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'first-page:')->classes('hidden sm:inline-flex')"
+                                :attributes="$attributes->prefixed('first-page:')->classes('hidden sm:inline-flex')"
                                 :x-on:click="$scrollIntoViewJsSnippet"
                                 :$size
                             />
                         @endif
 
                         <tk:pagination.prev-page
-                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'prev-page:')"
+                            :attributes="$attributes->prefixed('prev-page:')"
                             :x-on:click="$scrollIntoViewJsSnippet"
                             :$size
                         />
@@ -119,7 +118,7 @@ $textColors = TALLKit::classes(TALLKit::textNeutral());
                             @foreach ($elements as $element)
                                 @if (is_string($element))
                                     <tk:text
-                                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'dots:')->classes('px-px hidden lg:inline-flex')"
+                                        :attributes="$attributes->prefixed('dots:')->classes('px-px hidden lg:inline-flex')"
                                         :label="$element"
                                         :$size
                                         aria-hidden="true"
@@ -129,9 +128,8 @@ $textColors = TALLKit::classes(TALLKit::textNeutral());
                                 @if (is_array($element))
                                     @foreach ($element as $page => $href)
                                         <tk:pagination.page
-                                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'page:')->classes('px-3.5 hidden lg:inline-flex')"
+                                            :attributes="$attributes->prefixed('page:')->classes('px-3.5 hidden lg:inline-flex')"
                                             :$page
-                                            :$href
                                             :$size
                                         />
                                     @endforeach
@@ -140,14 +138,14 @@ $textColors = TALLKit::classes(TALLKit::textNeutral());
                         @endif
 
                         <tk:pagination.next-page
-                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'next-page:')"
+                            :attributes="$attributes->prefixed('next-page:')"
                             :x-on:click="$scrollIntoViewJsSnippet"
                             :$size
                         />
 
                         @if ($lastPage !== false)
                             <tk:pagination.last-page
-                                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'last-page:')->classes('hidden sm:inline-flex')"
+                                :attributes="$attributes->prefixed('last-page:')->classes('hidden sm:inline-flex')"
                                 :x-on:click="$scrollIntoViewJsSnippet"
                                 :$size
                             />
@@ -156,39 +154,38 @@ $textColors = TALLKit::classes(TALLKit::textNeutral());
                 </nav>
             @elseif ($isPaginator && $paginator->hasPages())
                 <nav
-                    {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'nav:')->classes('flex gap-1 items-center justify-end') }}
+                    {{ $attributes->prefixed('nav:')->classes('flex gap-1 items-center justify-end')->merge(['aria-label' => __('Pagination Navigation')]) }}
                     role="navigation"
-                    aria-label="{{ __('Pagination Navigation') }}"
                 >
                     <tk:pagination.prev-page
-                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'prev-page:')"
+                        :attributes="$attributes->prefixed('prev-page:')"
                         :x-on:click="$scrollIntoViewJsSnippet"
                         :$size
                     />
 
                     <tk:pagination.next-page
-                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'next-page:')"
+                        :attributes="$attributes->prefixed('next-page:')"
                         :x-on:click="$scrollIntoViewJsSnippet"
                         :$size
                     />
                 </nav>
             @elseif ($isPaginator)
                 <tk:text
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'total:')->classes($textColors)"
+                    :attributes="$attributes->prefixed('total:')->classes($textColors)"
                     :$size
                 >
                     <span>{!! __('Total:') !!}</span>
                     <span class="font-medium">{{ $paginator->total() }}</span>
-                    <span>{!! trans_choice('pagination.results', $paginator->total()) !!}</span>
+                    <span>{!! trans_choice('result|results', $paginator->total()) !!}</span>
                 </tk:text>
             @elseif ($isArrayable)
                 <tk:text
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'total:')->classes($textColors)"
+                    :attributes="$attributes->prefixed('total:')->classes($textColors)"
                     :$size
                 >
                     <span>{!! __('Total:') !!}</span>
                     <span class="font-medium">{{ collect($paginator)->count() }}</span>
-                    <span>{!! trans_choice('pagination.results', collect($paginator)->count()) !!}</span>
+                    <span>{!! trans_choice('result|results', collect($paginator)->count()) !!}</span>
                 </tk:text>
             @endif
         </div>

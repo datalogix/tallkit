@@ -2,13 +2,14 @@
 
 namespace TALLKit\Concerns;
 
+use DateTimeInterface;
 use Illuminate\Support\Str;
 use Illuminate\View\ComponentAttributeBag;
-use TALLKit\Facades\TALLKit;
+use TALLKit\Livewire\DateRange;
 
 trait InteractsWithField
 {
-    public function fieldProps()
+    public function fieldProps(): array
     {
         return [
             'value' => null,
@@ -25,10 +26,14 @@ trait InteractsWithField
             'suffix' => null,
             'showError' => null,
             'color' => null,
+            'placeholder' => null,
+            'invalid' => null,
+            'bag' => null,
+            'wireModel' => null,
         ];
     }
 
-    public function fieldControlProps()
+    public function fieldControlProps(): array
     {
         return [
             'prepend' => null,
@@ -40,23 +45,23 @@ trait InteractsWithField
         ];
     }
 
-    public function fieldExcludedPrefixes(array $extra = [])
+    public function fieldExcludedPrefixes(array $extra = []): array
     {
         return [
             'field:', 'label:', 'info:', 'badge:', 'description:',
             'group:', 'prefix:', 'suffix:',
             'help:', 'error:',
             'control:',
-            'prepend:', 'icon:', 'append:', 'loading:', 'icon-trailing:', 'kbd:',
+            'prepend:', 'icon:', 'append:', 'loading:', 'icon-trailing:', 'kbd:', 'tooltip:',
             ...$extra,
         ];
     }
 
-    public function mergeDefinedFieldProps(
+    public function fieldWithProps(
         ComponentAttributeBag $attributes,
         array $scope
     ): ComponentAttributeBag {
-        return $this->mergeDefinedProps(
+        return $this->attributesWithProps(
             $attributes,
             $scope,
             $this->fieldProps(),
@@ -64,26 +69,36 @@ trait InteractsWithField
         );
     }
 
-    public function resolveFieldContext(
+    public function fieldContext(
         ComponentAttributeBag $attributes,
         null|bool|string $label = null,
         ?string $id = null,
-    ) {
+        array $scope = [],
+    ): array {
         $wireModel = $attributes->whereStartsWith('wire:model')->first();
         $xModel = $attributes->whereStartsWith('x-model')->first();
 
         $name = $attributes->pluck('name', $wireModel ?? $xModel);
-        $basename = $name ? Str::before($name, '[]') : $name;
-        $fieldName = $basename ? Str::replace(['[', ']'], ['.', ''], $basename) : $basename;
+        $fieldName = $name ? $this->errorKey($name) : $name;
 
-        $label = $label === true || $label === null ? ($fieldName ? Str::headline(Str::before($fieldName, '_id')) : $fieldName) : $label;
+        $labelName = $fieldName ? collect(explode('.', $fieldName))->reject(fn ($part) => $part === '*' || is_numeric($part))->last() : null;
+        $label = $label === true || $label === null ? ($labelName ? Str::headline(preg_replace('/_id$/', '', $labelName)) : $fieldName) : $label;
 
-        $placeholder = $attributes->pluck('placeholder');
+        $placeholder = $scope['placeholder'] ?? $attributes->pluck('placeholder');
         $placeholder = $placeholder === true ? $label : $placeholder;
 
-        $invalid = $attributes->pluck('invalid', fn () => $name && TALLKit::hasError($name));
-        $wireModel = ! $wireModel && in_livewire() && $fieldName && ! $xModel ? $fieldName : false;
-        $id ??= TALLKit::generateId('field', $fieldName ?: null);
+        $bag = $this->errorBagName($scope['bag'] ?? $attributes->pluck('bag') ?? $attributes->get('error:bag'));
+        $invalid = $scope['invalid'] ?? $attributes->pluck('invalid', fn () => $name && $this->hasError($name, $bag));
+        // Bound only when the component has the property: binding a missing one breaks on the first change.
+        $autoWireModel = ($scope['wireModel'] ?? $attributes->pluck('wire-model')) !== false;
+        $wireModel = $autoWireModel && ! $wireModel && ! $xModel && $fieldName && ! Str::contains($fieldName, '*') && $this->livewireRendering() && $this->livewireHasProperty($fieldName)
+            ? $fieldName
+            : false;
+        $id ??= $this->fieldId($fieldName ?: null);
+
+        if ($bag !== null) {
+            app('tallkit.field-bags')[$id] = $bag;
+        }
 
         return [
             $name,
@@ -96,12 +111,68 @@ trait InteractsWithField
         ];
     }
 
-    public function ariaDescribedBy(
+    public function fieldErrorBag(?string $id): ?string
+    {
+        return $id !== null ? (app('tallkit.field-bags')[$id] ?? null) : null;
+    }
+
+    protected function fieldId(?string $fieldName = null): string
+    {
+        return $this->stableId('field', $fieldName);
+    }
+
+    /** Passwords and files are never sent back. */
+    public function fieldOldValue(?string $fieldName, mixed $value = null, ?string $type = null): mixed
+    {
+        if (blank($fieldName) || in_array($type, ['password', 'file'], true) || ! $this->hasOldInput()) {
+            return $value;
+        }
+
+        return request()->session()->hasOldInput($fieldName) ? request()->old($fieldName) : $value;
+    }
+
+    /** Formatted in its own timezone: as JSON a Carbon becomes UTC and can shift the day. */
+    public function fieldDateValue(mixed $value, string $format = 'Y-m-d'): mixed
+    {
+        return match (true) {
+            $value instanceof DateTimeInterface => $value->format($format),
+            $value instanceof DateRange => [
+                'start' => $value->start()?->format($format),
+                'end' => $value->end()?->format($format),
+            ],
+            is_iterable($value) => collect($value)->map(fn ($item) => $this->fieldDateValue($item, $format))->all(),
+            default => $value,
+        };
+    }
+
+    public function fieldOldChecked(?string $fieldName, bool $checked, mixed $value = null): bool
+    {
+        if (blank($fieldName) || ! $this->hasOldInput()) {
+            return $checked;
+        }
+
+        $old = request()->old($fieldName);
+        $sent = (string) ($value ?? 'on');
+
+        return is_array($old)
+            ? in_array($sent, array_map('strval', $old), true)
+            : $old !== null && (string) $old === $sent;
+    }
+
+    protected function hasOldInput(): bool
+    {
+        return ! $this->livewireRendering()
+            && request()->hasSession()
+            && request()->session()->has('_old_input');
+    }
+
+    public function fieldDescribedBy(
         ?string $id,
         mixed $description = null,
         mixed $help = null,
         mixed $invalid = null,
         mixed $showError = null,
+        mixed $hint = null,
     ): ?string {
         if (! $id) {
             return null;
@@ -110,13 +181,14 @@ trait InteractsWithField
         $ids = collect([
             $description ? "{$id}-description" : null,
             $help ? "{$id}-help" : null,
+            $hint ? "{$id}-hint" : null,
             $invalid && $showError !== false ? "{$id}-error" : null,
         ])->filter();
 
         return $ids->isNotEmpty() ? $ids->implode(' ') : null;
     }
 
-    public function detectInputType(?string $name = null)
+    public function fieldType(?string $name = null): string
     {
         if (blank($name)) {
             return 'text';
@@ -124,14 +196,14 @@ trait InteractsWithField
 
         $types = [
             'color' => ['color'],
-            'date' => ['date', 'birthdate', 'birth_date', '_at'],
-            'datetime-local' => ['datetime', 'date_time'],
+            'datetime-local' => ['datetime', 'date_time', '_at'],
+            'date' => ['date', 'birthdate', 'birth_date', '_on'],
             'email' => ['email'],
-            'file' => ['image', 'picture', 'photo', 'logo', 'background', 'audio', 'video', 'file', 'document'],
-            'password' => ['password', 'password_confirmation', 'new_password', 'new_password_confirmation'],
             'url' => ['url', 'website', 'youtube', 'vimeo', 'facebook', 'twitter', 'instagram', 'linkedin'],
+            'file' => ['image', 'picture', 'photo', 'logo', 'background', 'audio', 'video', 'file'],
+            'password' => ['password', 'password_confirmation', 'new_password', 'new_password_confirmation'],
             'time' => ['time', 'hour'],
-            'tel' => ['phone', 'whatsapp'],
+            'tel' => ['phone', 'telephone', 'cellphone', 'mobile', 'whatsapp'],
         ];
 
         foreach ($types as $type => $names) {
@@ -149,10 +221,12 @@ trait InteractsWithField
             return false;
         }
 
+        $words = $this->fieldNameWords($name);
+
         foreach ($needles as $needle) {
             $matches = Str::startsWith($needle, '_')
-                ? Str::endsWith(Str::lower($name), Str::lower($needle))
-                : Str::contains($name, $needle, true);
+                ? Str::endsWith($words, $this->fieldNameWords($needle))
+                : Str::contains($words, $this->fieldNameWords($needle));
 
             if ($matches) {
                 return true;
@@ -162,29 +236,29 @@ trait InteractsWithField
         return false;
     }
 
-    public function detectInputMask(
+    protected function fieldNameWords(string $name): string
+    {
+        $name = preg_replace('/(?<=[a-z0-9])(?=[A-Z])/', '_', $name);
+        $words = array_filter(preg_split('/[^a-z0-9]+/', Str::lower($name)), 'strlen');
+
+        return '_'.implode('_', $words).'_';
+    }
+
+    public function fieldMask(
         ?string $name = null,
         null|string|bool $mask = null,
         ?string $type = null
-    ) {
+    ): ?string {
         if ($mask === false) {
             return null;
         }
 
-        $masks = [
-            '99999-999' => ['cep', 'zipcode', 'zip-code'],
-            '99/99/9999' => ['date', 'birthdate', 'birth_date', '_at'],
-            '99/99/9999 99:99' => ['datetime', 'date_time'],
-            '99:99' => ['time'],
-            '999.999.999-99' => ['cpf'],
-            '99.999.999/9999-99' => ['cnpj'],
-            '(99) 999999999' => ['tel', 'phone', 'whatsapp'],
-        ];
+        $masks = (array) config('tallkit.masks', []);
 
         if (is_string($mask)) {
             foreach ($masks as $maskValue => $names) {
                 if ($this->fieldNameMatches($mask, $names)) {
-                    return $maskValue;
+                    return (string) $maskValue;
                 }
             }
 
@@ -197,7 +271,7 @@ trait InteractsWithField
 
         foreach ($masks as $maskValue => $names) {
             if ($this->fieldNameMatches($name, $names) || $this->fieldNameMatches($type, $names)) {
-                return $maskValue;
+                return (string) $maskValue;
             }
         }
 

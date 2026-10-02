@@ -1,13 +1,4 @@
 @props([
     'options' => null,
 ])
-<tk:loadable
-    x-data="chartjs"
-    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'loadable:')"
->
-    <canvas
-        {{ $attributes->whereDoesntStartWith(['loadable:']) }}
-        x-ref="target"
-        @if ($options) x-init="render(@js($options))" @endif
-    ></canvas>
-</tk:loadable>
+<tk:chart library="chartjs" :$options :$attributes />

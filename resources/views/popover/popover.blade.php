@@ -8,14 +8,14 @@
     wire:ignore.self
     popover="manual"
     {{
-        TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')
+        $attributes->prefixed('container:')
             ->classes('group [:where(&)]:focus:outline-hidden bg-transparent')
             ->merge(['data-keep-open' => $keepOpen])
-            ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId(name: 'popover')] : [], false)
+            ->wireKey(TALLKit::stableId('popover'))
     }}
 >
     <tk:transition
-        x-show="opened"
+        x-show="typeof opened === 'undefined' || opened"
         :$animation
         :attributes="
             $attributes
@@ -45,6 +45,7 @@
                     TALLKit::padding(size: $size, mode: 'smallest'),
                     TALLKit::roundedSize(size: $size, mode: 'large'),
                     TALLKit::generateClassBySize(size: $size, name: 'min-w', values: ['32', '40', '48', '56', '64', '72', '80']),
+                    '[:where(&)]:max-w-[calc(100vw-1rem)]',
                     TALLKit::generateClassBySize(size: $size, name: 'max-h', values: ['48', '56', '64', '72', '80', '88', '96']),
                 )
         "

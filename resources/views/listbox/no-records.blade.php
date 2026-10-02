@@ -1,10 +1,11 @@
+@props([
+    ...TALLKit::elementProps(),
+])
 <tk:text
-    :$attributes
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->merge(['label' => 'No records found', 'variant' => 'subtle'])->dataKey('listbox-no-records')"
     hidden
     class="p-4 text-center"
     aria-live="polite"
-    label="No records found"
-    variant="subtle"
     role="status"
 >
     {{ $slot }}

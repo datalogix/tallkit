@@ -1,4 +1,4 @@
-import { bind, hasLivewire, onLivewireCommit, timeout } from '../utils'
+import { bind, hasLivewire, onLivewireCommit, startTimeout, toMilliseconds } from '../utils'
 
 export function toggle({ action = null, model = null, delay = null, minDuration = null } = {}) {
   return {
@@ -41,10 +41,10 @@ export function toggle({ action = null, model = null, delay = null, minDuration 
 
         this.blocking = true
 
-        this.delayTimeout = timeout(() => {
+        this.delayTimeout = startTimeout(() => {
           this.busy = true
           this.busyShownAt = Date.now()
-        }, delay ?? 150)
+        }, delay, 150)
 
         const stop = () => {
           this.blocking = false
@@ -52,10 +52,10 @@ export function toggle({ action = null, model = null, delay = null, minDuration 
 
           if (!this.busy) return
 
-          const remaining = (minDuration ?? 700) - (Date.now() - this.busyShownAt)
+          const remaining = toMilliseconds(minDuration, 700) - (Date.now() - this.busyShownAt)
 
           if (remaining > 0) {
-            this.minDurationTimeout = timeout(() => { this.busy = false }, remaining)
+            this.minDurationTimeout = startTimeout(() => { this.busy = false }, remaining)
           } else {
             this.busy = false
           }

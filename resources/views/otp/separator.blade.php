@@ -1,9 +1,13 @@
 @aware(['size'])
-@props(['size'])
+@props([
+    ...TALLKit::elementProps(),
+    'size' => null,
+    'label' => '—',
+])
 <tk:text
-    :attributes="$attributes->classes(TALLKit::paddingInline(size: $size, mode: 'smallest'))"
+    aria-hidden="true"
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->classes(TALLKit::paddingInline(size: $size, mode: 'smallest'))"
     :$size
-    label="&mdash;"
 >
     {{ $slot }}
 </tk:text>

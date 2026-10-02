@@ -1,42 +1,23 @@
 @props([
+    ...TALLKit::elementProps(),
     'size' => null,
-    'mode' => null,
+    'scale' => null,
     'weight' => null,
     'variant' => null,
-
-    // element
-    'label' => null,
-    'icon' => null,
-    'prefix' => null,
-    'suffix' => null,
-    'iconTrailing' => null,
-    'info' => null,
-    'badge' => null,
-    'prepend' => null,
-    'append' => null,
-    'kbd' => null,
+    'color' => null,
 ])
 <tk:element.wrapper
-    name="text"
+    kind="text"
     as="p"
-    :$label
-    :$icon
-    :$prefix
-    :$suffix
-    :$iconTrailing
-    :$info
-    :$badge
-    :$prepend
-    :$append
-    :$kbd
-    :attributes="$attributes->classes(
-        TALLKit::fontSize(size: $size, mode: $mode, weight: $weight),
-        TALLKit::iconSize(size: $size, mode: $mode),
-        match ($variant) {
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->classes(
+        TALLKit::fontSize(size: $size, mode: $scale, weight: $weight),
+        TALLKit::iconSize(size: $size, mode: $scale),
+        TALLKit::text(color: $color) ?? match ($variant) {
             'accent' => 'text-[var(--color-accent-content)]',
             'strong' => TALLKit::textNeutral(variant: 'strong', prefix: '[:where(&)]:'),
             'subtle' => TALLKit::textNeutral(variant: 'subtle', prefix: '[:where(&)]:'),
-            default => TALLKit::text(color: $variant) ?? TALLKit::textNeutral(prefix: '[:where(&)]:'),
+            'none' => '',
+            default => TALLKit::textNeutral(prefix: '[:where(&)]:'),
         }
     )"
 >

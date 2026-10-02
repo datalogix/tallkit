@@ -4,10 +4,11 @@
     'empty' => null,
     'grouped' => null,
     'compact' => null,
+    'actions' => false,
 ])
 @php
 
-$notifications = collect($items ?? auth()->user()?->unreadNotifications ?? []);
+$notifications = collect($items);
 
 $dateLabel = function ($notification) {
     $data = data_get($notification, 'data', []);
@@ -38,7 +39,7 @@ $groups = $grouped
     @forelse ($groups as $label => $group)
         @if ($label)
             <tk:text
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'group-label:')
+                :attributes="$attributes->prefixed('group-label:')
                     ->classes('block px-2 pt-3 pb-1 first:pt-1 font-medium uppercase tracking-wide')
                 "
                 :size="TALLKit::adjustSize(size: $size)"
@@ -49,15 +50,16 @@ $groups = $grouped
 
         @foreach ($group as $notification)
             <tk:notification.item
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'item:')"
+                :attributes="$attributes->prefixed('item:')"
                 :$notification
                 :$size
                 :$compact
+                :$actions
             />
         @endforeach
     @empty
         <tk:text
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'empty:')
+            :attributes="$attributes->prefixed('empty:')
                 ->classes(
                     'block text-center',
                     TALLKit::padding(size: $size),

@@ -1,5 +1,37 @@
-import { loadRemoteAssets, escapeHtml } from '../utils'
+import { dataKey, dataSelector, loadRemoteAssets, escapeHtml, isDarkMode, onColorSchemeChange } from '../utils'
 import { loadable } from './loadable'
+
+const CDN = 'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build'
+
+const THEMES = {
+  light: `${CDN}/styles/github.min.css`,
+  dark: `${CDN}/styles/github-dark.min.css`,
+}
+
+let followingTheme = false
+
+function syncTheme() {
+  const href = isDarkMode() ? THEMES.dark : THEMES.light
+  let link = document.querySelector(`link${dataSelector('highlightjs-theme')}`)
+
+  if (!link) {
+    link = document.createElement('link')
+    link.rel = 'stylesheet'
+    link.setAttribute(dataKey('highlightjs-theme'), '')
+    document.head.appendChild(link)
+  }
+
+  if (link.getAttribute('href') !== href) link.setAttribute('href', href)
+}
+
+function followTheme() {
+  syncTheme()
+
+  if (followingTheme) return
+
+  followingTheme = true
+  onColorSchemeChange(syncTheme)
+}
 
 export function highlightjs() {
   return {
@@ -7,12 +39,11 @@ export function highlightjs() {
 
     language: null,
 
-    init () {
+    init() {
       this.load(() => loadRemoteAssets(
         () => !!window.hljs,
-        'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/highlight.min.js',
-        'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11/build/styles/default.min.css'
-      ))
+        `${CDN}/highlight.min.js`,
+      ).then(() => followTheme()))
     },
 
     render(code, language = null) {
@@ -24,9 +55,9 @@ export function highlightjs() {
         this.language = result.language ?? null
 
         return result.value
-      } catch(e) {
+      } catch (e) {
         return escapeHtml(code) ?? ''
       }
     },
-  };
+  }
 }

@@ -12,3 +12,19 @@
 .tilt-shaking {
   animation: tilt-shaking 0.2s;
 }
+
+/* Near-zero, not none: transitionend and animationend still fire for the scripts waiting on them. */
+@media (prefers-reduced-motion: reduce) {
+  [data-tallkit-transition],
+  [data-tallkit-modal],
+  [data-tallkit-modal]::backdrop,
+  .tilt-shaking,
+  :is([data-tallkit-disclosure-item], .group\/disclosure) [x-collapse],
+  [data-tallkit-icon],
+  [data-tallkit-sidebar],
+  [data-tallkit-carousel-track] {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

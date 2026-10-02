@@ -5,16 +5,18 @@ export async function loadScript(src, { integrity, crossorigin } = {}) {
     return src.reduce(
       (p, s) => p.then(async (events) => [...events, await loadScript(s, { integrity, crossorigin })]),
       Promise.resolve([])
-    );
+    )
   }
 
   if (scripts.has(src)) {
-    return scripts.get(src);
+    return scripts.get(src)
   }
 
   const promise = new Promise((resolve, reject) => {
-     if (document.querySelector(`script[src="${src}"]`)) {
-      resolve(new Event('load'))
+    const existing = findElement('script', 'src', src)
+
+    if (existing) {
+      waitForExisting(existing, resolve, reject)
       return
     }
 
@@ -26,6 +28,7 @@ export async function loadScript(src, { integrity, crossorigin } = {}) {
     script.onload = resolve
     script.onerror = (e) => {
       scripts.delete(src)
+      script.remove()
       reject(e)
     }
     document.head.appendChild(script)
@@ -55,7 +58,7 @@ export async function loadRemoteModule(src) {
   }
 
   if (modules.has(src)) {
-    return modules.get(src);
+    return modules.get(src)
   }
 
   const promise = import(/* @vite-ignore */ src).catch((e) => {
@@ -74,16 +77,18 @@ export function loadStyle(href, { integrity, crossorigin } = {}) {
     return href.reduce(
       (p, s) => p.then(async (events) => [...events, await loadStyle(s, { integrity, crossorigin })]),
       Promise.resolve([])
-    );
+    )
   }
 
   if (styles.has(href)) {
-    return styles.get(href);
+    return styles.get(href)
   }
 
   const promise = new Promise((resolve, reject) => {
-    if (document.querySelector(`link[rel="stylesheet"][href="${href}"]`)) {
-      resolve(new Event('load'))
+    const existing = findElement('link[rel="stylesheet"]', 'href', href)
+
+    if (existing) {
+      waitForExisting(existing, resolve, reject)
       return
     }
 
@@ -95,6 +100,7 @@ export function loadStyle(href, { integrity, crossorigin } = {}) {
     link.onload = resolve
     link.onerror = (e) => {
       styles.delete(href)
+      link.remove()
       reject(e)
     }
     document.head.appendChild(link)
@@ -102,4 +108,33 @@ export function loadStyle(href, { integrity, crossorigin } = {}) {
 
   styles.set(href, promise)
   return promise
+}
+
+function findElement(selector, attribute, value) {
+  return Array.from(document.querySelectorAll(selector)).find((el) => el.getAttribute(attribute) === value) ?? null
+}
+
+function waitForExisting(el, resolve, reject) {
+  if (document.readyState === 'complete') {
+    resolve(new Event('load'))
+    return
+  }
+
+  const done = (event) => {
+    el.removeEventListener('load', done)
+    el.removeEventListener('error', fail)
+    window.removeEventListener('load', done)
+    resolve(event)
+  }
+
+  const fail = (event) => {
+    el.removeEventListener('load', done)
+    el.removeEventListener('error', fail)
+    window.removeEventListener('load', done)
+    reject(event)
+  }
+
+  el.addEventListener('load', done)
+  el.addEventListener('error', fail)
+  window.addEventListener('load', done)
 }

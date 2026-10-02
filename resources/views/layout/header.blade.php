@@ -15,15 +15,15 @@
     }}
 >
     <tk:header
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'header:')->classes(['flex-col items-start' => isset($header)])"
+        :attributes="$attributes->prefixed('header:')->classes(['flex-col items-start' => isset($header)])"
     >
-        <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'area:')->classes('flex-1 w-full flex items-center gap-2') }}>
+        <div {{ $attributes->prefixed('area:')->classes('flex-1 w-full flex items-center gap-2') }}>
             <tk:sidebar.toggle
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'sidebar-open:')->classes('lg:hidden')"
+                :attributes="$attributes->prefixed('sidebar-open:')->classes('lg:hidden')"
             />
 
             <tk:brand
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'brand:')->classes('max-lg:hidden me-4')"
+                :attributes="$attributes->prefixed('brand:')->classes('max-lg:hidden me-4')"
             >
                 {{ $brand ?? '' }}
             </tk:brand>
@@ -31,7 +31,7 @@
             {{ $prepend ?? '' }}
 
             @if ($align === 'center' || $align === 'right')
-                <tk:spacer :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'spacer:')" />
+                <tk:spacer :attributes="$attributes->prefixed('spacer:')" />
             @endif
 
             <div class="hidden lg:block">
@@ -39,7 +39,7 @@
                     {{ $header }}
                 @else
                     <tk:nav
-                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'menu:')"
+                        :attributes="$attributes->prefixed('menu:')->merge(['label' => 'Main menu'])"
                         :items="$menu"
                     >
                         {{ $nav ?? '' }}
@@ -48,7 +48,7 @@
             </div>
 
             @if ($align === 'center' || $align === 'left' || $align === null)
-                <tk:spacer :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'spacer:')" />
+                <tk:spacer :attributes="$attributes->prefixed('spacer:')" />
             @endif
 
             {{ $append ?? '' }}
@@ -56,8 +56,8 @@
             {{ $notification ?? '' }}
 
             <tk:appearance.menu
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'appearance:')"
-                :mode="$appearance"
+                :attributes="$attributes->prefixed('appearance:')"
+                :control="$appearance"
                 :items="$userMenu"
             >
                 {{ $avatarMenu ?? '' }}
@@ -67,7 +67,7 @@
         @if (isset($header) && ((isset($nav) && filled($nav)) || ($menu && filled($menu))))
             <div class="hidden lg:block">
                 <tk:nav
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'menu:')"
+                    :attributes="$attributes->prefixed('menu:')->merge(['label' => 'Main menu'])"
                     :items="$menu"
                     indicator="line-bottom"
                 >
@@ -78,26 +78,25 @@
     </tk:header>
 
     <tk:sidebar
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'sidebar:')->classes('lg:hidden')"
+        :attributes="$attributes->prefixed('sidebar:')->classes('lg:hidden')"
         sticky
         stashable
     >
         <tk:sidebar.toggle
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'sidebar-close:')->classes('lg:hidden')"
+            :attributes="$attributes->prefixed('sidebar-close:')->classes('lg:hidden')"
             icon="close"
         />
 
         <tk:brand
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'sidebar-brand:')"
+            :attributes="$attributes->prefixed('sidebar-brand:')"
         >
             {{ $brand ?? '' }}
         </tk:brand>
 
-        {{ $prepend ?? '' }}
         {{ $header ?? '' }}
 
         <tk:nav
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'sidebar-menu:')"
+            :attributes="$attributes->prefixed('sidebar-menu:')->merge(['label' => 'Main menu'])"
             :items="$menu"
             :indicator="false"
             list
@@ -106,11 +105,10 @@
         </tk:nav>
 
         {{ $sidebar ?? '' }}
-        {{ $append ?? '' }}
     </tk:sidebar>
 
     <tk:main
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'main:')"
+        :attributes="$attributes->prefixed('main:')"
         container
     >
         {{ $slot }}

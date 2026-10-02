@@ -15,39 +15,43 @@ class BladeDirectives
 
     public static function scope($expression)
     {
-        // Split the expression by `top-level` commas (not in parentheses)
-        $directiveArguments = preg_split("/,(?![^\(\(]*[\)\)])/", $expression);
-        $directiveArguments = array_pad(array_map('trim', $directiveArguments), 2, '()');
+        $arguments = array_pad(static::splitArguments($expression), 2, '()');
 
-        // Prepare arguments to uses
-        if (! Str::startsWith($directiveArguments[1], '(')) {
-            $ar = $directiveArguments;
-            $directiveArguments = [];
-            $directiveArguments[] = $ar[0];
-            unset($ar[0]);
-            $directiveArguments[] = '('.implode(', ', $ar).')';
+        // @scope('name', $item, $index): without parentheses, everything after the name is a parameter.
+        [$name, $functionArguments, $functionUses] = Str::startsWith($arguments[1], '(')
+            ? array_pad($arguments, 3, null)
+            : [$arguments[0], '('.implode(', ', array_slice($arguments, 1)).')', null];
+
+        $functionUses = array_filter(array_map('trim', explode(',', trim($functionUses ?? '', '()'))), 'strlen');
+        $functionUses = implode(', ', array_unique([...$functionUses, '$__env', '$__bladeCompiler']));
+
+        return "<?php \$__bladeCompiler = \$__bladeCompiler ?? null; \$__env->slot({$name}, function {$functionArguments} use ({$functionUses}) { ?>";
+    }
+
+    protected static function splitArguments(string $expression): array
+    {
+        $parts = [''];
+        $depth = 0;
+
+        foreach (array_slice(token_get_all('<?php '.$expression), 1) as $token) {
+            $text = is_array($token) ? $token[1] : $token;
+
+            if ($text === ',' && $depth === 0) {
+                $parts[] = '';
+
+                continue;
+            }
+
+            if (in_array($text, ['(', '[', '{'], true)) {
+                $depth++;
+            } elseif (in_array($text, [')', ']', '}'], true)) {
+                $depth--;
+            }
+
+            $parts[array_key_last($parts)] .= $text;
         }
 
-        // Ensure that the directive's arguments array has 3 elements - otherwise fill with `null`
-        $directiveArguments = array_pad($directiveArguments, 3, null);
-
-        // Extract values from the directive's arguments array
-        [$name, $functionArguments, $functionUses] = $directiveArguments;
-
-        // Connect the arguments to form a correct function declaration
-        if ($functionArguments) {
-            $functionArguments = "function {$functionArguments}";
-        }
-
-        $functionUses = array_filter(explode(',', trim($functionUses ?? '', '()')), 'strlen');
-
-        // Add `$__env` and `$__bladeCompiler` to allow usage of other Blade directives inside the scoped slot
-        array_push($functionUses, '$__env');
-        array_push($functionUses, '$__bladeCompiler');
-
-        $functionUses = implode(',', $functionUses);
-
-        return "<?php \$__bladeCompiler = \$__bladeCompiler ?? null; \$__env->slot({$name}, {$functionArguments} use ({$functionUses}) { ?>";
+        return array_map('trim', $parts);
     }
 
     public static function endscope()

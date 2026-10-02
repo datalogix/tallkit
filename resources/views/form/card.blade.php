@@ -10,7 +10,7 @@
     'footer' => null,
 ])
 <tk:form
-    :attributes="$attributes->whereDoesntStartWith([
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), ['errorGroup' => null, 'errorBag' => null, 'focusError' => null, 'clearErrorsOnSubmit' => null, 'errorMessage' => null, 'successMessage' => null, 'submit' => null])->whereDoesntStartWith([
         'card:', 'alert:',
         'image', 'alt', 'icon', 'badge', 'separator', 'content',
         'title:', 'subtitle:', 'container:', 'list:', 'actions:',
@@ -18,7 +18,7 @@
     :alert="false"
 >
     <tk:card
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'card:', prepend: [
+        :attributes="$attributes->prefixed('card:', with: [
             'image', 'alt', 'icon', 'badge', 'separator', 'content',
             'title:', 'subtitle:', 'container:', 'list:', 'actions:',
         ])"
@@ -33,7 +33,7 @@
         :$footer
     >
         <tk:alert.session
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'alert:')"
+            :attributes="$attributes->prefixed('alert:')"
             :$size
         >
             {{ $alert ?? '' }}

@@ -1,11 +1,11 @@
 @aware(['size'])
 @props([
-    'heading' => null,
+    'label' => null,
     'size' => null,
 ])
 @php
 
-$headingId = $heading ? TALLKit::generateId(prefix: 'menu-group', name: $heading) : null;
+$headingId = $label ? TALLKit::stableId('menu-group', $label) : null;
 
 @endphp
 <div
@@ -28,14 +28,14 @@ $headingId = $heading ? TALLKit::generateId(prefix: 'menu-group', name: $heading
     }}
 >
     <tk:menu.separator
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'separator-top:')
+        :attributes="$attributes->prefixed('separator-top:')
             ->merge(['container:'.TALLKit::dataKey(name: 'menu-group-separator-top-container') => ''])"
     />
 
-    @if ($heading)
+    @if ($label)
         <tk:menu.heading
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'heading:')"
-            :label="$heading"
+            :attributes="$attributes->prefixed('heading:')"
+            :$label
             :$size
             :id="$headingId"
         />
@@ -44,7 +44,7 @@ $headingId = $heading ? TALLKit::generateId(prefix: 'menu-group', name: $heading
     {{ $slot }}
 
     <tk:menu.separator
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'separator-bottom:')
+        :attributes="$attributes->prefixed('separator-bottom:')
             ->merge(['container:'.TALLKit::dataKey(name: 'menu-group-separator-bottom-container') => ''])"
     />
 </div>

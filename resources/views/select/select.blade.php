@@ -6,7 +6,8 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
+$value = TALLKit::fieldOldValue($fieldName, $value);
 $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd || $attributes->has('class');
 $options = TALLKit::parseOptions(attributes: $attributes);
 
@@ -17,11 +18,11 @@ $hasMatchingOption = (bool) array_intersect($valueStrings, array_map('strval', $
 @endphp
 <tk:field.wrapper
     :$name
-    :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
 >
     <tk:field.control
         :$size
-        :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
+        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
             ->when(
                 $hasControl,
                 fn ($attrs) => $attrs->classes(
@@ -39,12 +40,12 @@ $hasMatchingOption = (bool) array_intersect($valueStrings, array_map('strval', $
                     ->dataKey('control')
                     ->dataKey('group-target')
                     ->merge([
-                        'name' => $name,
+                        'name' => $multiple && $name && ! str_ends_with($name, '[]') ? $name.'[]' : $name,
                         'id' => $id,
                         'multiple' => $multiple ? true : null,
                         'size' => $multiple ? ($rows ?? 5) : null,
                         'wire:model' => $wireModel,
-                        'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
+                        'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                         'aria-invalid' => $invalid ? 'true' : null,
                         'data-invalid' => $invalid ? true : null,
                     ])
@@ -71,7 +72,7 @@ $hasMatchingOption = (bool) array_intersect($valueStrings, array_map('strval', $
                         ',
                         TALLKit::fontSize(size: $size, mode: 'large'),
                         TALLKit::paddingStart(size: $size, mode: 'large'),
-                        TALLKit::paddingEnd(size: $size, mode: 'large'),
+                        $multiple ? TALLKit::paddingEnd(size: $size, mode: 'large') : '[:where(&)]:pe-9',
                         TALLKit::generateClassBySize(size: $size, name: 'min-h', values: ['8', '9', '10', '12', '14', '16', '18']),
                         $attributes->pluck('select:class'),
                     )
@@ -103,7 +104,7 @@ $hasMatchingOption = (bool) array_intersect($valueStrings, array_map('strval', $
         >
             @if (($placeholder ?? true) && ! $multiple)
                 <tk:select.option
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'placeholder:')->classes('placeholder')"
+                    :attributes="$attributes->prefixed('placeholder:')->classes('placeholder')"
                     :label="is_string($placeholder) ? $placeholder : '---'"
                     :selected="! $hasMatchingOption"
                     :value="''"
@@ -116,13 +117,13 @@ $hasMatchingOption = (bool) array_intersect($valueStrings, array_map('strval', $
                 @foreach ($options as $optionItemValue => $optionItemLabel)
                     @if (is_array($optionItemLabel))
                         <optgroup
-                            {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'optgroup:') }}
+                            {{ $attributes->prefixed('optgroup:') }}
                             label="{{ __($optionItemValue ?: '---') }}"
                         >
                             @foreach ($optionItemLabel as $optionItemGroupValue => $optionItemGroupLabel)
                                 <tk:select.option
-                                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'option:')
-                                        ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId(prefix: 'select-option', name: (string) $optionItemGroupValue)] : [], false)
+                                    :attributes="$attributes->prefixed('option:')
+                                        ->wireKey(TALLKit::generateId(prefix: 'select-option', name: (string) $optionItemGroupValue))
                                     "
                                     :label="$optionItemGroupLabel"
                                     :selected="in_array((string) $optionItemGroupValue, $valueStrings, true)"
@@ -132,8 +133,8 @@ $hasMatchingOption = (bool) array_intersect($valueStrings, array_map('strval', $
                         </optgroup>
                     @else
                         <tk:select.option
-                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'option:')
-                                ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId(prefix: 'select-option', name: (string) $optionItemValue)] : [], false)
+                            :attributes="$attributes->prefixed('option:')
+                                ->wireKey(TALLKit::generateId(prefix: 'select-option', name: (string) $optionItemValue))
                             "
                             :label="$optionItemLabel"
                             :selected="in_array((string) $optionItemValue, $valueStrings, true)"

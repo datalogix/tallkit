@@ -4,39 +4,47 @@
     'options' => null,
     'scripts' => null,
     'styles' => null,
-    'mode' => null,
+    'toolbar' => null,
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
+$value = TALLKit::fieldOldValue($fieldName, $value);
 
 @endphp
 <tk:field.wrapper
     :$name
-    :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
 >
     <tk:field.control
         :$size
-        :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())"
+        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())"
     >
         <div
             wire:ignore
             x-data="editorjs(
-                {{
-                    Js::from([
-                        'mode' => $mode,
+                @js([
+                        'toolbar' => $toolbar,
                         'options' => $options ?? [],
                         'scripts' => $scripts ?? [],
-                        'styles' => $styles ?? []
+                        'styles' => $styles ?? [],
+                        'i18n' => TALLKit::editorTranslations('editorjs'),
                     ])
-                }}
             )"
             {{
-                TALLKit::attributesAfter(attributes: $attributes, prefix: 'editor:')
+                $attributes->prefixed('editor:')
                     ->classes(
-                        'w-full block bg-white text-zinc-700',
+                        '
+                            tk-control-surface
+                            tk-control-invalid-border-nested
+                            w-full block
+                            text-zinc-700 dark:text-zinc-200
+                            outline-none
+                            focus-within:tk-focus-ring
+                        ',
                         TALLKit::roundedSize(size: $size, mode: 'large'),
                         TALLKit::paddingBlock(size: $size, mode: 'large'),
+                        TALLKit::paddingInline(size: $size, mode: 'large'),
                     )
             }}
         >
@@ -48,7 +56,7 @@
                             'name' => $name,
                             'id' => $id,
                             'wire:model' => $wireModel,
-                            'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
+                            'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                             'aria-invalid' => $invalid ? 'true' : null,
                             'data-invalid' => $invalid ? true : null,
                         ])
@@ -57,7 +65,7 @@
                 }}
             >{{ in_livewire() ? null : ($value ?? $slot) }}</textarea>
 
-            <div x-ref="root"></div>
+            <div x-ref="root" role="group" @if ($label) aria-labelledby="{{ $id }}-label" @endif></div>
         </div>
     </tk:field.control>
 </tk:field.wrapper>

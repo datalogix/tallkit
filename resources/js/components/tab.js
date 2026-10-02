@@ -1,4 +1,4 @@
-import { bind } from '../utils'
+import { dataSelector, bind, isRtl, emit } from '../utils'
 
 export function tab(
   {
@@ -9,44 +9,57 @@ export function tab(
   return {
     selected: null,
 
+    own(selector) {
+      return Array.from(this.$root.querySelectorAll(selector)).filter((el) => el.closest(dataSelector('tab-group')) === this.$root)
+    },
+
+    isOwnTab(target) {
+      const tab = target.closest('[role="tab"]')
+
+      return !!tab && tab.closest(dataSelector('tab-group')) === this.$root
+    },
+
     tabs() {
-      return (Array.from(this.$root.querySelectorAll('[role="tab"]'))).filter((el) => !el.disabled);
+      return this.own('[role="tab"]')
+        .filter((el) => !el.disabled && el.getAttribute('aria-disabled') !== 'true')
     },
 
     init() {
-      const selected = this.$root.querySelector('[data-selected]')?.dataset.name
+      const selected = this.own('[data-selected]')[0]?.dataset.name
       const tabs = this.tabs()
 
       if (selected || (selectFirst && tabs.length)) {
         this.$nextTick(() => {
-          this.select(selected ?? tabs[0]?.dataset.name)
+          this.selected = selected ?? tabs[0]?.dataset.name
         })
       }
 
       const nextKey = orientation === 'vertical' ? 'arrow-down' : 'arrow-right'
       const previousKey = orientation === 'vertical' ? 'arrow-up' : 'arrow-left'
 
+      const step = (forward) => orientation !== 'vertical' && isRtl(this.$root) ? -forward : forward
+
       bind(this.$root, {
         [`@keydown.${nextKey}`](event) {
-          if (!event.target.closest('[role="tab"]')) return
+          if (!this.isOwnTab(event.target)) return
           event.preventDefault()
-          this.focusTab(1, event.target)
+          this.focusTab(step(1), event.target)
         },
 
         [`@keydown.${previousKey}`](event) {
-          if (!event.target.closest('[role="tab"]')) return
+          if (!this.isOwnTab(event.target)) return
           event.preventDefault()
-          this.focusTab(-1, event.target)
+          this.focusTab(step(-1), event.target)
         },
 
         ['@keydown.home'](event) {
-          if (!event.target.closest('[role="tab"]')) return
+          if (!this.isOwnTab(event.target)) return
           event.preventDefault()
           this.focusTab('first', event.target)
         },
 
         ['@keydown.end'](event) {
-          if (!event.target.closest('[role="tab"]')) return
+          if (!this.isOwnTab(event.target)) return
           event.preventDefault()
           this.focusTab('last', event.target)
         },
@@ -58,7 +71,10 @@ export function tab(
     },
 
     select(name) {
+      if (this.selected === name) return
+
       this.selected = name
+      emit(this.$root, 'changed', { name })
     },
 
     focusTab(direction, current) {
@@ -77,5 +93,5 @@ export function tab(
 
       if (next.dataset.name) this.select(next.dataset.name)
     },
-  };
+  }
 }

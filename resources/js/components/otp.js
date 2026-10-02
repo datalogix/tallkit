@@ -1,4 +1,4 @@
-import { bind, setFieldValue, hasLivewire } from '../utils'
+import { bind, setFieldValue, hasLivewire, focusOnLabelClick, emit } from '../utils'
 import { bindableField } from '../mixins/bindable-field'
 
 export function otp(submit) {
@@ -13,54 +13,71 @@ export function otp(submit) {
     value: '',
     inputs: [],
     _syncing: false,
+    _submitted: null,
+    _stopLabelFocus: null,
 
     init() {
-      this.inputs = Array.from(this.$root.querySelectorAll('input[data-mode]'))
+      this.inputs = Array.from(this.$root.querySelectorAll('input[data-charset]'))
 
       _bindableField.init.call(this)
 
+      // Only the user completing the code submits it: a prefilled code must not send itself.
       this.$nextTick(() => {
         this.syncFromModel()
-        this.updateModel()
+        this.updateModel(false)
       })
 
       this.$watch('value', (val) => {
+        if (val === this.boxesValue()) return
+
         this.syncFromModel(val)
-        this.updateModel()
+        this.updateModel(false)
       })
 
       this.inputs.forEach((input, index) => {
         bind(input, this.bindings(input, index, this.inputs))
       })
+
+      this._stopLabelFocus = focusOnLabelClick(this.$root, () => this.inputs[0]?.focus())
+    },
+
+    destroy() {
+      this._stopLabelFocus?.()
+    },
+
+    emitOnBox(name, detail, box = this.inputs[0]) {
+      emit(box, name, detail)
     },
 
     bindings(input, index, inputs) {
       return {
-        ['@focus']: () => this.handleFocus(input, index, inputs),
-        ['@blur']: () => this.$dispatch('otp-blur', { input, index }),
+        ['@focus']: (e) => this.handleFocus(input, index, inputs, e),
+        ['@blur']: () => this.emitOnBox('blurred', { input, index }, input),
         ['@paste.prevent']: (e) => this.handlePaste(e, index, inputs),
         ['@input']: () => this.handleInput(input, index, inputs),
         ['@keydown']: (e) => this.handleKeydown(e, input, index, inputs),
         ['@keydown.arrow-left.prevent']: () => inputs[index - 1]?.select(),
         ['@keydown.arrow-right.prevent']: () => inputs[index + 1]?.select(),
         ['@keydown.backspace.prevent']: () => this.handleBackspace(input, index, inputs),
-      };
+      }
     },
 
-    handleFocus(input, index, inputs) {
-      if (input.value) {
+    handleFocus(input, index, inputs, event = null) {
+      // From another of its boxes, focus stays: sent back to the first empty one, Tab would never leave (a keyboard
+      // trap).
+      if (input.value || inputs.includes(event?.relatedTarget)) {
         input.select()
-        this.$dispatch('otp-focus', { input, index })
+        this.emitOnBox('focused', { input, index }, input)
         return
       }
 
       const firstEmpty = inputs.find(i => !i.value)
       firstEmpty?.select()
 
-      this.$dispatch('otp-focus', {
+      this.emitOnBox('focused', {
         input: firstEmpty || input,
         index: inputs.indexOf(firstEmpty || input),
-      })
+      }, firstEmpty || input)
     },
 
     handlePaste(e, index, inputs) {
@@ -75,14 +92,14 @@ export function otp(submit) {
 
       this.updateModel()
 
-      this.$dispatch('otp-paste', { pasted, index })
+      this.emitOnBox('pasted', { pasted, index })
     },
 
     handleInput(input, index, inputs) {
       if (this._syncing) return
 
-      const mode = input.dataset.mode
-      const filtered = filterValue(input.value, mode)
+      const charset = input.dataset.charset
+      const filtered = filterValue(input.value, charset)
 
       if (filtered.length > 1) {
         spreadValue(filtered, index, inputs)
@@ -97,9 +114,9 @@ export function otp(submit) {
     handleKeydown(e, input, _index, _inputs) {
       if (e.ctrlKey || e.metaKey || e.altKey) return
 
-      const mode = input.dataset.mode
+      const charset = input.dataset.charset
 
-      if (!isValidKey(e.key, mode)) {
+      if (!isValidKey(e.key, charset)) {
         e.preventDefault()
       }
     },
@@ -118,75 +135,96 @@ export function otp(submit) {
 
     syncFromModel(val) {
       val ??= this.value
-      const chars = String(val).padEnd(this.inputs.length).split('')
+      // String(null) would be "null".
+      const chars = String(val ?? '').padEnd(this.inputs.length).split('')
 
       this._syncing = true
       try {
         this.inputs.forEach((input, i) => {
-          const mode = input.dataset.mode
-          setFieldValue(input, filterValue(chars[i] ?? '', mode))
+          const charset = input.dataset.charset
+          setFieldValue(input, filterValue(chars[i] ?? '', charset))
         })
       } finally {
         this._syncing = false
       }
     },
 
-    updateModel() {
+    boxesValue() {
+      return this.inputs.map((i) => i.value || '').join('')
+    },
+
+    updateModel(byUser = true) {
       const values = this.inputs.map((i) => i.value || '')
       this.value = values.join('')
 
       const filled = values.filter(Boolean).length
 
-      this.$dispatch('otp-change', { value: this.value })
+      // No events: a field set by a script fires none.
+      if (!byUser) {
+        if (filled < this.inputs.length) this._submitted = null
+
+        return
+      }
+
+      this.emitOnBox('changed', { value: this.value })
 
       if (filled === this.inputs.length) {
-        this.$dispatch('otp-complete', { value: this.value })
+        this.emitOnBox('completed', { value: this.value })
 
-        if (submit === 'auto') {
-          this.$root.closest('form')?.requestSubmit()
-        } else if (submit && hasLivewire()) {
-          window.Livewire.dispatch(submit, this.value)
+        if (this.value !== this._submitted) {
+          this._submitted = this.value
+
+          if (submit === 'auto') {
+            this.$root.closest('form')?.requestSubmit()
+          } else if (submit && hasLivewire()) {
+            window.Livewire.dispatch(submit, this.value)
+          }
         }
       } else {
-        this.$dispatch('otp-incomplete', { value: this.value })
+        this._submitted = null
+
+        this.emitOnBox('incomplete', { value: this.value })
       }
 
       if (filled === 0) {
-        this.$dispatch('otp-clear')
+        this.emitOnBox('cleared', {})
       }
     },
-  };
+  }
 }
 
-function filterValue(value, mode = 'numeric') {
+function filterValue(value, charset = 'numeric') {
   const map = {
     numeric: /[0-9]/g,
     alpha: /[A-Z]/g,
     alphanumeric: /[A-Z0-9]/g,
   }
 
-  return (value.toUpperCase().match(map[mode]) || []).join('')
+  return (value.toUpperCase().match(map[charset]) || []).join('')
 }
 
-function isValidKey(key, mode) {
-  const control = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight']
+function isValidKey(key, charset) {
+  const control = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'Enter', 'Escape']
 
   if (control.includes(key)) return true
 
-  return filterValue(key, mode).length > 0
+  return filterValue(key, charset).length > 0
 }
 
 function spreadValue(value, start, inputs) {
   const chars = value.split('')
+  let box = start
 
-  chars.forEach((char, i) => {
-    const input = inputs[start + i]
-    if (!input) return
+  for (const char of chars) {
+    const input = inputs[box]
+    if (!input) break
 
-    const mode = input.dataset.mode
-    setFieldValue(input, filterValue(char, mode))
-  })
+    const filtered = filterValue(char, input.dataset.charset)
+    if (!filtered) continue
 
-  const next = inputs[Math.min(start + chars.length, inputs.length - 1)]
-  next?.focus()
+    setFieldValue(input, filtered)
+    box++
+  }
+
+  inputs[Math.min(box, inputs.length - 1)]?.focus()
 }

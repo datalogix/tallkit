@@ -1,12 +1,12 @@
 import { bind } from '../utils'
 
+// No `value` of its own: it would hide the group's.
 export function menuItem(checked, type) {
   return {
     checked,
-    value: undefined,
 
     isControlled() {
-      return this.value !== undefined
+      return this.menuGroup === true
     },
 
     isArray() {
@@ -19,17 +19,18 @@ export function menuItem(checked, type) {
       }
 
       if (this.isArray()) {
-        return this.value.some((v) => v == (this.$root).value);
+        return this.value.some((v) => v == this.$root.value)
       }
 
-      return this.value == (this.$root).value;
+      return this.value == this.$root.value
     },
 
     init() {
       bind(this.$el, {
         ['@click']: () => this.toggle(),
         [':data-checked']: () => this.isChecked(),
-        [':aria-checked']: () => this.isChecked()
+        // Always set, "false" too: menuitemcheckbox and menuitemradio require it.
+        [':aria-checked']: () => (this.isChecked() ? 'true' : 'false')
       })
     },
 
@@ -41,17 +42,17 @@ export function menuItem(checked, type) {
 
       if (this.isArray()) {
         this.value = this.isChecked()
-          ? this.value.filter((v) => v != (this.$root).value)
-          : [...this.value, (this.$root).value]
+          ? this.value.filter((v) => v != this.$root.value)
+          : [...this.value, this.$root.value]
         return
       }
 
       if (type === 'radio') {
-        this.value = (this.$root).value
+        this.value = this.$root.value
         return
       }
 
-      this.value = this.isChecked() ? null : (this.$root).value
+      this.value = this.isChecked() ? null : this.$root.value
     },
-  };
+  }
 }

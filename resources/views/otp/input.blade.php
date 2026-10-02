@@ -1,7 +1,16 @@
-@aware(['mode', 'private', 'size', 'color'])
-@props(['mode', 'private', 'size', 'color'])
+@aware(['charset', 'private', 'size', 'color'])
+@props([
+    ...TALLKit::fieldProps(),
+    ...TALLKit::fieldControlProps(),
+    'charset' => null,
+    'private' => null,
+    'size' => null,
+    'color' => null,
+    'first' => false,
+    'total' => 1,
+])
 <tk:input
-    :attributes="$attributes->except('input:class')"
+    :attributes="TALLKit::fieldWithProps($attributes, get_defined_vars())->except('input:class')"
     :$size
     :$color
     :input:class="TALLKit::classes(
@@ -12,13 +21,15 @@
     :type="$private ? 'password' : 'text'"
     :icon="false"
     :iconTrailing="false"
+    :show-error="false"
     :mask="false"
     :loading="false"
     :clearable="false"
     :kbd="false"
     :copyable="false"
     :viewable="false"
-    maxlength="1"
-    data-mode="{{ $mode ?? 'alphanumeric' }}"
-    inputmode="{{ $mode === null || $mode === 'numeric' ? 'numeric' : 'text' }}"
+    :maxlength="$first ? $total : 1"
+    :autocomplete="$first ? 'one-time-code' : 'off'"
+    data-charset="{{ $charset ?? 'alphanumeric' }}"
+    inputmode="{{ $charset === null || $charset === 'numeric' ? 'numeric' : 'text' }}"
 />

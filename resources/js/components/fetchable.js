@@ -1,4 +1,5 @@
 import { loadable } from './loadable'
+import { getCsrfToken } from '../utils'
 
 export function fetchable({ url = null, data = null, auto = null, options = {} } = {}) {
   const _loadable = loadable()
@@ -12,7 +13,7 @@ export function fetchable({ url = null, data = null, auto = null, options = {} }
     options: null,
     _controller: null,
 
-    init () {
+    init() {
       this.clear()
 
       this.url = url
@@ -33,7 +34,7 @@ export function fetchable({ url = null, data = null, auto = null, options = {} }
       }
     },
 
-    async fetch (url = null, options = {}, silent = false) {
+    async fetch(url = null, options = {}, silent = false) {
       const _url = url || this.url
       const _options = {
         ...(this.options ?? {}),
@@ -48,15 +49,24 @@ export function fetchable({ url = null, data = null, auto = null, options = {} }
         return
       }
 
+      // Cancelled: an older answer arriving last would replace the newer one.
       this._controller?.abort()
       const controller = new AbortController()
       this._controller = controller
 
+      const method = String(_options.method ?? 'get').toUpperCase()
+      const sameOrigin = new URL(_url, window.location.href).origin === window.location.origin
+      const csrf = getCsrfToken()
+      const csrfMeta = document.querySelector('meta[name="csrf-token"]')?.content
+      const headers = !['GET', 'HEAD', 'OPTIONS'].includes(method) && sameOrigin
+        ? { ...(csrf ? { 'X-XSRF-TOKEN': csrf } : csrfMeta ? { 'X-CSRF-TOKEN': csrfMeta } : {}), ..._options.headers }
+        : _options.headers
+
       this.load(async () => {
-        this.response = await window.fetch(_url, { ..._options, signal: controller.signal })
+        this.response = await window.fetch(_url, { ..._options, headers, signal: controller.signal })
 
         if (!this.response.ok) {
-          throw new Error(this.response.statusText)
+          throw new Error(this.response.statusText || `HTTP ${this.response.status}`)
         }
 
         this.data = (_options.responseType
@@ -65,18 +75,18 @@ export function fetchable({ url = null, data = null, auto = null, options = {} }
       }, silent)
     },
 
-    reload () {
+    reload() {
       return this.fetch()
     },
 
-    update (url = null, options = {}) {
+    update(url = null, options = {}) {
       return this.fetch(url, options, true)
     },
 
-    destroy () {
+    destroy() {
       _loadable.destroy.call(this)
       this._controller?.abort()
       this._controller = null
     }
-  };
+  }
 }

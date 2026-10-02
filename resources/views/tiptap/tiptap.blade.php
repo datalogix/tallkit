@@ -4,15 +4,16 @@
     'options' => null,
     'scripts' => null,
     'styles' => null,
-    'mode' => null,
+    'toolbar' => null,
     'version' => null,
-    'upload' => [
-        'url' => route('tallkit.upload'),
-    ],
+    'upload' => null,
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
+$upload = TALLKit::editorUpload($upload);
+
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
+$value = TALLKit::fieldOldValue($fieldName, $value);
 
 $toolbarButtons = [
     ['cluster' => 'text', 'group' => 'text', 'command' => 'bold', 'icon' => 'bold', 'label' => 'Bold'],
@@ -64,28 +65,33 @@ $toolbarSections = $toolbarSections->map(fn ($section, $index) => [
 @endphp
 <tk:field.wrapper
     :$name
-    :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
 >
     <tk:field.control
         :$size
-        :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())"
+        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())"
     >
         <div
             wire:ignore
             x-data="tiptap(
                 {{
                     Js::from([
-                        'mode' => $mode,
+                        'toolbar' => $toolbar,
                         'version' => $version,
                         'options' => $options ?? [],
                         'scripts' => $scripts ?? [],
                         'styles' => $styles ?? [],
                         'upload' => $upload,
+                        'labelledBy' => $label ? $id.'-label' : null,
+                        'messages' => [
+                            'linkUrl' => __('Link URL'),
+                            ...TALLKit::editorUploadMessages(),
+                        ],
                     ])
                 }}
             )"
             {{
-                TALLKit::attributesAfter(attributes: $attributes, prefix: 'editor:')
+                $attributes->prefixed('editor:')
                     ->classes(
                         '
                             tk-control-surface
@@ -109,7 +115,7 @@ $toolbarSections = $toolbarSections->map(fn ($section, $index) => [
                             'name' => $name,
                             'id' => $id,
                             'wire:model' => $wireModel,
-                            'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
+                            'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                             'aria-invalid' => $invalid ? 'true' : null,
                             'data-invalid' => $invalid ? true : null,
                         ])
@@ -123,7 +129,9 @@ $toolbarSections = $toolbarSections->map(fn ($section, $index) => [
 
             <div
                 {{
-                    TALLKit::attributesAfter(attributes: $attributes, prefix: 'toolbar:')
+                    $attributes->prefixed('toolbar:')
+                        ->dataKey('editor-toolbar')
+                        ->merge(['role' => 'toolbar', 'aria-label' => __('Formatting')])
                         ->classes(
                             '
                                 flex flex-wrap items-center gap-x-3 gap-y-1 p-1.5
@@ -138,13 +146,16 @@ $toolbarSections = $toolbarSections->map(fn ($section, $index) => [
                         <div class="flex flex-wrap items-center gap-px">
                             @foreach ($section['buttons'] as $toolbarButton)
                                 <tk:button
-                                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'toolbar-button:')
-                                        ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'toolbar-button-'.$toolbarButton['command'].':')->toArray())
+                                    :attributes="TALLKit::attributesMerge(
+                                            $attributes->prefixed('toolbar-button:'),
+                                            $attributes->prefixed('toolbar-button-'.$toolbarButton['command'].':'),
+                                        )
                                         ->classes('rounded-md p-1.5 w-auto h-auto')
                                     "
                                     x-show="groups.includes('{{ $toolbarButton['group'] }}')"
                                     @click="run('{{ $toolbarButton['command'] }}')"
                                     ::data-active="isActive('{{ $toolbarButton['command'] }}')"
+                                    ::aria-pressed="pressedState('{{ $toolbarButton['command'] }}')"
                                     :icon="$toolbarButton['icon']"
                                     :tooltip="$toolbarButton['label']"
                                     variant="subtle"
@@ -154,60 +165,68 @@ $toolbarSections = $toolbarSections->map(fn ($section, $index) => [
                     @elseif ($section['type'] === 'color')
                         <div x-show="groups.includes('color')" class="flex items-center gap-1">
                             <tk:color-picker
-                                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'toolbar-button:')
-                                    ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'toolbar-button-text-color:')->toArray())
+                                :attributes="TALLKit::attributesMerge(
+                                        $attributes->prefixed('toolbar-button:'),
+                                        $attributes->prefixed('toolbar-button-text-color:'),
+                                    )
                                 "
                                 @input="setColor($event.target.value)"
-                                type="button"
+                                trigger="button"
                                 preview="underline"
                                 icon="palette"
-                                tooltip="Text color"
+                                trigger:tooltip="Text color"
                                 live="textStyle('color')"
                             />
 
                             <tk:color-picker
-                                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'toolbar-button:')
-                                    ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'toolbar-button-highlight-color:')->toArray())
+                                :attributes="TALLKit::attributesMerge(
+                                        $attributes->prefixed('toolbar-button:'),
+                                        $attributes->prefixed('toolbar-button-highlight-color:'),
+                                    )
                                 "
                                 @input="setBackgroundColor($event.target.value)"
-                                type="button"
+                                trigger="button"
                                 preview="underline"
                                 icon="highlight"
-                                tooltip="Highlight color"
+                                trigger:tooltip="Highlight color"
                                 live="textStyle('backgroundColor')"
                             />
                         </div>
                     @elseif ($section['type'] === 'size')
                         <div x-show="groups.includes('size')" class="flex items-center gap-1">
-                            <tk:dropdown :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'toolbar-size:')">
+                            <tk:dropdown :attributes="$attributes->prefixed('toolbar-size:')">
                                 <tk:dropdown.button
-                                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'toolbar-button:')
-                                        ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'toolbar-button-size:')->toArray())
+                                    :attributes="TALLKit::attributesMerge(
+                                            $attributes->prefixed('toolbar-button:'),
+                                            $attributes->prefixed('toolbar-button-size:'),
+                                        )
                                         ->classes('h-auto w-auto rounded-md px-2 py-1.5 text-xs')
+                                        ->merge(['label' => 'Size'])
                                     "
                                     variant="subtle"
-                                    label="Size"
                                 />
 
-                                <tk:menu :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'toolbar-size-menu:')->classes('w-32')">
+                                <tk:menu :attributes="$attributes->prefixed('toolbar-size-menu:')->classes('w-32')">
                                     @foreach ($toolbarFontSizes as $fontSize)
                                         <tk:menu.item
-                                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'toolbar-size-menu-item:')"
+                                            :attributes="$attributes->prefixed('toolbar-size-menu-item:')"
                                             @click="setFontSize('{{ $fontSize['value'] }}')"
                                             label="{{ $fontSize['label'] }}"
                                         />
                                     @endforeach
 
                                     <tk:menu.separator
-                                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'toolbar-size-menu-separator:')"
+                                        :attributes="$attributes->prefixed('toolbar-size-menu-separator:')"
                                     />
 
                                     <tk:menu.item
-                                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'toolbar-size-menu-item:')
-                                            ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'toolbar-size-menu-item-reset:')->toArray())
+                                        :attributes="TALLKit::attributesMerge(
+                                                $attributes->prefixed('toolbar-size-menu-item:'),
+                                                $attributes->prefixed('toolbar-size-menu-item-reset:'),
+                                            )
+                                                ->merge(['label' => 'Reset'])
                                         "
                                         @click="setFontSize('')"
-                                        label="Reset"
                                     />
                                 </tk:menu>
                             </tk:dropdown>
@@ -216,9 +235,9 @@ $toolbarSections = $toolbarSections->map(fn ($section, $index) => [
 
                     @if (count($section['remainingGroups']))
                         <div
-                            x-show="{{ Js::from($section['groups']) }}.some((g) => groups.includes(g)) && {{ Js::from($section['remainingGroups']) }}.some((g) => groups.includes(g))"
+                            x-show="@js($section['groups']).some((g) => groups.includes(g)) && @js($section['remainingGroups']).some((g) => groups.includes(g))"
                             {{
-                                TALLKit::attributesAfter(attributes: $attributes, prefix: 'toolbar-separator:')
+                                $attributes->prefixed('toolbar-separator:')
                                     ->classes('h-5 w-px bg-zinc-200 dark:bg-white/10')
                             }}
                         ></div>

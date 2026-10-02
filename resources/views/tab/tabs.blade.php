@@ -7,7 +7,7 @@
 <div
     {{
 
-        TALLKit::attributesAfter(attributes: $attributes, prefix: 'scrollable:')
+        $attributes->prefixed('scrollable:')
             ->classes('overflow-x-auto overflow-y-hidden shrink-0')
     }}
 >

@@ -8,27 +8,23 @@ $logoutUrl ??= route_detect(['logout', 'auth.logout'], default: null);
 
 @endphp
 <tk:form.section
-    :attributes="$attributes->whereDoesntStartWith(['submit:', 'logout:'])"
+    :attributes="$attributes->whereDoesntStartWith(['submit:', 'logout:'])->merge(['title' => 'Verify your email address', 'subtitle' => 'Before proceeding, please check your email for a verification link.'])"
     :$size
-    title="Verify Your Email Address"
-    subtitle="Before proceeding, please check your email for a verification link."
 >
     {{ $slot }}
 
     <tk:submit
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'submit:')->classes('w-full')"
+        :attributes="$attributes->prefixed('submit:')->classes('w-full')->merge(['label' => 'Resend verification email'])"
         :$size
-        label="Resend verification email"
         variant="accent"
     />
 
     @if ($logoutUrl)
         <x-slot:append>
             <tk:link
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'logout:')"
+                :attributes="$attributes->prefixed('logout:')->merge(['label' => 'Log out'])"
                 :href="$logoutUrl"
                 :$size
-                label="Log out"
             />
         </x-slot:append>
     @endif

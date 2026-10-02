@@ -1,9 +1,10 @@
-@aware(['mode', 'variant'])
+@aware(['variant'])
 @props([
     'mode' => null,
     'variant' => null,
 ])
 <div
+    wire:ignore.self
     x-data="navIndicator({ mode: @js($mode) })"
     {{
         $attributes

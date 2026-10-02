@@ -9,7 +9,7 @@
     'separator' => null,
 ])
 <tk:form
-    :attributes="$attributes->whereDoesntStartWith([
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), ['errorGroup' => null, 'errorBag' => null, 'focusError' => null, 'clearErrorsOnSubmit' => null, 'errorMessage' => null, 'successMessage' => null, 'submit' => null])->whereDoesntStartWith([
         'section:', 'alert:',
         'icon', 'badge', 'separator', 'content',
         'header:', 'container:', 'title:', 'subtitle:', 'list:', 'actions:',
@@ -17,7 +17,7 @@
     :alert="false"
 >
     <tk:section
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'section:', prepend: [
+        :attributes="$attributes->prefixed('section:', with: [
             'icon', 'badge', 'separator', 'content',
             'header:', 'container:', 'title:', 'subtitle:', 'list:', 'actions:',
         ])"
@@ -31,7 +31,7 @@
         :$separator
     >
         <tk:alert.session
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'alert:')"
+            :attributes="$attributes->prefixed('alert:')"
             :$size
         >
             {{ $alert ?? '' }}

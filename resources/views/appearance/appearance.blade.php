@@ -2,7 +2,7 @@
     'nonce' => null,
 ])
 <style
-    {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'style:')->when($nonce, fn ($attrs, $value) => $attrs->merge(['nonce' => $value])) }}
+    {{ $attributes->prefixed('style:')->when($nonce, fn ($attrs, $value) => $attrs->merge(['nonce' => $value])) }}
     data-navigate-once
 >
     :root.dark {
@@ -10,8 +10,16 @@
     }
 </style>
 <script
-    {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'script:')->when($nonce, fn ($attrs, $value) => $attrs->merge(['nonce' => $value])) }}
+    {{ $attributes->prefixed('script:')->when($nonce, fn ($attrs, $value) => $attrs->merge(['nonce' => $value])) }}
     data-navigate-once
 >
-    document.addEventListener('tallkit:init', () => window.tallkit.appearance.init())
+    // The same storage key and values as appearance.js.
+    (function () {
+        var mode = null
+        try { mode = window.localStorage.getItem(@js(TALLKit::storageKey('appearance'))) } catch (e) {}
+        var dark = mode === 'dark' || (mode !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.classList.toggle('dark', dark)
+    })()
+
+    document.addEventListener(@js(TALLKit::eventName('init')), () => window.tallkit.appearance.init())
 </script>

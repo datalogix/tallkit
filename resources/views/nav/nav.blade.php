@@ -5,14 +5,16 @@
     'scrollable' => null,
     'items' => null,
     'indicator' => null,
+    'label' => null,
 ])
 @php
 
 $list = (bool) $list;
+$persistKey = 'nav-indicator-'.($attributes->get('id') ?? TALLKit::stableId('nav'));
 
 @endphp
 @if ($slot->hasActualContent() || collect($items)->isNotEmpty())
-    @if (Str::of($slot)->trim()->startsWith('<nav'))
+    @if (Str::of($slot)->trim()->startsWith('<'.'nav'))
         {{ $slot }}
     @else
         <nav
@@ -20,6 +22,7 @@ $list = (bool) $list;
                 $attributes
                     ->dataKey('nav')
                     ->whereDoesntStartWith(['item:', 'indicator:'])
+                    ->merge(['aria-label' => $label ? __($label) : null])
                     ->classes(
                         '
                             relative flex flex-1 overflow-auto
@@ -52,8 +55,8 @@ $list = (bool) $list;
         >
             @foreach (collect($items) as $item)
                 <tk:nav.item
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'item:')
-                        ->merge(is_array($item) ? $item : ['label' => $item], false)
+                    :attributes="$attributes->prefixed('item:')
+                        ->merge(TALLKit::attributesFromItem($item), false)
                     "
                     :$size
                 />
@@ -63,9 +66,9 @@ $list = (bool) $list;
         </nav>
 
         @if ($indicator !== false)
-            @persist('nav-indicator'.($list ? '-list' : '').(is_string($indicator) ? '-'.$indicator : ''))
+            @persist($persistKey)
                 <tk:nav.indicator
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'indicator:')"
+                    :attributes="$attributes->prefixed('indicator:')"
                     :mode="match ($list) {
                         true => in_array($indicator, ['line-left', 'line-right']) ? $indicator : 'bg',
                         default => in_array($indicator, ['line-top', 'line-bottom']) ? $indicator : 'bg',

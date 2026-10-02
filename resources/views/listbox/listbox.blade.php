@@ -9,10 +9,12 @@
     'standalone' => null,
     'multiple' => null,
     'color' => null,
+    'label' => null,
 ])
 @php
 
 $hasSearchable = isset($search) || $searchable !== false;
+$listId = $attributes->get('items:id') ?? TALLKit::stableId('listbox');
 
 @endphp
 <div
@@ -30,14 +32,17 @@ $hasSearchable = isset($search) || $searchable !== false;
         {{ $search }}
     @elseif ($searchable !== false)
         <tk:listbox.search
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'search:')"
+            :attributes="$attributes->prefixed('search:')"
             :$size
+            :controls="$listId"
         />
     @endisset
 
     <tk:listbox.items
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'items:', prepend: ['item:'])
+        :attributes="$attributes->prefixed('items:', with: ['item:'])
             ->when($hasSearchable, fn ($attrs) => $attrs->classes(TALLKit::generateClassBySize(size: $size, name: 'max-h', values: ['48', '56', '64', '72', '80', '88', '96'])))
+            ->mergeDefined(['aria-label' => $label ? __($label) : null])
+            ->merge(['id' => $listId])
         "
         :$items
         :$size
@@ -52,8 +57,9 @@ $hasSearchable = isset($search) || $searchable !== false;
             {{ $empty }}
         @elseif ($noRecords !== false)
             <tk:listbox.no-records
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'no-records:')"
+                :attributes="$attributes->prefixed('no-records:')"
                 :$size
+                :label="is_string($noRecords) ? $noRecords : null"
             />
         @endisset
     @endif

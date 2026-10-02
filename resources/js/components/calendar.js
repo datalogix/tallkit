@@ -1,22 +1,10 @@
-import {
-  isRtl,
-  isoOf,
-  parseIso,
-  startOfMonth,
-  addMonths,
-  addDays,
-  sameMonth,
-  diffDays,
-  isoWeekNumber,
-  resolveLocaleFirstDay,
-  parseCommaList,
-} from '../utils'
+import { isRtl, formatIsoDate, parseIsoDate, startOfMonth, addMonths, addDays, isSameMonth, diffDays, isoWeekNumber, localeFirstDay, parseCommaList, normalizeIsoDate, emit, resolveLocale, toNumber } from '../utils'
 import { bindableField } from '../mixins/bindable-field'
 
 export function calendar({
   value = null,
   multiple = false,
-  mode = null,
+  range = false,
   months = 1,
   min = null,
   max = null,
@@ -25,7 +13,7 @@ export function calendar({
   maxRange = null,
   static: isStatic = false,
   navigation = true,
-  withToday = false,
+  today = false,
   selectableHeader = false,
   fixedWeeks = false,
   startDay = null,
@@ -33,9 +21,12 @@ export function calendar({
   weekNumbers = false,
   locale = null,
 } = {}) {
-  months = Math.max(1, Number(months) || 1)
-  minRange = Number(minRange) || null
-  maxRange = Number(maxRange) || null
+  const mode = range ? 'range' : null
+  months = Math.max(1, toNumber(months, 1))
+  min = normalizeIsoDate(min)
+  max = normalizeIsoDate(max)
+  minRange = toNumber(minRange)
+  maxRange = toNumber(maxRange)
 
   const _bindableField = bindableField({
     key: 'calendar-field',
@@ -48,28 +39,35 @@ export function calendar({
 
     static: isStatic,
     navigation,
-    withToday,
+    today,
     selectableHeader,
     fixedWeeks,
     weekNumbers,
-    locale: locale || (typeof navigator !== 'undefined' ? navigator.language : 'en-US'),
+    locale: resolveLocale(locale),
     startDay: 0,
-    unavailable: parseCommaList(unavailable),
+    unavailable: parseCommaList(unavailable).map(normalizeIsoDate).filter(Boolean),
 
     value: null,
+
     anchorMonth: null,
+
     focused: null,
+
     hoverIso: null,
     rangeAnchor: null,
 
+    dispatchPicked(value) {
+      emit(this.$root, 'picked', { value })
+    },
+
     init() {
-      this.startDay = startDay !== null && startDay !== undefined ? Number(startDay) : resolveLocaleFirstDay(this.locale)
+      this.startDay = toNumber(startDay) ?? localeFirstDay(this.locale)
       this.value = this.parseInitialValue(value)
 
       _bindableField.init.call(this)
 
       this.anchorMonth = startOfMonth(this.firstAnchorDate())
-      this.focused = this.firstSelectedIso() ?? isoOf(new Date())
+      this.focused = this.firstSelectedIso() ?? formatIsoDate(new Date())
     },
 
     parseInitialValue(raw) {
@@ -80,32 +78,33 @@ export function calendar({
     },
 
     normalizeSingle(raw) {
-      if (!raw || typeof raw === 'object') return Array.isArray(raw) ? (raw[0] ?? null) : null
+      if (!raw || typeof raw === 'object') return Array.isArray(raw) ? normalizeIsoDate(raw[0]) : null
 
-      return String(raw).trim() || null
+      return normalizeIsoDate(raw)
     },
 
     normalizeMultiple(raw) {
       if (!raw) return []
-      if (Array.isArray(raw)) return raw.filter(Boolean)
 
-      return parseCommaList(raw)
+      return (Array.isArray(raw) ? raw : parseCommaList(raw)).map(normalizeIsoDate).filter(Boolean)
     },
 
     normalizeRange(raw) {
       if (!raw) return null
 
-      if (Array.isArray(raw)) {
-        return raw[0] || raw[1] ? { start: raw[0] ?? null, end: raw[1] ?? null } : null
+      const range = (start, end) => {
+        start = normalizeIsoDate(start)
+        end = normalizeIsoDate(end)
+
+        return start || end ? { start, end } : null
       }
 
-      if (typeof raw === 'object') {
-        return raw.start || raw.end ? { start: raw.start ?? null, end: raw.end ?? null } : null
-      }
+      if (Array.isArray(raw)) return range(raw[0], raw[1])
+      if (typeof raw === 'object') return range(raw.start, raw.end)
 
       const [start, end] = String(raw).split('/')
 
-      return start?.trim() ? { start: start.trim(), end: end?.trim() || null } : null
+      return normalizeIsoDate(start) ? range(start, end) : null
     },
 
     valueString() {
@@ -124,8 +123,8 @@ export function calendar({
 
     firstAnchorDate() {
       const iso = this.firstSelectedIso()
-      if (iso) return parseIso(iso)
-      if (openTo) return parseIso(openTo) ?? new Date()
+      if (iso && parseIsoDate(iso)) return parseIsoDate(iso)
+      if (openTo) return parseIsoDate(openTo) ?? new Date()
 
       return new Date()
     },
@@ -143,7 +142,7 @@ export function calendar({
 
     isMonthVisible(date) {
       for (let i = 0; i < months; i++) {
-        if (sameMonth(this.monthAt(i), date)) return true
+        if (isSameMonth(this.monthAt(i), date)) return true
       }
 
       return false
@@ -166,7 +165,7 @@ export function calendar({
     },
 
     dayAriaLabel(iso) {
-      return new Intl.DateTimeFormat(this.locale, { dateStyle: 'full' }).format(parseIso(iso))
+      return new Intl.DateTimeFormat(this.locale, { dateStyle: 'full' }).format(parseIsoDate(iso))
     },
 
     monthOptions() {
@@ -176,10 +175,11 @@ export function calendar({
     },
 
     yearOptions() {
-      const span = 10
       const current = this.anchorMonth.getFullYear()
+      const from = Math.min(min ? Number(min.slice(0, 4)) : current - 100, current)
+      const to = Math.max(max ? Number(max.slice(0, 4)) : current + 100, current)
 
-      return Array.from({ length: span * 2 + 1 }, (_, i) => current - span + i)
+      return Array.from({ length: to - from + 1 }, (_, i) => from + i)
     },
 
     weeksFor(monthIndex) {
@@ -196,7 +196,7 @@ export function calendar({
       const days = Array.from({ length: totalCells }, (_, i) => {
         const date = new Date(year, monthNum, i - startOffset + 1)
 
-        return { iso: isoOf(date), label: date.getDate(), inMonth: date.getMonth() === monthNum }
+        return { iso: formatIsoDate(date), label: date.getDate(), inMonth: date.getMonth() === monthNum }
       })
 
       const weeks = []
@@ -208,7 +208,7 @@ export function calendar({
 
         weeks.push({
           key: weekDays[0].iso,
-          weekNumber: this.weekNumbers ? isoWeekNumber(parseIso(thursday.iso)) : null,
+          weekNumber: this.weekNumbers ? isoWeekNumber(parseIsoDate(thursday.iso)) : null,
           days: weekDays,
         })
       }
@@ -255,7 +255,7 @@ export function calendar({
         return
       }
 
-      this.selectDate(isoOf(today))
+      this.selectDate(formatIsoDate(today))
     },
 
     isDayDisabled(iso) {
@@ -295,7 +295,7 @@ export function calendar({
     },
 
     isToday(iso) {
-      return iso === isoOf(new Date())
+      return iso === formatIsoDate(new Date())
     },
 
     displayRange() {
@@ -343,7 +343,7 @@ export function calendar({
 
       this.value = this.value === iso ? null : iso
       this.focused = iso
-      this.$dispatch('calendar-picked', { value: this.value })
+      this.dispatchPicked(this.value)
     },
 
     toggleMultiple(iso) {
@@ -354,7 +354,7 @@ export function calendar({
         : [...current, iso].sort()
 
       this.focused = iso
-      this.$dispatch('calendar-picked', { value: this.value })
+      this.dispatchPicked(this.value)
     },
 
     pickRangeDate(iso) {
@@ -379,7 +379,7 @@ export function calendar({
       this.rangeAnchor = null
       this.hoverIso = null
       this.focused = iso
-      this.$dispatch('calendar-picked', { value: this.value })
+      this.dispatchPicked(this.value)
     },
 
     setRangeBound(part, iso) {
@@ -408,7 +408,18 @@ export function calendar({
       this.rangeAnchor = null
       this.hoverIso = null
       this.focused = iso || this.focused
-      this.$dispatch('calendar-picked', { value: this.value })
+      this.dispatchPicked(this.value)
+    },
+
+    rangeAllowed(start, end) {
+      if (this.static || !start || !end) return false
+      if ((min && start < min) || (max && end > max)) return false
+
+      const days = diffDays(start, end) + 1
+
+      if ((minRange && days < minRange) || (maxRange && days > maxRange)) return false
+
+      return !this.rangeContainsUnavailable(start, end)
     },
 
     rangeContainsUnavailable(start, end) {
@@ -431,25 +442,61 @@ export function calendar({
       this.hoverIso = null
     },
 
+    tabbableIso() {
+      const usable = (iso) => !!iso && this.isMonthVisible(parseIsoDate(iso)) && !this.isDayDisabled(iso)
+
+      for (const iso of [this.focused, this.firstSelectedIso(), formatIsoDate(new Date())]) {
+        if (usable(iso)) return iso
+      }
+
+      for (let i = 0; i < months; i++) {
+        const month = this.monthAt(i)
+        const days = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate()
+
+        for (let day = 1; day <= days; day++) {
+          const iso = formatIsoDate(new Date(month.getFullYear(), month.getMonth(), day))
+
+          if (!this.isDayDisabled(iso)) return iso
+        }
+      }
+
+      return null
+    },
+
+    enabledFrom(iso, step) {
+      for (let i = 0; i < 366; i++, iso = addDays(iso, step)) {
+        if (!this.isDayDisabled(iso)) return iso
+      }
+
+      return null
+    },
+
     onCellKeydown(event, iso) {
       const rtl = isRtl(this.$root)
       const deltas = { ArrowLeft: rtl ? 1 : -1, ArrowRight: rtl ? -1 : 1, ArrowUp: -7, ArrowDown: 7 }
+      let target = null
+      let step = 1
 
       if (event.key in deltas) {
-        event.preventDefault()
-        this.focusIso(addDays(iso, deltas[event.key]))
+        target = addDays(iso, deltas[event.key])
+        step = deltas[event.key]
       } else if (event.key === 'Home') {
-        event.preventDefault()
-        this.focusIso(this.weekEdge(iso, 'start'))
+        target = this.weekEdge(iso, 'start')
       } else if (event.key === 'End') {
-        event.preventDefault()
-        this.focusIso(this.weekEdge(iso, 'end'))
+        target = this.weekEdge(iso, 'end')
+        step = -1
       } else if (event.key === 'PageUp') {
-        event.preventDefault()
-        this.focusIso(this.shiftMonth(iso, event.shiftKey ? -12 : -1))
+        target = this.shiftMonth(iso, event.shiftKey ? -12 : -1)
       } else if (event.key === 'PageDown') {
+        target = this.shiftMonth(iso, event.shiftKey ? 12 : 1)
+        step = -1
+      }
+
+      if (target) {
         event.preventDefault()
-        this.focusIso(this.shiftMonth(iso, event.shiftKey ? 12 : 1))
+
+        const next = this.enabledFrom(target, step)
+        if (next) this.focusIso(next)
       } else if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault()
         this.selectDate(iso)
@@ -457,20 +504,26 @@ export function calendar({
     },
 
     weekEdge(iso, edge) {
-      const jsDay = parseIso(iso).getDay()
+      const jsDay = parseIsoDate(iso).getDay()
       const offset = (jsDay - this.startDay + 7) % 7
 
       return edge === 'start' ? addDays(iso, -offset) : addDays(iso, 6 - offset)
     },
 
     shiftMonth(iso, deltaMonths) {
-      const date = parseIso(iso)
+      const date = parseIsoDate(iso)
+      const target = new Date(date.getFullYear(), date.getMonth() + deltaMonths, 1)
+      const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate()
 
-      return isoOf(new Date(date.getFullYear(), date.getMonth() + deltaMonths, date.getDate()))
+      target.setDate(Math.min(date.getDate(), lastDay))
+
+      return formatIsoDate(target)
     },
 
     focusIso(iso) {
-      const targetMonth = startOfMonth(parseIso(iso))
+      // Taken now: a change of month removes the cell the key came from.
+      const root = this.$root
+      const targetMonth = startOfMonth(parseIsoDate(iso))
 
       if (!this.isMonthVisible(targetMonth)) {
         if (!this.navigation) return
@@ -481,7 +534,7 @@ export function calendar({
       this.focused = iso
 
       this.$nextTick(() => {
-        this.$root.querySelector(`[data-iso="${iso}"]`)?.focus()
+        root.querySelector(`[data-iso="${iso}"]:not([data-outside-month])`)?.focus()
       })
     },
   }

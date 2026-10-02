@@ -12,7 +12,7 @@
 $hasContent = $slot->hasActualContent();
 
 @endphp
-@if ($icon || $prepend || $title || $description || $append || $actions || $hasContent)
+@if ($icon || $prepend || $title || filled($description) || $append || $actions || $hasContent)
     <div {{ $attributes
         ->whereDoesntStartWith(['container:', 'icon:', 'title:', 'description:', 'list:', 'actions:'])
         ->classes(
@@ -23,7 +23,7 @@ $hasContent = $slot->hasActualContent();
         )
     }}>
         @if (TALLKit::isSlot(slot: $icon))
-            @php($iconAttrs = TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:'))
+            @php($iconAttrs = $attributes->prefixed('icon:'))
             <div {{
                 $iconAttrs->when(
                     ! $iconAttrs->has('aria-label') && ! $iconAttrs->has('aria-labelledby'),
@@ -34,7 +34,7 @@ $hasContent = $slot->hasActualContent();
             </div>
         @elseif ($icon)
             <tk:icon
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')"
+                :attributes="$attributes->prefixed('icon:')"
                 :$icon
                 :$size
             />
@@ -42,7 +42,7 @@ $hasContent = $slot->hasActualContent();
 
         <div
             {{
-                TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')
+                $attributes->prefixed('container:')
                     ->classes(
                         'flex-1',
                         TALLKit::spaceBlock(size: $size)
@@ -52,15 +52,27 @@ $hasContent = $slot->hasActualContent();
             {{ $prepend }}
 
             <tk:heading
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'title:')"
+                :attributes="$attributes->prefixed('title:')"
                 :label="$title"
                 :$size
             />
 
-            @if (is_string($description) || $hasContent)
+            @php($descriptionIsContent = $description !== null && ! is_string($description) && ! is_array($description) && filled((string) $description))
+            @if (is_string($description) || $descriptionIsContent)
                 <tk:text
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'description:')"
+                    :attributes="$attributes->prefixed('description:')"
                     :label="is_string($description) ? $description : null"
+                    :$size
+                >
+                    @if ($descriptionIsContent)
+                        {{ $description }}
+                    @endif
+                </tk:text>
+            @endif
+
+            @if ($hasContent)
+                <tk:text
+                    :attributes="$attributes->prefixed('description:')->when(is_string($description) || $descriptionIsContent, fn ($attrs) => $attrs->except('id'))"
                     :$size
                 >
                     {{ $slot }}
@@ -69,7 +81,7 @@ $hasContent = $slot->hasActualContent();
 
             @if (is_array($description))
                 <tk:list
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'list:')"
+                    :attributes="$attributes->prefixed('list:')"
                     :items="$description"
                     :$size
                 />
@@ -79,7 +91,7 @@ $hasContent = $slot->hasActualContent();
         </div>
 
         @if ($actions)
-            <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'actions:')->classes(
+            <div {{ $attributes->prefixed('actions:')->classes(
                 'shrink-0 flex items-center',
                 TALLKit::gap(size: $size)
             ) }}>

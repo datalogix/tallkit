@@ -4,12 +4,17 @@ namespace TALLKit\Assets;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Vite;
+use TALLKit\Http\Controllers\AssetController;
 
 class AssetManager
 {
-    use CanPretendToBeAFile;
-
     public $hasRenderedScripts = false;
+
+    public $hasRenderedComponents = false;
+
+    protected static ?string $versionHash = null;
 
     public static function boot()
     {
@@ -18,6 +23,8 @@ class AssetManager
         $instance->registerAssetRoutes();
 
         app()->instance(static::class, $instance);
+
+        View::composer(hash('xxh128', 'tallkit').'::*', fn () => $instance->hasRenderedComponents = true);
 
         AssetInjector::boot();
     }
@@ -33,26 +40,32 @@ class AssetManager
 
     public function registerAssetRoutes()
     {
-        Route::get('/tallkit/tallkit.js', fn () => $this->pretendResponseIsFile(
-            config('app.debug')
-                ? __DIR__.'/../../dist/tallkit.js'
-                : __DIR__.'/../../dist/tallkit.min.js'
-        ))->name('tallkit-script');
+        Route::get('/tallkit/tallkit.js', [AssetController::class, 'script'])->name('tallkit.script');
     }
 
     public static function scripts(?array $options = null)
     {
         app(static::class)->hasRenderedScripts = true;
 
-        $manifest = json_decode(@file_get_contents(__DIR__.'/../../dist/manifest.json'), true);
-        $versionHash = $manifest['/tallkit.js'] ?? rand();
-        $nonce = isset($options) && isset($options['nonce']) ? ' nonce="'.$options['nonce'].'"' : '';
+        $nonce = $options['nonce'] ?? Vite::cspNonce();
+        $nonce = $nonce ? ' nonce="'.e($nonce).'"' : '';
 
-        return '<script src="'.route('tallkit-script', ['id' => $versionHash]).'" data-navigate-once'.$nonce.'></script>';
+        $loadAlpine = config('tallkit.load_alpine', true) ? '' : ' data-load-alpine="false"';
+
+        $tooltip = array_filter((array) config('tallkit.tooltip', []), fn ($value) => $value !== null && $value !== '');
+        $tooltip = $tooltip ? " data-tooltip='".e(json_encode($tooltip))."'" : '';
+
+        return '<script src="'.route('tallkit.script', ['id' => static::versionHash()]).'" data-navigate-once'.$loadAlpine.$tooltip.$nonce.'></script>';
     }
 
-    public static function styles(?array $options = null)
+    protected static function versionHash(): string
     {
-        return '';
+        if (static::$versionHash !== null) {
+            return static::$versionHash;
+        }
+
+        $manifest = json_decode((string) @file_get_contents(__DIR__.'/../../dist/manifest.json'), true);
+
+        return static::$versionHash = (string) ($manifest['/tallkit.js'] ?? @filemtime(__DIR__.'/../../dist/tallkit.js') ?: '');
     }
 }

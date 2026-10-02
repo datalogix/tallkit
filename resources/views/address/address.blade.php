@@ -1,4 +1,5 @@
 @props([
+    ...TALLKit::elementProps(),
     'data' => null,
     'zipcode' => null,
     'address' => null,
@@ -8,8 +9,6 @@
     'city' => null,
     'state' => null,
     'inline' => null,
-    'icon' => null,
-    'mode' => null,
 ])
 @php
 
@@ -24,19 +23,19 @@ $state ??= data_get($data, 'state');
 @endphp
 <tk:text
     as="address"
-    :$attributes
-    :icon="$icon ?? 'map-marker'"
-    :mode="$mode ?? 'large'"
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->merge(['icon' => 'map-marker', 'scale' => 'large'])"
 >
-    {{ implode(', ', array_filter([$address, $number, $complement, $neighborhood])) }}
+    @php
+        $street = implode(', ', array_filter([$address, $number, $complement, $neighborhood]));
+        $place = implode(', ', array_filter([implode(' - ', array_filter([$city, $state])), $zipcode]));
+    @endphp
+    {{ $street }}
 
-    @if ($city || $state || $zipcode)
-        {!! $inline ? ',' : '<br>' !!}
-        {{ $city }}
-        {{ $state ? ' - ' : '' }}
-        {{ $state }}
-        {{ $zipcode ? ', ' : '' }}
-        {{ $zipcode }}
+    @if ($place !== '')
+        @if ($street !== '')
+            {!! $inline ? ', ' : '<br>' !!}
+        @endif
+        {{ $place }}
     @endif
 
     {{ $slot }}

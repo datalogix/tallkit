@@ -1,21 +1,11 @@
 @props([
-    'size' => null,
     ...TALLKit::elementProps(),
+    'size' => null,
 ])
 <tk:field.group.side
     side="prefix"
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())"
     :$size
-    :$label
-    :$icon
-    :$prefix
-    :$suffix
-    :$iconTrailing
-    :$info
-    :$badge
-    :$prepend
-    :$append
-    :$kbd
-    :$attributes
 >
     {{ $slot }}
 </tk:field.group.side>

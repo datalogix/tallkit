@@ -1,7 +1,7 @@
 @props([
     ...TALLKit::fieldProps(),
     ...TALLKit::fieldControlProps(),
-    'type' => null,
+    'trigger' => null,
     'multiple' => null,
     'interval' => null,
     'min' => null,
@@ -10,22 +10,31 @@
     'openTo' => null,
     'format' => null,
     'locale' => null,
-    'withoutDropdown' => null,
+    'dropdown' => null,
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
+$value = TALLKit::fieldOldValue($fieldName, $value);
 
-$disabled = (bool) $attributes->get('disabled');
+$value = TALLKit::fieldDateValue($value, 'H:i');
+$min = TALLKit::fieldDateValue($min, 'H:i');
+$max = TALLKit::fieldDateValue($max, 'H:i');
+$unavailable = TALLKit::fieldDateValue($unavailable, 'H:i');
+$openTo = TALLKit::fieldDateValue($openTo, 'H:i');
+$locale = TALLKit::resolveLocale($locale);
+
+$disabled = TALLKit::isAttributeEnabled($attributes->get('disabled'));
+$readonly = TALLKit::isAttributeEnabled($attributes->get('readonly'));
 
 @endphp
 <tk:field.wrapper
     :$name
-    :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
 >
     <div
-        x-data="timePicker({{
-            Js::from([
+        wire:ignore
+        x-data="timePicker(@js([
                 'value' => $value,
                 'multiple' => (bool) $multiple,
                 'format' => $format,
@@ -35,14 +44,13 @@ $disabled = (bool) $attributes->get('disabled');
                 'max' => $max,
                 'unavailable' => $unavailable,
                 'openTo' => $openTo,
-                'type' => $withoutDropdown ? 'input' : $type,
-            ])
-        }})"
-        {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'picker:')->classes('contents') }}
+                'trigger' => $dropdown === false ? 'input' : $trigger,
+            ]))"
+        {{ $attributes->prefixed('picker:')->classes('contents') }}
     >
         <tk:field.control
             :$size
-            :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
+            :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
                 ->classes(
                     'tk-control-wrapper-expanded',
                     TALLKit::roundedSize(size: $size, mode: 'large'),
@@ -51,7 +59,7 @@ $disabled = (bool) $attributes->get('disabled');
                 ->merge([
                     'icon' => $icon ?? 'clock-outline',
                     'icon:size' => TALLKit::adjustSize(size: $size),
-                    'iconTrailing' => $withoutDropdown ? null : 'chevron-down',
+                    'iconTrailing' => $dropdown === false ? null : 'chevron-down',
                     'icon-trailing:size' => TALLKit::adjustSize(size: $size),
                 ])
             "
@@ -72,23 +80,26 @@ $disabled = (bool) $attributes->get('disabled');
                 }}
             />
 
-            @if ($type === 'input' || $withoutDropdown)
+            @if ($trigger === 'input' || $dropdown === false)
                 <input
                     {{
-                        TALLKit::attributesAfter(attributes: $attributes, prefix: 'trigger:')
+                        $attributes->prefixed('trigger:')
                             ->dataKey('input')
                             ->dataKey('control')
                             ->dataKey('group-target')
                             ->merge([
                                 'type' => 'text',
+                                'role' => $dropdown === false ? null : 'combobox',
+                                'aria-haspopup' => $dropdown === false ? null : 'listbox',
                                 'autocomplete' => 'off',
                                 'id' => $id,
                                 'placeholder' => __(is_string($placeholder) ? $placeholder : 'Select time'),
-                                'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
+                                'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                                 'aria-invalid' => $invalid ? 'true' : null,
+                                'aria-readonly' => $readonly ? 'true' : null,
                                 'data-invalid' => $invalid ? true : null,
                                 'disabled' => $disabled ?: null,
-                                'readonly' => $multiple ?: null,
+                                'readonly' => ($multiple || $readonly) ?: null,
                             ])
                             ->classes(
                                 'tk-field-control-base w-full',
@@ -110,12 +121,14 @@ $disabled = (bool) $attributes->get('disabled');
                 />
             @else
                 <tk:button
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'trigger:')
+                    :attributes="$attributes->prefixed('trigger:')
                         ->dataKey('control')
                         ->merge([
                             'id' => $id,
-                            'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
+                            'aria-labelledby' => trim(($label ? $id.'-label ' : '').$id.'-value'),
+                            'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                             'aria-invalid' => $invalid ? 'true' : null,
+                            'aria-readonly' => $readonly ? 'true' : null,
                             'data-invalid' => $invalid ? true : null,
                         ])
                         ->classes(
@@ -138,7 +151,7 @@ $disabled = (bool) $attributes->get('disabled');
                     <span
                         x-show="!formatted()"
                         {{
-                            TALLKit::attributesAfter(attributes: $attributes, prefix: 'placeholder:')
+                            $attributes->prefixed('placeholder:')
                                 ->classes(TALLKit::textNeutral(variant: 'muted'))
                         }}
                     >{{ __(is_string($placeholder) ? $placeholder : 'Select time') }}</span>
@@ -146,7 +159,8 @@ $disabled = (bool) $attributes->get('disabled');
                         x-show="formatted()"
                         x-text="formatted()"
                         {{
-                            TALLKit::attributesAfter(attributes: $attributes, prefix: 'formatted:')
+                            $attributes->prefixed('formatted:')
+                                ->merge(['id' => $id.'-value'])
                                 ->classes('overflow-hidden text-ellipsis')
                         }}
                     ></span>
@@ -154,25 +168,26 @@ $disabled = (bool) $attributes->get('disabled');
             @endif
         </tk:field.control>
 
-        @unless ($withoutDropdown)
+        @unless ($dropdown === false)
             <tk:popover
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'popover:')->classes('p-0')"
+                :attributes="$attributes->prefixed('popover:')->classes('p-0')"
                 :$size
                 animation="none"
                 :keep-open="(bool) $multiple"
             >
                 <div
                     role="listbox"
-                    aria-label="{{ __('Time') }}"
                     aria-multiselectable="{{ $multiple ? 'true' : 'false' }}"
+                    @keydown="moveSlotFocus($event)"
                     {{
-                        TALLKit::attributesAfter(attributes: $attributes, prefix: 'list:')
+                        $attributes->prefixed('list:')
                             ->classes('p-1 space-y-0.5')
+                            ->merge(['aria-label' => __('Time')])
                     }}
                 >
                     <template x-for="slot in slots()" :key="slot">
                         <tk:button
-                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'slot:')
+                            :attributes="$attributes->prefixed('slot:')
                                 ->classes(
                                     '
                                         w-full justify-center tabular-nums
@@ -185,6 +200,7 @@ $disabled = (bool) $attributes->get('disabled');
                             variant="ghost"
                             :size="$size"
                             role="option"
+                            tabindex="-1"
                             ::data-slot="slot"
                             ::aria-selected="isSelected(slot)"
                             ::data-active="isSelected(slot)"

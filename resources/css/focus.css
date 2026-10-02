@@ -1,0 +1,28 @@
+@utility tk-focus-outline {
+  @apply outline-2 outline-offset-2 outline-blue-700 dark:outline-blue-300;
+}
+
+@utility tk-focus-ring {
+  @apply outline-2 outline-offset-0 outline-blue-700 dark:outline-blue-300 ring-2 ring-blue-700/20 dark:ring-blue-300/20;
+}
+
+/* :where(): zero specificity, so a component's or the app's own focus style wins. */
+:where(
+  [data-tallkit-button],
+  [data-tallkit-link],
+  [data-tallkit-nav-item],
+  [data-tallkit-brand],
+  [data-tallkit-badge-link],
+  [data-tallkit-avatar]
+):focus-visible {
+  outline: 2px solid var(--color-blue-700);
+  outline-offset: 2px;
+
+  @variant dark {
+    outline-color: var(--color-blue-300);
+  }
+}
+
+:where([role='gridcell'][data-tallkit-button]):focus-visible {
+  outline-offset: 0;
+}

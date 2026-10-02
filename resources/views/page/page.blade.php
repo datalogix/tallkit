@@ -15,7 +15,7 @@
         </x-slot:actions>
     @endisset
 
-    <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')->classes(
+    <div {{ $attributes->prefixed('container:')->classes(
         'flex items-start',
         match ($breakpoint) {
             'sm' => 'max-sm:flex-col',
@@ -27,7 +27,7 @@
         },
     ) }}>
         @if (collect($menu)->isNotEmpty())
-            <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'menu:')->classes(
+            <div {{ $attributes->prefixed('menu:')->classes(
                 'w-full me-16 pb-6',
                 match ($breakpoint) {
                     'sm' => 'sm:w-[220px]',
@@ -39,7 +39,7 @@
                 },
             ) }}>
                 <tk:nav
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'nav:')->classes(
+                    :attributes="$attributes->prefixed('nav:')->classes(
                         match ($breakpoint) {
                             'sm' => 'max-sm:hidden',
                             default => 'max-md:hidden',
@@ -62,7 +62,7 @@
 
                 @endphp
                 <tk:select
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'select:')->classes(
+                    :attributes="$attributes->prefixed('select:')->classes(
                         match ($breakpoint) {
                             'sm' => 'sm:hidden',
                             default => 'md:hidden',
@@ -73,15 +73,16 @@
                         },
                     )"
                     :options="$options"
-                    :value="data_get($options->first(fn($item) => data_get($item, 'current') ?? is_current_href(data_get($item, 'id'))), 'id')"
+                    :value="data_get($options->first(fn($item) => data_get($item, 'current') ?? TALLKit::isCurrentHref(data_get($item, 'id'))), 'id')"
                     :placeholder="false"
+                    :aria-label="__('Sections')"
                     x-data
                     x-on:change="{{ in_livewire() ? 'Livewire.navigate($el.value)' : 'window.location.href = $el.value' }}"
                 />
             </div>
         @endif
 
-        <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'area:')->classes('flex-1 min-w-0 w-full [:where(&)]:space-y-6') }}>
+        <div {{ $attributes->prefixed('area:')->classes('flex-1 min-w-0 w-full [:where(&)]:space-y-6') }}>
             {{ $slot }}
         </div>
     </div>

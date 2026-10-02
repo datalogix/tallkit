@@ -6,17 +6,23 @@
 ])
 @php
 
-$hasPrefix = ! $inline && ($prefix || TALLKit::attributesAfter(attributes: $attributes, prefix: 'prefix:')->isNotEmpty());
-$hasSuffix = ! $inline && ($suffix || TALLKit::attributesAfter(attributes: $attributes, prefix: 'suffix:')->isNotEmpty());
+$hasPrefix = ! $inline && ($prefix || $attributes->prefixed('prefix:')->isNotEmpty());
+$hasSuffix = ! $inline && ($suffix || $attributes->prefixed('suffix:')->isNotEmpty());
+
+// Same check as element.wrapper's (keep the lists alike): empty, each would still cost two components.
+$shows = fn ($text, string $prefix) => $text || $attributes->prefixed($prefix)->only(['label', 'icon', 'prefix', 'suffix', 'icon-trailing', 'info', 'badge', 'prepend', 'append', 'kbd'])->filter(fn ($value) => (bool) $value)->isNotEmpty();
+$hasDescription = $shows($description, 'description:');
+$hasHelp = $shows($help, 'help:');
 
 @endphp
 @if ($label || $description || $help || $hasPrefix || $hasSuffix)
-    <tk:field :$inline :$align :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'field:')">
+    <tk:field :$inline :$align :attributes="$attributes->prefixed('field:')">
         <tk:label
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'label:')
-                ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'info:', prepend: true)->getAttributes())
-                ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'badge:', prepend: true)->getAttributes())
-            "
+            :attributes="TALLKit::attributesMerge(
+                $attributes->prefixed('label:'),
+                $attributes->prefixed('info:', keepPrefix: true),
+                $attributes->prefixed('badge:', keepPrefix: true),
+            )"
             :for="$id"
             :$label
             :$labelPrepend
@@ -26,18 +32,21 @@ $hasSuffix = ! $inline && ($suffix || TALLKit::attributesAfter(attributes: $attr
             :$badge
         />
 
-        <tk:text
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'description:')->merge(['id' => $id ? $id.'-description' : null])"
-            :label="$description"
-            :$size
-        />
+        @if ($hasDescription)
+            <tk:text
+                :attributes="$attributes->prefixed('description:')->merge(['id' => $id ? $id.'-description' : null])"
+                :label="$description"
+                :$size
+            />
+        @endif
 
         @if ($hasPrefix || $hasSuffix)
             <tk:field.group
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'group:')
-                    ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'prefix:', prepend: true)->getAttributes())
-                    ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'suffix:', prepend: true)->getAttributes())
-                "
+                :attributes="TALLKit::attributesMerge(
+                    $attributes->prefixed('group:'),
+                    $attributes->prefixed('prefix:', keepPrefix: true),
+                    $attributes->prefixed('suffix:', keepPrefix: true),
+                )"
                 :$prefix
                 :$suffix
                 :$size
@@ -48,15 +57,18 @@ $hasSuffix = ! $inline && ($suffix || TALLKit::attributesAfter(attributes: $attr
             {{ $slot }}
         @endif
 
-        <tk:text
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'help:')->merge(['id' => $id ? $id.'-help' : null])"
-            :label="$help"
-            :$size
-        />
+        @if ($hasHelp)
+            <tk:text
+                :attributes="$attributes->prefixed('help:')->merge(['id' => $id ? $id.'-help' : null])"
+                :label="$help"
+                :$size
+            />
+        @endif
 
         @if ($showError !== false)
             <tk:error
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'error:')->merge(['id' => $id ? $id.'-error' : null])"
+                :attributes="$attributes->prefixed('error:')->merge(['id' => $id ? $id.'-error' : null])"
+                :bag="TALLKit::fieldErrorBag($id)"
                 :$name
                 :$size
             />
@@ -64,4 +76,13 @@ $hasSuffix = ! $inline && ($suffix || TALLKit::attributesAfter(attributes: $attr
     </tk:field>
 @else
     {{ $slot }}
+
+    @if ($showError !== false && filled($name))
+        <tk:error
+            :attributes="$attributes->prefixed('error:')->merge(['id' => $id ? $id.'-error' : null])"
+            :bag="TALLKit::fieldErrorBag($id)"
+            :$name
+            :$size
+        />
+    @endif
 @endif

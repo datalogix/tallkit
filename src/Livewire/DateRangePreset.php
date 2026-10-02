@@ -2,7 +2,9 @@
 
 namespace TALLKit\Livewire;
 
+use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
+use TALLKit\Facades\TALLKit;
 
 enum DateRangePreset: string
 {
@@ -35,39 +37,48 @@ enum DateRangePreset: string
     case AllTime = 'allTime';
     case Custom = 'custom';
 
-    public function dates(?Carbon $start = null)
+    // The day moves before the months to avoid overflow (Feb 31 is Mar 3).
+    public function dates(?CarbonInterface $start = null)
     {
+        $now = Carbon::now();
+
         return match ($this) {
-            self::Today => [Carbon::now()->startOfDay(), Carbon::now()->endOfDay()],
-            self::Yesterday => [Carbon::now()->subDay()->startOfDay(), Carbon::now()->subDay()->endOfDay()],
-            self::ThisWeek => [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()],
-            self::LastWeek => [Carbon::now()->subWeek()->startOfWeek(), Carbon::now()->subWeek()->endOfWeek()],
-            self::Last7Days => [Carbon::now()->subDays(7)->addDay()->startOfDay(), Carbon::now()->endOfDay()],
-            self::ThisMonth => [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()],
-            // If it is currently the 31st of the month, and we do `subMonth()`, if the previous month has 30 days, it will return the 1st of
-            // the current month, not the 30th of the previous month. So we need to use `startOfMonth()` first before doing `subMonth()`...
-            self::LastMonth => [Carbon::now()->startOfMonth()->subMonth(), Carbon::now()->startOfMonth()->subMonth()->endOfMonth()],
-            self::ThisQuarter => [Carbon::now()->startOfQuarter(), Carbon::now()->endOfQuarter()],
-            self::LastQuarter => [Carbon::now()->subQuarter()->startOfQuarter(), Carbon::now()->subQuarter()->endOfQuarter()],
-            self::ThisYear => [Carbon::now()->startOfYear(), Carbon::now()->endOfYear()],
-            self::LastYear => [Carbon::now()->subYear()->startOfYear(), Carbon::now()->subYear()->endOfYear()],
-            self::Last14Days => [Carbon::now()->subDays(14)->addDay()->startOfDay(), Carbon::now()->endOfDay()],
-            self::Last30Days => [Carbon::now()->subDays(30)->addDay()->startOfDay(), Carbon::now()->endOfDay()],
-            self::Last3Months => [Carbon::now()->subMonths(3)->addDay()->startOfDay(), Carbon::now()->endOfDay()],
-            self::Last6Months => [Carbon::now()->subMonths(6)->addDay()->startOfDay(), Carbon::now()->endOfDay()],
-            self::YearToDate => [Carbon::now()->startOfYear(), Carbon::now()->endOfDay()],
-            self::Tomorrow => [Carbon::now()->addDay()->startOfDay(), Carbon::now()->addDay()->endOfDay()],
-            self::NextWeek => [Carbon::now()->addWeek()->startOfWeek(), Carbon::now()->addWeek()->endOfWeek()],
-            self::Next7Days => [Carbon::now()->startOfDay(), Carbon::now()->addDays(6)->endOfDay()],
-            self::NextMonth => [Carbon::now()->endOfMonth()->addDay()->startOfDay(), Carbon::now()->endOfMonth()->addDay()->endOfMonth()->endOfDay()],
-            self::NextQuarter => [Carbon::now()->addQuarter()->startOfQuarter(), Carbon::now()->addQuarter()->endOfQuarter()],
-            self::NextYear => [Carbon::now()->addYear()->startOfYear(), Carbon::now()->addYear()->endOfYear()],
-            self::Next14Days => [Carbon::now()->startOfDay(), Carbon::now()->addDays(13)->endOfDay()],
-            self::Next30Days => [Carbon::now()->startOfDay(), Carbon::now()->addDays(29)->endOfDay()],
-            self::Next3Months => [Carbon::now()->startOfDay(), Carbon::now()->addMonths(3)->subDay()->endOfDay()],
-            self::Next6Months => [Carbon::now()->startOfDay(), Carbon::now()->addMonths(6)->subDay()->endOfDay()],
-            self::AllTime => [$start, Carbon::now()->endOfDay()],
+            self::Today => [$now->copy()->startOfDay(), $now->copy()->endOfDay()],
+            self::Yesterday => [$now->copy()->subDay()->startOfDay(), $now->copy()->subDay()->endOfDay()],
+            self::ThisWeek => self::week($now),
+            self::LastWeek => self::week($now->copy()->subWeek()),
+            self::Last7Days => [$now->copy()->subDays(6)->startOfDay(), $now->copy()->endOfDay()],
+            self::ThisMonth => [$now->copy()->startOfMonth(), $now->copy()->endOfMonth()],
+            self::LastMonth => [$now->copy()->startOfMonth()->subMonth(), $now->copy()->startOfMonth()->subMonth()->endOfMonth()],
+            self::ThisQuarter => [$now->copy()->startOfQuarter(), $now->copy()->endOfQuarter()],
+            self::LastQuarter => [$now->copy()->startOfQuarter()->subQuarter(), $now->copy()->startOfQuarter()->subQuarter()->endOfQuarter()],
+            self::ThisYear => [$now->copy()->startOfYear(), $now->copy()->endOfYear()],
+            self::LastYear => [$now->copy()->subYear()->startOfYear(), $now->copy()->subYear()->endOfYear()],
+            self::Last14Days => [$now->copy()->subDays(13)->startOfDay(), $now->copy()->endOfDay()],
+            self::Last30Days => [$now->copy()->subDays(29)->startOfDay(), $now->copy()->endOfDay()],
+            self::Last3Months => [$now->copy()->addDay()->subMonthsNoOverflow(3)->startOfDay(), $now->copy()->endOfDay()],
+            self::Last6Months => [$now->copy()->addDay()->subMonthsNoOverflow(6)->startOfDay(), $now->copy()->endOfDay()],
+            self::YearToDate => [$now->copy()->startOfYear(), $now->copy()->endOfDay()],
+            self::Tomorrow => [$now->copy()->addDay()->startOfDay(), $now->copy()->addDay()->endOfDay()],
+            self::NextWeek => self::week($now->copy()->addWeek()),
+            self::Next7Days => [$now->copy()->startOfDay(), $now->copy()->addDays(6)->endOfDay()],
+            self::NextMonth => [$now->copy()->startOfMonth()->addMonthNoOverflow(), $now->copy()->startOfMonth()->addMonthNoOverflow()->endOfMonth()],
+            self::NextQuarter => [$now->copy()->startOfQuarter()->addQuarter(), $now->copy()->startOfQuarter()->addQuarter()->endOfQuarter()],
+            self::NextYear => [$now->copy()->addYear()->startOfYear(), $now->copy()->addYear()->endOfYear()],
+            self::Next14Days => [$now->copy()->startOfDay(), $now->copy()->addDays(13)->endOfDay()],
+            self::Next30Days => [$now->copy()->startOfDay(), $now->copy()->addDays(29)->endOfDay()],
+            self::Next3Months => [$now->copy()->startOfDay(), $now->copy()->subDay()->addMonthsNoOverflow(3)->endOfDay()],
+            self::Next6Months => [$now->copy()->startOfDay(), $now->copy()->subDay()->addMonthsNoOverflow(6)->endOfDay()],
+            self::AllTime => [$start?->copy()->startOfDay(), $now->copy()->endOfDay()],
+            self::Custom => throw new \LogicException('A custom date range has no dates of its own.'),
         };
+    }
+
+    protected static function week(Carbon $date): array
+    {
+        $weekStart = TALLKit::localeFirstDay();
+
+        return [$date->copy()->startOfWeek($weekStart), $date->copy()->endOfWeek(($weekStart + 6) % 7)];
     }
 
     public function label()

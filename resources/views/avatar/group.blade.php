@@ -1,33 +1,33 @@
 @props([
-    'avatars' => null,
+    'items' => null,
     'max' => null,
     'size' => null,
     'square' => null,
 ])
 <div {{ $attributes->classes(
-    'flex isolate rtl:space-x-reverse',
+    'flex isolate [&>*]:ring-2 [&>*]:ring-white dark:[&>*]:ring-zinc-900',
      match ($size) {
-        'xs' => '-space-x-3',
-        'sm' => '-space-x-4',
-        'lg' => '-space-x-6',
-        'xl' => '-space-x-8',
-        '2xl' => '-space-x-10',
-        '3xl' => '-space-x-12',
-        default => '-space-x-5',
+        'xs' => '-space-x-1.5',
+        'sm' => '-space-x-2',
+        'lg' => '-space-x-2.5',
+        'xl' => '-space-x-3',
+        '2xl' => '-space-x-3.5',
+        '3xl' => '-space-x-4',
+        default => '-space-x-2',
      },
 ) }}>
-    @foreach (collect($avatars)->take($max) as $avatar)
+    @foreach (collect($items)->take($max) as $avatar)
         <tk:avatar
-            :attributes="$avatar"
+            :attributes="TALLKit::attributesMerge(is_array($avatar) || $avatar instanceof Illuminate\View\ComponentAttributeBag ? $avatar : ['name' => $avatar])"
             :$size
             :$square
         />
     @endforeach
 
-    @if ($max && collect($avatars)->count() > $max)
+    @if ($max && collect($items)->count() > $max)
         <tk:avatar
-            initials="+{{ collect($avatars)->count() - $max }}"
-            :tooltip="__(':count more', ['count' => collect($avatars)->count() - $max])"
+            initials="+{{ collect($items)->count() - $max }}"
+            :tooltip="__(':count more', ['count' => collect($items)->count() - $max])"
             :$size
             :$square
         />

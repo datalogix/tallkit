@@ -2,16 +2,37 @@ export function padDatePart(n) {
   return String(n).padStart(2, '0')
 }
 
-export function isoOf(date) {
+// By its local day: toISOString gives the UTC one.
+export function formatIsoDate(date) {
   return `${date.getFullYear()}-${padDatePart(date.getMonth() + 1)}-${padDatePart(date.getDate())}`
 }
 
-export function parseIso(iso) {
+export function normalizeIsoDate(value) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})(?:$|[T\s])/.exec(String(value ?? '').trim())
+
+  if (!match) return null
+
+  const [, y, m, d] = match.map(Number)
+  const date = new Date(y, m - 1, d)
+
+  if (date.getFullYear() !== y || date.getMonth() !== m - 1 || date.getDate() !== d) return null
+
+  return `${match[1]}-${match[2]}-${match[3]}`
+}
+
+// Local midnight: new Date("YYYY-MM-DD") is UTC midnight.
+export function parseIsoDate(iso) {
+  iso = normalizeIsoDate(iso)
+
   if (!iso) return null
 
   const [y, m, d] = iso.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
 
-  return new Date(y, m - 1, d)
+  // Date would roll a day that doesn't exist into another month.
+  if (date.getFullYear() !== y || date.getMonth() !== m - 1 || date.getDate() !== d) return null
+
+  return date
 }
 
 export function startOfMonth(date) {
@@ -29,22 +50,23 @@ export function endOfMonth(date) {
 export function startOfWeek(date, startDay = 0) {
   const offset = (date.getDay() - startDay + 7) % 7
 
-  return addDays(isoOf(date), -offset)
+  return addDays(formatIsoDate(date), -offset)
 }
 
 export function addDays(iso, n) {
-  const date = parseIso(iso)
+  const date = parseIsoDate(iso)
   date.setDate(date.getDate() + n)
 
-  return isoOf(date)
+  return formatIsoDate(date)
 }
 
-export function sameMonth(a, b) {
+export function isSameMonth(a, b) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth()
 }
 
+// Rounded: a day across a daylight saving change is 23 or 25 hours.
 export function diffDays(isoA, isoB) {
-  return Math.round((parseIso(isoB) - parseIso(isoA)) / 86400000)
+  return Math.round((parseIsoDate(isoB) - parseIsoDate(isoA)) / 86400000)
 }
 
 export function isoWeekNumber(date) {
@@ -57,7 +79,7 @@ export function isoWeekNumber(date) {
   return Math.ceil((((d - yearStart) / 86400000) + 1) / 7)
 }
 
-export function resolveLocaleFirstDay(locale) {
+export function localeFirstDay(locale) {
   try {
     const info = new Intl.Locale(locale).weekInfo ?? new Intl.Locale(locale).getWeekInfo?.()
 
@@ -65,7 +87,6 @@ export function resolveLocaleFirstDay(locale) {
       return info.firstDay % 7
     }
   } catch {
-    //
   }
 
   return 0
@@ -80,14 +101,13 @@ export function localeDateOrder(locale) {
 
     if (order.length === 3) return order
   } catch {
-    //
   }
 
   return ['month', 'day', 'year']
 }
 
-export function formatEditable(iso, locale) {
-  const date = parseIso(iso)
+export function formatTypedDate(iso, locale) {
+  const date = parseIsoDate(iso)
   if (!date) return ''
 
   return new Intl.DateTimeFormat(locale, { year: 'numeric', month: '2-digit', day: '2-digit' }).format(date)
@@ -99,7 +119,7 @@ export function parseTypedDate(text, locale) {
   const digits = String(text).match(/\d+/g)
   if (!digits || digits.length < 3) return null
 
-  const order = localeDateOrder(locale)
+  const order = /^\s*\d{4}\D/.test(String(text)) ? ['year', 'month', 'day'] : localeDateOrder(locale)
   const values = {}
 
   order.forEach((type, index) => {
@@ -118,25 +138,45 @@ export function parseTypedDate(text, locale) {
 
   const date = new Date(year, month - 1, day)
 
+  // Date would roll a day that doesn't exist into the next month.
   if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
     return null
   }
 
-  return isoOf(date)
+  return formatIsoDate(date)
 }
 
-export function toMinutes(hhmm) {
+export function timeToMinutes(hhmm) {
   const [h, m] = hhmm.split(':').map(Number)
 
   return h * 60 + m
 }
 
-export function parseTimeToken(token) {
-  const match = /^(\d{1,2}):(\d{2})$/.exec(String(token).trim())
+export function parseTypedTime(token) {
+  let text = String(token ?? '').trim().toLowerCase().replace(/\./g, '')
+
+  if (!text) return null
+
+  const dateTime = /^\d{4}-\d{2}-\d{2}[t ](.+)$/.exec(text)
+  if (dateTime) text = dateTime[1].replace(/(z|[+-]\d{2}:?\d{2})$/, '')
+
+  const match = /^(\d{1,2}):(\d{2})(?::\d{2}(?:\d+)?)?\s*(am|pm)?$/.exec(text)
+    ?? /^(\d{1,2})h(\d{2})?$/.exec(text)
+    ?? /^(\d{1,2})(\d{2})\s*(am|pm)?$/.exec(text)
+    ?? /^(\d{1,2})()\s*(am|pm)$/.exec(text)
+
   if (!match) return null
 
-  const h = Number(match[1])
-  const m = Number(match[2])
+  let h = Number(match[1])
+  const m = Number(match[2] || 0)
+  const meridiem = match[3]
+
+  if (meridiem) {
+    if (h < 1 || h > 12) return null
+    if (meridiem === 'pm' && h < 12) h += 12
+    if (meridiem === 'am' && h === 12) h = 0
+  }
+
   if (h > 23 || m > 59) return null
 
   return `${padDatePart(h)}:${padDatePart(m)}`

@@ -7,11 +7,14 @@
     'prepend' => null,
     'append' => null,
     'actions' => null,
+    'icon' => null,
+    'title' => null,
+    'description' => null,
 ])
 <tk:element
-    name="status"
+    kind="status"
     :$href
-    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')
+    :attributes="$attributes->prefixed('container:')
         ->classes(
             '
                 justify-center
@@ -28,7 +31,7 @@
     "
 >
     <tk:content
-        :attributes="$attributes->whereDoesntStartWith(['container:', 'value:'])->classes('flex-col justify-center items-center')"
+        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), ['icon' => null, 'title' => null, 'description' => null])->whereDoesntStartWith(['container:', 'value:'])->classes('flex-col justify-center items-center')"
         :$size
         :$append
         :$actions
@@ -37,7 +40,7 @@
             {{ $prepend }}
 
             <tk:heading
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'value:')
+                :attributes="$attributes->prefixed('value:')
                     ->classes(
                         'block w-full',
                         match ($size) {
@@ -51,7 +54,7 @@
                         }
                     )
                 "
-                :variant="$color"
+                :$color
                 :label="$value"
             />
         </x-slot:prepend>

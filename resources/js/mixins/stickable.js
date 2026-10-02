@@ -1,4 +1,4 @@
-export function sticky() {
+export function stickable() {
   return {
     _onResize: null,
     _resizeObserver: null,
@@ -14,6 +14,8 @@ export function sticky() {
     },
 
     updateOffset() {
+      // Measured in the flow: once stuck, offsetTop is where it is stuck.
+      this.$el.style.position = 'static'
       const top = this.$el.offsetTop
       this.$el.style.position = 'sticky'
       this.$el.style.top = `${top}px`
@@ -24,5 +26,5 @@ export function sticky() {
       window.removeEventListener('resize', this._onResize)
       this._resizeObserver?.disconnect()
     }
-  };
+  }
 }

@@ -20,7 +20,7 @@
 
 .tiptap-content ul,
 .tiptap-content ol {
-  @apply mb-3 pl-6;
+  @apply mb-3 ps-6;
 }
 
 .tiptap-content ul {
@@ -36,7 +36,7 @@
 }
 
 .tiptap-content blockquote {
-  @apply mb-3 border-l-[3px] border-zinc-300 dark:border-white/15 pl-4 text-zinc-600 dark:text-zinc-400;
+  @apply mb-3 border-s-[3px] border-zinc-300 dark:border-white/15 ps-4 text-zinc-600 dark:text-zinc-400;
 }
 
 .tiptap-content hr {
@@ -119,5 +119,47 @@
 }
 
 .tiptap-content th {
-  @apply bg-zinc-50 dark:bg-white/5 font-semibold text-left;
+  @apply bg-zinc-50 dark:bg-white/5 font-semibold text-start;
+}
+
+[data-tallkit-editor-state='disabled'] {
+  @apply opacity-disabled cursor-not-allowed;
+}
+
+[data-tallkit-editor-state='readonly'] [inert] {
+  @apply opacity-disabled;
+}
+
+[data-tallkit-quill] .ql-toolbar.ql-snow,
+[data-tallkit-quill] .ql-container.ql-snow {
+  border: 0;
+}
+
+[data-tallkit-quill] .ql-toolbar.ql-snow {
+  border-bottom: 1px solid color-mix(in oklab, currentColor 15%, transparent);
+}
+
+[data-tallkit-quill] .ql-snow .ql-stroke,
+[data-tallkit-quill] .ql-snow .ql-stroke-miter {
+  stroke: currentColor;
+}
+
+[data-tallkit-quill] .ql-snow .ql-fill,
+[data-tallkit-quill] .ql-snow .ql-stroke.ql-fill {
+  fill: currentColor;
+}
+
+[data-tallkit-quill] .ql-snow .ql-picker,
+[data-tallkit-quill] .ql-snow .ql-picker-label {
+  color: inherit;
+}
+
+[data-tallkit-quill] .ql-snow .ql-picker-options,
+[data-tallkit-quill] .ql-snow .ql-tooltip {
+  @apply bg-white text-zinc-700 border-zinc-200 dark:bg-zinc-700 dark:text-zinc-200 dark:border-white/10;
+}
+
+[data-tallkit-quill] .ql-editor.ql-blank::before {
+  color: currentColor;
+  opacity: 0.6;
 }

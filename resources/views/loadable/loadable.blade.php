@@ -17,9 +17,8 @@
             {{ $empty }}
         @else
             <tk:text
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'empty:')"
+                :attributes="$attributes->prefixed('empty:')->merge(['label' => 'Nothing to show'])"
                 variant="subtle"
-                label="Nothing to show"
             />
         @endisset
     </template>
@@ -36,7 +35,7 @@
         @isset ($loading)
             {{ $loading }}
         @else
-            <tk:loading :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'loading:')" />
+            <tk:loading :attributes="$attributes->prefixed('loading:')" />
         @endisset
     </template>
 
@@ -44,7 +43,7 @@
         @isset ($error)
             {{ $error }}
         @else
-            <tk:error :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'error:')">
+            <tk:error :attributes="$attributes->prefixed('error:')">
                 <span x-text="error?.message ?? error"></span>
             </tk:error>
         @endisset

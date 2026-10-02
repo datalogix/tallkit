@@ -3,20 +3,24 @@
     'size' => null,
     'expanded' => null,
     'expandable' => null,
-    'heading' => null,
+    'label' => null,
     'line' => null,
     'collapse' => null,
 ])
-@if ($expandable && $heading)
+@php
+$parts = ['trigger:', 'heading:', 'container:', 'line:'];
+@endphp
+@if ($expandable && $label)
     <div
+        wire:ignore.self
         x-data="disclosure"
-        {{ $attributes->whereDoesntStartWith(['heading:', 'container:', 'line:'])->classes('group/disclosure') }}
+        {{ $attributes->whereDoesntStartWith($parts)->classes('group/disclosure') }}
         @if ($expanded !== false) data-open @endif
     >
         <tk:button
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'heading:')->classes('w-full min-w-0 justify-start p-2.5')"
+            :attributes="$attributes->prefixed('trigger:')->classes('w-full min-w-0 justify-start p-2.5')"
             :$size
-            :label="$heading"
+            :$label
             content:class="truncate"
             variant="subtle"
             icon="chevron-right"
@@ -28,7 +32,7 @@
 
         <div
             {{
-                TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')
+                $attributes->prefixed('container:')
                     ->classes('min-w-0 relative hidden group-data-[open]/disclosure:block space-y-[2px]')
                     ->when($line !== false, fn($attrs) => $attrs->classes(TALLKit::generateClassBySize(size: $size, name: 'ps', values: ['8', '9', '10', '11', '12', '13', '14'])))
                     ->when($collapse === true, fn($attrs) => $attrs->merge(['x-show' => 'opened', 'x-collapse' => '']))
@@ -36,7 +40,7 @@
             }}
         >
             @if ($line !== false)
-                <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'line:')->classes(
+                <div {{ $attributes->prefixed('line:')->classes(
                     'absolute inset-y-[3px] w-px start-0',
                     TALLKit::backgroundNeutral(variant: 'strong'),
                     TALLKit::generateClassBySize(size: $size, name: 'ms', values: ['4', '4.5', '5', '5.5', '6', '6.5', '7']),
@@ -46,20 +50,20 @@
             {{ $slot }}
         </div>
     </div>
-@elseif ($heading)
-    <div {{ $attributes->whereDoesntStartWith(['heading:', 'container:'])->classes('block space-y-[2px]') }}>
+@elseif ($label)
+    <div {{ $attributes->whereDoesntStartWith($parts)->classes('block space-y-[2px]') }}>
         <tk:heading
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'heading:')->classes('p-2.5 leading-none truncate', TALLKit::textNeutral(variant: 'subtle'))"
+            :attributes="$attributes->prefixed('heading:')->classes('p-2.5 leading-none truncate', TALLKit::textNeutral(variant: 'subtle'))"
             :size="TALLKit::adjustSize(size: $size)"
-            :label="$heading"
+            :$label
         />
 
-        <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:') }}>
+        <div {{ $attributes->prefixed('container:') }}>
             {{ $slot }}
         </div>
     </div>
 @else
-    <div {{ $attributes->whereDoesntStartWith(['heading:'])->classes('block space-y-[2px]') }}>
+    <div {{ $attributes->whereDoesntStartWith($parts)->classes('block space-y-[2px]') }}>
         {{ $slot }}
     </div>
 @endif

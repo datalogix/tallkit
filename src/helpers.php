@@ -1,23 +1,13 @@
 <?php
 
 use Illuminate\Contracts\Container\BindingResolutionException;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
-use Livewire\Livewire;
-use Livewire\Mechanisms\ExtendBlade\ExtendBlade;
 use TALLKit\Facades\TALLKit;
 
 if (! function_exists('route_detect')) {
     function route_detect(array|string|null $routes, $parameters = null, ?string $default = '/')
     {
-        foreach (array_filter(Arr::wrap($routes)) as $route) {
-            if (Route::has($route)) {
-                return route($route, $parameters);
-            }
-        }
-
-        return $default;
+        return TALLKit::routeDetect($routes, $parameters, $default);
     }
 }
 
@@ -31,73 +21,17 @@ if (! function_exists('make_model')) {
         try {
             return app(Str::of($class)->studly()->prepend('\App\Models\\')->toString());
         } catch (BindingResolutionException $e) {
-            //
+
         }
 
         return null;
-    }
-}
-
-if (! function_exists('find_asset')) {
-    function find_asset(array|string $paths)
-    {
-        foreach (array_filter(Arr::wrap($paths)) as $path) {
-            if (file_exists(public_path($path))) {
-                return asset($path);
-            }
-        }
-
-        return null;
-    }
-}
-
-if (! function_exists('find_image')) {
-    function find_image(string $name, array $dirs = ['', 'imgs/', 'images/'], array $exts = ['png', 'jpg', 'jpeg'])
-    {
-        $paths = collect($dirs)->flatMap(fn ($dir) => collect($exts)->map(fn ($ext) => "{$dir}{$name}.{$ext}"))->all();
-
-        return find_asset($paths);
     }
 }
 
 if (! function_exists('in_livewire')) {
     function in_livewire()
     {
-        return class_exists(Livewire::class)
-            && ExtendBlade::isRenderingLivewireComponent();
-    }
-}
-
-if (! function_exists('is_current_href')) {
-    function is_current_href(?string $href = null, ?bool $exact = null)
-    {
-        if (blank($href)) {
-            return false;
-        }
-
-        $hrefForCurrentDetection = Str::startsWith($href, trim(config('app.url')))
-            ? Str::after($href, trim(config('app.url'), '/'))
-            : $href;
-
-        if ($hrefForCurrentDetection === '') {
-            $hrefForCurrentDetection = '/';
-        }
-
-        if ($hrefForCurrentDetection !== '/') {
-            $hrefForCurrentDetection = trim($hrefForCurrentDetection, '/');
-        }
-
-        if (! $hrefForCurrentDetection) {
-            return false;
-        }
-
-        $pattern = $exact ? $hrefForCurrentDetection : [$hrefForCurrentDetection, "$hrefForCurrentDetection/*"];
-
-        if (class_exists(Livewire::class) && app('livewire')?->isLivewireRequest()) {
-            return Str::is($pattern, app('livewire')->originalPath());
-        }
-
-        return request()->is($pattern);
+        return TALLKit::livewireRendering();
     }
 }
 
@@ -105,13 +39,6 @@ if (! function_exists('toast')) {
     function toast(...$args)
     {
         return TALLKit::toast(...$args);
-    }
-}
-
-if (! function_exists('close_toast')) {
-    function close_toast(...$args)
-    {
-        return TALLKit::closeToast(...$args);
     }
 }
 

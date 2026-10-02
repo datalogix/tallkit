@@ -1,4 +1,7 @@
-import { dataKey, isoOf, parseIso, startOfMonth, startOfWeek, endOfMonth, addDays, addMonths, formatEditable, parseTypedDate, localeDateOrder } from '../utils'
+import { queryData, formatIsoDate, parseIsoDate, startOfMonth, startOfWeek, endOfMonth, addDays, addMonths, formatTypedDate, parseTypedDate, localeDateOrder } from '../utils'
+
+const startOfQuarter = (date) => new Date(date.getFullYear(), Math.floor(date.getMonth() / 3) * 3, 1)
+const endOfQuarter = (date) => new Date(date.getFullYear(), Math.floor(date.getMonth() / 3) * 3 + 3, 0)
 import { popover } from './popover'
 import { calendar } from './calendar'
 import { bindableField } from '../mixins/bindable-field'
@@ -7,13 +10,14 @@ const DATE_STYLES = ['full', 'long', 'medium', 'short']
 const DEFAULT_FORMAT = 'medium'
 
 export function datePicker({
-  mode = null,
+  range = false,
+  dateRange = false,
   multiple = null,
   format = null,
-  type = null,
+  trigger = null,
   openTo = null,
   forceOpenTo = null,
-  withConfirmation = null,
+  confirm = null,
   ...calendarOptions
 } = {}) {
   if (format && !DATE_STYLES.includes(format)) {
@@ -21,13 +25,20 @@ export function datePicker({
     format = DEFAULT_FORMAT
   }
 
+  const mode = range ? 'range' : null
   const _popover = popover({ mode: 'dropdown', position: 'bottom', align: 'start' })
-  const _calendar = calendar({ mode, multiple, openTo, ...calendarOptions })
+  const _calendar = calendar({ range, multiple, openTo, ...calendarOptions })
   const _bindableField = bindableField({
     key: 'date-picker',
     property: 'committed',
     serialize() { return this.committedString() },
-    deserialize(raw) { return this.parseInitialValue(raw) },
+    deserialize(raw) {
+      this.preset = raw?.preset ?? null
+
+      return this.parseInitialValue(raw)
+    },
+    // A DateRange property gets an object, so the preset reaches the server.
+    toWire: dateRange ? function () { return this.committedRange() } : null,
   })
 
   return {
@@ -36,6 +47,7 @@ export function datePicker({
     ..._bindableField,
 
     committed: null,
+    preset: null,
     typed: '',
     typing: false,
 
@@ -56,7 +68,7 @@ export function datePicker({
       this.$watch('value', () => {
         this.syncTyped()
 
-        if (withConfirmation) return
+        if (confirm) return
 
         this.committed = this.value
 
@@ -81,7 +93,7 @@ export function datePicker({
     },
 
     isDisabled() {
-      return !!this.$root.querySelector(dataKey('control'))?.disabled
+      return !!queryData(this.$root, 'control')?.disabled
     },
 
     open(focus = true) {
@@ -91,8 +103,8 @@ export function datePicker({
     },
 
     onOpen() {
-      if (withConfirmation) this.value = this.committed
-      if (forceOpenTo && openTo) this.anchorMonth = startOfMonth(parseIso(openTo))
+      if (confirm) this.value = this.committed
+      if (forceOpenTo && openTo) this.anchorMonth = startOfMonth(parseIsoDate(openTo))
 
       _popover.onOpen.call(this)
     },
@@ -114,7 +126,7 @@ export function datePicker({
 
       this.value = iso || null
       this.focused = this.value ?? this.focused
-      this.$dispatch('calendar-picked', { value: this.value })
+      this.dispatchPicked(this.value)
     },
 
     formatted() {
@@ -131,17 +143,35 @@ export function datePicker({
       if (mode === 'range') {
         if (!this.value.start || !this.value.end) return null
 
-        const start = parseIso(this.value.start)
-        const end = parseIso(this.value.end)
+        const start = parseIsoDate(this.value.start)
+        const end = parseIsoDate(this.value.end)
+
+        // format(null) is the epoch.
+        if (!start || !end) return null
 
         return fmt.formatRange ? fmt.formatRange(start, end) : `${fmt.format(start)} – ${fmt.format(end)}`
       }
 
       if (multiple) {
-        return this.value.length ? this.value.map((iso) => fmt.format(parseIso(iso))).join(', ') : null
+        const dates = (this.value ?? []).map(parseIsoDate).filter(Boolean)
+
+        return dates.length ? dates.map((date) => fmt.format(date)).join(', ') : null
       }
 
-      return fmt.format(parseIso(this.value))
+      const date = parseIsoDate(this.value)
+
+      return date ? fmt.format(date) : null
+    },
+
+    committedRange() {
+      if (!this.committed?.start) return null
+
+      const range = { start: this.committed.start, end: this.committed.end ?? null }
+      const preset = this.presetRange(this.preset)
+
+      if (preset && preset.start === range.start && preset.end === range.end) range.preset = this.preset
+
+      return range
     },
 
     committedString() {
@@ -157,7 +187,7 @@ export function datePicker({
     },
 
     typable() {
-      return type === 'input' && !multiple
+      return trigger === 'input' && !multiple
     },
 
     maskPattern() {
@@ -178,15 +208,15 @@ export function datePicker({
 
     formattedEditable() {
       if (mode === 'range') {
-        const start = this.value?.start ? formatEditable(this.value.start, this.locale) : ''
-        const end = this.value?.end ? formatEditable(this.value.end, this.locale) : ''
+        const start = this.value?.start ? formatTypedDate(this.value.start, this.locale) : ''
+        const end = this.value?.end ? formatTypedDate(this.value.end, this.locale) : ''
 
         if (!start && !end) return ''
 
         return `${start} – ${end}`
       }
 
-      return this.value ? formatEditable(this.value, this.locale) : ''
+      return this.value ? formatTypedDate(this.value, this.locale) : ''
     },
 
     commitTyped() {
@@ -201,12 +231,12 @@ export function datePicker({
 
         if (start) {
           this.setRangeBound('start', start)
-          this.anchorMonth = startOfMonth(parseIso(start))
+          this.anchorMonth = startOfMonth(parseIsoDate(start))
         }
 
         if (end) {
           this.setRangeBound('end', end)
-          this.anchorMonth = startOfMonth(parseIso(end))
+          this.anchorMonth = startOfMonth(parseIsoDate(end))
         }
       } else {
         const iso = parseTypedDate(this.typed, this.locale)
@@ -214,8 +244,8 @@ export function datePicker({
         if (iso && !this.isDayDisabled(iso)) {
           this.value = iso
           this.focused = iso
-          this.anchorMonth = startOfMonth(parseIso(iso))
-          this.$dispatch('calendar-picked', { value: iso })
+          this.anchorMonth = startOfMonth(parseIsoDate(iso))
+          this.dispatchPicked(iso)
         }
       }
     },
@@ -225,7 +255,7 @@ export function datePicker({
       this.typing = false
       this.syncTyped()
 
-      if (!withConfirmation) this.close()
+      if (!confirm) this.close()
     },
 
     onFieldBlur(event) {
@@ -239,47 +269,73 @@ export function datePicker({
       this.syncTyped()
     },
 
+    // The same as the server's (TALLKit\Livewire\DateRangePreset::dates()).
     presetRange(key) {
       if (mode !== 'range') return null
 
-      const today = isoOf(new Date())
-      const todayDate = parseIso(today)
+      const today = formatIsoDate(new Date())
+      const todayDate = parseIsoDate(today)
+      const week = (iso) => {
+        const start = startOfWeek(parseIsoDate(iso), this.startDay)
+
+        return { start, end: addDays(start, 6) }
+      }
+      const month = (offset) => {
+        const date = addMonths(todayDate, offset)
+
+        return { start: formatIsoDate(startOfMonth(date)), end: formatIsoDate(endOfMonth(date)) }
+      }
+      const quarter = (offset) => {
+        const date = addMonths(startOfQuarter(todayDate), offset * 3)
+
+        return { start: formatIsoDate(startOfQuarter(date)), end: formatIsoDate(endOfQuarter(date)) }
+      }
+      const year = (offset) => ({ start: `${todayDate.getFullYear() + offset}-01-01`, end: `${todayDate.getFullYear() + offset}-12-31` })
 
       switch (key) {
-        case 'today':
-          return { start: today, end: today }
-        case 'yesterday': {
-          const yesterday = addDays(today, -1)
-
-          return { start: yesterday, end: yesterday }
-        }
-        case 'thisWeek':
-          return { start: startOfWeek(todayDate, this.startDay), end: today }
-        case 'last7Days':
-          return { start: addDays(today, -6), end: today }
-        case 'last14Days':
-          return { start: addDays(today, -13), end: today }
-        case 'last30Days':
-          return { start: addDays(today, -29), end: today }
-        case 'thisMonth':
-          return { start: isoOf(startOfMonth(todayDate)), end: isoOf(endOfMonth(todayDate)) }
-        case 'lastMonth': {
-          const lastMonth = addMonths(todayDate, -1)
-
-          return { start: isoOf(startOfMonth(lastMonth)), end: isoOf(endOfMonth(lastMonth)) }
-        }
-        case 'thisYear':
-          return { start: `${todayDate.getFullYear()}-01-01`, end: `${todayDate.getFullYear()}-12-31` }
-        case 'lastYear':
-          return { start: `${todayDate.getFullYear() - 1}-01-01`, end: `${todayDate.getFullYear() - 1}-12-31` }
-        default:
-          return null
+        case 'today': return { start: today, end: today }
+        case 'yesterday': return { start: addDays(today, -1), end: addDays(today, -1) }
+        case 'tomorrow': return { start: addDays(today, 1), end: addDays(today, 1) }
+        case 'thisWeek': return week(today)
+        case 'lastWeek': return week(addDays(today, -7))
+        case 'nextWeek': return week(addDays(today, 7))
+        case 'last7Days': return { start: addDays(today, -6), end: today }
+        case 'last14Days': return { start: addDays(today, -13), end: today }
+        case 'last30Days': return { start: addDays(today, -29), end: today }
+        case 'next7Days': return { start: today, end: addDays(today, 6) }
+        case 'next14Days': return { start: today, end: addDays(today, 13) }
+        case 'next30Days': return { start: today, end: addDays(today, 29) }
+        case 'thisMonth': return month(0)
+        case 'lastMonth': return month(-1)
+        case 'nextMonth': return month(1)
+        case 'thisQuarter': return quarter(0)
+        case 'lastQuarter': return quarter(-1)
+        case 'nextQuarter': return quarter(1)
+        case 'thisYear': return year(0)
+        case 'lastYear': return year(-1)
+        case 'nextYear': return year(1)
+        case 'yearToDate': return { start: `${todayDate.getFullYear()}-01-01`, end: today }
+        case 'last3Months': return { start: this.shiftMonth(addDays(today, 1), -3), end: today }
+        case 'last6Months': return { start: this.shiftMonth(addDays(today, 1), -6), end: today }
+        case 'next3Months': return { start: today, end: this.shiftMonth(addDays(today, -1), 3) }
+        case 'next6Months': return { start: today, end: this.shiftMonth(addDays(today, -1), 6) }
+        default: return null
       }
+    },
+
+    presetAvailable(key) {
+      const range = this.presetRange(key)
+
+      return !!range && this.rangeAllowed(range.start, range.end)
     },
 
     isPresetActive(key) {
       const range = this.presetRange(key)
       if (!range) return false
+
+      // Two presets can have the same days (this week and last 7 days).
+      const chosen = this.presetRange(this.preset)
+      if (chosen && this.value?.start === chosen.start && this.value?.end === chosen.end) return key === this.preset
 
       return this.value?.start === range.start && this.value?.end === range.end
     },
@@ -288,11 +344,12 @@ export function datePicker({
       if (this.isDisabled()) return
 
       const range = this.presetRange(key)
-      if (!range) return
+      if (!range || !this.rangeAllowed(range.start, range.end)) return
 
+      this.preset = key
       this.value = range
       this.focused = range.end
-      this.$dispatch('calendar-picked', { value: range })
+      this.dispatchPicked(range)
     },
   }
 }

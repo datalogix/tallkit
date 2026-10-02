@@ -1,18 +1,13 @@
 <?php
 
-namespace TALLKit\Livewire;
+namespace TALLKit\Livewire\Mixins;
 
 use TALLKit\Facades\TALLKit;
 
-trait InteractsWithAlert
+class AlertMixin
 {
     public function alert()
     {
         return fn (...$args) => TALLKit::alert(...$args);
-    }
-
-    public function alerts()
-    {
-        return fn () => TALLKit::alerts();
     }
 }

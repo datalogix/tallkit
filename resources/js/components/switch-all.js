@@ -1,5 +1,5 @@
-import { groupAll } from '../mixins/group-all'
+import { checkAll } from '../mixins/check-all'
 
 export function switchAll({ group = null } = {}) {
-  return groupAll('switch', group ?? '')
+  return checkAll('switch', group ?? '')
 }

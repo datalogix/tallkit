@@ -1,15 +1,21 @@
+import { emit, startTimeout } from '../utils'
+
 export function loadable() {
   return {
     empty: null,
     loaded: null,
     error: null,
 
+    // Only the latest load changes the state.
     _loadToken: 0,
     _pendingLoad: null,
+    _destroyed: false,
 
-    async load (cb, silent = false) {
+    async load(cb, silent = false) {
       if (!silent && !this.$el.hasAttribute('data-silent')) {
         this.start()
+      } else {
+        this._loadToken++
       }
 
       const token = this._loadToken
@@ -19,73 +25,84 @@ export function loadable() {
 
         this.complete(0, token)
 
-        if (typeof result === 'function') {
+        if (typeof result === 'function' && !this._destroyed) {
           this.$nextTick(result)
         }
       } catch (e) {
+        if (e?.name === 'AbortError') return
+
         this.fail(e, 0, token)
       }
     },
 
-    reset () {
+    reset() {
       this.empty = null
       this.loaded = null
       this.error = null
     },
 
-    clear () {
+    clear() {
       this.reset()
       this.empty = true
     },
 
-    start () {
+    start() {
       this._loadToken++
       this._clearPendingLoad()
       this.reset()
       this.loaded = false
-      this.$dispatch('started')
+      emit(this.$root, 'started')
     },
 
-    complete (milliseconds = 0, token) {
+    complete(milliseconds = 0, token) {
+      if (this._destroyed) return
+
       token ??= this._loadToken
       this._clearPendingLoad()
 
-      this._pendingLoad = setTimeout(() => {
+      this._pendingLoad = startTimeout(() => {
         this._pendingLoad = null
         if (token !== this._loadToken) return
 
         this.reset()
         this.loaded = true
-        this.$dispatch('completed')
-      }, milliseconds)
+        emit(this.$root, 'completed')
+      }, milliseconds, 0)
     },
 
-    fail (error, milliseconds = 0, token) {
+    fail(error, milliseconds = 0, token) {
+      if (this._destroyed) return
+
       token ??= this._loadToken
       this._clearPendingLoad()
 
-      this._pendingLoad = setTimeout(() => {
+      this._pendingLoad = startTimeout(() => {
         this._pendingLoad = null
         if (token !== this._loadToken) return
 
         this.reset()
         this.error = error
-        this.$dispatch('failed')
-      }, milliseconds)
+        emit(this.$root, 'failed')
+      }, milliseconds, 0)
     },
 
-    _clearPendingLoad () {
+    _clearPendingLoad() {
       if (this._pendingLoad) {
         clearTimeout(this._pendingLoad)
         this._pendingLoad = null
       }
     },
 
-    destroy () {
+    destroy() {
+      this._destroyed = true
       this._clearPendingLoad()
     },
 
-    startAndComplete (completeOnNextTick = false) {
+    isDestroyed() {
+      return this._destroyed
+    },
+
+    startAndComplete(completeOnNextTick = false) {
       this.start()
 
       if (completeOnNextTick) {
@@ -93,20 +110,20 @@ export function loadable() {
       }
     },
 
-    isEmpty () {
+    isEmpty() {
       return this.empty === true
     },
 
-    isLoading () {
+    isLoading() {
       return this.loaded === false
     },
 
-    isCompleted () {
+    isCompleted() {
       return this.loaded === true
     },
 
-    isError () {
+    isError() {
       return this.error !== null
     }
-  };
+  }
 }

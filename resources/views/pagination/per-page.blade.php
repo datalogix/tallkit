@@ -3,7 +3,6 @@
     'paginator',
     'options',
     'name' => 'perPage',
-    'size' => null,
 ])
 @php
 
@@ -29,5 +28,4 @@ $value = in_livewire() ? $paginator->perPage() : array_search($paginator->perPag
     :$value
     :placeholder="false"
     :aria-label="__('Items per page')"
-    :$size
 />

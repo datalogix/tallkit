@@ -1,5 +1,6 @@
 @aware(['list', 'size', 'variant', 'indicator'])
 @props([
+    ...TALLKit::elementProps(),
     'size' => null,
     'variant' => null,
     'square' => null,
@@ -12,7 +13,7 @@ $square ??= $slot->isEmpty() && ! $label;
 
 @endphp
 <tk:element
-    name="nav-item"
+    kind="nav-item"
     :$label
     :icon:size="TALLKit::adjustSize(size: $size)"
     :icon:class="$square ? '' : 'me-1.5'"
@@ -25,7 +26,7 @@ $square ??= $slot->isEmpty() && ! $label;
         'flex-1 leading-none whitespace-nowrap justify-start text-start',
         TALLKit::fontSize(size: $size, weight: true)
     )"
-    :attributes="$attributes
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())
         ->classes([
             TALLKit::padding(size: $size),
             TALLKit::roundedSize(size: $size),

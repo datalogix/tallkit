@@ -1,58 +1,123 @@
-import { dataKey, bind } from '../utils'
+import { dataSelector, queryAllData, bind } from '../utils'
 
 export function menu() {
   return {
+    observer: null,
+    _current: null,
+    typed: '',
+    typedTimeout: null,
+
     init() {
-      const items = (Array.from(this.$el.querySelectorAll(dataKey('menu-item'))))
-        .filter((item) => item.closest(dataKey('menu')) === this.$el)
+      const menu = this.$el
 
-      bind(items, {
-        ['@mouseenter']() {
-          if (this.$el.disabled) {
-            return
+      const itemOf = (event) => {
+        const item = event.target instanceof Element ? event.target.closest(dataSelector('menu-item')) : null
+
+        return item && item.closest(dataSelector('menu')) === menu && !item.disabled ? item : null
+      }
+
+      bind(menu, {
+        ['@mouseover'](event) {
+          itemOf(event)?.setAttribute('data-active', '')
+        },
+
+        ['@mouseout'](event) {
+          const item = itemOf(event)
+
+          if (item && !item.contains(event.relatedTarget)) item.removeAttribute('data-active')
+        },
+
+        ['@focusin'](event) {
+          const item = itemOf(event)
+
+          item?.setAttribute('data-active', '')
+          if (item) this.syncTabindex(item)
+        },
+
+        ['@focusout'](event) {
+          const item = event.target instanceof Element ? event.target.closest(dataSelector('menu-item')) : null
+
+          if (item && item.closest(dataSelector('menu')) === menu) item.removeAttribute('data-active')
+
+          const to = event.relatedTarget
+          if (to instanceof Element && !menu.contains(to) && typeof this.close === 'function' && this.isOpened?.()) {
+            this.close()
           }
-
-          this.$el.setAttribute('data-active', '')
         },
 
-        ['@mouseleave']() {
-          if (this.$el.disabled) {
-            return
-          }
-
-          this.$el.removeAttribute('data-active')
-        },
-
-        ['@focus']() {
-          if (this.$el.disabled) {
-            return
-          }
-
-          this.$el.setAttribute('data-active', '')
-        },
-
-        ['@blur']() {
-          this.$el.removeAttribute('data-active')
-        },
-      })
-
-      bind(this.$el, {
         ['@keydown.arrow-down.prevent']() {
-          this.focusItem(items, 1)
+          this.focusItem(this.menuItems(), 1)
         },
 
         ['@keydown.arrow-up.prevent']() {
-          this.focusItem(items, -1)
+          this.focusItem(this.menuItems(), -1)
         },
 
         ['@keydown.home.prevent']() {
-          this.focusItem(items, 'first')
+          this.focusItem(this.menuItems(), 'first')
         },
 
         ['@keydown.end.prevent']() {
-          this.focusItem(items, 'last')
+          this.focusItem(this.menuItems(), 'last')
+        },
+
+        ['@keydown'](event) {
+          if (event.key.length !== 1 || event.ctrlKey || event.metaKey || event.altKey || event.key === ' ') return
+          if (event.target.closest?.('input, textarea, select, [contenteditable]')) return
+
+          this.typeAhead(event.key)
         },
       })
+
+      if (typeof this.isOpened !== 'function') {
+        menu.closest('[popover]')?.removeAttribute('popover')
+      }
+
+      this.syncTabindex()
+      this.observer = new MutationObserver(() => this.syncTabindex())
+      this.observer.observe(menu, { childList: true, subtree: true, attributes: true, attributeFilter: ['tabindex'] })
+    },
+
+    destroy() {
+      this.observer?.disconnect()
+      clearTimeout(this.typedTimeout)
+    },
+
+    // Set only where it differs: the observer hears its own changes.
+    syncTabindex(active = null) {
+      const items = this.menuItems()
+      const usable = (item) => item && items.includes(item) && !item.disabled
+      const current = active
+        ?? (usable(this._current) ? this._current : null)
+        ?? items.find((item) => item.getAttribute('tabindex') === '0' && !item.disabled)
+        ?? items.find((item) => !item.disabled)
+
+      this._current = current
+
+      items.forEach((item) => {
+        const value = item === current ? '0' : '-1'
+
+        if (item.getAttribute('tabindex') !== value) item.setAttribute('tabindex', value)
+      })
+    },
+
+    typeAhead(key) {
+      clearTimeout(this.typedTimeout)
+      this.typed += key.toLowerCase()
+      this.typedTimeout = setTimeout(() => { this.typed = '' }, 500)
+
+      const enabled = this.menuItems().filter((item) => !item.disabled)
+      const start = enabled.indexOf(document.activeElement)
+      const from = this.typed.length === 1 ? start + 1 : Math.max(start, 0)
+      const ordered = [...enabled.slice(from), ...enabled.slice(0, from)]
+      const match = ordered.find((item) => item.textContent.trim().toLowerCase().startsWith(this.typed))
+
+      match?.focus()
+    },
+
+    menuItems() {
+      return queryAllData(this.$root, 'menu-item')
+        .filter((item) => item.closest(dataSelector('menu')) === this.$root)
     },
 
     focusItem(items, direction) {
@@ -74,5 +139,5 @@ export function menu() {
 
       enabled[index].focus()
     }
-  };
+  }
 }

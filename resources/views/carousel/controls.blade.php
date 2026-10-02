@@ -5,7 +5,7 @@
     'position' => null,
 ])
 <div
-    x-data="carouselControls({{ Js::from(['name' => $name]) }})"
+    x-data="carouselControls(@js(['name' => $name]))"
     {{
         $attributes
             ->dataKey('carousel-controls')
@@ -15,14 +15,14 @@
 >
     @if ($arrows !== false)
         <tk:carousel.arrows
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'arrows:')"
+            :attributes="$attributes->prefixed('arrows:')"
             :$position
         />
     @endif
 
     @if ($indicators !== false)
         <tk:carousel.indicators
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'indicators:')"
+            :attributes="$attributes->prefixed('indicators:')"
         />
     @endif
 </div>

@@ -1,0 +1,97 @@
+[data-tallkit-tooltip-panel] {
+  @apply
+    relative m-0 overflow-visible
+    break-words whitespace-pre-line
+    border border-white/10 bg-zinc-800 text-white dark:bg-zinc-700
+    p-2 rounded-md text-xs font-medium;
+
+  max-width: var(--tk-tooltip-max-width, 20rem);
+
+  /* allow-discrete keeps it shown while it fades: hidePopover hides it at once. */
+  opacity: 0;
+  scale: 0.95;
+  transition-property: opacity, scale, display, overlay;
+  transition-duration: var(--tk-tooltip-duration, 100ms);
+  transition-timing-function: ease-out;
+  transition-behavior: allow-discrete;
+
+  &:popover-open {
+    opacity: 1;
+    scale: 1;
+
+    @starting-style {
+      opacity: 0;
+      scale: 0.95;
+    }
+  }
+
+  &:not(:popover-open) {
+    pointer-events: none;
+  }
+
+  &[data-position='top'] { transform-origin: bottom; }
+  &[data-position='bottom'] { transform-origin: top; }
+  &[data-position='left'] { transform-origin: right; }
+  &[data-position='right'] { transform-origin: left; }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+
+  &[data-size='xs'] { @apply p-1 rounded-sm text-[0.625rem] font-light; }
+  &[data-size='sm'] { @apply p-1.5 rounded-sm text-[0.6875rem] font-normal; }
+  &[data-size='lg'] { @apply p-2.5 rounded-md text-sm font-semibold; }
+  &[data-size='xl'] { @apply p-3 rounded-lg text-base font-bold; }
+
+  &[data-variant='accent'] {
+    @apply bg-[var(--color-accent)] text-[var(--color-accent-foreground)];
+  }
+
+  &[data-variant='inverse'] {
+    @apply bg-white text-zinc-800 border-black/10;
+  }
+
+  &[data-color]:not([data-color='']) {
+    @apply bg-(--tk-solid) text-(--tk-on-solid);
+  }
+}
+
+[data-tallkit-tooltip-panel] [data-tallkit-tooltip-panel-body] {
+  @apply relative flex gap-1.5;
+}
+
+[data-tallkit-tooltip-panel] [data-tallkit-tooltip-panel-text] {
+  @apply flex-1;
+}
+
+[data-tallkit-tooltip-panel] [data-tallkit-tooltip-panel-kbd] {
+  @apply ps-1 font-sans opacity-75;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+[data-tallkit-tooltip-panel] [data-tallkit-tooltip-panel-arrow] {
+  @apply absolute hidden size-2 rotate-45 pointer-events-none bg-inherit border-inherit;
+}
+
+[data-tallkit-tooltip-panel][data-arrow] [data-tallkit-tooltip-panel-arrow] {
+  @apply block;
+}
+
+[data-tallkit-tooltip-panel][data-position='top'] [data-tallkit-tooltip-panel-arrow] {
+  @apply top-full left-[var(--tk-arrow-offset,50%)] -translate-x-1/2 -translate-y-1/2 border-0 border-r border-b;
+}
+
+[data-tallkit-tooltip-panel][data-position='bottom'] [data-tallkit-tooltip-panel-arrow] {
+  @apply bottom-full left-[var(--tk-arrow-offset,50%)] -translate-x-1/2 translate-y-1/2 border-0 border-l border-t;
+}
+
+[data-tallkit-tooltip-panel][data-position='left'] [data-tallkit-tooltip-panel-arrow] {
+  @apply left-full top-[var(--tk-arrow-offset,50%)] -translate-x-1/2 -translate-y-1/2 border-0 border-t border-r;
+}
+
+[data-tallkit-tooltip-panel][data-position='right'] [data-tallkit-tooltip-panel-arrow] {
+  @apply right-full top-[var(--tk-arrow-offset,50%)] translate-x-1/2 -translate-y-1/2 border-0 border-b border-l;
+}

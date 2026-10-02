@@ -7,10 +7,14 @@
     'title' => null,
     'subtitle' => null,
     'actions' => null,
+    'description' => null,
+    'prepend' => null,
+    'append' => null,
 ])
 <tk:modal
-    :attributes="$attributes->whereDoesntStartWith(['actions:', 'cancel:', 'confirm:'])
-        ->classes('[:where(&)]:max-w-sm')"
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), ['description' => null, 'prepend' => null, 'append' => null])->whereDoesntStartWith(['actions:', 'cancel:', 'confirm:'])
+        ->classes('[:where(&)]:max-w-sm')
+        ->merge(['role' => 'alertdialog'])"
     :$size
     :title="$title ?? match ($variant) {
         default => 'Are you sure?',
@@ -27,29 +31,32 @@
         </x-slot:trigger>
     @endif
 
-    <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'actions:')->classes('flex items-center gap-2 mt-10') }}>
+    <div {{ $attributes->prefixed('actions:')->classes('flex items-center gap-2 mt-10') }}>
         @isset ($actions)
             {{ $actions }}
         @else
+            {{-- Focus starts on the way out: an Enter pressed out of habit mustn't confirm. --}}
             <tk:modal.close
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'cancel:')"
+                :attributes="$attributes->prefixed('cancel:')->merge(['label' => 'Cancel'])"
                 :$size
                 :action="$cancel"
-                label="Cancel"
+                autofocus
             />
 
+            {{-- Only what it is told to call: no method guessed from the variant. --}}
             <tk:button
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'confirm:')
+                :attributes="$attributes->prefixed('confirm:')
                     ->dataKey($autoClose === false ? null : 'modal-auto-close')
                     ->classes('ms-auto')
+                    ->merge(['label' => 'Confirm'])
                 "
                 :$size
-                :action="$confirm ?? $variant ?? 'confirm'"
+                :action="$confirm"
+                x-on:click="$dispatch('confirmed')"
                 :variant="match ($variant) {
                     default => 'inverse',
                     'delete' => 'danger',
                 }"
-                label="Confirm"
             />
         @endisset
     </div>

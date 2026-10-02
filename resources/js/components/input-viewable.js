@@ -1,4 +1,4 @@
-import { bind, findFieldInput } from '../utils'
+import { bind, emit, findFieldInput, keepAttributesOnMorph } from '../utils'
 
 export function inputViewable() {
   return {
@@ -20,14 +20,10 @@ export function inputViewable() {
       input.setAttribute('type', this.viewed ? 'text' : this.originalType)
 
       bind(this.$el, {
-        [':aria-pressed']() {
-          return this.viewed
-        },
-
         ['@click']() {
           this.viewed = !this.viewed
           input.setAttribute('type', this.viewed ? 'text' : this.originalType)
-          input.dispatchEvent(new Event('viewed', { bubbles: true }))
+          emit(input, 'viewed', {}, { bubbles: true })
         }
       })
 
@@ -39,10 +35,13 @@ export function inputViewable() {
         attributes: true,
         attributeFilter: ['type']
       })
+
+      this._stopMorphHook = keepAttributesOnMorph((el) => el === input, ['type'])
     },
 
     destroy() {
       this.inputObserver?.disconnect()
+      this._stopMorphHook?.()
     }
   }
 }

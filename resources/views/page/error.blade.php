@@ -46,7 +46,7 @@ $description ??= match ((string) $code) {
         <span
             aria-hidden="true"
             {{
-                TALLKit::attributesAfter(attributes: $attributes, prefix: 'code:')
+                $attributes->prefixed('code:')
                     ->classes(
                         '
                             pointer-events-none absolute inset-x-0 top-1/3 -z-10 -translate-y-1/2
@@ -65,6 +65,7 @@ $description ??= match ((string) $code) {
         :attributes="$attributes->whereStartsWith('content:')"
         :size="TALLKit::adjustSize(size: $size, move: 1)"
         title:class="w-auto"
+        title:level="1"
         :$title
         :$description
     />
@@ -73,10 +74,9 @@ $description ??= match ((string) $code) {
 
     @if ($homeUrl)
         <tk:button
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'home:')"
+            :attributes="$attributes->prefixed('home:')->merge(['label' => 'Go back home'])"
             :href="$homeUrl"
             :$size
-            label="Go back home"
             variant="accent"
         />
     @endif

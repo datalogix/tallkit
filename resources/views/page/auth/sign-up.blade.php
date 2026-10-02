@@ -15,60 +15,54 @@ $loginUrl ??= route_detect([
 
 @endphp
 <tk:form.section
-    :attributes="$attributes->whereDoesntStartWith(['name:', 'email:', 'identifier:', 'password:', 'password-confirmation:', 'terms:', 'submit:', 'oauth:', 'login:'])"
+    :attributes="$attributes->whereDoesntStartWith(['name:', 'email:', 'identifier:', 'password:', 'password-confirmation:', 'terms:', 'submit:', 'oauth:', 'login:'])->merge(['title' => 'Create an account', 'subtitle' => 'Enter your details below to create your account:'])"
     :$size
-    title="Create an account"
-    subtitle="Enter your details below to create your account:"
 >
     <tk:input
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'name:')"
+        :attributes="$attributes->prefixed('name:')->merge(['placeholder' => 'Full name'])"
         :$size
         name="name"
         required
         autocomplete="name"
         autofocus
-        placeholder="Full name"
     />
 
-    @if ($requiresEmail !== false && $identifier !== 'email')
+    @if ($requiresEmail !== false && ($identifier ?? 'email') !== 'email')
         <tk:input
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'email:')"
+            :attributes="$attributes->prefixed('email:')->merge(['placeholder' => 'Email address'])"
             :$size
             name="email"
             required
             autocomplete="email"
-            placeholder="Email address"
         />
     @endif
 
     {{ $slot }}
 
     <tk:page.auth.identifier
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'identifier:')"
+        :attributes="$attributes->prefixed('identifier:')"
         :$size
         :$identifier
     />
 
     <tk:password
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'password:')"
+        :attributes="$attributes->prefixed('password:')->merge(['placeholder' => true])"
         :$size
         name="password"
         required
         autocomplete="new-password"
-        placeholder
     />
 
     <tk:password
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'password-confirmation:')"
+        :attributes="$attributes->prefixed('password-confirmation:')->merge(['placeholder' => true])"
         :$size
         name="password_confirmation"
         required
         autocomplete="new-password"
-        placeholder
     />
 
     <tk:terms.acceptance
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'terms:')"
+        :attributes="$attributes->prefixed('terms:')"
         :$size
         name="terms"
         required
@@ -76,38 +70,35 @@ $loginUrl ??= route_detect([
     />
 
     <tk:submit
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'submit:')->classes('w-full')"
+        :attributes="$attributes->prefixed('submit:')->classes('w-full')->merge(['label' => 'Create account'])"
         :$size
-        label="Create account"
         variant="accent"
     />
 
     <tk:page.auth.oauth
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'oauth:')"
+        :attributes="$attributes->prefixed('oauth:')"
         :$size
-        :providers="$oauth"
+        :items="$oauth"
     />
 
     @if ($loginUrl)
-        <tk:separator :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'separator:')" />
+        <tk:separator :attributes="$attributes->prefixed('login:separator:')" />
 
         <div
             {{
-                TALLKit::attributesAfter(attributes: $attributes, prefix: 'login:container:')
-                    ->classes('space-x-1 rtl:space-x-reverse flex justify-center')
+                $attributes->prefixed('login:container:')
+                    ->classes('space-x-1 flex justify-center')
             }}
         >
             <tk:text
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'login:label:')"
+                :attributes="$attributes->prefixed('login:label:')->merge(['label' => 'Already have an account?'])"
                 :$size
-                label="Already have an account?"
             />
 
             <tk:link
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'login:link:')"
+                :attributes="$attributes->prefixed('login:link:')->merge(['label' => 'Sign in'])"
                 :$size
                 :href="$loginUrl"
-                label="Sign in"
             />
         </div>
     @endif

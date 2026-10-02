@@ -26,10 +26,11 @@
 >
     @if ($title || $subtitle || $description || $append || $actions)
         <tk:content
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'header:', prepend: ['container:', 'title:', 'description:' => 'subtitle:', 'list:', 'actions:'])
-                ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon', prepend: 'title:icon')->getAttributes())
-                ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'badge', prepend: 'title:badge')->getAttributes())
-            "
+            :attributes="TALLKit::attributesMerge(
+                $attributes->prefixed('header:', with: ['container:', 'title:', 'description:' => 'subtitle:', 'list:', 'actions:']),
+                $attributes->prefixed('icon', keepPrefix: 'title:icon'),
+                $attributes->prefixed('badge', keepPrefix: 'title:badge'),
+            )"
             :$size
             :title:icon:size="$size"
             :title:badge:size="$size"
@@ -40,7 +41,11 @@
             :$actions
         >
             <x-slot:append>
-                {{ $description }}
+                @if (is_string($description))
+                    <tk:text :label="$description" :$size />
+                @else
+                    {{ $description }}
+                @endif
                 {{ $append }}
             </x-slot:append>
         </tk:content>
@@ -53,19 +58,20 @@
                 ($slot->hasActualContent() || $content)
             )
         )
-            <tk:separator :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'separator:')" />
+            <tk:separator :attributes="$attributes->prefixed('separator:')" />
         @endif
     @endif
 
     @if ($slot->hasActualContent() || $content)
         <div
             {{
-                TALLKit::attributesAfter(attributes: $attributes, prefix: 'content:')
+                $attributes->prefixed('content:')
                     ->dataKey('section-content')
                     ->classes(TALLKit::generateClassBySize(size: $size, name: 'space-y', values: [4, 5, 6, 7, 8, 9, 10]))
             }}
         >
-            {{ __($content) }}
+            {{-- A text is translated; a slot or HTML is shown as given (__() takes only a string). --}}
+            {{ is_string($content) ? __($content) : $content }}
             {{ $slot }}
         </div>
     @endif

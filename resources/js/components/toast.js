@@ -1,8 +1,12 @@
-import { bind } from '../utils'
+import { bind, clamp, eventName, generateId, safeUrl, toMilliseconds } from '../utils'
+import { sendToastEvent } from '../toast'
 
-export function toast() {
+export function toast(flashed = [], texts = {}) {
+  texts = { loading: 'Loading...', success: 'Success!', error: 'Error!', ...texts }
+
   return {
     toasts: [],
+
     isPageVisible: false,
     isUserActive: false,
     idleTimeout: null,
@@ -10,27 +14,39 @@ export function toast() {
     _listeners: [],
 
     init() {
+      const active = window.__tallkitToastContainer
+
+      if (active && active !== this.$el && active.isConnected) {
+        console.warn('[tallkit] There is already a <tk:toast> on the page: this one stays inert.')
+        flashed.forEach((detail) => sendToastEvent(eventName('toast'), detail))
+        return
+      }
+
+      window.__tallkitToastContainer = this.$el
+
       bind(this.$el, {
-        ['@toast.document'](e) {
+        [`@${eventName('toast')}.document`](e) {
           this.addToast(e.detail)
         },
-        ['@toast-close.document'](e) {
+        [`@${eventName('toast-close')}.document`](e) {
           this.removeToast(e.detail.id)
         },
       })
 
       window.__tallkitToastReady = true
       ;(window.__tallkitToastQueue ?? []).forEach(({ event, detail }) => {
-        if (event === 'toast') this.addToast(detail)
-        if (event === 'toast-close') this.removeToast(detail.id)
+        if (event === eventName('toast')) this.addToast(detail)
+        if (event === eventName('toast-close')) this.removeToast(detail.id)
       })
       window.__tallkitToastQueue = []
+
+      flashed.forEach((detail) => this.addToast(detail))
 
       this.initAttentionListeners()
     },
 
     initAttentionListeners() {
-      this.isPageVisible = true
+      this.isPageVisible = !document.hidden
       this.isUserActive = true
       this.idleTimeout = null
       this.idleDelay = 10000
@@ -81,6 +97,11 @@ export function toast() {
     destroy() {
       this._listeners.forEach((off) => off())
       clearTimeout(this.idleTimeout)
+
+      if (window.__tallkitToastContainer === this.$el) {
+        window.__tallkitToastContainer = null
+        window.__tallkitToastReady = false
+      }
     },
 
     syncAttention() {
@@ -115,171 +136,22 @@ export function toast() {
         }
       }
 
-      const duration = resolveDuration(props.duration, props.title, props.message, props.actions?.length > 0)
-      const manager = this
       const currentToast = props.id ? this.toasts.find((t) => t.id === props.id) : null
 
       if (currentToast) {
-        return this.updateToast(currentToast.id, props);
+        return this.updateToast(currentToast.id, props)
       }
 
-      const toast = window.Alpine.reactive({
-        id: crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        createdAt: Date.now(),
-        ...props,
-        duration,
-        position,
-
-        attentionAware: props.attentionAware ?? true,
-        progress: props.progress ?? true,
-        pauseOnHover: props.pauseOnHover ?? true,
-        swipe: props.swipe ?? true,
-        actions: normalizeActions(props.actions),
-
-        visible: false,
-
-        progressValue: 1,
-        startTime: 0,
-        total: duration,
-        elapsedBeforePause: 0,
-        raf: null,
-        pausedAt: null,
-        pausedByHover: false,
-        pausedByAttention: false,
-
-        swiping: false,
-        startX: 0,
-        startY: 0,
-        currentX: 0,
-        currentY: 0,
-        lockDirection: null,
-
-        start() {
-          if (!this.duration) return
-
-          this.startTime = performance.now()
-
-          const loop = (time) => {
-            if (!manager.toasts.find((t) => t.id === this.id)) {
-              this.stop()
-              return
-            }
-
-            if (this.pausedAt) return
-
-            const elapsed = this.elapsedBeforePause + (time - this.startTime)
-            const linear = Math.min(elapsed / this.total, 1)
-
-            if (this.progress) {
-              this.progressValue = 1 - linear
-            }
-
-            if (linear >= 1) {
-              manager.removeToast(this.id)
-              return
-            }
-
-            this.raf = requestAnimationFrame(loop)
-          }
-
-          this.raf = requestAnimationFrame(loop)
-        },
-
-        pause(reason = 'attention') {
-          if (!this.duration) return
-
-          if (reason === 'hover') {
-            this.pausedByHover = true
-          } else {
-            this.pausedByAttention = true
-          }
-
-          if (this.pausedAt) return
-
-          this.pausedAt = performance.now()
-          this.elapsedBeforePause += this.pausedAt - this.startTime
-
-          if (this.raf) {
-            cancelAnimationFrame(this.raf)
-            this.raf = null
-          }
-        },
-
-        resume(reason = 'attention') {
-          if (reason === 'hover') {
-            this.pausedByHover = false
-          } else {
-            this.pausedByAttention = false
-          }
-
-          if (this.pausedByHover || this.pausedByAttention) return
-          if (!this.pausedAt) return
-
-          this.pausedAt = null
-          this.start()
-        },
-
-        stop() {
-          if (this.raf) {
-            cancelAnimationFrame(this.raf)
-            this.raf = null
-          }
-        },
-
-        onPointerDown(e) {
-          if (!this.swipe) return
-
-          this.swiping = true
-          this.startX = e.clientX
-          this.startY = e.clientY
-          this.lockDirection = null
-        },
-
-        onPointerMove(e) {
-          if (!this.swipe || !this.swiping) return
-
-          this.currentX = e.clientX - this.startX
-          this.currentY = e.clientY - this.startY
-
-          if (!this.lockDirection) {
-            this.lockDirection = Math.abs(this.currentX) > Math.abs(this.currentY) ? 'x' : 'y'
-          }
-
-          if (this.lockDirection === 'x') {
-            e.preventDefault()
-          }
-        },
-
-        onPointerUp(e) {
-          if (!this.swipe) return
-
-          this.swiping = false
-
-          if (this.lockDirection !== 'x') {
-            this.currentX = 0
-            this.currentY = 0
-            this.lockDirection = null
-            return
-          }
-
-          const width = (e.currentTarget).offsetWidth
-          const threshold = width * 0.4
-
-          if (Math.abs(this.currentX) > threshold) {
-            manager.removeToast(this.id)
-          } else {
-            this.currentX = 0
-            this.currentY = 0
-            this.lockDirection = null
-          }
-        }
-      })
+      const toast = createToast(props, position, this)
 
       this.toasts.push(toast)
+      this.announce(toast)
 
       this.$nextTick(() => {
         toast.visible = true
         toast.start()
+
+        this.syncAttention()
       })
 
       return toast
@@ -302,34 +174,57 @@ export function toast() {
         'swipe',
         'invert',
         'actions',
-      ];
+      ]
 
       for (const key in data) {
         if (!allowed.includes(key) || key === 'duration') continue
         toast[key] = key === 'actions' ? normalizeActions(data[key]) : data[key]
       }
 
-      toast.currentX = 0
-      toast.swiping = false
+      // Without html: true a new title or message is text, whatever the old one was.
+      if ('title' in data || 'message' in data) {
+        toast.html = data.html === true
+      }
+
+      toast.resetSwipe()
+
+      if ('title' in data || 'message' in data || 'type' in data) {
+        this.announce(toast)
+      }
 
       if (data.duration !== undefined) {
-        toast.stop()
-
-        toast.pausedAt = null
-        toast.pausedByHover = false
-        toast.pausedByAttention = false
         toast.duration = resolveDuration(data.duration, toast.title, toast.message, toast.actions?.length > 0)
-        toast.total = toast.duration
-        toast.elapsedBeforePause = 0
-
-        toast.progressValue = 1
-
-        if (toast.visible) {
-          toast.start()
-        }
+        toast.restart()
       }
 
       return toast
+    },
+
+    announce(toast) {
+      const region = toast.type === 'error' ? this.$refs.assertiveRegion : this.$refs.politeRegion
+
+      if (!region) return
+
+      // A parsed document runs nothing: no scripts, no onerror.
+      const text = (value) => toast.html
+        ? new DOMParser().parseFromString(String(value ?? ''), 'text/html').body.textContent
+        : String(value ?? '')
+      const words = [text(toast.title), text(toast.message)].map((part) => part.trim()).filter(Boolean).join('. ')
+
+      if (!words) return
+
+      region.textContent = ''
+      clearTimeout(region._tallkitAnnounce)
+      region._tallkitAnnounce = setTimeout(() => { region.textContent = words }, 100)
+    },
+
+    // Text unless given as HTML on purpose: a name from data never turns into markup.
+    showContent(el, value, html) {
+      if (html) {
+        el.innerHTML = value ?? ''
+      } else {
+        el.textContent = value ?? ''
+      }
     },
 
     removeToast(id) {
@@ -346,7 +241,7 @@ export function toast() {
     },
 
     getToastsByPosition(position) {
-      return this.toasts.filter((t) => t.position === position);
+      return this.toasts.filter((t) => t.position === position)
     },
 
     notify(props) {
@@ -407,17 +302,9 @@ export function toast() {
           count: existing.count
         }
 
-        existing.currentX = 0
-        existing.swiping = false
-
-        if (existing.visible && existing.duration) {
-          existing.stop()
-
-          existing.pausedAt = null
-          existing.progressValue = 1
-
-          existing.start()
-        }
+        existing.resetSwipe()
+        existing.restart()
+        this.announce(existing)
 
         return existing
       }
@@ -431,7 +318,7 @@ export function toast() {
     },
 
     promise(promise, messages = {}) {
-      const toast = this.loading(messages.loading ?? 'Loading...')
+      const toast = this.loading(messages.loading ?? texts.loading)
       const resolveMessage = (msg, data) =>
         typeof msg === 'function' ? msg(data) : msg
 
@@ -440,7 +327,7 @@ export function toast() {
           if (!this.toasts.find((t) => t.id === toast.id)) return
 
           this.updateToast(toast.id, {
-            title: resolveMessage(messages.success, data) ?? 'Success!',
+            title: resolveMessage(messages.success, data) ?? texts.success,
             type: 'success',
             duration: getDynamicDuration(resolveMessage(messages.success, data)),
             progress: true,
@@ -451,7 +338,7 @@ export function toast() {
           if (!this.toasts.find((t) => t.id === toast.id)) return
 
           this.updateToast(toast.id, {
-            title: resolveMessage(messages.error, error) ?? 'Error!',
+            title: resolveMessage(messages.error, error) ?? texts.error,
             type: 'error',
             duration: getDynamicDuration(resolveMessage(messages.error, error)) * 1.3,
             progress: true,
@@ -490,13 +377,204 @@ export function toast() {
         createdAt: now
       })
     }
-  };
+  }
+}
+
+function createToast(props, position, manager) {
+  const duration = resolveDuration(props.duration, props.title, props.message, props.actions?.length > 0)
+
+  return window.Alpine.reactive({
+    createdAt: Date.now(),
+    ...props,
+    id: props.id ?? generateId('toast'),
+    duration,
+    position,
+
+    html: props.html === true,
+    attentionAware: props.attentionAware ?? true,
+    progress: props.progress ?? true,
+    pauseOnHover: props.pauseOnHover ?? true,
+    swipe: props.swipe ?? true,
+    actions: normalizeActions(props.actions),
+
+    visible: false,
+
+    ...toastCountdown(duration, manager),
+    ...toastSwipe(manager),
+  })
+}
+
+const PAUSED_BY = { hover: 'pausedByHover', focus: 'pausedByFocus', attention: 'pausedByAttention' }
+
+function toastCountdown(duration, manager) {
+  return {
+    progressValue: 1,
+    startTime: 0,
+    total: duration,
+    elapsedBeforePause: 0,
+    raf: null,
+    pausedAt: null,
+    pausedByHover: false,
+    pausedByFocus: false,
+    pausedByAttention: false,
+
+    start() {
+      if (!this.duration) return
+
+      this.startTime = performance.now()
+
+      const loop = (time) => {
+        if (!manager.toasts.find((t) => t.id === this.id)) {
+          this.stop()
+          return
+        }
+
+        if (this.pausedAt) return
+
+        const elapsed = this.elapsedBeforePause + (time - this.startTime)
+        const linear = Math.min(elapsed / this.total, 1)
+
+        if (this.progress) {
+          this.progressValue = 1 - linear
+        }
+
+        if (linear >= 1) {
+          manager.removeToast(this.id)
+          return
+        }
+
+        this.raf = requestAnimationFrame(loop)
+      }
+
+      this.raf = requestAnimationFrame(loop)
+    },
+
+    pause(reason = 'attention') {
+      if (!this.duration) return
+
+      this[PAUSED_BY[reason] ?? PAUSED_BY.attention] = true
+
+      if (this.pausedAt) return
+
+      this.pausedAt = performance.now()
+      this.elapsedBeforePause += this.pausedAt - this.startTime
+
+      this.stop()
+    },
+
+    resume(reason = 'attention') {
+      this[PAUSED_BY[reason] ?? PAUSED_BY.attention] = false
+
+      if (this.pausedByHover || this.pausedByFocus || this.pausedByAttention) return
+      if (!this.pausedAt) return
+
+      this.pausedAt = null
+      this.start()
+    },
+
+    stop() {
+      if (this.raf) {
+        cancelAnimationFrame(this.raf)
+        this.raf = null
+      }
+    },
+
+    restart() {
+      this.stop()
+
+      this.pausedAt = null
+      this.elapsedBeforePause = 0
+      this.total = this.duration
+      this.progressValue = 1
+
+      if (!this.visible || !this.duration) return
+
+      this.start()
+
+      if (this.pausedByHover) this.pause('hover')
+      if (this.pausedByFocus) this.pause('focus')
+      if (this.pausedByAttention) this.pause('attention')
+    },
+  }
+}
+
+function toastSwipe(manager) {
+  return {
+    swiping: false,
+    startX: 0,
+    startY: 0,
+    currentX: 0,
+    currentY: 0,
+    lockDirection: null,
+
+    onPointerDown(e) {
+      if (!this.swipe) return
+
+      this.swiping = true
+      this.startX = e.clientX
+      this.startY = e.clientY
+      this.lockDirection = null
+    },
+
+    onPointerMove(e) {
+      if (!this.swipe || !this.swiping) return
+
+      this.currentX = e.clientX - this.startX
+      this.currentY = e.clientY - this.startY
+
+      if (!this.lockDirection && Math.max(Math.abs(this.currentX), Math.abs(this.currentY)) > 4) {
+        this.lockDirection = Math.abs(this.currentX) > Math.abs(this.currentY) ? 'x' : 'y'
+
+        // Captured only once sideways: from the start, a tap's click would go to the toast instead of the button.
+        if (this.lockDirection === 'x') {
+          e.currentTarget.setPointerCapture?.(e.pointerId)
+        }
+      }
+
+      if (this.lockDirection === 'x') {
+        e.preventDefault()
+      }
+    },
+
+    onPointerCancel() {
+      this.resetSwipe()
+    },
+
+    onPointerUp(e) {
+      if (!this.swipe) return
+
+      this.swiping = false
+
+      if (this.lockDirection !== 'x') {
+        this.resetSwipe()
+        return
+      }
+
+      const width = (e.currentTarget).offsetWidth
+      const threshold = width * 0.4
+
+      if (Math.abs(this.currentX) > threshold) {
+        manager.removeToast(this.id)
+      } else {
+        this.resetSwipe()
+      }
+    },
+
+    resetSwipe() {
+      this.swiping = false
+      this.currentX = 0
+      this.currentY = 0
+      this.lockDirection = null
+    },
+  }
 }
 
 function normalizeActions(actions) {
   return (actions ?? []).map((action) => ({
     loading: false,
     ...action,
+    // Only a page's address: actions may come from data.
+    href: safeUrl(action.href),
     run() {
       let result
 
@@ -506,7 +584,7 @@ function normalizeActions(actions) {
         const component = window.Livewire?.find(this.component)
 
         if (!component) {
-          console.warn(`[TALLKit] Toast action "${this.label}" could not find Livewire component "${this.component}" to call "${this.method}".`, this)
+          console.warn(`[tallkit] Toast action "${this.label}" could not find Livewire component "${this.component}" to call "${this.method}".`, this)
           return
         }
 
@@ -515,7 +593,7 @@ function normalizeActions(actions) {
         window.Livewire?.dispatch(this.event, this.params ?? {})
         return
       } else {
-        console.warn(`[TALLKit] Toast action "${this.label}" has no onClick, method, event, or href handler.`, this)
+        console.warn(`[tallkit] Toast action "${this.label}" has no onClick, method, event, or href handler.`, this)
         return
       }
 
@@ -536,7 +614,7 @@ function resolveDuration(duration, title, message, hasActions = false) {
   if (duration === false) return null
   if (duration === true) return getDynamicDuration(title, message)
   if (duration == null) return hasActions ? null : getDynamicDuration(title, message)
-  return duration
+  return toMilliseconds(duration, getDynamicDuration(title, message))
 }
 
 function normalizePosition(position) {
@@ -565,5 +643,5 @@ function getDynamicDuration(title = '', message = '') {
   const lines = text.split('\n').length
   time += lines * 300
 
-  return Math.min(max, Math.max(min, time))
+  return clamp(time, min, max)
 }

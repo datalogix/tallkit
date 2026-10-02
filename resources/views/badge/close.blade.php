@@ -1,12 +1,12 @@
 @props([
+    ...TALLKit::elementProps(),
     'icon' => null,
     'size' => null,
 ])
 <tk:button
-    variant="none"
-    tooltip="Close"
     :icon="$slot->isEmpty() ? $icon ?? 'close' : null"
-    :attributes="$attributes
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())
+        ->merge(['variant' => 'none', 'tooltip' => 'Close'])
         ->dataKey('dismissible')
         ->dataKey('badge-close')
         ->classes(

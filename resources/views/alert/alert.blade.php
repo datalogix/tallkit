@@ -7,24 +7,43 @@
     'append' => null,
     'actions' => null,
     'border' => null,
-    'dismissible' => null,
+    'closable' => null,
     'size' => null,
     'progress' => null,
-    'timeout' => null,
     'duration' => null,
     'pauseOnHover' => null,
     'options' => null,
 ])
+@php
+
+$type = $type === 'error' ? 'danger' : $type;
+
+$duration ??= $progress ? true : null;
+$duration = match (true) {
+    $duration === true, $duration === 'true' => 7000,
+    is_numeric($duration) => max((int) $duration, 0),
+    default => 0,
+};
+
+$palette = match ($type) {
+    'danger' => 'red',
+    'success' => 'green',
+    'warning' => 'yellow',
+    'info' => 'blue',
+    default => 'zinc',
+};
+
+@endphp
 <tk:content
-    x-data="alertComponent({{ Js::from([
-        'timeout' => $timeout ?? $duration ?? ($progress ? 7000 : null),
-        'pauseOnHover' => $pauseOnHover ?? (bool) $progress,
-    ] + ($options ?? [])) }})"
+    x-data="alertComponent({{ Js::from(($options ?? []) + [
+        'duration' => $duration,
+        'pauseOnHover' => $pauseOnHover ?? true,
+    ]) }})"
     aria-atomic="true"
-    :attributes="$attributes
-        ->dataKey('alert')
-        ->whereDoesntStartWith(['message:', 'dismissible:', 'progress:'])
-        ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'message:', prepend: 'description:')->getAttributes())
+    :attributes="TALLKit::attributesMerge(
+            $attributes->dataKey('alert')->whereDoesntStartWith(['message:', 'close:', 'progress:']),
+            $attributes->prefixed('message:', keepPrefix: 'description:'),
+        )
         ->merge([
             'role' => in_array($type, ['danger', 'warning']) ? 'alert' : 'status',
             'aria-live' => in_array($type, ['danger', 'warning']) ? 'assertive' : 'polite',
@@ -32,13 +51,8 @@
         ->classes(
             'relative overflow-hidden mb-4 transition-all duration-300 ease-out opacity-100',
             TALLKit::padding(size: $size),
-            match ($type) {
-                'danger' => 'text-red-800 bg-red-100 dark:bg-zinc-700 dark:text-red-300',
-                'success' => 'text-green-800 bg-green-100 dark:bg-zinc-700 dark:text-green-300',
-                'warning' => 'text-yellow-800 bg-yellow-100 dark:bg-zinc-700 dark:text-yellow-300',
-                'info' => 'text-blue-800 bg-blue-100 dark:bg-zinc-700 dark:text-blue-300',
-                default => 'text-zinc-800 bg-zinc-100 dark:bg-zinc-700 dark:text-zinc-300',
-            },
+            TALLKit::mutedBackground(color: $palette),
+            TALLKit::mutedText(color: $palette),
             match ($border) {
                 'top' => 'border-t-3',
                 'left' => 'border-l-3',
@@ -58,13 +72,7 @@
         )
         ->when(
             $border,
-            fn ($c) => $c->classes(match ($type) {
-                'danger' => 'border-red-300/50 dark:border-red-200/40',
-                'success' => 'border-green-300/50 dark:border-green-200/40',
-                'warning' => 'border-yellow-300/50 dark:border-yellow-200/40',
-                'info' => 'border-blue-300/50 dark:border-blue-200/40',
-                default => 'border-zinc-300/50 dark:border-zinc-200/40',
-            })
+            fn ($c) => $c->classes('border-(--tk-border)')
         )
     "
     :$size
@@ -76,7 +84,7 @@
     }"
     icon:class="shrink-0"
     :$title
-    title:mode="large"
+    title:scale="large"
     title:variant="none"
     :description="$message"
     description:variant="none"
@@ -90,23 +98,21 @@
 
             @if ($progress)
                 <tk:alert.progress
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'progress:')"
+                    :attributes="$attributes->prefixed('progress:')"
                     :type="is_string($progress) ? $progress : null"
-                    :$size
                 />
             @endif
         </x-slot:prepend>
     @endif
 
-    @if ($actions || $dismissible)
+    @if ($actions || $closable)
         <x-slot:actions>
             {{ $actions }}
 
-            @if ($dismissible)
+            @if ($closable)
                 <tk:alert.close
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'dismissible:')"
-                    :icon="is_string($dismissible) ? $dismissible : null"
-                    :$type
+                    :attributes="$attributes->prefixed('close:')"
+                    :icon="is_string($closable) ? $closable : null"
                     :$size
                 />
             @endif

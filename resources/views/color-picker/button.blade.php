@@ -1,6 +1,6 @@
 @props([
+    ...TALLKit::elementProps(),
     'preview' => null,
-    'icon' => null,
     'swatches' => null,
     'clearable' => null,
     'dropper' => null,
@@ -13,12 +13,11 @@ $swatches ??= ['#ffffff', '#000000', '#71717a', '#ef4444', '#f97316', '#eab308',
 $style = $preview === 'underline' ? "value ? 'box-shadow: inset 0 -2px 0 0 ' + value : ''" : "'background-color: ' + (value || 'transparent')";
 
 @endphp
-<tk:dropdown :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'dropdown:')">
+<tk:dropdown :attributes="$attributes->prefixed('dropdown:')">
     <tk:dropdown.button
-        :attributes="$attributes->whereDoesntStartWith(['dropdown:', 'swatch:', 'option:', 'footer:', 'custom:', 'dropper:', 'clearable:'])"
+        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->whereDoesntStartWith(['dropdown:', 'popover:', 'swatch:', 'option:', 'footer:', 'custom:', 'dropper:', 'clearable:'])->merge(['icon' => 'palette'])"
         :$size
         ::style="{{ $style }}"
-        :icon="$icon ?? 'palette'"
         :icon::class="$preview === 'underline' ? null : '{
             \'opacity-100\': !value,
             \'opacity-0\': value,
@@ -27,13 +26,13 @@ $style = $preview === 'underline' ? "value ? 'box-shadow: inset 0 -2px 0 0 ' + v
     />
 
     <tk:popover
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'popover:')->classes('p-2 space-y-2')"
+        :attributes="$attributes->prefixed('popover:')->classes('p-2 space-y-2')"
         :$keepOpen
     >
-        <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'swatch:')->classes('grid grid-cols-5 gap-1') }}>
-            @foreach ($swatches as $swatch)
+        <div {{ $attributes->prefixed('swatch:')->classes('grid grid-cols-5 gap-1') }}>
+            <template x-for="(swatch, index) in @js(array_values($swatches))" :key="index">
                 <tk:button
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'option:')
+                    :attributes="$attributes->prefixed('option:')
                         ->classes(
                             '
                                 tk-control-transition
@@ -48,17 +47,17 @@ $style = $preview === 'underline' ? "value ? 'box-shadow: inset 0 -2px 0 0 ' + v
                             TALLKit::widthHeight(size: $size)
                         )
                     "
-                    ::data-active="value === '{{ $swatch }}'"
-                    @click="pick('{{ $swatch }}')"
-                    title="{{ $swatch }}"
-                    style="background-color: {{ $swatch }}"
+                    ::data-active="value === swatch"
+                    @click="pick(swatch)"
+                    ::title="swatch"
+                    ::style="{ backgroundColor: swatch }"
                 />
-            @endforeach
+            </template>
         </div>
 
         <div
             {{
-                TALLKit::attributesAfter(attributes: $attributes, prefix: 'footer:')
+                $attributes->prefixed('footer:')
                     ->classes('flex items-center justify-between gap-2 border-t border-zinc-100 pt-2 dark:border-white/10')
             }}
         >
@@ -68,32 +67,31 @@ $style = $preview === 'underline' ? "value ? 'box-shadow: inset 0 -2px 0 0 ' + v
                     data-keep-open
                     x-bind:value="value || '#000000'"
                     @input="pick($event.target.value)"
-                    title="{{ __('Custom color') }}"
                     {{
-                        TALLKit::attributesAfter(attributes: $attributes, prefix: 'custom:')
+                        $attributes->prefixed('custom:')
                             ->classes(
                                 'cursor-pointer tk-control-surface',
                                 TALLKit::roundedSize(size: $size),
                                 TALLKit::widthHeight(size: $size)
                             )
+                            ->merge(['title' => __('Custom color')])
                     }}
                 >
 
                 @if ($dropper)
                     <tk:button
-                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'dropper:')"
+                        :attributes="$attributes->prefixed('dropper:')->merge(['tooltip' => __('Pick color'), 'variant' => 'none'])"
                         :size="TALLKit::adjustSize(size: $size)"
                         @click="dropColor()"
-                        tooltip="{{ __('Pick color') }}"
+                        x-show="hasEyeDropper()"
                         icon="eye-dropper"
-                        variant="none"
                     />
                 @endif
             </div>
 
             @if ($clearable !== false)
                 <tk:clearable
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'clearable:')"
+                    :attributes="$attributes->prefixed('clearable:')"
                     :size="TALLKit::adjustSize(size: $size)"
                     :label="is_string($clearable) ? $clearable : 'Clear'"
                     :icon="false"

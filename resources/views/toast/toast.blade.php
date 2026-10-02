@@ -1,6 +1,9 @@
+@props([
+    'flashed' => true,
+])
 <div
     wire:ignore
-    x-data="toast"
+    x-data="toast(@js($flashed ? TALLKit::toastPullFlashed() : []), @js(['loading' => __('Loading...'), 'success' => __('Success!'), 'error' => __('Error!')]))"
     tabindex="-1"
     {{
         $attributes
@@ -12,10 +15,14 @@
             ->classes('fixed inset-0 overflow-hidden pointer-events-none z-9999999')
     }}
 >
+    {{-- On the page before any toast: a live region added with its content often isn't read. --}}
+    <div x-ref="politeRegion" role="status" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+    <div x-ref="assertiveRegion" role="alert" aria-live="assertive" aria-atomic="true" class="sr-only"></div>
+
     @foreach (['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right'] as $position)
         <div
             {{
-                TALLKit::attributesAfter(attributes: $attributes, prefix: 'position:')->classes(
+                $attributes->prefixed('position:')->classes(
                     'absolute flex flex-col',
                     str_contains($position, 'top') ? 'flex-col-reverse' : null,
                     match ($position) {
@@ -34,9 +41,6 @@
                 :key="toast.id"
             >
                 <tk:transition
-                    aria-atomic="true"
-                    ::role="toast.type === 'error' ? 'alert' : 'status'"
-                    ::aria-live="toast.type === 'error' ? 'assertive' : 'polite'"
                     :animation="match ($position) {
                         'top-left', 'bottom-left' => 'slide-right-full',
                         'top-right', 'bottom-right' => 'slide-left-full',
@@ -45,7 +49,7 @@
                         default => 'none',
                     }"
                     :attributes="
-                        TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')->classes(
+                        $attributes->prefixed('container:')->classes(
                             '
                                 m-1 shadow-lg rounded-xl border
                                 relative overflow-hidden
@@ -72,52 +76,56 @@
                     }"
                     x-show="toast.visible"
                     @click.stop="toast.swiping && $event.preventDefault()"
-                    @mouseenter="toast.pauseOnHover && toast.pause('hover')"
-                    @mouseleave="toast.pauseOnHover && toast.resume('hover')"
+                    @pointerenter="$event.pointerType === 'mouse' && toast.pauseOnHover && toast.pause('hover')"
+                    @pointerleave="$event.pointerType === 'mouse' && toast.pauseOnHover && toast.resume('hover')"
+                    @focusin="toast.pause('focus')"
+                    @focusout="! $el.contains($event.relatedTarget) && toast.resume('focus')"
                     @pointerdown="toast.swipe && toast.onPointerDown($event)"
                     @pointermove="toast.swipe && toast.onPointerMove($event)"
                     @pointerup="toast.swipe && toast.onPointerUp($event)"
+                    @pointercancel="toast.swipe && toast.onPointerCancel()"
                 >
                     <tk:icon
-                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-success:')->getAttributes())->classes('shrink-0')"
-                        ::class="toast.invert ? 'text-green-400 dark:text-green-500' : 'text-green-500 dark:text-green-400'"
+                        :attributes="TALLKit::attributesMerge($attributes->prefixed('icon:'), $attributes->prefixed('icon-success:'))->classes('shrink-0')"
+                        ::class="toast.invert ? 'text-green-400 dark:text-green-600' : 'text-green-600 dark:text-green-400'"
                         x-show="toast.type === 'success'"
                         name="check-circle"
                     />
                     <tk:icon
-                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-info:')->getAttributes())->classes('shrink-0')"
-                        ::class="toast.invert ? 'text-blue-400 dark:text-blue-500' : 'text-blue-500 dark:text-blue-400'"
+                        :attributes="TALLKit::attributesMerge($attributes->prefixed('icon:'), $attributes->prefixed('icon-info:'))->classes('shrink-0')"
+                        ::class="toast.invert ? 'text-blue-400 dark:text-blue-600' : 'text-blue-600 dark:text-blue-400'"
                         x-show="toast.type === 'info'"
                         name="info"
                     />
                     <tk:icon
-                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-error:')->getAttributes())->classes('shrink-0')"
-                        ::class="toast.invert ? 'text-red-400 dark:text-red-500' : 'text-red-500 dark:text-red-400'"
+                        :attributes="TALLKit::attributesMerge($attributes->prefixed('icon:'), $attributes->prefixed('icon-error:'))->classes('shrink-0')"
+                        ::class="toast.invert ? 'text-red-400 dark:text-red-600' : 'text-red-600 dark:text-red-400'"
                         x-show="toast.type === 'error'"
                         name="cancel"
                     />
                     <tk:icon
-                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-warning:')->getAttributes())->classes('shrink-0')"
-                        ::class="toast.invert ? 'text-amber-400 dark:text-amber-500' : 'text-amber-500 dark:text-amber-400'"
+                        :attributes="TALLKit::attributesMerge($attributes->prefixed('icon:'), $attributes->prefixed('icon-warning:'))->classes('shrink-0')"
+                        ::class="toast.invert ? 'text-amber-400 dark:text-amber-600' : 'text-amber-600 dark:text-amber-400'"
                         x-show="toast.type === 'warning'"
                         name="warning"
                     />
                     <tk:loading
-                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-loading:')->getAttributes())->classes('shrink-0')"
+                        :attributes="TALLKit::attributesMerge($attributes->prefixed('icon:'), $attributes->prefixed('icon-loading:'))->classes('shrink-0')"
                         ::class="toast.invert ? 'text-zinc-400 dark:text-zinc-500' : 'text-zinc-500 dark:text-zinc-400'"
                         x-show="toast.type === 'loading'"
+                        :announce="false"
                     />
                     <div class="flex-1 flex flex-col gap-2">
                         <div
-                            {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'title:')->classes('font-medium') }}
+                            {{ $attributes->prefixed('title:')->classes('font-medium') }}
                             :class="toast.invert ? 'text-white dark:text-zinc-800' : 'text-zinc-800 dark:text-white'"
-                            x-html="toast.title || toast.message"
+                            x-effect="showContent($el, toast.title || toast.message, toast.html)"
                         ></div>
                         <div
-                            {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'message:')->classes('font-normal') }}
+                            {{ $attributes->prefixed('message:')->classes('font-normal') }}
                             :class="toast.invert ? 'text-zinc-400 dark:text-zinc-500' : 'text-zinc-500 dark:text-zinc-400'"
                             x-show="toast.title && toast.message"
-                            x-html="toast.message"
+                            x-effect="showContent($el, toast.message, toast.html)"
                         ></div>
                         <div
                             x-show="toast.actions && toast.actions.length"
@@ -131,7 +139,7 @@
                                         :target="action.target ?? null"
                                         x-text="action.label"
                                         {{
-                                            TALLKit::attributesAfter(attributes: $attributes, prefix: 'actions:')->classes(
+                                            $attributes->prefixed('actions:')->classes(
                                                 'inline-flex h-8 items-center justify-center rounded-md px-3 text-sm font-medium whitespace-nowrap'
                                             )
                                         }}
@@ -145,7 +153,7 @@
                                         @click="action.run()"
                                         :disabled="action.loading"
                                         {{
-                                            TALLKit::attributesAfter(attributes: $attributes, prefix: 'actions:')->classes(
+                                            $attributes->prefixed('actions:')->classes(
                                                 'inline-flex h-8 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium whitespace-nowrap disabled:opacity-50 disabled:cursor-default'
                                             )
                                         }}
@@ -161,16 +169,15 @@
                         </div>
                     </div>
                     <tk:button
-                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'close:')"
+                        :attributes="$attributes->prefixed('close:')->merge(['tooltip' => 'Close'])"
                         ::class="toast.invert ? 'text-white hover:text-zinc-300 dark:text-zinc-800 dark:hover:text-zinc-500' : ''"
                         x-on:click="removeToast(toast.id)"
                         icon="close"
                         variant="none"
-                        tooltip="Close"
                     />
                     <div
                         x-show="toast.progress && toast.duration"
-                        {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'progress:')->classes('h-full absolute inset-0 pointer-events-none origin-left') }}
+                        {{ $attributes->prefixed('progress:')->classes('h-full absolute inset-0 pointer-events-none origin-left') }}
                         :class="toast.invert ? 'bg-black/15 dark:bg-black/5' : 'bg-black/2 dark:bg-black/5'"
                         :style="toast.progress ? { transform: `scaleX(${toast.progressValue})` } : {}"
                     ></div>

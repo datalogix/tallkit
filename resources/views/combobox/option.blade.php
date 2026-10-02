@@ -1,8 +1,14 @@
 @aware(['size'])
-@props(['size' => null])
+{{-- The label as a prop: left in the attributes, it would be escaped twice. --}}
+@props([
+    ...TALLKit::elementProps(),
+    'size' => null,
+    'label' => null,
+])
 <tk:listbox.item
-    :$attributes
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())"
     :$size
+    :$label
     content:class="block truncate"
     icon="check"
     icon:data-tallkit-checkmark

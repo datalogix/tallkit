@@ -10,21 +10,22 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
 $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
+$checked = TALLKit::fieldOldChecked($fieldName, $checked, $value);
 
 @endphp
 <tk:field.wrapper
     inline
     :$align
     :$name
-    :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
     :label="$slot->isEmpty() ? $label : $slot"
 >
     <div
         {{ $attributes->only('disabled')->dataKey('control') }}
         {{
-            TALLKit::attributesAfter(attributes: $attributes, prefix: 'control:')
+            $attributes->prefixed('control:')
                 ->classes(
                     'flex outline-offset-2 relative',
                     TALLKit::widthHeight(size: $size),
@@ -34,17 +35,17 @@ $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
         <input
             @checked($checked)
             type="checkbox"
-            x-init="$el.indeterminate = @js((bool) $indeterminate)"
+            @if ($indeterminate) x-init="$el.indeterminate = true" @endif
             {{
                 $attributes
                     ->dataKey('checkbox')
+                    ->dataKey('checkbox-group', $group)
                     ->merge([
                         'name' => $name,
                         'id' => $id,
                         'value' => $value,
                         'wire:model' => $wireModel,
-                        TALLKit::dataKey(name: 'checkbox-group') => $group,
-                        'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
+                        'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                         'aria-invalid' => $invalid ? 'true' : null,
                         'data-invalid' => $invalid ? true : null,
                         'aria-label' => $label ? null : __('Checkbox'),
@@ -85,7 +86,7 @@ $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
 
         <div
             {{
-                TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-area:')
+                $attributes->prefixed('icon-area:')
                     ->classes(
                         '
                             absolute
@@ -118,11 +119,11 @@ $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
         >
             <tk:icon
                 :icon="$iconOn ?? 'check'"
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-on:')->classes(
+                :attributes="$attributes->prefixed('icon-on:')->classes(
                     'size-full m-px checked scale-90',
                     match (true) {
                         $color === 'accent' => 'text-[var(--color-accent-foreground)]',
-                        TALLKit::isColor(color: $color) => 'text-white',
+                        TALLKit::isColor(color: $color) => TALLKit::checkedForeground(color: $color),
                         default => 'text-white dark:text-zinc-700',
                     },
                 )"
@@ -131,14 +132,14 @@ $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
             @if ($iconOff)
                 <tk:icon
                     :icon="$iconOff"
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-off:')->classes('size-full m-px unchecked')"
+                    :attributes="$attributes->prefixed('icon-off:')->classes('size-full m-px unchecked')"
                 />
             @endif
 
             @if ($indeterminate)
                 <tk:icon
                     :icon="$iconIndeterminate ?? 'minus'"
-                    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-indeterminate:')->classes('size-full m-px indeterminate')"
+                    :attributes="$attributes->prefixed('icon-indeterminate:')->classes('size-full m-px indeterminate')"
                 />
             @endif
         </div>

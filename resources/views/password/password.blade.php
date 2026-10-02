@@ -1,7 +1,6 @@
 <tk:input
-    :attributes="TALLKit::mergeDefinedFieldProps(attributes: $attributes, scope: get_defined_vars())"
+    :attributes="TALLKit::fieldWithProps(attributes: $attributes, scope: get_defined_vars())->merge(['placeholder' => true])"
     type="password"
     name="password"
-    placeholder
     autocomplete="current-password"
 />

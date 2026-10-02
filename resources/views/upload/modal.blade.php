@@ -1,16 +1,20 @@
 @props([
     'size' => null,
+    'title' => null,
+    'subtitle' => null,
+    'description' => null,
+    'append' => null,
+    'actions' => null,
 ])
 <tk:modal
-    :attributes="$attributes->whereDoesntStartWith(['button:', 'preview:'])"
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), ['title' => null, 'subtitle' => null, 'description' => null, 'append' => null, 'actions' => null])->whereDoesntStartWith(['button:', 'preview:'])"
     :$size
     x-on:closed="previewId = null"
 >
     <x-slot:prepend>
         <tk:button
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'button:')"
+            :attributes="$attributes->prefixed('button:')->merge(['label' => 'Open in new tab'])"
             :$size
-            label="Open in new tab"
             @click="openFile"
         />
     </x-slot:prepend>
@@ -18,7 +22,7 @@
     <template x-if="previewFile()">
         <div class="relative flex flex-col">
             <tk:upload.preview
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'preview:')"
+                :attributes="$attributes->prefixed('preview:')"
                 :$size
                 variable="previewFile()"
             />

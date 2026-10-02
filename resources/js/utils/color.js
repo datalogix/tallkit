@@ -1,13 +1,15 @@
+import { clamp } from './number'
+
 const HEX_RE = /^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i
 const RGB_RE = /^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*(?:,\s*([\d.]+%?)\s*)?\)$/i
 const HSL_RE = /^hsla?\(\s*([\d.]+)\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%\s*(?:,\s*([\d.]+%?)\s*)?\)$/i
 
 function clamp255(value) {
-  return Math.max(0, Math.min(255, Math.round(Number(value))))
+  return clamp(Math.round(Number(value)), 0, 255)
 }
 
 function clampAlpha(value) {
-  return Math.max(0, Math.min(1, Number.isFinite(value) ? value : 1))
+  return clamp(Number.isFinite(value) ? value : 1, 0, 1)
 }
 
 function roundAlpha(value) {
@@ -127,7 +129,31 @@ export function parseColor(input) {
     return { r, g, b, a: parseAlpha(m[4]) }
   }
 
-  return null
+  return parseCssColor(value)
+}
+
+const CONTEXTUAL = /^(currentcolor|inherit|initial|unset|revert|revert-layer)$|var\(|env\(|attr\(/i
+
+let pixel = null
+
+function parseCssColor(value) {
+  if (CONTEXTUAL.test(value) || typeof document === 'undefined' || !window.CSS?.supports?.('color', value)) return null
+
+  try {
+    pixel ??= document.createElement('canvas').getContext('2d', { willReadFrequently: true })
+
+    if (!pixel) return null
+
+    pixel.clearRect(0, 0, 1, 1)
+    pixel.fillStyle = value
+    pixel.fillRect(0, 0, 1, 1)
+
+    const [r, g, b, alpha] = pixel.getImageData(0, 0, 1, 1).data
+
+    return { r, g, b, a: roundAlpha(alpha / 255) }
+  } catch {
+    return null
+  }
 }
 
 export function formatColor({ r, g, b, a = 1 }, format = 'hex') {

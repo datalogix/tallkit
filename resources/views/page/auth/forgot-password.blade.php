@@ -13,9 +13,8 @@ $loginUrl ??= route_detect([
 
 @endphp
 <tk:form.section
-    :attributes="$attributes->whereDoesntStartWith(['identifier:', 'submit:', 'separator:', 'login:'])"
+    :attributes="$attributes->whereDoesntStartWith(['identifier:', 'submit:', 'login:'])->merge(['title' => 'Forgot password'])"
     :$size
-    title="Forgot password"
     :subtitle="match ($identifier) {
         'cpf' => 'Enter your CPF and we\'ll send you a password reset link.',
         'cnpj' => 'Enter your CNPJ and we\'ll send you a password reset link.',
@@ -27,26 +26,24 @@ $loginUrl ??= route_detect([
     {{ $slot }}
 
     <tk:page.auth.identifier
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'identifier:')"
+        :attributes="$attributes->prefixed('identifier:')"
         :$size
         :$identifier
     />
 
     <tk:submit
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'submit:')->classes('w-full')"
+        :attributes="$attributes->prefixed('submit:')->classes('w-full')->merge(['label' => 'Send password reset link'])"
         :$size
-        label="Send password reset link"
         variant="accent"
     />
 
     @if ($loginUrl)
-        <tk:separator :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'separator:')" />
+        <tk:separator :attributes="$attributes->prefixed('login:separator:')" />
 
         <tk:link
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'login:')"
+            :attributes="$attributes->prefixed('login:link:')->merge(['label' => 'Back to sign in'])"
             :href="$loginUrl"
             :$size
-            label="Back to sign in"
         />
     @endif
 </tk:form.section>

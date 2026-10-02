@@ -6,42 +6,66 @@
     'sortable' => null,
     'border' => null,
     'dense' => null,
-    'stripped' => null,
+    'striped' => null,
     'hover' => null,
     'verticalLines' => null,
     'horizontalLines' => null,
     'sticky' => null,
+    'draggable' => null,
+    'resizable' => null,
+    'toggleable' => null,
+    'pinnable' => null,
+    'persist' => null,
+    'columnMinWidth' => null,
+    'columnMaxMinWidth' => null,
     'rowSelection' => null,
     'selectAll' => null,
     'rowKey' => null,
     'noRecords' => null,
     'footer' => null,
-    'displayIdColumn' => null,
+    'idColumn' => null,
     'mapRelationsColumn' => null,
+    'expanded' => null,
+    'rowExpanded' => null,
 ])
 @php
 
+// Out of the attributes: they print on the table, and a Closure can't be printed.
+$attributes = $attributes->filter(fn ($value, $key) => ! (str_starts_with($key, 'row_') && $value instanceof \Closure));
+
+// The tag is built, not written (see table/columns.blade.php).
+$slotHas = fn (string $tag) => Str::contains($slot, '<'.$tag, true);
 $cols = collect($cols);
 $rows ??= is_string($resource) ? make_model($resource) : $resource;
+
+// Full class names: a compiled view has no use statements.
+$query = match (true) {
+    $rows instanceof \Illuminate\Database\Eloquent\Model => $rows->newQuery(),
+    $rows instanceof \Illuminate\Database\Eloquent\Builder,
+    $rows instanceof \Illuminate\Database\Query\Builder,
+    $rows instanceof \Illuminate\Database\Eloquent\Relations\Relation => $rows,
+    default => null,
+};
+
 $rows = match (true) {
-    $rows instanceof Model => $rows->paginate(),
-    $rows instanceof Builder => $rows->paginate(),
-    $rows instanceof Relation => $rows->paginate(),
-    $rows instanceof Paginator => $rows,
-    $rows instanceof CursorPaginator => $rows,
+    $query !== null => ($sortable && ! $query instanceof \Illuminate\Database\Query\Builder ? TALLKit::tableSortQuery($query, $cols) : $query)->paginate(),
+    $rows instanceof \Illuminate\Contracts\Pagination\Paginator => $rows,
+    $rows instanceof \Illuminate\Contracts\Pagination\CursorPaginator => $rows,
     $rows === null => null,
     default => collect($rows),
 };
 
-if ($cols->isEmpty() && $rows?->isNotEmpty()) {
-    $cols = collect($rows->first())->keys();
-} elseif ($displayIdColumn === null) {
-    $displayIdColumn = true;
+if ($cols->isEmpty() && ($rows?->isNotEmpty() || $query !== null && ! $query instanceof \Illuminate\Database\Query\Builder)) {
+    // Never a secret: only what the model shows ($visible, else its key, $fillable and timestamps).
+    $cols = collect(TALLKit::tableDefaultColumns($rows?->first() ?? $query->getModel()));
+} elseif ($idColumn === null) {
+    $idColumn = true;
 }
 
 $cols = $cols->filter()
     ->mapWithKeys(function ($value, $key) use ($sortable) {
-        $name = data_get($value, 'name', is_array($value) ? $key : $value);
+        $labelled = ! is_array($value) && ! is_numeric($key);
+        $name = data_get($value, 'name', is_array($value) || $labelled ? $key : $value);
         $newKey = Str::snake(is_numeric($key) ? $name : $key);
 
         return [
@@ -49,23 +73,21 @@ $cols = $cols->filter()
                 '_key' => $key,
                 'sortable' => data_get($value, 'sortable', $name !== 'actions' && $sortable),
                 'name' => Str::before($name, '.'),
-            ] + (is_array($value) ? $value : []),
+            ] + (is_array($value) ? $value : ($labelled ? ['label' => $value] : [])),
         ];
     })
-    ->unless($displayIdColumn, fn ($cols) => $cols->filter(fn ($col, $key) => mb_strtolower($key) !== 'id'))
+    ->unless($idColumn, fn ($cols) => $cols->filter(fn ($col, $key) => mb_strtolower($key) !== 'id'))
     ->when($mapRelationsColumn ?? true, function ($cols) {
-         $mappedRelations = [];
+        $taken = [];
 
-        return $cols->mapWithKeys(function ($col, $key) use (&$mappedRelations) {
-            if (in_array($key, $mappedRelations)) {
-                return null;
+        return $cols->mapWithKeys(function ($col, $key) use (&$taken) {
+            $key = Str::endsWith($key, '_id') ? Str::replaceLast('_id', '', $key) : $key;
+
+            if (isset($taken[$key])) {
+                return [];
             }
 
-            if (Str::endsWith($key, '_id')) {
-                $mappedRelations[] = $col;
-
-                return [Str::replaceLast('_id', '', $key) => $col];
-            }
+            $taken[$key] = true;
 
             return [$key => $col];
         });
@@ -73,28 +95,49 @@ $cols = $cols->filter()
 
 $hasRowExpanded = isset($expanded) || isset($rowExpanded) || Str::contains($slot, 'data-role="row-expanded"', true);
 $hasRowSelection = $rowSelection || Str::contains($slot, 'data-role="row-selection"', true) || $selectAll;
-$colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 0);
+$colspan = max(1, $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 0));
+
+$hasPinnedColumns = Str::contains($slot, 'data-column-sticky', true) || Str::contains($slot, 'data-column-pinnable', true) || $cols->contains(fn ($col) => data_get($col, 'sticky') === 'left');
+$hasColumnFeatures = $draggable || $resizable || $toggleable || $pinnable || $hasPinnedColumns;
+
+$tableData = $hasRowSelection || $hasRowExpanded || $hasColumnFeatures
+    ? ['x-data' => 'table('.Js::from(array_filter([
+        'draggable' => (bool) $draggable,
+        'resizable' => (bool) $resizable,
+        'toggleable' => (bool) $toggleable,
+        'pinnable' => (bool) $pinnable,
+        'persist' => $persist,
+        'minColumnWidth' => $columnMinWidth,
+        'maxMinColumnWidth' => $columnMaxMinWidth,
+    ], fn ($value) => $value !== null && $value !== false)).')']
+    : [];
+
+$tableAttributes = array_filter([
+    'x-bind:style' => $resizable || $pinnable || $hasPinnedColumns ? 'columnTableStyle()' : null,
+    'x-bind:data-column-resized' => $resizable ? 'columnResizeActive()' : null,
+]);
 
 @endphp
 <div {{
-    TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')
+    $attributes->prefixed('container:')
         ->dataKey('table-container')
         ->classes([
             'overflow-hidden',
             'border border-zinc-800/10 dark:border-white/20 rounded-md' => $dense || $border
         ])
-        ->merge($hasRowSelection || $hasRowExpanded ? ['x-data' => 'table'] : [])
+        ->merge($tableData)
 }}>
-    <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'area:')->classes('overflow-x-auto') }}>
+    <div {{ $attributes->prefixed('area:')->classes('overflow-x-auto') }}>
         <table {{
             $attributes
                 ->whereDoesntStartWith([
                     'container:', 'area:',
-                    'columns:', 'thead:', 'select-all:', 'column:', 'column-', 'th:', 'th-',
-                    'rows:', 'tbody:', 'row:', 'row-', 'cell:', 'cell-', 'td:', 'td-',
-                    'no-records:', 'footer:', 'tfoot:',
+                    'columns:', 'select-all:', 'column:', 'column-',
+                    'rows:', 'row:', 'row-', 'cell:', 'cell-',
+                    'no-records:', 'footer:',
                     'pagination:',
                 ])
+                ->merge($tableAttributes, escape: false)
                 ->classes(
                     '
                         relative
@@ -107,14 +150,30 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
         }}>
             {{ $slot }}
 
-            @if (Str::doesntContain($slot, '<thead', true) && $cols->isNotEmpty())
-                <tk:table.columns :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'columns:')->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'thead:')->toArray())">
+            @if (! $slotHas('thead') && $cols->isNotEmpty())
+                @if ($resizable)
+                    <tk:table.colgroup>
+                        @if ($hasRowExpanded)
+                            <tk:table.col fixed="expand" />
+                        @endif
+
+                        @if ($hasRowSelection)
+                            <tk:table.col fixed="select" />
+                        @endif
+
+                        @foreach ($cols as $key => $col)
+                            <tk:table.col :name="$key" :hidden="data_get($col, 'hidden')" />
+                        @endforeach
+                    </tk:table.colgroup>
+                @endif
+
+                <tk:table.columns :attributes="$attributes->prefixed('columns:')">
                     @if ($hasRowExpanded)
                         <tk:table.column.expanded />
                     @endif
 
                     @if ($hasRowSelection)
-                        <tk:table.column.select-all :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'select-all:')">
+                        <tk:table.column.select-all :attributes="$attributes->prefixed('select-all:')">
                             @if (TALLKit::isSlot(slot: $selectAll))
                                 {{ $selectAll}}
                             @elseif ($selectAll === false)
@@ -124,13 +183,18 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                     @endif
 
                     @foreach ($cols as $key => $col)
-                        <tk:table.column :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'column:')
-                            ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'column-'.$key.':')->toArray())
-                            ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'th:')->toArray())
-                            ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'th-'.$key.':')->toArray())
-                            ->merge(Arr::wrap(data_forget($col, '_key')))
+                        {{-- As props: merge() escapes, and they'd be escaped twice. --}}
+                        <tk:table.column :attributes="TALLKit::attributesMerge(
+                                $attributes->prefixed('column:'),
+                                $attributes->prefixed('column-'.$key.':'),
+                            )
+                            ->merge(Arr::except(Arr::wrap(data_forget($col, '_key')), ['label', 'name']))
+                            ->merge(['data-column-key' => $key])
                             ->classes(['w-0' => $key === 'actions'])
-                        ">
+                        "
+                            :label="data_get($col, 'label')"
+                            :name="data_get($col, 'name')"
+                        >
                             @isset (${'col_' . $key})
                                 {{ ${'col_' . $key}(col: $col, key: $key, name: data_get($col, 'name', $key), cols: $cols, rows: $rows) }}
                             @endisset
@@ -139,25 +203,29 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                 </tk:table.columns>
             @endif
 
-            @if (Str::doesntContain($slot, '<tbody', true) && $cols->isNotEmpty())
-                <tk:table.rows :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'rows:')->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'tbody:')->toArray())">
+            @if (! $slotHas('tbody') && ($cols->isNotEmpty() || $rows?->isEmpty()))
+                @php
+                    $cellShells = [];
+                    $cellParams = [];
+                @endphp
+                <tk:table.rows :attributes="$attributes->prefixed('rows:')">
                     @forelse ($rows as $index => $row)
                         <tk:table.row
                             data-id="{{ data_get($row, $rowKey ?? 'id', $index) }}"
-                            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'row:')
-                                ->merge($hasRowSelection ? ['data-state' => 'unchecked'] : [])
-                                ->merge($hasRowExpanded ? ['data-expanded' => 'close'] : [])
-                                ->merge(in_livewire() ? ['wire:key' => data_get($row, $rowKey ?? 'id', $index)] : [])
+                            :attributes="$attributes->prefixed('row:')
+                                ->mergeDefined(['data-state' => $hasRowSelection ? 'unchecked' : null])
+                                ->mergeDefined(['data-expanded' => $hasRowExpanded ? 'close' : null])
+                                ->wireKey(data_get($row, $rowKey ?? 'id', $index))
                             "
                         >
                             @if ($hasRowExpanded)
-                                <tk:table.cell.expanded :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'cell-expanded:')">
+                                <tk:table.cell.expanded :attributes="$attributes->prefixed('cell-expanded:')">
                                     {{ $cellExpanded ?? '' }}
                                 </tk:table.cell.expanded>
                             @endif
 
                             @if ($hasRowSelection)
-                                <tk:table.cell.selection :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'cell-selection:')">
+                                <tk:table.cell.selection :attributes="$attributes->prefixed('cell-selection:')">
                                     @if (TALLKit::isSlot(slot: $rowSelection))
                                         {{ $rowSelection}}
                                     @endif
@@ -165,28 +233,38 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                             @endif
 
                             @foreach ($cols as $key => $col)
-                                <tk:table.cell :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'cell:')
-                                    ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'cell-'.$key.':')->toArray())
-                                    ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'td:')->toArray())
-                                    ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'td-'.$key.':')->toArray())
-                                    ->merge(['align' => data_get($col, 'align', $key === 'actions' ? 'center' : null)])
-                                    ->merge(['sticky' => data_get($col, 'sticky')])
-                                ">
-                                    @if (isset(${'row_' . $key}))
-                                        {{ ${'row_' . $key}(
-                                            row: $row,
-                                            key: $key,
-                                            value: fn () => TALLKit::getRowValue(row: $row, key: $key, col: $col),
-                                            col: $col,
-                                            cols: $cols,
-                                            rows: $rows,
-                                            index: $index
-                                        ) }}
+                                @php
+                                    ob_start();
+                                @endphp
+                                    @php
+                                        $cellRenderer = ${'row_'.$key} ?? ${Str::camel('row_'.$key)} ?? null;
+
+                                        // Only the parameters it declares: an unknown named one fails.
+                                        if ($cellRenderer instanceof \Closure) {
+                                            $cellParams[$key] ??= collect((new \ReflectionFunction($cellRenderer))->getParameters())
+                                                ->mapWithKeys(fn ($parameter) => [$parameter->getName() => $parameter->isVariadic()])
+                                                ->all();
+
+                                            $cellArguments = [
+                                                'row' => $row,
+                                                'key' => $key,
+                                                'value' => fn () => TALLKit::tableCellValue(row: $row, key: $key, col: $col),
+                                                'col' => $col,
+                                                'cols' => $cols,
+                                                'rows' => $rows,
+                                                'index' => $index,
+                                            ];
+                                        }
+                                    @endphp
+                                    @if ($cellRenderer instanceof \Closure)
+                                        {{ $cellRenderer(...(in_array(true, $cellParams[$key], true) ? $cellArguments : array_intersect_key($cellArguments, $cellParams[$key]))) }}
+                                    @elseif ($cellRenderer !== null)
+                                        {{ $cellRenderer }}
                                     @elseif ($key == 'row_index')
                                         {{ $index + 1 }}
                                     @else
                                         @php
-                                        $rowValue = TALLKit::getRowValue(row: $row, key: $key, col: $col);
+                                        $rowValue = TALLKit::tableCellValue(row: $row, key: $key, col: $col);
                                         @endphp
 
                                         @if (is_bool($rowValue))
@@ -196,24 +274,60 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                                             {!! $rowValue !!}
                                         @endif
                                     @endif
-                                </tk:table.cell>
+                                @php
+                                    $cellContent = ob_get_clean();
+                                @endphp
+
+                                @if (trim($cellContent) === '')
+                                    <tk:table.cell :attributes="TALLKit::attributesMerge(
+                                            $attributes->prefixed('cell:'),
+                                            $attributes->prefixed('cell-'.$key.':'),
+                                        )
+                                        ->merge(['align' => data_get($col, 'align', $key === 'actions' ? 'center' : null)])
+                                        ->merge(['sticky' => data_get($col, 'sticky')])
+                                        ->merge(['column' => $key, 'hidden' => data_get($col, 'hidden')])
+                                    " />
+                                @elseif (isset($cellShells[$key]))
+                                    {!! $cellShells[$key][0].$cellContent.$cellShells[$key][1] !!}
+                                @else
+                                    @php
+                                        ob_start();
+                                    @endphp
+                                    <tk:table.cell :attributes="TALLKit::attributesMerge(
+                                            $attributes->prefixed('cell:'),
+                                            $attributes->prefixed('cell-'.$key.':'),
+                                        )
+                                        ->merge(['align' => data_get($col, 'align', $key === 'actions' ? 'center' : null)])
+                                        ->merge(['sticky' => data_get($col, 'sticky')])
+                                        ->merge(['column' => $key, 'hidden' => data_get($col, 'hidden')])
+                                    ">__tallkit_cell_content__</tk:table.cell>
+                                    @php
+                                        $cellShells[$key] = explode('__tallkit_cell_content__', ob_get_clean(), 2);
+                                    @endphp
+                                    {!! $cellShells[$key][0].$cellContent.$cellShells[$key][1] !!}
+                                @endif
                             @endforeach
                         </tk:table.row>
 
                         @if ($hasRowExpanded)
-                            <tk:table.row.expanded :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'row-expanded:')
+                            <tk:table.row.expanded :attributes="$attributes->prefixed('row-expanded:')
                                 ->merge(['colspan' => $colspan])
+                                ->mergeDefined(['x-bind:colspan' => $resizable ? 'columnColspan()' : null])
                             ">
-                                @if (isset($expanded))
-                                    {{ $expanded($row, $cols, $rows) }}
-                                @elseif (isset($rowExpanded))
-                                    {{ $rowExpanded($row, $cols, $rows) }}
+                                @php
+                                    $expandedContent = $expanded ?? $rowExpanded;
+                                @endphp
+                                @if ($expandedContent instanceof \Closure)
+                                    {{ $expandedContent($row, $cols, $rows) }}
+                                @elseif ($expandedContent !== null)
+                                    {{ $expandedContent }}
                                 @endif
                             </tk:table.row.expanded>
                         @endif
                     @empty
-                        <tk:table.row.no-records :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'no-records:')
+                        <tk:table.row.no-records :attributes="$attributes->prefixed('no-records:')
                             ->merge(['colspan' => $colspan])
+                            ->mergeDefined(['x-bind:colspan' => $resizable ? 'columnColspan()' : null])
                         ">
                             {{ $noRecords }}
                         </tk:table.row.no-records>
@@ -221,9 +335,8 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
                 </tk:table.rows>
             @endif
 
-            @if (Str::doesntContain($slot, '<tfoot', true) && isset($footer))
-                <tk:table.footer :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'footer:')
-                    ->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'tfoot:')->toArray())
+            @if (! $slotHas('tfoot') && isset($footer))
+                <tk:table.footer :attributes="$attributes->prefixed('footer:')
                     ->merge(['cell:colspan' => $colspan])
                 ">
                     {{ $footer }}
@@ -234,7 +347,7 @@ $colspan = $cols->count() + ($hasRowSelection ? 1 : 0) + ($hasRowExpanded ? 1 : 
 
     @if ($pagination !== false && $rows !== null)
         <tk:pagination
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'pagination:')"
+            :attributes="$attributes->prefixed('pagination:')"
             :paginator="$rows"
         />
     @endif

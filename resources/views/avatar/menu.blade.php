@@ -2,38 +2,57 @@
     'profile' => null,
     'items' => null,
     'size' => null,
+    'keepOpen' => null,
+    'animation' => null,
 ])
 @php
 
-$attrs = $attributes->whereDoesntStartWith(['dropdown:', 'menu:', 'avatar:', 'profile:', 'menu-separator:']);
+$attrs = $attributes->whereDoesntStartWith(['dropdown:', 'menu:', 'avatar:', 'profile:', 'menu-separator:', 'trigger:']);
 
 @endphp
-<tk:dropdown :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'dropdown:')">
-    @if ($profile)
-        <tk:avatar.profile
-            :attributes="$attrs->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'profile:')->getAttributes())"
-            :$size
-         />
-    @else
-        <tk:avatar
-            :attributes="$attrs->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'avatar:')->getAttributes())->classes('cursor-pointer hover:opacity-75')"
-            :$size
-        />
-    @endif
+<tk:dropdown :attributes="$attributes->prefixed('dropdown:')">
+    <button
+        type="button"
+        {{
+            $attributes->prefixed('trigger:')
+                ->merge(['aria-label' => $profile ? null : __('Account menu')])
+                ->classes(
+                    '
+                        cursor-pointer hover:opacity-75 text-start
+                        outline-none focus-visible:tk-focus-outline
+                    ',
+                    $profile ? 'rounded-lg' : 'rounded-full',
+                )
+        }}
+    >
+        @if ($profile)
+            <tk:avatar.profile
+                :attributes="TALLKit::attributesMerge($attrs, $attributes->prefixed('profile:'))"
+                :$size
+            />
+        @else
+            <tk:avatar
+                :attributes="TALLKit::attributesMerge($attrs, $attributes->prefixed('avatar:'))"
+                :$size
+            />
+        @endif
+    </button>
 
     <tk:menu
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'menu:')"
+        :attributes="$attributes->prefixed('menu:')"
         :$items
         :$size
+        :$keepOpen
+        :$animation
     >
         <x-slot:prepend>
             @unless ($profile)
                 <tk:avatar.profile
-                    :attributes="$attrs->merge(TALLKit::attributesAfter(attributes: $attributes, prefix: 'profile:')->getAttributes())"
+                    :attributes="TALLKit::attributesMerge($attrs, $attributes->prefixed('profile:'))"
                     :$size
                 />
 
-                <tk:menu.separator :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'menu-separator:')" />
+                <tk:menu.separator :attributes="$attributes->prefixed('menu-separator:')" />
             @endunless
 
             {{ $prepend ?? '' }}

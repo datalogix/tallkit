@@ -1,17 +1,17 @@
 @props([
-    'variant' => null,
     'label' => null,
 ])
 <div
     {{
-        TALLKit::attributesAfter(attributes: $attributes, prefix: 'container:')
+        $attributes->prefixed('container:')
             ->dataKey('menu-separator-container')
-            ->classes('-mx-[.4rem] my-[.4rem] h-px')
+            ->classes('-mx-[.4rem] my-[.4rem]', ['h-px' => ! $label && ! $slot->hasActualContent()])
     }}
 >
     <tk:separator
         :attributes="$attributes->whereDoesntStartWith(['container:'])"
-        :$variant
         :$label
-     />
+    >
+        {{ $slot }}
+    </tk:separator>
 </div>

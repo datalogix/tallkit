@@ -14,6 +14,7 @@
     x-cloak
     {{
         $attributes
+            ->dataKey('tab-group')
             ->classes([
                 'flex flex-col',
                 'flex-row' => $orientation === 'vertical',

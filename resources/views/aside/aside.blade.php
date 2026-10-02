@@ -8,7 +8,7 @@
             '[grid-area:aside]',
             'overflow-y-auto' => $sticky
         ])
-        ->merge($sticky ? ['x-data' => 'aside'] : [])
+        ->mergeDefined(['x-data' => $sticky ? 'aside' : null, 'wire:ignore.self' => $sticky ? true : null])
 }}>
     {{ $slot }}
 </div>

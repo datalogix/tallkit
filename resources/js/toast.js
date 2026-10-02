@@ -1,3 +1,5 @@
+import { emit, eventName } from './utils'
+
 export function toast(...args) {
   if (args.length === 0) {
     return {
@@ -5,19 +7,24 @@ export function toast(...args) {
       error: (...props) => toast({ ...parseArgs(...props), type: 'error' }),
       info: (...props) => toast({ ...parseArgs(...props), type: 'info' }),
       warning: (...props) => toast({ ...parseArgs(...props), type: 'warning' }),
-    };
+      loading: (...props) => toast({ duration: false, progress: false, swipe: false, ...parseArgs(...props), type: 'loading' }),
+      promise: (promise, messages = {}) => container()?.promise(promise, messages) ?? promise,
+      close: (id) => sendToastEvent(eventName('toast-close'), { id }),
+    }
   }
 
-  emit('toast', parseArgs(...args))
+  sendToastEvent(eventName('toast'), parseArgs(...args))
 }
 
-export function closeToast(id) {
-  emit('toast-close', { id })
+const container = () => {
+  const el = window.__tallkitToastReady ? window.__tallkitToastContainer : null
+
+  return el?.isConnected && window.Alpine ? window.Alpine.$data(el) : null
 }
 
-function emit(event, detail) {
+export function sendToastEvent(event, detail) {
   if (window.__tallkitToastReady) {
-    document.dispatchEvent(new CustomEvent(event, { detail }))
+    emit(document, event, detail)
   } else {
     (window.__tallkitToastQueue ??= []).push({ event, detail })
   }
@@ -31,5 +38,5 @@ const parseArgs = (...args) => {
   const [message, title, type, duration, position, progress, size, invert, actions, id] = args
   const detail = { message, title, type, duration, position, progress, size, invert, actions, id }
 
-  return Object.fromEntries(Object.entries(detail).filter(([, value]) => value !== null))
+  return Object.fromEntries(Object.entries(detail).filter(([, value]) => value !== null && value !== undefined))
 }

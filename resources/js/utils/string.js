@@ -5,35 +5,20 @@ export function parseCommaList(value) {
   return String(value).split(',').map((v) => v.trim()).filter(Boolean)
 }
 
-export function dataKey(name, value) {
-  return value
-    ? `[data-tallkit-${name}="${value}"]`
-    : `[data-tallkit-${name}]`
-}
-
 export function escapeHtml(str) {
   if (str == null) return str
 
-  return str.replace(/[&<>"']/g, (char) => ({
+  return String(str).replace(/[&<>"']/g, (char) => ({
     '&': '&amp;',
     '<': '&lt;',
     '>': '&gt;',
     '"': '&quot;',
     "'": '&#39;',
-  })[char]);
-}
-
-export function generateId(prefix, name, suffix) {
-  return slug([
-    'tallkit',
-    prefix,
-    name ?? Math.random().toString(36).slice(2, 9),
-    suffix,
-  ].filter(Boolean).join('-')) ?? ''
+  })[char])
 }
 
 export function slug(str) {
-  return normalize(str, {
+  return normalizeText(str, {
     replaceAccents: true,
     removeSpaces: true,
     replaceSpaces: '-',
@@ -42,7 +27,7 @@ export function slug(str) {
   })
 }
 
-export function normalize(str, options) {
+export function normalizeText(str, options) {
   if (!options || !str) return str
 
   const opts = {
@@ -85,4 +70,17 @@ export function normalize(str, options) {
   }
 
   return str
+}
+
+// A javascript:, data: or vbscript: link runs code when clicked.
+export function safeUrl(url) {
+  if (url === null || url === undefined || String(url).trim() === '') return null
+
+  try {
+    const { protocol } = new URL(String(url), window.location.href)
+
+    return protocol === 'http:' || protocol === 'https:' ? String(url) : null
+  } catch {
+    return null
+  }
 }

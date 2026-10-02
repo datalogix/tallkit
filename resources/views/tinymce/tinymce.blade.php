@@ -4,35 +4,43 @@
     'options' => null,
     'scripts' => null,
     'styles' => null,
-    'mode' => null,
+    'toolbar' => null,
+    'upload' => null,
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::resolveFieldContext(attributes: $attributes, label: $label, id: $id);
+$upload = TALLKit::editorUpload($upload);
+
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
+$value = TALLKit::fieldOldValue($fieldName, $value);
 
 @endphp
 <tk:field.wrapper
     :$name
-    :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
 >
     <tk:field.control
         :$size
-        :attributes="TALLKit::mergeDefinedProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())"
+        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())"
     >
         <div
             wire:ignore
             x-data="tinymce(
                 {{
                     Js::from([
-                        'mode' => $mode,
+                        'toolbar' => $toolbar,
                         'options' => $options ?? [],
                         'scripts' => $scripts ?? [],
-                        'styles' => $styles ?? []
+                        'styles' => $styles ?? [],
+                        'upload' => $upload,
+                        'title' => $label ? __($label) : null,
+                        'messages' => TALLKit::editorUploadMessages(),
+                        'locale' => TALLKit::resolveLocale(),
                     ])
                 }}
             )"
             {{
-                TALLKit::attributesAfter(attributes: $attributes, prefix: 'editor:')
+                $attributes->prefixed('editor:')
                     ->classes('w-full block')
             }}
         >
@@ -44,7 +52,7 @@
                             'name' => $name,
                             'id' => $id,
                             'wire:model' => $wireModel,
-                            'aria-describedby' => TALLKit::ariaDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
+                            'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                             'aria-invalid' => $invalid ? 'true' : null,
                             'data-invalid' => $invalid ? true : null,
                         ])

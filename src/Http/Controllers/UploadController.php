@@ -5,70 +5,105 @@ namespace TALLKit\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use TALLKit\Facades\TALLKit;
 
 class UploadController extends Controller
 {
     public function store(Request $request)
     {
-        $type = TALLKit::getUploadFileType($request->file('file')?->getClientOriginalExtension());
-        $maxSize = $this->resolveMaxSize($type, $request->integer('max_size'));
-
-        $request->validate([
-            'file' => ['required', 'file', "max:{$maxSize}", 'mimes:'.implode(',', $this->allowedExtensions())],
-            'disk' => ['nullable', 'string'],
-            'directory' => ['nullable', 'string'],
-        ]);
-
-        $disk = $this->resolveDisk($request->input('disk'));
-        $directory = $this->resolveDirectory($request->input('directory'));
-
-        $path = $request->file('file')->store($directory, $disk);
-
-        return response()->json([
-            'url' => Storage::disk($disk)->url($path),
-        ]);
-    }
-
-    protected function resolveMaxSize(string $type, int $requested): int
-    {
-        $sizes = config('tallkit.upload.max_size', 20480);
-        $ceiling = is_array($sizes) ? (int) ($sizes[$type] ?? $sizes['default'] ?? 20480) : (int) $sizes;
-
-        return $requested > 0 ? min($requested, $ceiling) : $ceiling;
-    }
-
-    protected function allowedExtensions(): array
-    {
-        return config('tallkit.upload.allowed_extensions', [
-            'jpg', 'jpeg', 'png', 'gif', 'webp',
-            'mp4', 'mov', 'webm',
-            'mp3', 'wav',
-            'pdf',
-            'doc', 'docx',
-            'xls', 'xlsx',
-            'ppt', 'pptx',
-            'zip', 'rar', '7z',
-            'txt', 'md', 'csv',
-        ]);
-    }
-
-    protected function resolveDisk(?string $disk): string
-    {
-        return filled($disk) ? $disk : config('tallkit.upload.disk', 'public');
-    }
-
-    protected function resolveDirectory(?string $directory): string
-    {
-        if (blank($directory)) {
-            return config('tallkit.upload.directory', 'tallkit-uploads');
+        if (! $request->hasValidRelativeSignature()) {
+            abort(403, __('The upload link is invalid or has expired. Reload the page and try again.'));
         }
 
+        if (! $this->mayUpload($request)) {
+            abort(401, __('Unauthenticated.'));
+        }
+
+        if (is_array($request->file('file'))) {
+            $attribute = trans()->has('validation.attributes.file') ? __('validation.attributes.file') : 'file';
+
+            throw ValidationException::withMessages(['file' => __('validation.file', ['attribute' => $attribute])]);
+        }
+
+        $params = $request->query();
+        $types = array_filter(explode(',', (string) ($params['types'] ?? '')));
+        $type = TALLKit::uploadedFileType($request->file('file'));
+
+        $signedMax = $params['max_size'] ?? null;
+        $signedMax = (int) (is_array($signedMax) ? ($signedMax[$type] ?? 0) : $signedMax);
+        // The body may only ask for a smaller size: the query's is the signed one.
+        $asked = $request->request->get('max_size');
+        $limits = array_filter([$signedMax, is_numeric($asked) ? (int) $asked : 0]);
+        $maxSize = TALLKit::uploadMaxSize($type, $limits ? min($limits) : null);
+
+        $extensions = $types
+            ? collect($types)->flatMap(fn ($kind) => TALLKit::uploadAllowedExtensions($kind))->unique()->all()
+            : TALLKit::uploadAllowedExtensions();
+
+        $request->validate([
+            'file' => ['required', 'file', "max:{$maxSize}", 'mimes:'.implode(',', $extensions ?: ['none'])],
+        ]);
+
+        $disk = TALLKit::uploadDisk($params['disk'] ?? null);
+
+        if (! TALLKit::uploadDiskAllowed($disk)) {
+            throw ValidationException::withMessages([
+                'disk' => __('The selected disk is invalid.'),
+            ]);
+        }
+
+        $directory = $this->resolveDirectory($params['directory'] ?? null);
+
+        // store() may return false or throw: fail explicitly, or the editor inserts a broken image.
+        try {
+            $path = $request->file('file')->store($directory, $disk);
+        } catch (\Throwable $e) {
+            report($e);
+
+            abort(500, __('The file could not be saved.'));
+        }
+
+        if ($path === false) {
+            report(new \RuntimeException("TALLKit: an upload could not be saved on the [{$disk}] disk, in [{$directory}]."));
+
+            abort(500, __('The file could not be saved.'));
+        }
+
+        try {
+            $url = Storage::disk($disk)->url($path);
+        } catch (\Throwable) {
+            $url = null;
+        }
+
+        if (blank($url)) {
+            Storage::disk($disk)->delete($path);
+
+            abort(422, __('The file was uploaded to a disk with no public address.'));
+        }
+
+        return response()->json([
+            'url' => $url,
+            'path' => $path,
+            'disk' => $disk,
+        ]);
+    }
+
+    protected function mayUpload(Request $request): bool
+    {
+        return auth(config('tallkit.upload.guard'))->check() || (bool) $request->query('guest');
+    }
+
+    // Always inside the configured directory.
+    protected function resolveDirectory(?string $directory): string
+    {
+        $base = TALLKit::uploadDirectory();
+
         $segments = array_filter(
-            explode('/', str_replace('\\', '/', $directory)),
+            explode('/', str_replace('\\', '/', (string) $directory)),
             fn ($segment) => $segment !== '' && $segment !== '.' && $segment !== '..',
         );
 
-        return $segments !== [] ? implode('/', $segments) : config('tallkit.upload.directory', 'tallkit-uploads');
+        return implode('/', array_filter([$base, ...$segments], fn ($segment) => $segment !== ''));
     }
 }

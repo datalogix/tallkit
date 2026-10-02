@@ -12,14 +12,14 @@
     @if ($slot->isNotEmpty())
         {{ $slot }}
     @elseif ($chart)
-        <x-dynamic-component
-            :component="'tallkit::chart.'.$chart"
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'chart:')"
+        <tk:chart
+            :library="$chart"
+            :attributes="$attributes->prefixed('chart:')"
             x-effect="render(data)"
         />
     @else
         <tk:pretty-print-json
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'json:')"
+            :attributes="$attributes->prefixed('json:')"
             x-html="render(data)"
         />
     @endif

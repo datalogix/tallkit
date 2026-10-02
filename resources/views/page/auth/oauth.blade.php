@@ -1,6 +1,6 @@
 @props([
     'size' => null,
-    'providers' => null,
+    'items' => null,
     'route' => null,
     'separator' => null,
 ])
@@ -21,27 +21,28 @@ $icons = [
     'x' => 'simple-icons:x',
 ];
 
-$providers ??= collect(array_keys($icons))
+$items ??= collect(array_keys($icons))
     ->filter(fn ($provider) => filled(config("services.{$provider}.client_id")))
     ->values()
     ->all();
 
-$providers = Arr::wrap($providers);
+$items = Arr::wrap($items);
 
 @endphp
-@if (filled($providers))
+@if (filled($items))
     @if ($separator !== false)
         <tk:separator
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'separator:')"
-            :text="is_string($separator) ? $separator : 'or'"
+            :attributes="$attributes->prefixed('separator:')"
+            :label="is_string($separator) ? $separator : 'or'"
         />
     @endif
 
-    @foreach ($providers as $provider)
+    @foreach ($items as $provider)
         <tk:button
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: $provider.':')->classes('w-full')"
+            :attributes="$attributes->prefixed($provider.':')->classes('w-full')"
             :$size
-            :href="route_detect([$route ?? 'auth.oauth.redirect'], parameters: ['provider' => $provider], default: '#')"
+            :href="$oauthHref = route_detect([$route ?? 'auth.oauth.redirect'], parameters: ['provider' => $provider], default: null)"
+            :disabled="! $oauthHref"
             :icon="$icons[$provider] ?? 'ph:key'"
             :label="__('Continue with :provider', ['provider' => Str::headline($provider)])"
             variant="outline"

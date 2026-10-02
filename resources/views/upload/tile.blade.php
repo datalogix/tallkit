@@ -17,6 +17,7 @@
                 transition-all duration-200
             ',
             'border border-zinc-300 dark:border-white/10' => $variant !== 'gallery',
+            'bg-zinc-100 dark:bg-white/5' => $variant === 'gallery',
             'size-full' => ! $multiple,
             match ($variant) {
                 'gallery' => match ($size) {
@@ -42,7 +43,7 @@
     }}
     :class="{
         'ring-2': dragOverIndex === index,
-        '{{ TALLKit::uploadRing(color: $color ?: 'blue') }}': dragOverIndex === index,
+        '{{ TALLKit::ring(color: $color ?: 'blue') }}': dragOverIndex === index,
     }"
     :draggable="sortable"
     @dragstart="dragStart(index, $event)"
@@ -50,74 +51,87 @@
     @dragleave.prevent="dragLeaveTile(index, $event)"
     @drop.prevent.stop="dropOnTile(index, $event)"
     @dragend="dragEnd"
+    @keydown.alt.up.prevent="moveByKey(index, 'up')"
+    @keydown.alt.down.prevent="moveByKey(index, 'down')"
+    @keydown.alt.left.prevent="moveByKey(index, 'left')"
+    @keydown.alt.right.prevent="moveByKey(index, 'right')"
 >
     <div
         {{
-            TALLKit::attributesAfter(attributes: $attributes, prefix: 'actions:')
+            $attributes->prefixed('actions:')
                 ->classes([
-                    'flex items-center justify-end gap-1 bg-black/50 px-2 py-1',
-                    'absolute inset-x-0 top-0 z-10 opacity-0 transition-opacity group-hover/tile:opacity-100 group-focus-within/tile:opacity-100' => $variant === 'gallery',
+                    '
+                        flex items-center justify-end gap-1 bg-black/50 px-2 py-1
+
+                        **:[:where(&)]:text-white/80
+                        **:[:where(&)]:hover:text-white
+                        **:[:where(&)]:[&[data-active]]:text-white
+                    ',
+                    '
+                        absolute inset-x-0 top-0 z-10
+                        opacity-0 transition-opacity
+                        group-hover/tile:opacity-100
+                        group-focus-within/tile:opacity-100
+                        pointer-coarse:opacity-100
+                    ' => $variant === 'gallery',
                 ])
         }}
     >
         <tk:button
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'view:')"
+            :attributes="$attributes->prefixed('view:')->merge(['tooltip' => 'View'])"
             :size="TALLKit::adjustSize(size: $size)"
             x-show="file.url"
             variant="none"
             icon="eye"
-            tooltip="View"
             @click="$event.currentTarget.blur(); viewFile(file.id)"
         />
 
         <tk:button
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'edit:')"
+            :attributes="$attributes->prefixed('edit:')->merge(['tooltip' => 'Edit'])"
             :size="TALLKit::adjustSize(size: $size)"
             x-show="!multiple() && file.status === 'done'"
             variant="none"
             icon="pencil"
-            tooltip="Edit"
             @click="selectFile"
         />
 
         <tk:button
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'cancel:')"
+            :attributes="$attributes->prefixed('cancel:')->merge(['tooltip' => 'Cancel'])"
             :size="TALLKit::adjustSize(size: $size)"
             x-show="file.status === 'uploading'"
             variant="none"
             icon="close"
-            tooltip="Cancel"
             @click="cancelUpload(file.id)"
         />
 
         <tk:button
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'retry:')"
+            :attributes="$attributes->prefixed('retry:')->merge(['tooltip' => 'Retry'])"
             :size="TALLKit::adjustSize(size: $size)"
-            x-show="file.status === 'error' || file.status === 'cancelled'"
+            x-show="canRetry(file)"
             variant="none"
             icon="refresh"
-            tooltip="Retry"
             @click="retryUpload(file.id)"
         />
 
         <tk:button
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'remove:')"
+            :attributes="$attributes->prefixed('remove:')->merge(['tooltip' => 'Remove'])"
             :size="TALLKit::adjustSize(size: $size)"
+            x-show="file.status !== 'uploading'"
             variant="none"
             icon="trash"
-            tooltip="Remove"
+            ::aria-describedby="sortable ? sortHintId : null"
             @click="removeFile(file.id)"
         />
     </div>
 
     <tk:upload.preview
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'preview:')"
+        :attributes="$attributes->prefixed('preview:')"
         :$size
     />
 
     <div
         {{
-            TALLKit::attributesAfter(attributes: $attributes, prefix: 'info:')
+            $attributes->prefixed('info:')
                 ->classes([
                     'flex flex-col',
                     'absolute inset-x-0 bottom-0 z-10' => $variant === 'gallery',
@@ -126,36 +140,42 @@
     >
         <tk:progress
             x-show="file.status === 'uploading'"
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'progress:')->classes('rounded-none')"
+            :attributes="$attributes->prefixed('progress:')->classes('rounded-none')"
             :$size
             position="none"
-            variant="blue"
+            color="blue"
             variable="file.progress"
             bar:class="rounded-none"
         />
 
         <div
             {{
-                TALLKit::attributesAfter(attributes: $attributes, prefix: 'file-info:')
+                $attributes->prefixed('file-info:')
                     ->classes([
                         'flex items-center justify-between gap-2 bg-black/50 px-2 py-1',
-                        'opacity-0 transition-opacity group-hover/tile:opacity-100 group-focus-within/tile:opacity-100' => $variant === 'gallery',
+                        '
+                            opacity-0 transition-opacity
+                            group-hover/tile:opacity-100
+                            group-focus-within/tile:opacity-100
+                            pointer-coarse:opacity-100
+                        ' => $variant === 'gallery',
                     ])
             }}
         >
             <span
                 {{
-                    TALLKit::attributesAfter(attributes: $attributes, prefix: 'file-name:')
+                    $attributes->prefixed('file-name:')
                         ->classes(
                             'flex-1 truncate text-white',
                             TALLKit::fontSize(size: TALLKit::adjustSize(size: $size))
                         )
                 }}
                 x-text="file.name"
+                :title="sortable ? file.name + ' · ' + sortHint : file.name"
             ></span>
             <span
                 {{
-                    TALLKit::attributesAfter(attributes: $attributes, prefix: 'file-size:')
+                    $attributes->prefixed('file-size:')
                         ->classes(
                             'shrink-0 text-white/70',
                             TALLKit::fontSize(size: TALLKit::adjustSize(size: $size))

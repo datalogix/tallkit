@@ -14,27 +14,26 @@
     }}
 >
     <tk:sidebar
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'sidebar:')"
+        :attributes="$attributes->prefixed('sidebar:')"
         sticky
         stashable
     >
         <tk:sidebar.toggle
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'sidebar-close:')->classes('lg:hidden')"
+            :attributes="$attributes->prefixed('sidebar-close:')->classes('lg:hidden')"
             icon="close"
         />
 
         <tk:brand
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'sidebar-brand:')"
+            :attributes="$attributes->prefixed('sidebar-brand:')"
             size="lg"
         >
             {{ $brand ?? '' }}
         </tk:brand>
 
-        {{ $prepend ?? '' }}
         {{ $header ?? '' }}
 
         <tk:nav
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'sidebar-menu:')"
+            :attributes="$attributes->prefixed('sidebar-menu:')->merge(['label' => 'Main menu'])"
             :items="$menu"
             list
         >
@@ -42,27 +41,26 @@
         </tk:nav>
 
         {{ $sidebar ?? '' }}
-        {{ $append ?? '' }}
     </tk:sidebar>
 
     <tk:header
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'header:')->classes('gap-2')"
+        :attributes="$attributes->prefixed('header:')->classes('gap-2')"
     >
         <tk:sidebar.toggle
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'sidebar-open:')->classes('lg:hidden')"
+            :attributes="$attributes->prefixed('sidebar-open:')->classes('lg:hidden')"
         />
 
         {{ $prepend ?? '' }}
 
-        <tk:spacer :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'spacer:')" />
+        <tk:spacer :attributes="$attributes->prefixed('spacer:')" />
 
         {{ $append ?? '' }}
         {{ $search ?? '' }}
         {{ $notification ?? '' }}
 
         <tk:appearance.menu
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'appearance:')"
-            :mode="$appearance"
+            :attributes="$attributes->prefixed('appearance:')"
+            :control="$appearance"
             :items="$userMenu"
         >
             {{ $avatarMenu ?? '' }}
@@ -70,7 +68,7 @@
     </tk:header>
 
     <tk:main
-        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'main:')"
+        :attributes="$attributes->prefixed('main:')"
         container
     >
         {{ $slot }}
@@ -78,7 +76,7 @@
 
     @isset ($aside)
         <tk:aside
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'aside:')"
+            :attributes="$attributes->prefixed('aside:')"
             sticky
         >
             {{ $aside }}

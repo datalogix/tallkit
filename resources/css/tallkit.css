@@ -1,3 +1,4 @@
+/* theme.css first: the others read its variables. */
 @import './theme.css';
 @import './animation.css';
 @import './alpine.css';
@@ -5,8 +6,11 @@
 @import './colors.css';
 @import './editor.css';
 @import './fields.css';
+@import './focus.css';
+@import './forced-colors.css';
 @import './layout.css';
 @import './sizes.css';
 @import './table.css';
+@import './tooltip.css';
 
 @source '../views';

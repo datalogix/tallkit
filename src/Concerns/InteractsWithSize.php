@@ -2,8 +2,6 @@
 
 namespace TALLKit\Concerns;
 
-use TALLKit\Facades\TALLKit;
-
 trait InteractsWithSize
 {
     protected function modeIncrement(?string $mode = null)
@@ -35,13 +33,18 @@ trait InteractsWithSize
         return $value[$modeIndex];
     }
 
+    protected function scaledClass(string $utility, array $scale, ?string $size, ?string $mode): string
+    {
+        return '[:where(&)]:'.$utility.'-'.$this->incrementalByMode($size, $mode, $scale);
+    }
+
     public function adjustSize(
         ?string $size = null,
         int $move = -1,
         array $sizes = ['xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl'],
-    ) {
+    ): ?string {
         $default = 'md';
-        $size ??= $this->size ?? $default;
+        $size ??= $default;
         $index = array_search($size, $sizes);
 
         if ($index === false && $size !== $default) {
@@ -59,7 +62,7 @@ trait InteractsWithSize
         ?string $size = null,
         ?string $mode = null,
         ?bool $weight = null,
-    ) {
+    ): string {
         $sizes = ['xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl'];
         $textScale = [
             'text-[0.5rem]',
@@ -85,7 +88,7 @@ trait InteractsWithSize
         ];
 
         $increment = $this->modeIncrement($mode);
-        $resolvedSize = $size ?? $this->size ?? 'md';
+        $resolvedSize = $size ?? 'md';
         $sizeIndex = array_search($resolvedSize, $sizes, true);
 
         if ($sizeIndex === false) {
@@ -122,26 +125,22 @@ trait InteractsWithSize
     public function width(
         ?string $size = null,
         ?string $mode = null,
-    ) {
-        $value = $this->incrementalByMode($size, $mode, $this->dimensionScale());
-
-        return '[:where(&)]:w-'.$value;
+    ): string {
+        return $this->scaledClass('w', $this->dimensionScale(), $size, $mode);
     }
 
     public function height(
         ?string $size = null,
         ?string $mode = null,
-    ) {
-        $value = $this->incrementalByMode($size, $mode, $this->dimensionScale());
-
-        return '[:where(&)]:h-'.$value;
+    ): string {
+        return $this->scaledClass('h', $this->dimensionScale(), $size, $mode);
     }
 
     public function widthHeight(
         ?string $size = null,
         ?string $mode = null,
-    ) {
-        $value = $this->incrementalByMode($size, $mode, [
+    ): string {
+        return $this->scaledClass('size', [
             'xs' => ['2', '3', '4', '6', '8'],
             'sm' => ['2.5', '3.5', '5', '7', '10'],
             'md' => ['3', '4', '6', '9', '12'],
@@ -151,15 +150,13 @@ trait InteractsWithSize
             '3xl' => ['5', '7', '10', '16', '28'],
             'none' => '0',
             'full' => 'full',
-        ]);
-
-        return '[:where(&)]:size-'.$value;
+        ], $size, $mode);
     }
 
     public function iconSize(
         ?string $size = null,
         ?string $mode = null,
-    ) {
+    ): string {
         $value = $this->incrementalByMode($size, $mode, [
             'xs' => ['2', '2.5', '3', '3.5', '4'],
             'sm' => ['2.5', '3', '3.5', '4', '4.5'],
@@ -172,7 +169,7 @@ trait InteractsWithSize
             'full' => 'full',
         ]);
 
-        return '[&_['.TALLKit::dataKey('icon').']]:size-'.$value;
+        return '[&_['.$this->dataKey('icon').']]:size-'.$value;
     }
 
     public function roundedSize(
@@ -180,7 +177,7 @@ trait InteractsWithSize
         ?string $mode = null,
         ?bool $after = null,
         ?bool $before = null,
-    ) {
+    ): string {
         $value = $this->incrementalByMode($size, $mode, [
             'xs' => ['rounded-none', 'rounded-xs', 'rounded-sm', 'rounded-md', 'rounded-lg'],
             'sm' => ['rounded-xs', 'rounded-xs', 'rounded-sm', 'rounded-md', 'rounded-lg'],
@@ -199,8 +196,8 @@ trait InteractsWithSize
     public function padding(
         ?string $size = null,
         ?string $mode = null,
-    ) {
-        $value = $this->incrementalByMode($size, $mode, [
+    ): string {
+        return $this->scaledClass('p', [
             'xs' => ['1', '1.5', '2', '2.5', '3'],
             'sm' => ['1.5', '2', '2.5', '3', '3.5'],
             'md' => ['2', '2.5', '3', '3.5', '4'],
@@ -209,16 +206,14 @@ trait InteractsWithSize
             '2xl' => ['3.5', '4', '5', '6', '7'],
             '3xl' => ['4', '5', '6', '7', '8'],
             'none' => '0',
-        ]);
-
-        return '[:where(&)]:p-'.$value;
+        ], $size, $mode);
     }
 
     public function paddingInline(
         ?string $size = null,
         ?string $mode = null,
-    ) {
-        $value = $this->incrementalByMode($size, $mode, [
+    ): string {
+        return $this->scaledClass('px', [
             'xs' => ['px', '0.5', '1', '1.5', '2'],
             'sm' => ['1', '1.5', '2', '2.5', '3'],
             'md' => ['1.5', '2', '2.5', '3', '3.5'],
@@ -227,12 +222,10 @@ trait InteractsWithSize
             '2xl' => ['3', '3.5', '4', '5', '6'],
             '3xl' => ['3.5', '4', '5', '6', '7'],
             'none' => '0',
-        ]);
-
-        return '[:where(&)]:px-'.$value;
+        ], $size, $mode);
     }
 
-    protected function tightSpacingScale(): array
+    protected function spacingScale(): array
     {
         return [
             'xs' => ['px', '0.5', '1', '1.5', '2'],
@@ -249,110 +242,76 @@ trait InteractsWithSize
     public function paddingBlock(
         ?string $size = null,
         ?string $mode = null,
-    ) {
-        $value = $this->incrementalByMode($size, $mode, $this->tightSpacingScale());
-
-        return '[:where(&)]:py-'.$value;
+    ): string {
+        return $this->scaledClass('py', $this->spacingScale(), $size, $mode);
     }
 
     public function paddingStart(
         ?string $size = null,
         ?string $mode = null,
-    ) {
-        $value = $this->incrementalByMode($size, $mode, $this->tightSpacingScale());
-
-        return '[:where(&)]:ps-'.$value;
+    ): string {
+        return $this->scaledClass('ps', $this->spacingScale(), $size, $mode);
     }
 
     public function paddingEnd(
         ?string $size = null,
         ?string $mode = null,
-    ) {
-        $value = $this->incrementalByMode($size, $mode, $this->tightSpacingScale());
-
-        return '[:where(&)]:pe-'.$value;
+    ): string {
+        return $this->scaledClass('pe', $this->spacingScale(), $size, $mode);
     }
 
     public function marginTop(
         ?string $size = null,
         ?string $mode = null,
-    ) {
-        $value = $this->incrementalByMode($size, $mode, $this->tightSpacingScale());
-
-        return '[:where(&)]:mt-'.$value;
+    ): string {
+        return $this->scaledClass('mt', $this->spacingScale(), $size, $mode);
     }
 
     public function marginBottom(
         ?string $size = null,
         ?string $mode = null,
-    ) {
-        $value = $this->incrementalByMode($size, $mode, $this->tightSpacingScale());
-
-        return '[:where(&)]:mb-'.$value;
-    }
-
-    protected function wideSpacingScale(): array
-    {
-        return [
-            'xs' => ['px', '0.5', '1', '1.5', '2'],
-            'sm' => ['0.5', '1', '1.5', '2', '2.5'],
-            'md' => ['1', '1.5', '2', '2.5', '3'],
-            'lg' => ['1.5', '2', '2.5', '3', '3.5'],
-            'xl' => ['2', '2.5', '3', '3.5', '4'],
-            '2xl' => ['2.5', '3', '3.5', '4', '5'],
-            '3xl' => ['3', '3.5', '4', '5', '6'],
-            'none' => '0',
-        ];
+    ): string {
+        return $this->scaledClass('mb', $this->spacingScale(), $size, $mode);
     }
 
     public function gap(
         ?string $size = null,
         ?string $mode = null,
-    ) {
-        $value = $this->incrementalByMode($size, $mode, $this->wideSpacingScale());
-
-        return '[:where(&)]:gap-'.$value;
+    ): string {
+        return $this->scaledClass('gap', $this->spacingScale(), $size, $mode);
     }
 
     public function gapBlock(
         ?string $size = null,
         ?string $mode = null,
-    ) {
-        $value = $this->incrementalByMode($size, $mode, $this->wideSpacingScale());
-
-        return '[:where(&)]:gap-y-'.$value;
+    ): string {
+        return $this->scaledClass('gap-y', $this->spacingScale(), $size, $mode);
     }
 
     public function gapInline(
         ?string $size = null,
         ?string $mode = null,
-    ) {
-        $value = $this->incrementalByMode($size, $mode, $this->wideSpacingScale());
-
-        return '[:where(&)]:gap-x-'.$value;
+    ): string {
+        return $this->scaledClass('gap-x', $this->spacingScale(), $size, $mode);
     }
 
     public function spaceBlock(
         ?string $size = null,
         ?string $mode = null,
-    ) {
-        $value = $this->incrementalByMode($size, $mode, $this->wideSpacingScale());
-
-        return '[:where(&)]:space-y-'.$value;
+    ): string {
+        return $this->scaledClass('space-y', $this->spacingScale(), $size, $mode);
     }
 
     public function spaceInline(
         ?string $size = null,
         ?string $mode = null,
-    ) {
-        $value = $this->incrementalByMode($size, $mode, $this->wideSpacingScale());
-
-        return '[:where(&)]:space-x-'.$value;
+    ): string {
+        return $this->scaledClass('space-x', $this->spacingScale(), $size, $mode);
     }
 
     public function borderStyle(
         string|bool|null $style = null,
-    ) {
+    ): string {
         return match ($style) {
             true => 'border',
             'none' => 'border-0',
@@ -367,7 +326,7 @@ trait InteractsWithSize
         ?string $size = null,
         ?string $name = null,
         ?array $values = null,
-    ) {
+    ): string {
         if (! $name || ! $values) {
             return '';
         }
@@ -381,6 +340,10 @@ trait InteractsWithSize
             '2xl' => $values[5] ?? null,
             '3xl' => $values[6] ?? null,
         ]);
+
+        if ($value === '') {
+            return '';
+        }
 
         return '[:where(&)]:'.$name.'-'.$value;
     }

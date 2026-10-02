@@ -1,15 +1,15 @@
+@aware(['guard'])
 @props([
     'notification' => null,
     'size' => null,
     'compact' => null,
+    'actions' => false,
+    'guard' => null,
 ])
 @php
 
 $data = data_get($notification, 'data', []);
-$url = data_get($data, 'url');
-$urlScheme = $url ? parse_url($url, PHP_URL_SCHEME) : null;
-$url = ($url && ($urlScheme === null || in_array(strtolower($urlScheme), ['http', 'https']))) ? $url : null;
-$as = $url ? 'a' : 'div';
+$url = TALLKit::safeUrl(data_get($data, 'url'));
 $id = data_get($data, 'id') ?? data_get($notification, 'id');
 $icon = data_get($data, 'icon') ?? data_get($notification, 'icon');
 $title = data_get($data, 'title') ?? data_get($notification, 'title');
@@ -19,33 +19,33 @@ $created_at = Carbon\Carbon::parse(data_get($data, 'created_at') ?? data_get($no
 $read_at = data_get($data, 'read_at') ?? data_get($notification, 'read_at');
 
 @endphp
-<{{ $as }}
-    @if ($url) href="{{ $url }}" @endif
-    x-data="notificationItem"
+<div
+    @if ($actions) x-data="notificationItem" @endif
     {{
         $attributes
             ->whereDoesntStartWith([
                 'icon-container:', 'icon:',
-                'content:', 'message:', 'time:',
+                'content:', 'message:', 'description:', 'time:',
                 'actions:', 'bullet:', 'read:', 'remove:',
             ])
             ->classes(
                 '
-                    flex transition group
+                    relative flex transition group
                     hover:bg-zinc-800/5 dark:hover:bg-zinc-800/80
+                    has-[[data-tallkit-notification-link]:focus-visible]:tk-focus-outline has-[[data-tallkit-notification-link]:focus-visible]:outline-offset-0
                 ',
                 TALLKit::padding(size: $size, mode: $compact ? 'small' : null),
                 TALLKit::gap(size: $size, mode: $compact ? null : 'largest'),
                 TALLKit::roundedSize(size: $size, mode: 'large'),
             )
             ->dataKey('notification-item')
-            ->merge(in_livewire() ? ['wire:key' => TALLKit::generateId(prefix: 'notification-item', name: (string) $id)] : [], false)
+            ->wireKey(TALLKit::generateId(prefix: 'notification-item', name: (string) $id))
     }}
 >
     @if (! $compact && $icon !== false)
-        <div {{ TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon-container:')->classes('shrink-0') }}>
+        <div {{ $attributes->prefixed('icon-container:')->classes('shrink-0') }}>
             <tk:avatar
-                :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'icon:')"
+                :attributes="$attributes->prefixed('icon:')"
                 :size="TALLKit::adjustSize(size: $size)"
                 :icon="$icon ?? match ($type) {
                     'success' => 'check-circle-outline',
@@ -69,18 +69,35 @@ $read_at = data_get($data, 'read_at') ?? data_get($notification, 'read_at');
 
     <div
         {{
-            TALLKit::attributesAfter(attributes: $attributes, prefix: 'content:')
+            $attributes->prefixed('content:')
                 ->classes('flex-1 space-y-px')
         }}
     >
         <tk:text
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'message:')"
+            :attributes="$attributes->prefixed('message:')->classes(['font-medium' => $title && $message])"
             :size="$compact ? TALLKit::adjustSize(size: $size) : $size"
         >
-            {{ $message ?? $title ?? class_basename($type) }}
+            @if ($url)
+                <a
+                    href="{{ $url }}"
+                    {{ TALLKit::dataKey('notification-link') }}
+                    class="outline-none after:absolute after:inset-0 after:rounded-[inherit]"
+                >{{ $title ?? $message ?? class_basename($type) }}</a>
+            @else
+                {{ $title ?? $message ?? class_basename($type) }}
+            @endif
         </tk:text>
+        @if ($title && $message)
+            <tk:text
+                :attributes="$attributes->prefixed('description:')"
+                :size="$compact ? TALLKit::adjustSize(size: $size, move: -1) : TALLKit::adjustSize(size: $size)"
+                variant="subtle"
+            >
+                {{ $message }}
+            </tk:text>
+        @endif
         <tk:text
-            :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'time:')"
+            :attributes="$attributes->prefixed('time:')"
             :size="TALLKit::adjustSize(size: $size, move: $compact ? -2 : -1)"
             variant="subtle"
         >
@@ -88,54 +105,55 @@ $read_at = data_get($data, 'read_at') ?? data_get($notification, 'read_at');
         </tk:text>
     </div>
 
-    @if ($id)
+    @php($canAct = $actions && filled($id))
+    @if (! $read_at || $canAct)
         <div
             {{
-                TALLKit::attributesAfter(attributes: $attributes, prefix: 'actions:')
-                    ->classes('shrink-0 w-fit ms-auto flex justify-end')
+                $attributes->prefixed('actions:')
+                    ->classes('relative z-10 shrink-0 w-fit ms-auto flex justify-end')
             }}
         >
             @if ($read_at)
                 <tk:button.group :$size>
                     <tk:button
-                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'remove:')->dataKey('dismissible')"
+                        :attributes="$attributes->prefixed('remove:')->dataKey('dismissible')->merge(['tooltip' => 'Remove notification'])"
                         :size="TALLKit::adjustSize(size: $size, move: $compact ? -2 : -1)"
-                        action="deleteNotification({{ Js::from($id) }})"
+                        action="notificationDelete({{ Js::from($id) }}{{ $guard ? ', '.Js::from($guard) : '' }})"
                         icon="trash-outline"
-                        tooltip="Remove notification"
                     />
                 </tk:button.group>
             @else
                 <div
                     {{
-                        TALLKit::attributesAfter(attributes: $attributes, prefix: 'bullet:')
+                        $attributes->prefixed('bullet:')
                             ->classes(
                                 match ($type) {
-                                    'success' => 'bg-green-500',
-                                    'error' => 'bg-red-500',
-                                    'warning' => 'bg-amber-500',
-                                    'info' => 'bg-blue-500',
-                                    default => 'bg-green-500',
+                                    'success' => 'bg-green-600 dark:bg-green-500',
+                                    'error' => 'bg-red-600 dark:bg-red-500',
+                                    'warning' => 'bg-amber-600 dark:bg-amber-500',
+                                    'info' => 'bg-blue-600 dark:bg-blue-500',
+                                    default => 'bg-green-600 dark:bg-green-500',
                                 },
-                                'rounded-full block group-hover:hidden',
+                                ['rounded-full block', 'group-hover:hidden group-focus-within:hidden pointer-coarse:hidden' => $canAct],
                                 TALLKit::widthHeight(size: $size, mode: 'smallest'),
                             )
                     }}
                 ></div>
 
+                @if ($canAct)
                 <tk:button.group
                     :$size
-                    class="hidden group-hover:flex"
+                    class="sr-only group-hover:not-sr-only group-focus-within:not-sr-only pointer-coarse:not-sr-only"
                 >
                     <tk:button
-                        :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: 'read:')->dataKey('dismissible')"
+                        :attributes="$attributes->prefixed('read:')->dataKey('dismissible')->merge(['tooltip' => 'Mark as read'])"
                         :size="TALLKit::adjustSize(size: $size, move: $compact ? -2 : -1)"
-                        action="markNotificationAsRead({{ Js::from($id) }})"
+                        action="notificationMarkAsRead({{ Js::from($id) }}{{ $guard ? ', '.Js::from($guard) : '' }})"
                         icon="check-circle-outline"
-                        tooltip="Mark as read"
                     />
                 </tk:button.group>
+                @endif
             @endif
         </div>
     @endif
-</{{ $as }}>
+</div>

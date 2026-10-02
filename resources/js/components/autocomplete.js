@@ -4,11 +4,23 @@ import { listbox } from './listbox'
 
 export function autocomplete(options = {}) {
   const _popover = popover({ mode: 'manual', position: 'bottom', align: 'start', matchTriggerWidth: true })
-  const _listbox = listbox({ hideEmpty: true, clearOnSelect: false, ...options })
+  const _listbox = listbox({ hideEmpty: true, clearOnSelect: false, autoHighlight: false, tabSelects: false, ...options })
 
   return {
     ..._popover,
     ..._listbox,
+
+    _chosen: false,
+
+    resolvePopoverTrigger() {
+      return this.input ?? _popover.resolvePopoverTrigger.call(this)
+    },
+
+    // Both halves: spread one after the other, the listbox's destroy() replaces the popover's.
+    destroy() {
+      _popover.destroy.call(this)
+      _listbox.destroy.call(this)
+    },
 
     init() {
       _popover.init.call(this)
@@ -17,6 +29,10 @@ export function autocomplete(options = {}) {
       this.trigger = this.input
 
       bind(this.input, {
+        ['@keydown']() {
+          this._chosen = false
+        },
+
         ['@blur']() {
           this.close()
         },
@@ -27,10 +43,13 @@ export function autocomplete(options = {}) {
       })
 
       bind(this.$root, {
-        ['@listbox-item-selected']({
+        ['@selected']({
           detail
         }) {
           setFieldValue(this.input, detail.item.title)
+
+          this.debouncedSearch?.cancel()
+          this._chosen = true
           this.close()
         }
       })
@@ -39,7 +58,11 @@ export function autocomplete(options = {}) {
     search() {
       _listbox.search.call(this)
 
-      if (this.filteredItems.length) {
+      if (this._chosen) return this.close()
+
+      const typing = document.activeElement === this.input && !this.input.disabled && !this.input.readOnly
+
+      if (this.filteredItems.length && typing) {
         this.open()
       } else {
         this.close()
@@ -54,5 +77,5 @@ export function autocomplete(options = {}) {
       _popover.close.call(this)
       this.clear()
     },
-  };
+  }
 }

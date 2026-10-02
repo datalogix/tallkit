@@ -3,14 +3,15 @@
     'size' => null,
     'identifier' => null
 ])
+{{-- Masks by name (tallkit.masks): x-mask keeps literal zeros as they are. --}}
 <tk:input
-    :attributes="TALLKit::attributesAfter(attributes: $attributes, prefix: match ($identifier) {
-        'cpf' => 'cpf:',
-        'cnpj' => 'cnpj:',
-        'username' => 'username:',
-        'login' => 'login:',
-        default => 'email:',
-    })"
+    :attributes="$attributes->merge(['placeholder' => match ($identifier) {
+        'cpf' => '000.000.000-00',
+        'cnpj' => '00.000.000/0000-00',
+        'username' => 'Username',
+        'login' => 'Login',
+        default => 'email@example.com',
+    }])"
     :$size
     :name="match ($identifier) {
         'cpf' => 'cpf',
@@ -26,13 +27,6 @@
         'login' => 'Login',
         default => 'Email',
     }"
-    :placeholder="match ($identifier) {
-        'cpf' => '000.000.000-00',
-        'cnpj' => '00.000.000/0000-00',
-        'username' => 'Username',
-        'login' => 'Login',
-        default => 'email@example.com',
-    }"
     :autocomplete="match ($identifier) {
         'cpf' => null,
         'cnpj' => null,
@@ -41,8 +35,8 @@
         default => 'email',
     }"
     :mask="match ($identifier) {
-        'cpf' => '999.999.999-99',
-        'cnpj' => '00.000.000/0000-00',
+        'cpf' => 'cpf',
+        'cnpj' => 'cnpj',
         default => null,
     }"
     autofocus

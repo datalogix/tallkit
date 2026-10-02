@@ -1,11 +1,7 @@
-export function parseTimeToMilliseconds(value) {
-  const parsed = Number.parseFloat(value)
+import { toMilliseconds } from './timer'
 
-  if (Number.isNaN(parsed)) {
-    return 0
-  }
-
-  return value.trim().endsWith('ms') ? parsed : parsed * 1000
+export function prefersReducedMotion() {
+  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
 }
 
 export function getTransitionTimeout(element) {
@@ -15,11 +11,11 @@ export function getTransitionTimeout(element) {
 
   return durations.reduce((max, duration, index) => {
     const delay = delays[index] ?? delays[delays.length - 1] ?? '0s'
-    return Math.max(max, parseTimeToMilliseconds(duration) + parseTimeToMilliseconds(delay))
+    return Math.max(max, toMilliseconds(duration) + toMilliseconds(delay))
   }, 0)
 }
 
-export function animation(el, options = {}) {
+export function runTransition(el, options = {}) {
   let fallbackId = null
   let onTransitionEnd = null
   let finished = false
@@ -49,14 +45,12 @@ export function animation(el, options = {}) {
     options.onDone?.()
   }
 
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
   const applyClasses = (remove = [], add = []) => {
     if (remove.length) el.classList.remove(...remove)
     if (add.length) el.classList.add(...add)
   }
 
-  if (reduceMotion) {
+  if (prefersReducedMotion()) {
     applyClasses(options.from, options.to)
     options.start?.()
     options.finish?.()
@@ -67,6 +61,7 @@ export function animation(el, options = {}) {
   applyClasses(options.to, options.from)
   options.start?.()
 
+  // Laid out first (offsetHeight), or it jumps to the end without a transition.
   requestAnimationFrame(() => {
     void el.offsetHeight
 
@@ -74,6 +69,7 @@ export function animation(el, options = {}) {
     options.finish?.()
   })
 
+  // Only its own transitionend: a child's bubbles up too.
   onTransitionEnd = (event) => {
     if (event.target !== el) return
 
@@ -84,6 +80,7 @@ export function animation(el, options = {}) {
 
   const timeout = getTransitionTimeout(el)
 
+  // transitionend may never come (no transition, hidden, removed): finished anyway.
   if (timeout === 0) {
     finish()
   } else {
@@ -95,22 +92,10 @@ export function animation(el, options = {}) {
 }
 
 export function fadeOut(el, options = {}) {
-  return animation(el, {
+  return runTransition(el, {
     from: ['opacity-100'],
     to: ['opacity-0'],
     remove: true,
-    ...options
-  })
-}
-
-export function fadeIn(el, options = {}) {
-  if (!el.classList.contains('opacity-0')) {
-    el.classList.add('opacity-0')
-  }
-
-  return animation(el, {
-    from: ['opacity-0'],
-    to: ['opacity-100'],
     ...options
   })
 }
@@ -135,7 +120,7 @@ export function collapse(el, options = {}) {
 
   void el.offsetHeight
 
-  return animation(el, {
+  return runTransition(el, {
     ...options,
 
     start() {
@@ -190,7 +175,7 @@ export function expand(el, options = {}) {
 
   void el.offsetHeight
 
-  return animation(el, {
+  return runTransition(el, {
     ...options,
 
     start() {
