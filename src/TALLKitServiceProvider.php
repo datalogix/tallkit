@@ -2,7 +2,9 @@
 
 namespace TALLKit;
 
+use Composer\InstalledVersions;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\RateLimiter;
@@ -55,6 +57,7 @@ class TALLKitServiceProvider extends ServiceProvider
 
         $this->bootComponentPath();
         $this->bootTagCompiler();
+        $this->bootCompiledViews();
         $this->bootMacros();
         $this->bootRoutes();
         $this->bootLivewireUploads();
@@ -106,6 +109,28 @@ class TALLKitServiceProvider extends ServiceProvider
 
             return $value;
         });
+    }
+
+    protected function bootCompiledViews()
+    {
+        $path = config('view.compiled');
+
+        if (! is_string($path) || ! is_dir($path) || ! InstalledVersions::isInstalled('datalogix/tallkit')) {
+            return;
+        }
+
+        $version = InstalledVersions::getPrettyVersion('datalogix/tallkit').'@'.InstalledVersions::getReference('datalogix/tallkit');
+        $stamp = storage_path('framework/tallkit-version');
+
+        if (@file_get_contents($stamp) === $version || @file_put_contents($stamp, $version) === false) {
+            return;
+        }
+
+        $files = new Filesystem;
+
+        foreach ($files->glob($path.'/*') as $item) {
+            $files->isDirectory($item) ? $files->deleteDirectory($item) : $files->delete($item);
+        }
     }
 
     protected function bootMacros()
