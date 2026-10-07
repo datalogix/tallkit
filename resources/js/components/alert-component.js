@@ -1,4 +1,4 @@
-import { queryData, eventName, startTimeout, toMilliseconds, bind } from '../utils'
+import { eventName, startTimeout, toMilliseconds, bind } from '../utils'
 import { dismissible } from '../mixins/dismissible'
 
 export function alertComponent({ duration: given = 0, pauseOnHover = false } = {}) {
@@ -15,17 +15,16 @@ export function alertComponent({ duration: given = 0, pauseOnHover = false } = {
 
     pauseReasons: new Set(),
 
-    progressEl: null,
+    progressValue: 100,
+    progressFrame: null,
     visibilityHandler: null,
 
     state: 'idle',
 
     init() {
       _dismissible.init.call(this)
-      this.progressEl = queryData(this.$root, 'alert-progress')
 
       this.startTimer()
-      this.initProgress()
 
       this.visibilityHandler = this.handleVisibility.bind(this)
       document.addEventListener('visibilitychange', this.visibilityHandler)
@@ -61,6 +60,23 @@ export function alertComponent({ duration: given = 0, pauseOnHover = false } = {
         this.remaining,
         duration
       )
+
+      this.trackProgress()
+    },
+
+    trackProgress() {
+      cancelAnimationFrame(this.progressFrame)
+
+      const step = () => {
+        if (this.state !== 'running') return
+
+        const left = this.remaining - (Date.now() - this.startedAt)
+
+        this.progressValue = Math.max(0, Math.min(100, (left / duration) * 100))
+        this.progressFrame = requestAnimationFrame(step)
+      }
+
+      step()
     },
 
     pause(reason = 'manual') {
@@ -76,7 +92,8 @@ export function alertComponent({ duration: given = 0, pauseOnHover = false } = {
 
       this.state = 'paused'
 
-      this.freezeProgress()
+      cancelAnimationFrame(this.progressFrame)
+      this.progressValue = (this.remaining / duration) * 100
     },
 
     resume(reason = 'manual') {
@@ -84,19 +101,6 @@ export function alertComponent({ duration: given = 0, pauseOnHover = false } = {
 
       if (this.pauseReasons.size > 0) return
       if (this.state !== 'paused' || this.remaining <= 0) return
-
-      if (this.progressEl) {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            if (!this.progressEl || this.state !== 'running') return
-
-            this.progressEl.style.transitionTimingFunction = 'linear'
-            this.progressEl.style.transitionDuration = `${this.remaining}ms`
-
-            this.applyProgress(0)
-          })
-        })
-      }
 
       this.startTimer()
     },
@@ -108,13 +112,9 @@ export function alertComponent({ duration: given = 0, pauseOnHover = false } = {
       this.remaining = duration
       this.state = 'idle'
       this.pauseReasons.clear()
-
-      this.progressEl = queryData(this.$root, 'alert-progress')
-
-      if (this.progressEl) this.progressEl.style.transitionDuration = '0ms'
+      this.progressValue = 100
 
       this.startTimer()
-      this.initProgress()
 
       if (document.hidden) this.pause('visibility')
     },
@@ -127,40 +127,11 @@ export function alertComponent({ duration: given = 0, pauseOnHover = false } = {
       }
     },
 
-    initProgress() {
-      if (!this.progressEl || !this.remaining) return
-
-      this.progressEl.style.transitionTimingFunction = 'linear'
-      this.applyProgress(100)
-
-      requestAnimationFrame(() => {
-        if (!this.progressEl || this.state !== 'running') return
-
-        void this.progressEl.offsetWidth
-
-        this.progressEl.style.transitionDuration = `${this.remaining}ms`
-        this.applyProgress(0)
-      })
-    },
-
-    applyProgress(percent) {
-      if (!this.progressEl) return
-
-      this.progressEl.style.backgroundSize = `${percent}% 100%`
-    },
-
-    freezeProgress() {
-      if (!this.progressEl) return
-
-      const size = getComputedStyle(this.progressEl).backgroundSize
-
-      this.progressEl.style.transitionDuration = '0ms'
-      this.progressEl.style.backgroundSize = size
-    },
-
     beforeDismiss() {
       this.state = 'dismissing'
       this.remaining = 0
+
+      cancelAnimationFrame(this.progressFrame)
 
       if (this.timeoutId) {
         clearTimeout(this.timeoutId)
@@ -169,6 +140,8 @@ export function alertComponent({ duration: given = 0, pauseOnHover = false } = {
     },
 
     destroy() {
+      cancelAnimationFrame(this.progressFrame)
+
       if (this.timeoutId) {
         clearTimeout(this.timeoutId)
         this.timeoutId = null

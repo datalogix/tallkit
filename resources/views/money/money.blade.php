@@ -83,11 +83,9 @@ if ($config = data_get($currencies, Str::upper($currency))) {
 }
 
 $precision = (int) ($precision ?? ($delimiter === '' ? 0 : 2));
-// The mask needs a decimal separator even with no decimals: one that isn't the thousands'.
 $delimiter = (string) $delimiter !== '' ? $delimiter : ($thousands === '.' ? ',' : '.');
 $as = $as === 'cents' ? 'cents' : 'decimal';
 
-// No wire:model on the field (it would send the formatted text): the script sets the property with the amount.
 $wireModel = $attributes->whereStartsWith('wire:model');
 $wireModelKey = array_key_first($wireModel->getAttributes());
 [$name, $fieldName, , , , $autoWireModel] = TALLKit::fieldContext(attributes: new \Illuminate\View\ComponentAttributeBag($attributes->getAttributes()), label: false, id: 'money');

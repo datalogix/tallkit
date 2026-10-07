@@ -16,22 +16,40 @@ export function menu() {
         return item && item.closest(dataSelector('menu')) === menu && !item.disabled ? item : null
       }
 
+      const activate = (item) => {
+        this.menuItems().forEach((other) => {
+          if (other !== item) other.removeAttribute('data-active')
+        })
+
+        item.setAttribute('data-active', '')
+      }
+
       bind(menu, {
         ['@mouseover'](event) {
-          itemOf(event)?.setAttribute('data-active', '')
+          const item = itemOf(event)
+
+          if (item) activate(item)
         },
 
         ['@mouseout'](event) {
           const item = itemOf(event)
 
-          if (item && !item.contains(event.relatedTarget)) item.removeAttribute('data-active')
+          if (!item || item.contains(event.relatedTarget)) return
+
+          item.removeAttribute('data-active')
+
+          const focused = this.menuItems().find((other) => other === document.activeElement)
+
+          if (focused) activate(focused)
         },
 
         ['@focusin'](event) {
           const item = itemOf(event)
 
-          item?.setAttribute('data-active', '')
-          if (item) this.syncTabindex(item)
+          if (!item) return
+
+          activate(item)
+          this.syncTabindex(item)
         },
 
         ['@focusout'](event) {
@@ -83,7 +101,6 @@ export function menu() {
       clearTimeout(this.typedTimeout)
     },
 
-    // Set only where it differs: the observer hears its own changes.
     syncTabindex(active = null) {
       const items = this.menuItems()
       const usable = (item) => item && items.includes(item) && !item.disabled

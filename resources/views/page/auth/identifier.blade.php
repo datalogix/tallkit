@@ -3,7 +3,6 @@
     'size' => null,
     'identifier' => null
 ])
-{{-- Masks by name (tallkit.masks): x-mask keeps literal zeros as they are. --}}
 <tk:input
     :attributes="$attributes->merge(['placeholder' => match ($identifier) {
         'cpf' => '000.000.000-00',

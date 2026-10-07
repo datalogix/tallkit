@@ -81,6 +81,7 @@ $initialValueString = match (true) {
             'locale' => $locale,
         ]))"
     @endif
+    x-cloak
     {{
         $attributes
             ->whereDoesntStartWith([

@@ -8,10 +8,11 @@
             ->whereDoesntStartWith(['prev:', 'next:'])
             ->classes(match ($position) {
                 'overlap' => 'absolute inset-y-0 -left-4 -right-4 flex items-center justify-between z-10 pointer-events-none',
-                'outside' => 'flex items-center justify-between mt-3',
+                'outside' => 'flex items-center justify-between',
                 default => 'absolute inset-0 flex items-center justify-between px-2 pointer-events-none z-10'
             })
     }}
+    x-show="canNavigate()"
 >
     <tk:button
         :attributes="$attributes->prefixed('prev:')

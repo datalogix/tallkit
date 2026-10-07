@@ -10,7 +10,6 @@
 
 $boxPlaceholder = is_string($placeholder) ? $placeholder : null;
 [$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
-// No old(): a code sent back complete would submit itself again.
 
 $format ??= str_repeat(match ($charset) { 'alpha' => 'A', 'alphanumeric' => '*', default => '9' }, 6);
 $groups = explode('-', $format);
@@ -46,7 +45,6 @@ $digitIndex = 0;
                         'name' => $name,
                         'value' => in_livewire() ? null : $value,
                     ])
-                    // The code's binding goes here, whole, or it never reaches its property.
                     ->merge($attributes->whereStartsWith(['wire:model', 'x-model'])->getAttributes() ?: array_filter(['wire:model' => $wireModel]), false)
             }}
         />

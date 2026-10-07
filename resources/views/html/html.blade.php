@@ -42,7 +42,6 @@ $googleFonts = is_string($googleFonts) ? ['families' => $googleFonts] : $googleF
 $livewire ??= TALLKit::livewireInstalled();
 $nonce ??= Vite::cspNonce();
 
-// Unescaped: <x-dynamic-component> escapes bound attributes, and a bag's are escaped already.
 $componentAttributes = new \Illuminate\View\ComponentAttributeBag(array_map(
     fn ($value) => is_string($value) ? htmlspecialchars_decode($value, ENT_QUOTES) : $value,
     $attributes->prefixed('components:')->getAttributes(),

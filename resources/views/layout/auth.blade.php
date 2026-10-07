@@ -5,7 +5,6 @@
 ])
 @php
 
-// Relative to public/: an absolute path would point into a previous release after a deploy.
 $bgs = collect(
         $bg ??
         Cache::remember(TALLKit::storageKey('auth-hero-images'), 60 * 60 * 24, fn () => collect(['imgs', 'images'])

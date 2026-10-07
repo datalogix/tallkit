@@ -91,6 +91,7 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
                 :$size
                 :$disabled
                 :$keepOpen
+                :standalone="false"
             />
         @else
             <tk:field.control
@@ -127,6 +128,7 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
                         :$size
                         :$disabled
                         :$keepOpen
+                        :standalone="false"
                     />
                 </x-slot:prepend>
 

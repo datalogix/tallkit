@@ -20,46 +20,27 @@
             ->merge(['data-open' => $expanded])
     }}
 >
-    @if ($level)<div role="heading" aria-level="{{ $level }}">@endif
-    <tk:button
-        :attributes="$attributes->prefixed('trigger:')->classes(
-            TALLKit::paddingInline(size: $border ? $size : 'none', mode: 'largest'),
-            TALLKit::paddingBlock(size: $size, mode: 'largest'),
-            'w-full [&_[data-tallkit-icon]]:ml-auto',
-        )"
-        :$size
-        :$disabled
-        :$label
-        variant="none"
-        content:class="flex-1 justify-start"
-        :icon="$reversed ? 'chevron-right' : false"
-        icon:class="rtl:-scale-x-100"
-        icon::class="{ 'transition': {{ $collapse !== false ? 'true' : 'false' }}, 'rotate-90 rtl:-rotate-90': opened }"
-        :iconTrailing="$reversed ? false : 'chevron-down'"
-        icon-trailing::class="{ 'transition': {{ $collapse !== false ? 'true' : 'false' }}, 'rotate-180': opened }"
-    />
-    @if ($level)</div>@endif
+    @if ($label !== null)
+        <tk:accordion.heading
+            :attributes="$attributes->prefixed('trigger:')"
+            :$size
+            :$collapse
+            :$reversed
+            :$border
+            :$disabled
+            :$label
+            :$level
+        />
 
-    <div
-        x-cloak
-        {{
-            $attributes->prefixed('content:')
-                ->classes(
-                    TALLKit::fontSize(size: $size),
-                    TALLKit::paddingInline(size: $border ? $size : 'none', mode: 'largest'),
-                    TALLKit::paddingBlock(size: $size, mode: 'largest'),
-                    'pt-0!',
-                )
-                ->merge(['x-show' => 'opened'])
-                ->merge(
-                    match (true) {
-                        $collapse === false => [],
-                        is_string($collapse) => ['x-collapse.'.$collapse => ''],
-                        default => ['x-collapse' => ''],
-                    }
-                )
-        }}
-    >
+        <tk:accordion.content
+            :attributes="$attributes->prefixed('content:')"
+            :$size
+            :$collapse
+            :$border
+        >
+            {{ $slot }}
+        </tk:accordion.content>
+    @else
         {{ $slot }}
-    </div>
+    @endif
 </div>

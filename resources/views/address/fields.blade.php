@@ -53,7 +53,7 @@
     @if (function_exists('statesBR'))
         <tk:select
             name="state"
-        autocomplete="address-level1"
+            autocomplete="address-level1"
             field:class="col-span-2 lg:col-span-1"
             :attributes="$attributes->prefixed('state:')->dataKey('address-form-state')"
             :$required
@@ -63,7 +63,7 @@
     @else
         <tk:input
             name="state"
-        autocomplete="address-level1"
+            autocomplete="address-level1"
             field:class="col-span-2 lg:col-span-1"
             :attributes="$attributes->prefixed('state:')->dataKey('address-form-state')"
             :$required

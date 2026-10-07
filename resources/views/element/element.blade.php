@@ -76,11 +76,11 @@ $tip = TALLKit::tooltip($tooltip, $attributes, name: $ariaLabel ? __($ariaLabel)
         'wire:navigate' => ! $external && $navigate !== false && ($navigate === true || ! $linksToFile),
         'href' => $href,
     ]))
-    // Escaped here: the bag prints its values as they are, and quotes would close the attribute.
     ->when($as === 'button', fn ($attrs) => $attrs->merge([
         'type' => $type ?? 'button',
         'wire:click' => $action,
     ]))
+    ->when(TALLKit::isSlot($label), fn ($attrs) => $attrs->merge($label->attributes->getAttributes()))
     ->when($ariaLabel, fn ($attrs, $value) => $attrs->merge(['aria-label' => __($value)]))
     ->merge($tip['attributes'])
     ->when($tip['describedBy'], fn ($attrs, $id) => TALLKit::withDescribedBy($attrs, $id))

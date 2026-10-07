@@ -13,7 +13,6 @@
     {{ $attributes->prefixed('script:')->when($nonce, fn ($attrs, $value) => $attrs->merge(['nonce' => $value])) }}
     data-navigate-once
 >
-    // The same storage key and values as appearance.js.
     (function () {
         var mode = null
         try { mode = window.localStorage.getItem(@js(TALLKit::storageKey('appearance'))) } catch (e) {}

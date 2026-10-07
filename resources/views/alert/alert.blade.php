@@ -97,9 +97,18 @@ $palette = match ($type) {
             {{ $prepend }}
 
             @if ($progress)
-                <tk:alert.progress
-                    :attributes="$attributes->prefixed('progress:')"
-                    :type="is_string($progress) ? $progress : null"
+                <tk:progress
+                    :attributes="$attributes->prefixed('progress:')
+                        ->except('bar:class')
+                        ->merge([
+                            'bar:class' => (string) TALLKit::classes(
+                                in_array($progress, ['top', 'bottom'], true) ? 'bg-current/40' : 'bg-black/5 dark:bg-white/10',
+                                $attributes->get('progress:bar:class'),
+                            ),
+                        ])
+                    "
+                    :overlay="in_array($progress, ['top', 'bottom'], true) ? $progress : 'fill'"
+                    variable="progressValue"
                 />
             @endif
         </x-slot:prepend>

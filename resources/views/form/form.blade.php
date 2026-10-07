@@ -44,7 +44,6 @@ $action = in_livewire() ? ($action ?: 'submit') : route_detect(routes: [$route, 
             )
             ->when(
                 in_livewire(),
-                // Its own wire:submit stays the only one: a second would submit twice.
                 fn ($attrs) => $wireSubmit ? $attrs : $attrs->merge(['wire:submit' => $action]),
                 fn ($attrs) => $attrs
                     ->mergeDefined(['enctype' => ! $enctype && Str::contains($slot, 'type="file"', true) ? 'multipart/form-data' : null])

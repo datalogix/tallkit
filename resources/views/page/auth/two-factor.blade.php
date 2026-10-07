@@ -1,7 +1,7 @@
 @props([
+    'resendUrl' => null,
     'size' => null,
     'method' => null,
-    'resendUrl' => null,
 ])
 @php
 

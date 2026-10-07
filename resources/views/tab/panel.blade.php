@@ -4,7 +4,6 @@
 ])
 @php
 
-// The same count as its tab's: the Nth panel of a name pairs with the Nth tab.
 $panelId = TALLKit::stableId('tab', $name, 'panel');
 $tabId = Str::beforeLast($panelId, '-panel');
 

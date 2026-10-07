@@ -53,7 +53,6 @@ $counterExpression = $maxlength ? sprintf("length + ' / %d'", $maxlength) : 'len
                         'id' => $id,
                         'placeholder' => $placeholder ? __((string) $placeholder) : null,
                         'rows' => is_numeric($rows) || $rows === null ? ($rows ?? 3) : null,
-                        // Taken as a prop for the counter: put back, or nothing stops typing past it.
                         'maxlength' => $maxlength ?: null,
                         'wire:model' => $wireModel,
                         'aria-describedby' => collect([

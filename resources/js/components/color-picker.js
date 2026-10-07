@@ -18,8 +18,12 @@ export function colorPicker({ value = null, format = null } = {}) {
       return typeof window !== 'undefined' && 'EyeDropper' in window
     },
 
+    isDisabled() {
+      return !!this.field?.disabled
+    },
+
     pick(color) {
-      if (this.field.disabled) return
+      if (this.isDisabled()) return
 
       const normalized = color ? (normalizeColor(color, this.format) ?? color) : null
 
@@ -30,7 +34,7 @@ export function colorPicker({ value = null, format = null } = {}) {
     },
 
     commitTyped(raw) {
-      if (this.field.disabled) return
+      if (this.isDisabled()) return
 
       if (!raw) {
         this.pick(null)
@@ -42,12 +46,12 @@ export function colorPicker({ value = null, format = null } = {}) {
       if (normalized) {
         this.pick(normalized)
       } else {
-        this.field.value = this.value ?? ''
+        if (this.field) this.field.value = this.value ?? ''
       }
     },
 
     async dropColor() {
-      if (!this.hasEyeDropper() || this.field.disabled) return
+      if (!this.hasEyeDropper() || this.isDisabled()) return
 
       try {
         const result = await new window.EyeDropper().open()

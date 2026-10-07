@@ -9,7 +9,6 @@
 $hasPrefix = ! $inline && ($prefix || $attributes->prefixed('prefix:')->isNotEmpty());
 $hasSuffix = ! $inline && ($suffix || $attributes->prefixed('suffix:')->isNotEmpty());
 
-// Same check as element.wrapper's (keep the lists alike): empty, each would still cost two components.
 $shows = fn ($text, string $prefix) => $text || $attributes->prefixed($prefix)->only(['label', 'icon', 'prefix', 'suffix', 'icon-trailing', 'info', 'badge', 'prepend', 'append', 'kbd'])->filter(fn ($value) => (bool) $value)->isNotEmpty();
 $hasDescription = $shows($description, 'description:');
 $hasHelp = $shows($help, 'help:');

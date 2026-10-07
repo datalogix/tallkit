@@ -8,7 +8,6 @@
 <tk:dropdown :attributes="$attributes->prefixed('dropdown:')">
     <tk:button
         :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->whereDoesntStartWith(['dropdown:', 'menu:'])
-            // Merged, not pluck(): a bound attribute runs more than once, and a second pluck() gives the default back.
             ->merge(['variant' => 'ghost', 'icon' => 'ellipsis-vertical', 'tooltip' => 'More options'])"
         :$size
     />

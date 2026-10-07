@@ -13,7 +13,6 @@
 [$name, $fieldName, $label, , , , $groupId] = TALLKit::fieldContext(attributes: $attributes, label: $label);
 
 $optionId = fn ($value) => $groupId.'-'.TALLKit::idPart($value);
-// The group's binding goes on each option, whole: on the fieldset it checks nothing and loses its modifiers.
 $modelAttributes = $attributes->whereStartsWith(['wire:model', 'x-model'])->getAttributes();
 $options = TALLKit::parseOptions(attributes: $attributes);
 $optionName = $name && ! str_ends_with($name, '[]') ? $name.'[]' : $name;

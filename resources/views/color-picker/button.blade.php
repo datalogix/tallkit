@@ -6,16 +6,38 @@
     'dropper' => null,
     'size' => null,
     'keepOpen' => null,
+    'standalone' => null,
+    'value' => null,
+    'format' => null,
 ])
 @php
 
 $swatches ??= ['#ffffff', '#000000', '#71717a', '#ef4444', '#f97316', '#eab308', '#22c55e', '#14b8a6', '#0ea5e9', '#6366f1', '#a855f7', '#ec4899', '#84cc16', '#78716c', '#18181b'];
 $style = $preview === 'underline' ? "value ? 'box-shadow: inset 0 -2px 0 0 ' + value : ''" : "'background-color: ' + (value || 'transparent')";
+$fieldAttributes = $standalone !== false
+    ? $attributes->filter(fn ($value, $key) => $key === 'name' || str_starts_with($key, 'wire:model') || str_starts_with($key, 'x-model'))
+    : null;
 
 @endphp
+@if ($standalone !== false)
+<div
+    wire:ignore.self
+    x-data="colorPicker(@js(['value' => $value, 'format' => $format]))"
+    class="inline-flex"
+>
+    <input
+        type="hidden"
+        {{
+            $fieldAttributes
+                ->dataKey('color-picker')
+                ->merge(['value' => in_livewire() ? null : $value])
+        }}
+    />
+@endif
+
 <tk:dropdown :attributes="$attributes->prefixed('dropdown:')">
     <tk:dropdown.button
-        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->whereDoesntStartWith(['dropdown:', 'popover:', 'swatch:', 'option:', 'footer:', 'custom:', 'dropper:', 'clearable:'])->merge(['icon' => 'palette'])"
+        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->whereDoesntStartWith(['dropdown:', 'popover:', 'swatch:', 'option:', 'footer:', 'custom:', 'dropper:', 'clearable:', 'wire:model', 'x-model'])->except('name')->merge(['icon' => 'palette'])"
         :$size
         ::style="{{ $style }}"
         :icon::class="$preview === 'underline' ? null : '{
@@ -100,3 +122,7 @@ $style = $preview === 'underline' ? "value ? 'box-shadow: inset 0 -2px 0 0 ' + v
         </div>
     </tk:popover>
 </tk:dropdown>
+
+@if ($standalone !== false)
+</div>
+@endif

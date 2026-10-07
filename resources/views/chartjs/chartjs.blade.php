@@ -1,4 +1,8 @@
 @props([
     'options' => null,
 ])
-<tk:chart library="chartjs" :$options :$attributes />
+<tk:chart
+    library="chartjs"
+    :$attributes
+    :$options
+/>

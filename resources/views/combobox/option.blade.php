@@ -1,5 +1,4 @@
 @aware(['size'])
-{{-- The label as a prop: left in the attributes, it would be escaped twice. --}}
 @props([
     ...TALLKit::elementProps(),
     'size' => null,

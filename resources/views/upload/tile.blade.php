@@ -140,12 +140,12 @@
     >
         <tk:progress
             x-show="file.status === 'uploading'"
-            :attributes="$attributes->prefixed('progress:')->classes('rounded-none')"
+            :attributes="$attributes->prefixed('progress:')"
             :$size
             position="none"
             color="blue"
             variable="file.progress"
-            bar:class="rounded-none"
+            square
         />
 
         <div

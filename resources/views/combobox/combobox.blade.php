@@ -380,7 +380,6 @@ $readonly = TALLKit::isAttributeEnabled($attributes->get('readonly'));
 
                     @php
                         $stampOption = function ($value, $label) use ($optionTemplate) {
-                            // Numbers as text: they take the fast path.
                             if (is_int($label) || is_float($label)) {
                                 $label = (string) $label;
                             }

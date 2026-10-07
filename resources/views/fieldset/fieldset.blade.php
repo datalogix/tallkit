@@ -27,7 +27,6 @@ $descriptionId = "{$id}-description";
             '
         )
         ->merge(['id' => $id])
-        // Both its description and the one given: merge() would keep only the one given.
         ->except('aria-describedby')
         ->merge(['aria-describedby' => collect([$attributes->get('aria-describedby'), $description ? $descriptionId : null])->filter()->implode(' ') ?: null])
 }}>

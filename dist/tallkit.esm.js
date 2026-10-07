@@ -1642,14 +1642,13 @@ function alertComponent({ duration: given = 0, pauseOnHover = false } = {}) {
 		remaining: duration,
 		startedAt: 0,
 		pauseReasons: /* @__PURE__ */ new Set(),
-		progressEl: null,
+		progressValue: 100,
+		progressFrame: null,
 		visibilityHandler: null,
 		state: "idle",
 		init() {
 			_dismissible.init.call(this);
-			this.progressEl = queryData(this.$root, "alert-progress");
 			this.startTimer();
-			this.initProgress();
 			this.visibilityHandler = this.handleVisibility.bind(this);
 			document.addEventListener("visibilitychange", this.visibilityHandler);
 			if (document.hidden) this.pause("visibility");
@@ -1672,6 +1671,17 @@ function alertComponent({ duration: given = 0, pauseOnHover = false } = {}) {
 			this.state = "running";
 			this.startedAt = Date.now();
 			this.timeoutId = startTimeout(() => this.dismiss("timeout"), this.remaining, duration);
+			this.trackProgress();
+		},
+		trackProgress() {
+			cancelAnimationFrame(this.progressFrame);
+			const step = () => {
+				if (this.state !== "running") return;
+				const left = this.remaining - (Date.now() - this.startedAt);
+				this.progressValue = Math.max(0, Math.min(100, left / duration * 100));
+				this.progressFrame = requestAnimationFrame(step);
+			};
+			step();
 		},
 		pause(reason = "manual") {
 			this.pauseReasons.add(reason);
@@ -1681,20 +1691,13 @@ function alertComponent({ duration: given = 0, pauseOnHover = false } = {}) {
 			clearTimeout(this.timeoutId);
 			this.timeoutId = null;
 			this.state = "paused";
-			this.freezeProgress();
+			cancelAnimationFrame(this.progressFrame);
+			this.progressValue = this.remaining / duration * 100;
 		},
 		resume(reason = "manual") {
 			if (!this.pauseReasons.delete(reason)) return;
 			if (this.pauseReasons.size > 0) return;
 			if (this.state !== "paused" || this.remaining <= 0) return;
-			if (this.progressEl) requestAnimationFrame(() => {
-				requestAnimationFrame(() => {
-					if (!this.progressEl || this.state !== "running") return;
-					this.progressEl.style.transitionTimingFunction = "linear";
-					this.progressEl.style.transitionDuration = `${this.remaining}ms`;
-					this.applyProgress(0);
-				});
-			});
 			this.startTimer();
 		},
 		restart() {
@@ -1703,46 +1706,25 @@ function alertComponent({ duration: given = 0, pauseOnHover = false } = {}) {
 			this.remaining = duration;
 			this.state = "idle";
 			this.pauseReasons.clear();
-			this.progressEl = queryData(this.$root, "alert-progress");
-			if (this.progressEl) this.progressEl.style.transitionDuration = "0ms";
+			this.progressValue = 100;
 			this.startTimer();
-			this.initProgress();
 			if (document.hidden) this.pause("visibility");
 		},
 		handleVisibility() {
 			if (document.hidden) this.pause("visibility");
 			else this.resume("visibility");
 		},
-		initProgress() {
-			if (!this.progressEl || !this.remaining) return;
-			this.progressEl.style.transitionTimingFunction = "linear";
-			this.applyProgress(100);
-			requestAnimationFrame(() => {
-				if (!this.progressEl || this.state !== "running") return;
-				this.progressEl.offsetWidth;
-				this.progressEl.style.transitionDuration = `${this.remaining}ms`;
-				this.applyProgress(0);
-			});
-		},
-		applyProgress(percent) {
-			if (!this.progressEl) return;
-			this.progressEl.style.backgroundSize = `${percent}% 100%`;
-		},
-		freezeProgress() {
-			if (!this.progressEl) return;
-			const size = getComputedStyle(this.progressEl).backgroundSize;
-			this.progressEl.style.transitionDuration = "0ms";
-			this.progressEl.style.backgroundSize = size;
-		},
 		beforeDismiss() {
 			this.state = "dismissing";
 			this.remaining = 0;
+			cancelAnimationFrame(this.progressFrame);
 			if (this.timeoutId) {
 				clearTimeout(this.timeoutId);
 				this.timeoutId = null;
 			}
 		},
 		destroy() {
+			cancelAnimationFrame(this.progressFrame);
 			if (this.timeoutId) {
 				clearTimeout(this.timeoutId);
 				this.timeoutId = null;
@@ -4831,20 +4813,46 @@ var carousel_exports = /* @__PURE__ */ __exportAll({
 function registry() {
 	return window.__tallkitCarousels ??= window.Alpine.reactive({});
 }
+var SWIPE_THRESHOLD = 50;
+var DRAG_LOCK = 10;
+var AUTOPLAY_TICK = 100;
 function carousel({ name = null, autoplay = false, interval = 5e3, advance = "slide", wrap = true, fade = false } = {}) {
+	let offset = 0;
+	let drag = null;
+	let lastTick = 0;
 	return {
 		current: 0,
 		slideCount: 0,
+		slideList: [],
 		visibleCount: 1,
+		elapsed: 0,
 		_autoplayId: null,
 		_paused: false,
 		_hovered: false,
 		_focused: false,
+		_hidden: false,
+		_offscreen: false,
 		init() {
 			this._root = this.$root;
 			if (name) registry()[name] = this;
 			this.measure();
-			this.$nextTick(() => this.render());
+			this.$nextTick(() => this.render({ instant: true }));
+			this.bindDrag();
+			this._slidesObserver = new MutationObserver(() => {
+				this.measure();
+				this.current = Math.min(this.current, this.maxIndex());
+				this.render({ instant: true });
+			});
+			const track = this.track();
+			if (track) this._slidesObserver.observe(track, { childList: true });
+			this._onVisibilityChange = () => {
+				this._hidden = document.hidden;
+			};
+			document.addEventListener("visibilitychange", this._onVisibilityChange);
+			this._visibilityObserver = new IntersectionObserver(([entry]) => {
+				this._offscreen = !entry.isIntersecting;
+			});
+			this._visibilityObserver.observe(this._root);
 			bind(this._root, {
 				["@keydown.arrow-left"](event) {
 					if (isTypingIn(event.target)) return;
@@ -4868,23 +4876,83 @@ function carousel({ name = null, autoplay = false, interval = 5e3, advance = "sl
 				},
 				["x-resize"]() {
 					this.measure();
-					this.render();
+					this.render({ instant: true });
 				}
 			});
 			this.startAutoplay();
 		},
 		destroy() {
 			clearInterval(this._autoplayId);
+			this._slidesObserver?.disconnect();
+			this._visibilityObserver?.disconnect();
+			document.removeEventListener("visibilitychange", this._onVisibilityChange);
 			if (name && registry()[name] === this) delete registry()[name];
 		},
+		bindDrag() {
+			const viewport = queryData(this._root, "carousel-viewport");
+			bind(viewport, {
+				["@pointerdown"](event) {
+					if (event.pointerType === "mouse" || !this.canNavigate()) return;
+					drag = {
+						id: event.pointerId,
+						x: event.clientX,
+						y: event.clientY,
+						dx: 0,
+						locked: false
+					};
+				},
+				["@pointermove"](event) {
+					if (!drag || event.pointerId !== drag.id) return;
+					const dx = event.clientX - drag.x;
+					const dy = event.clientY - drag.y;
+					if (!drag.locked) {
+						if (Math.max(Math.abs(dx), Math.abs(dy)) < DRAG_LOCK) return;
+						if (Math.abs(dy) > Math.abs(dx)) {
+							drag = null;
+							return;
+						}
+						drag.locked = true;
+						viewport.setPointerCapture?.(event.pointerId);
+					}
+					drag.dx = dx;
+					if (fade) return;
+					const track = this.track();
+					const forward = dx < 0 !== isRtl(this._root);
+					const atEdge = !wrap && (forward ? this.current >= this.maxIndex() : this.current <= 0);
+					track.style.transition = "none";
+					track.style.transform = `translateX(${offset + (atEdge ? dx / 3 : dx)}px)`;
+				},
+				["@pointerup"](event) {
+					if (!drag || event.pointerId !== drag.id) return;
+					const { dx, locked } = drag;
+					drag = null;
+					if (!locked) return;
+					this.track().style.transition = "";
+					if (Math.abs(dx) < SWIPE_THRESHOLD) {
+						this.render();
+						return;
+					}
+					dx < 0 !== isRtl(this._root) ? this.next() : this.prev();
+				},
+				["@pointercancel"]() {
+					if (!drag) return;
+					const { locked } = drag;
+					drag = null;
+					if (!locked) return;
+					this.track().style.transition = "";
+					this.render();
+				}
+			});
+		},
 		slides() {
-			return queryAllData(this._root, "carousel-slide");
+			return this.slideList;
 		},
 		track() {
 			return queryData(this._root, "carousel-track");
 		},
 		measure() {
-			const slides = this.slides();
+			this.slideList = queryAllData(this._root, "carousel-slide");
+			const slides = this.slideList;
 			const track = this.track();
 			this.slideCount = slides.length;
 			if (fade) {
@@ -4917,10 +4985,13 @@ function carousel({ name = null, autoplay = false, interval = 5e3, advance = "sl
 			return advance === "page" ? Math.max(1, Math.ceil(this.slideCount / this.visibleCount)) : this.maxIndex() + 1;
 		},
 		currentPage() {
-			return advance === "page" ? Math.floor(this.current / this.visibleCount) : this.current;
+			return advance === "page" ? Math.ceil(this.current / this.visibleCount) : this.current;
 		},
 		isPageActive(page) {
 			return this.currentPage() === page;
+		},
+		canNavigate() {
+			return this.pageCount() > 1;
 		},
 		isFirst() {
 			return !wrap && this.current <= 0;
@@ -4931,10 +5002,15 @@ function carousel({ name = null, autoplay = false, interval = 5e3, advance = "sl
 		slideNumber(el) {
 			return this.slides().indexOf(el) + 1;
 		},
+		isIndexVisible(index) {
+			return fade ? index === this.current : index >= this.current && index < this.current + this.visibleCount;
+		},
 		isSlideVisible(el) {
 			const index = this.slides().indexOf(el);
-			if (index === -1) return false;
-			return fade ? index === this.current : index >= this.current && index < this.current + this.visibleCount;
+			return index !== -1 && this.isIndexVisible(index);
+		},
+		thumbnailOf(slide) {
+			return slide.dataset.thumbnail || slide.querySelector("img")?.getAttribute("src") || null;
 		},
 		next() {
 			this.goTo(this.current + this.step());
@@ -4948,13 +5024,28 @@ function carousel({ name = null, autoplay = false, interval = 5e3, advance = "sl
 		goTo(index) {
 			const max = this.maxIndex();
 			const previous = this.current;
-			this.current = wrap && max > 0 ? (index % (max + 1) + (max + 1)) % (max + 1) : clamp(index, 0, max);
-			this.render();
+			let target = Math.min(Math.max(index, 0), max);
+			let wrapped = false;
+			if (wrap && max > 0) {
+				if (index > max && previous >= max) {
+					target = 0;
+					wrapped = true;
+				} else if (index < 0 && previous <= 0) {
+					target = max;
+					wrapped = true;
+				}
+			}
+			this.current = target;
+			this.render({ instant: wrapped });
 			this.resetAutoplay();
-			if (this.current !== previous) emit(queryData(this.$root, "carousel-viewport"), "changed", { index: this.current });
+			if (this.current !== previous) {
+				emit(queryData(this.$root, "carousel-viewport"), "changed", { index: this.current });
+				this.$nextTick(() => this.revealThumbnail());
+			}
 		},
-		render() {
+		render({ instant = false } = {}) {
 			const slides = this.slides();
+			this.preload();
 			if (fade) {
 				slides.forEach((slide, index) => {
 					const active = index === this.current;
@@ -4970,22 +5061,57 @@ function carousel({ name = null, autoplay = false, interval = 5e3, advance = "sl
 			const rtl = isRtl(this._root);
 			const trackRect = track.getBoundingClientRect();
 			const targetRect = target.getBoundingClientRect();
-			const offset = rtl ? trackRect.right - targetRect.right : targetRect.left - trackRect.left;
-			track.style.transform = `translateX(${rtl ? offset : -offset}px)`;
+			const distance = rtl ? trackRect.right - targetRect.right : targetRect.left - trackRect.left;
+			offset = rtl ? distance : -distance;
+			if (instant) track.style.transition = "none";
+			track.style.transform = `translateX(${offset}px)`;
+			if (instant) {
+				track.offsetWidth;
+				track.style.transition = "";
+			}
+		},
+		preload() {
+			const slides = this.slides();
+			const count = slides.length;
+			if (!count) return;
+			for (let index = this.current - 1; index <= this.current + this.visibleCount; index++) slides[(index + count) % count]?.querySelectorAll("img[loading=\"lazy\"]").forEach((img) => {
+				img.loading = "eager";
+			});
+		},
+		revealThumbnail() {
+			const strip = queryData(this._root, "carousel-thumbnails");
+			const thumb = strip?.querySelectorAll(":scope > button")[this.current];
+			if (!thumb || strip.scrollWidth <= strip.clientWidth) return;
+			const stripRect = strip.getBoundingClientRect();
+			const thumbRect = thumb.getBoundingClientRect();
+			strip.scrollBy({
+				left: thumbRect.left + thumbRect.width / 2 - (stripRect.left + stripRect.width / 2),
+				behavior: prefersReducedMotion() ? "auto" : "smooth"
+			});
 		},
 		autoplays() {
 			return autoplay && !prefersReducedMotion();
 		},
 		startAutoplay() {
 			if (!this.autoplays()) return;
+			lastTick = performance.now();
 			this._autoplayId = startInterval(() => {
-				if (!this._paused && !this._hovered && !this._focused) this.next();
-			}, interval);
+				const now = performance.now();
+				const delta = now - lastTick;
+				lastTick = now;
+				if (!this.isRotating() || !this.canNavigate()) return;
+				this.elapsed = Math.min(this.elapsed + delta, interval);
+				if (this.elapsed >= interval) this.next();
+			}, AUTOPLAY_TICK);
 		},
 		resetAutoplay() {
 			if (!autoplay) return;
+			this.elapsed = 0;
 			clearInterval(this._autoplayId);
 			this.startAutoplay();
+		},
+		progress() {
+			return interval > 0 ? this.elapsed / interval : 0;
 		},
 		pause() {
 			this._paused = true;
@@ -4995,6 +5121,9 @@ function carousel({ name = null, autoplay = false, interval = 5e3, advance = "sl
 		},
 		isPaused() {
 			return this._paused;
+		},
+		isRotating() {
+			return this.autoplays() && !this._paused && !this._hovered && !this._focused && !this._hidden && !this._offscreen;
 		},
 		togglePause() {
 			this._paused = !this._paused;
@@ -5018,8 +5147,14 @@ function carouselControls({ name = null } = {}) {
 		pageCount() {
 			return this.target()?.pageCount() ?? 0;
 		},
+		currentPage() {
+			return this.target()?.currentPage() ?? 0;
+		},
 		isPageActive(page) {
 			return !!this.target()?.isPageActive(page);
+		},
+		canNavigate() {
+			return !!this.target()?.canNavigate();
 		},
 		isFirst() {
 			return this.target()?.isFirst() ?? true;
@@ -5223,25 +5358,28 @@ function colorPicker({ value = null, format = null } = {}) {
 		hasEyeDropper() {
 			return typeof window !== "undefined" && "EyeDropper" in window;
 		},
+		isDisabled() {
+			return !!this.field?.disabled;
+		},
 		pick(color) {
-			if (this.field.disabled) return;
+			if (this.isDisabled()) return;
 			const normalized = color ? normalizeColor(color, this.format) ?? color : null;
 			if (normalized === this.value) return;
 			this.value = normalized;
 			this.dispatchPicked(normalized);
 		},
 		commitTyped(raw) {
-			if (this.field.disabled) return;
+			if (this.isDisabled()) return;
 			if (!raw) {
 				this.pick(null);
 				return;
 			}
 			const normalized = normalizeColor(raw, this.format);
 			if (normalized) this.pick(normalized);
-			else this.field.value = this.value ?? "";
+			else if (this.field) this.field.value = this.value ?? "";
 		},
 		async dropColor() {
-			if (!this.hasEyeDropper() || this.field.disabled) return;
+			if (!this.hasEyeDropper() || this.isDisabled()) return;
 			try {
 				const result = await new window.EyeDropper().open();
 				this.pick(result.sRGBHex);
@@ -7148,18 +7286,29 @@ function menu() {
 				const item = event.target instanceof Element ? event.target.closest(dataSelector("menu-item")) : null;
 				return item && item.closest(dataSelector("menu")) === menu && !item.disabled ? item : null;
 			};
+			const activate = (item) => {
+				this.menuItems().forEach((other) => {
+					if (other !== item) other.removeAttribute("data-active");
+				});
+				item.setAttribute("data-active", "");
+			};
 			bind(menu, {
 				["@mouseover"](event) {
-					itemOf(event)?.setAttribute("data-active", "");
+					const item = itemOf(event);
+					if (item) activate(item);
 				},
 				["@mouseout"](event) {
 					const item = itemOf(event);
-					if (item && !item.contains(event.relatedTarget)) item.removeAttribute("data-active");
+					if (!item || item.contains(event.relatedTarget)) return;
+					item.removeAttribute("data-active");
+					const focused = this.menuItems().find((other) => other === document.activeElement);
+					if (focused) activate(focused);
 				},
 				["@focusin"](event) {
 					const item = itemOf(event);
-					item?.setAttribute("data-active", "");
-					if (item) this.syncTabindex(item);
+					if (!item) return;
+					activate(item);
+					this.syncTabindex(item);
 				},
 				["@focusout"](event) {
 					const item = event.target instanceof Element ? event.target.closest(dataSelector("menu-item")) : null;

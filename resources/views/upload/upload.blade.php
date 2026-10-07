@@ -25,7 +25,6 @@ $disk = TALLKit::uploadDisk($disk);
 $missing = '__tallkit_upload_missing__';
 $boundValue = in_livewire() && data_get($this, $fieldName, $missing) !== $missing ? data_get($this, $fieldName) : null;
 
-// Without stored, a path the browser wrote into the property isn't looked up: it could be anyone's file.
 if ($boundValue !== null && $stored === false) {
     $boundValue = TALLKit::uploadServerValue($this, $fieldName, $boundValue);
 }

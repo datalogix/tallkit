@@ -3,6 +3,7 @@
     'arrows' => null,
     'indicators' => null,
     'position' => null,
+    'color' => null,
 ])
 <div
     x-data="carouselControls(@js(['name' => $name]))"
@@ -23,6 +24,8 @@
     @if ($indicators !== false)
         <tk:carousel.indicators
             :attributes="$attributes->prefixed('indicators:')"
+            :$color
+            :variant="$indicators === 'counter' ? 'counter' : null"
         />
     @endif
 </div>
