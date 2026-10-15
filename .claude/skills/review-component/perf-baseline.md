@@ -210,3 +210,6 @@
 | two-factor | `<tk:two-factor.recovery-codes>` with 2 codes | 0.829 ms | 2026-10-14 |
 | upload | `<tk:upload name="f" label="File" />` (dropzone, tile template, preview modal) | 4.253 ms | 2026-10-14 |
 | upload | `multiple variant="list"` | 3.688 ms | 2026-10-14 |
+| similar | `<tk:similar :items="[]" />` (renders nothing) | 0.021 ms | 2026-10-15 |
+| similar | 2 items, `value="Food"` (alert + 2 buttons) | 1.131 ms | 2026-10-15 |
+| similar | 2 items, `select="useExisting"` (+ 2 buttons) | 1.674 ms | 2026-10-15 |
