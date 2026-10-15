@@ -851,3 +851,13 @@ skip code that has not changed since.
 - resources/views/upload/type-icon.blade.php d5f8286a7afdaa0c5e4da891d3dbb45fa13d285e
 - resources/views/upload/upload.blade.php 2a129937d1002080492b7e2da4d095e73d892e8a
 - resources/js/components/upload.js 63d22e7048f302b993af9a5b9dfd606534bbf527
+
+## similar
+- 2026-10-15 — bugs, a11y, perf, code, api
+- resources/views/similar/similar.blade.php 31a384137faed3558ee96044209d7a07741692c5
+- src/Livewire/ConfirmsSimilar.php bfd72d73e6fe912e1c624166bb9e5074bb715361
+- src/Livewire/Similar.php bf069614dd06585f1a8d5383d772ab38aa525036
+- src/Concerns/InteractsWithLivewire.php 1c7d64f4ce2c1fbff31bb4c4bfea9ae7bcce24c1
+- resources/views/alert/alert.blade.php 5a377096c9a279bea90c04c6d3de364dc757e7d1
+- resources/views/button/button.blade.php b7a7fc10e4cb10bbdb068f711de7c3744b4cd636
+- resources/views/text/text.blade.php f0202bc544e105f3999c150f6720e022da2062ba

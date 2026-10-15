@@ -436,5 +436,12 @@
     "Revoke all trusted devices?": "Revogar todos os dispositivos confiáveis?",
     "Disable two-factor authentication?": "Desativar a autenticação de dois fatores?",
     "Unlink your :provider account?": "Desvincular sua conta :provider?",
-    "Show hidden columns": "Mostrar colunas ocultas"
+    "Show hidden columns": "Mostrar colunas ocultas",
+    "Similar records found": "Encontramos registros parecidos",
+    "Do you want to create \":value\" anyway?": "Deseja criar \":value\" mesmo assim?",
+    "Do you want to continue anyway?": "Deseja continuar mesmo assim?",
+    "Create anyway": "Criar mesmo assim",
+    "Use this": "Usar este",
+    "Do you want to save \":value\" anyway?": "Deseja salvar \":value\" mesmo assim?",
+    "Save anyway": "Salvar mesmo assim"
 }

@@ -152,6 +152,7 @@ Each component is documented in its own file under [`docs/`](docs/).
 - [Select](docs/select.md)
 - [Separator](docs/separator.md)
 - [Sidebar](docs/sidebar.md)
+- [Similar](docs/similar.md)
 - [Skeleton](docs/skeleton.md)
 - [Slider](docs/slider.md)
 - [Spacer](docs/spacer.md)
