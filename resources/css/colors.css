@@ -777,6 +777,7 @@
 @source inline('hover:bg-(--tk-solid-hover)');
 @source inline('[&[data-active]]:bg-(--tk-solid-hover)');
 @source inline('[&:is(button)]:hover:bg-(--tk-solid-hover)');
+@source inline('[&:is(a,button,:has(>[data-tallkit-badge-link]:hover))]:hover:bg-(--tk-{soft,solid}-hover)');
 @source inline('bg-(--tk-pastel)');
 @source inline('text-(--tk-on-pastel)');
 @source inline('focus-visible:[&::-webkit-slider-thumb]:outline-(--tk-ring)');

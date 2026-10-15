@@ -34,6 +34,9 @@ class TALLKitServiceProvider extends ServiceProvider
         $this->app->scoped('tallkit.field-bags', fn () => new \ArrayObject);
         $this->app->scoped('tallkit.uploads', fn () => new \ArrayObject);
         $this->app->scoped('tallkit.icons', fn () => new \ArrayObject);
+        $this->app->scoped('tallkit.avatar-lookups', fn () => new \ArrayObject);
+        $this->app->scoped('tallkit.avatars', fn () => new \ArrayObject);
+        $this->app->scoped('tallkit.found-images', fn () => new \ArrayObject);
 
         AliasLoader::getInstance()->alias('TALLKit', Facades\TALLKit::class);
 

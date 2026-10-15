@@ -97,7 +97,6 @@ function parseData(value) {
 export function editorjs({ options = {}, scripts = [], styles = [], toolbar = null, i18n = null } = {}) {
   const _loadable = loadable()
 
-  // Out of Alpine's reactive data: called through its proxy, the editor breaks.
   let editor = null
 
   return {
@@ -130,7 +129,6 @@ export function editorjs({ options = {}, scripts = [], styles = [], toolbar = nu
     mount(groups) {
       if (this.isDestroyed()) return
 
-      // Not caught here: load() shows it, and its completion would hide it.
       editor = new window.EditorJS({
         holder: this.$refs.root,
         tools: groups.reduce((tools, group) => ({ ...tools, ...GROUPS[group]?.tools() }), {}),

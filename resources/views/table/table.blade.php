@@ -30,15 +30,12 @@
 ])
 @php
 
-// Out of the attributes: they print on the table, and a Closure can't be printed.
 $attributes = $attributes->filter(fn ($value, $key) => ! (str_starts_with($key, 'row_') && $value instanceof \Closure));
 
-// The tag is built, not written (see table/columns.blade.php).
 $slotHas = fn (string $tag) => Str::contains($slot, '<'.$tag, true);
 $cols = collect($cols);
 $rows ??= is_string($resource) ? make_model($resource) : $resource;
 
-// Full class names: a compiled view has no use statements.
 $query = match (true) {
     $rows instanceof \Illuminate\Database\Eloquent\Model => $rows->newQuery(),
     $rows instanceof \Illuminate\Database\Eloquent\Builder,
@@ -56,7 +53,6 @@ $rows = match (true) {
 };
 
 if ($cols->isEmpty() && ($rows?->isNotEmpty() || $query !== null && ! $query instanceof \Illuminate\Database\Query\Builder)) {
-    // Never a secret: only what the model shows ($visible, else its key, $fillable and timestamps).
     $cols = collect(TALLKit::tableDefaultColumns($rows?->first() ?? $query->getModel()));
 } elseif ($idColumn === null) {
     $idColumn = true;
@@ -127,11 +123,30 @@ $tableAttributes = array_filter([
         ])
         ->merge($tableData)
 }}>
+    @if ($toggleable)
+        <div
+            {{ $attributes->prefixed('hidden-columns:')->classes('flex justify-end p-2') }}
+            x-show="Object.values(columnVisibility).includes(false)"
+            x-cloak
+        >
+            <tk:button
+                :attributes="$attributes->prefixed('show-columns:')"
+                x-ref="showColumns"
+                x-on:click="columnResetVisibility(); $nextTick(() => $root.querySelector({{ Js::from(TALLKit::dataSelector('column-hide')) }})?.focus())"
+                variant="ghost"
+                size="sm"
+                icon="eye"
+            >
+                <span x-text="{{ Js::from(__('Show hidden columns')) }} + ' (' + Object.values(columnVisibility).filter((visible) => visible === false).length + ')'"></span>
+            </tk:button>
+        </div>
+    @endif
+
     <div {{ $attributes->prefixed('area:')->classes('overflow-x-auto') }}>
         <table {{
             $attributes
                 ->whereDoesntStartWith([
-                    'container:', 'area:',
+                    'container:', 'area:', 'hidden-columns:', 'show-columns:',
                     'columns:', 'select-all:', 'column:', 'column-',
                     'rows:', 'row:', 'row-', 'cell:', 'cell-',
                     'no-records:', 'footer:',
@@ -183,7 +198,6 @@ $tableAttributes = array_filter([
                     @endif
 
                     @foreach ($cols as $key => $col)
-                        {{-- As props: merge() escapes, and they'd be escaped twice. --}}
                         <tk:table.column :attributes="TALLKit::attributesMerge(
                                 $attributes->prefixed('column:'),
                                 $attributes->prefixed('column-'.$key.':'),
@@ -239,7 +253,6 @@ $tableAttributes = array_filter([
                                     @php
                                         $cellRenderer = ${'row_'.$key} ?? ${Str::camel('row_'.$key)} ?? null;
 
-                                        // Only the parameters it declares: an unknown named one fails.
                                         if ($cellRenderer instanceof \Closure) {
                                             $cellParams[$key] ??= collect((new \ReflectionFunction($cellRenderer))->getParameters())
                                                 ->mapWithKeys(fn ($parameter) => [$parameter->getName() => $parameter->isVariadic()])

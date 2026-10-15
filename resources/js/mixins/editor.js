@@ -28,7 +28,6 @@ export function parseToolbar(toolbar, groupOrder) {
 
 export function editorField() {
   return {
-    // _lastSynced: its own change coming back from Livewire isn't applied again (the cursor would jump).
     input: null,
     _lastSynced: null,
 
@@ -37,7 +36,6 @@ export function editorField() {
 
       if (hasBlurModel(this.input)) blurOnFocusLeave(this.$root, this.input)
 
-      // Not with Livewire: the reset doesn't change the property.
       if (!getWireModelInfo(this.input)) onFormReset(this.$root, this.input?.form, () => {
         if (this.isCompleted()) this.applyExternalValue(this.input.value)
       })

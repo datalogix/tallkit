@@ -10,11 +10,13 @@
 ])
 @php
 
-$hasPrependOrAppend = $labelPrepend || $labelAppend;
+$hasPrepend = has_content($labelPrepend);
+$hasAppend = has_content($labelAppend);
+$hasPrependOrAppend = $hasPrepend || $hasAppend;
 $tag = $as ?? ($for ? 'label' : 'span');
 
 @endphp
-@if ($slot->hasActualContent() || $label)
+@if ($slot->hasActualContent() || has_content($label))
     @if ($hasPrependOrAppend)
         <div
             {{
@@ -30,7 +32,7 @@ $tag = $as ?? ($for ? 'label' : 'span');
         >
     @endif
 
-    @if ($labelPrepend)
+    @if ($hasPrepend)
         <div {{ $attributes->prefixed('label-prepend:')->classes('me-auto') }}>
             {{ $labelPrepend }}
         </div>
@@ -58,7 +60,7 @@ $tag = $as ?? ($for ? 'label' : 'span');
             :icon-trailing:size="TALLKit::adjustSize(size: $size)"
             :badge:size="TALLKit::adjustSize(size: $size)"
             :attributes="TALLKit::attributesMerge(
-                    TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->whereDoesntStartWith(['area:', 'label-prepend:', 'label-append:', 'container:', 'info:']),
+                    $attributes->withElementProps(get_defined_vars())->whereDoesntStartWith(['area:', 'label-prepend:', 'label-append:', 'container:', 'info:']),
                     $attributes->prefixed('info:', keepPrefix: 'icon-trailing:'),
                 )
                 ->classes(
@@ -71,7 +73,7 @@ $tag = $as ?? ($for ? 'label' : 'span');
         </tk:element>
     </{{ $tag }}>
 
-    @if ($labelAppend)
+    @if ($hasAppend)
         <div {{ $attributes->prefixed('label-append:')->classes('ms-auto') }}>
             {{ $labelAppend }}
         </div>

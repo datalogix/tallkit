@@ -8,10 +8,13 @@
     'label' => null,
 ])
 <tk:menu.group
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), ['label' => null])->whereDoesntStartWith(['item:'])->merge(['data-keep-open' => $keepOpen])"
+    :attributes="$attributes->withProps(get_defined_vars(), ['label' => null])->whereDoesntStartWith(['item:'])->merge(['data-keep-open' => $keepOpen])"
     :$size
     wire:ignore.self
-    x-data="{ value: {{ Js::from($type === 'radio' ? $value : ($value ?? [])) }}, menuGroup: true }"
+    x-data="{{ Js::from([
+        'value' => $type === 'radio' ? $value : ($value ?? []),
+        'menuGroup' => true,
+    ]) }}"
     x-modelable="value"
 >
     @foreach (collect($items) as $key => $item)

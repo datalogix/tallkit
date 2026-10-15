@@ -6,10 +6,8 @@ import { loadable } from './loadable'
 export function fullCalendar({ locale = null, theme = null, palette = null, options = {} } = {}) {
   const _loadable = loadable()
 
-  // Out of Alpine's reactive data: called through its proxy, the library breaks.
   let calendar = null
 
-  // FullCalendar names locales "pt-br": "pt_BR" is an invalid tag to it.
   const calendarLocale = () => (locale ? String(locale).replace('_', '-').toLowerCase() : null)
 
   return {
@@ -58,14 +56,16 @@ export function fullCalendar({ locale = null, theme = null, palette = null, opti
 
     render() {
       try {
-        // Kept from the first time: called from an update, $el is the component's root.
         this._calendarEl ??= this.$el
+
+        const current = calendar && { initialDate: calendar.getDate(), initialView: calendar.view.type }
 
         calendar?.destroy()
         calendar = new window.FullCalendar.Calendar(this._calendarEl, {
           locale: calendarLocale() || undefined,
           ...options,
-          ...this.getDataOptions(this._calendarEl)
+          ...this.getDataOptions(this._calendarEl),
+          ...current,
         })
         calendar.render()
         emit(this._calendarEl, 'rendered', { fullCalendar: calendar }, { later: true })

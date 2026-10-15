@@ -4,7 +4,7 @@
     'size' => null,
     'square' => null,
 ])
-<div {{ $attributes->classes(
+<div {{ $attributes->merge(['role' => 'group'])->classes(
     'flex isolate [&>*]:ring-2 [&>*]:ring-white dark:[&>*]:ring-zinc-900',
      match ($size) {
         'xs' => '-space-x-1.5',
@@ -18,7 +18,7 @@
 ) }}>
     @foreach (collect($items)->take($max) as $avatar)
         <tk:avatar
-            :attributes="TALLKit::attributesMerge(is_array($avatar) || $avatar instanceof Illuminate\View\ComponentAttributeBag ? $avatar : ['name' => $avatar])"
+            :attributes="TALLKit::attributesMerge(is_array($avatar) || $avatar instanceof Illuminate\View\ComponentAttributeBag ? $avatar : [is_object($avatar) ? 'user' : 'name' => $avatar])"
             :$size
             :$square
         />
@@ -28,6 +28,7 @@
         <tk:avatar
             initials="+{{ collect($items)->count() - $max }}"
             :tooltip="__(':count more', ['count' => collect($items)->count() - $max])"
+            :user="false"
             :$size
             :$square
         />

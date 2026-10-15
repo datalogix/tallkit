@@ -4,6 +4,7 @@
     'identifier' => null,
     'requiresEmail' => null,
     'oauth' => null,
+    'terms' => null,
 ])
 @php
 
@@ -61,13 +62,16 @@ $loginUrl ??= route_detect([
         autocomplete="new-password"
     />
 
-    <tk:terms.acceptance
-        :attributes="$attributes->prefixed('terms:')"
-        :$size
-        name="terms"
-        required
-        variant="accent"
-    />
+    @if ($terms !== false)
+        <tk:terms.acceptance
+            :attributes="$attributes->prefixed('terms:')"
+            :$size
+            :terms-of-service="string_value($terms)"
+            name="terms"
+            required
+            variant="accent"
+        />
+    @endif
 
     <tk:submit
         :attributes="$attributes->prefixed('submit:')->classes('w-full')->merge(['label' => 'Create account'])"

@@ -6,14 +6,14 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = $attributes->fieldContext(label: $label, id: $id, scope: get_defined_vars());
 $value = TALLKit::fieldOldValue($fieldName, $value);
 $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd || $attributes->has('class');
 
 @endphp
 <tk:field.wrapper
     :$name
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :attributes="$attributes->withFieldProps(get_defined_vars())"
     :prefix="false"
     :suffix="false"
 >
@@ -32,7 +32,7 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
 
     <tk:field.control
         :$size
-        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
+        :attributes="$attributes->withFieldControlProps(get_defined_vars())
             ->when(
                 $hasControl,
                 fn ($attrs) => $attrs->classes(
@@ -62,13 +62,12 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
                         ->merge([
                             'name' => $name,
                             'id' => $id,
-                            'value' => in_livewire() ? null : $value,
+                            'value' => unless_livewire($value),
                             'wire:model' => $wireModel,
                             'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
-                            'aria-invalid' => $invalid ? 'true' : null,
-                            'data-invalid' => $invalid ? true : null,
+                            ...TALLKit::fieldInvalid($invalid),
                         ])
-                        ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: ['slider:', 'ticks:', 'tick:', 'value:']))
+                        ->withoutFieldPrefixes(['slider:', 'ticks:', 'tick:', 'value:'])
                         ->classes(
                             '
                                 [--range-active:rgb(0_0_0_/_.8)]

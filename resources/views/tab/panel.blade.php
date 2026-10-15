@@ -19,8 +19,8 @@ $tabId = Str::beforeLast($panelId, '-panel');
     id="{{ $panelId }}"
     aria-labelledby="{{ $tabId }}"
     role="tabpanel"
-    :tabindex="isSelected(@js($name)) ? 0 : -1"
-    :data-selected="isSelected(@js($name))"
+    :tabindex="isSelected({{ Js::from($name) }}) ? 0 : -1"
+    :data-selected="isSelected({{ Js::from($name) }})"
 >
     {{ $slot }}
 </div>

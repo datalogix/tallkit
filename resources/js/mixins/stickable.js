@@ -14,7 +14,6 @@ export function stickable() {
     },
 
     updateOffset() {
-      // Measured in the flow: once stuck, offsetTop is where it is stuck.
       this.$el.style.position = 'static'
       const top = this.$el.offsetTop
       this.$el.style.position = 'sticky'

@@ -9,6 +9,7 @@ trait InteractsWithAlert
     public function alert(
         null|string|array $message = null,
         ?string $type = null,
+        ?string $variant = null,
         string|bool|null $icon = null,
         string|bool|null $border = null,
         ?string $title = null,
@@ -32,6 +33,7 @@ trait InteractsWithAlert
         $alert = [
             'message' => $message,
             'type' => $type,
+            'variant' => $variant,
             'icon' => $icon,
             'border' => $border,
             'title' => $title,

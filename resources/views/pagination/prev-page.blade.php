@@ -19,7 +19,7 @@ $action = method_exists($paginator, 'getCursorName')
 
 @endphp
 <tk:button
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps(), ['tooltip' => null])"
+    :attributes="$attributes->withElementProps(get_defined_vars(), ['tooltip' => null])"
     :aria-disabled="$disabled"
     :disabled="$disabled"
     :rel="in_livewire() ? false : 'prev'"

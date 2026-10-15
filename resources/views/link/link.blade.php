@@ -4,7 +4,7 @@
 ])
 <tk:text
     kind="link"
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())
+    :attributes="$attributes->withElementProps(get_defined_vars())
         ->classes(
             match ($underline !== false) {
             true => 'underline underline-offset-2 hover:no-underline',

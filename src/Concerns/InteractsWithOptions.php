@@ -33,7 +33,11 @@ trait InteractsWithOptions
             $options = $options === '' ? [] : [$options];
         }
 
-        if ($options instanceof Model || $options instanceof QueryBuilder) {
+        if ($options instanceof Model) {
+            $options = [$options];
+        }
+
+        if ($options instanceof QueryBuilder) {
             $options = $options->get();
         }
 
@@ -46,13 +50,27 @@ trait InteractsWithOptions
             && array_is_list($options)
             && collect($options)->every(fn ($value) => is_scalar($value));
 
-        return collect($options)->mapWithKeys(function ($value, $key) use ($useValueAsKey, $optionValue, $optionLabel, $optionGroupLabel, $optionGroupChildren, $optionGroupChildrenValue, $optionGroupChildrenLabel) {
+        return collect($options)->mapWithKeys(function ($value, $key) use (
+            $useValueAsKey,
+            $optionValue,
+            $optionLabel,
+            $optionGroupLabel,
+            $optionGroupChildren,
+            $optionGroupChildrenValue,
+            $optionGroupChildrenLabel,
+        ) {
             if ($value instanceof \UnitEnum) {
                 return $this->enumOption($value);
             }
 
-            $_optionValue = $this->optionField($value, $optionValue, ['id', 'value']) ?? ($useValueAsKey ? $value : $key);
-            $_optionLabel = $this->optionField($value, $optionLabel, ['name', 'label', 'title', 'text']) ?? $this->optionFallbackLabel($value);
+            if (is_scalar($value) && ! $optionGroupChildren) {
+                return [$useValueAsKey ? $value : $key => $value];
+            }
+
+            $_optionValue = $this->optionField($value, $optionValue, ['id', 'value'])
+                ?? ($value instanceof Model ? $value->getKey() : ($useValueAsKey ? $value : $key));
+            $_optionLabel = $this->optionField($value, $optionLabel, ['name', 'label', 'title', 'text'])
+                ?? $this->optionFallbackLabel($value);
 
             if (! $optionGroupChildren && ! is_array($_optionLabel)) {
                 return [$_optionValue => $_optionLabel];
@@ -66,9 +84,16 @@ trait InteractsWithOptions
             }
 
             return [
-                $_optionGroupLabel => $_optionGroupChildren->mapWithKeys(function ($value, $key) use ($optionGroupChildrenValue, $optionGroupChildrenLabel, $optionValue, $optionLabel) {
-                    $_optionValue = $this->optionField($value, $optionGroupChildrenValue ?? $optionValue, ['id', 'value']) ?? $key;
-                    $_optionLabel = $this->optionField($value, $optionGroupChildrenLabel ?? $optionLabel, ['name', 'label', 'title', 'text']) ?? $this->optionFallbackLabel($value);
+                $_optionGroupLabel => $_optionGroupChildren->mapWithKeys(function ($value, $key) use (
+                    $optionGroupChildrenValue,
+                    $optionGroupChildrenLabel,
+                    $optionValue,
+                    $optionLabel,
+                ) {
+                    $_optionValue = $this->optionField($value, $optionGroupChildrenValue ?? $optionValue, ['id', 'value'])
+                        ?? ($value instanceof Model ? $value->getKey() : $key);
+                    $_optionLabel = $this->optionField($value, $optionGroupChildrenLabel ?? $optionLabel, ['name', 'label', 'title', 'text'])
+                        ?? $this->optionFallbackLabel($value);
 
                     return [$_optionValue => $_optionLabel];
                 })->toArray(),

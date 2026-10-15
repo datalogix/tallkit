@@ -11,6 +11,26 @@ if (! function_exists('route_detect')) {
     }
 }
 
+if (! function_exists('has_content')) {
+    function has_content(mixed ...$values): bool
+    {
+        foreach ($values as $value) {
+            if (TALLKit::hasContent($value)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}
+
+if (! function_exists('string_value')) {
+    function string_value(mixed $value, mixed $default = null): mixed
+    {
+        return is_string($value) && $value !== '' ? $value : $default;
+    }
+}
+
 if (! function_exists('make_model')) {
     function make_model(string $class)
     {
@@ -32,6 +52,13 @@ if (! function_exists('in_livewire')) {
     function in_livewire()
     {
         return TALLKit::livewireRendering();
+    }
+}
+
+if (! function_exists('unless_livewire')) {
+    function unless_livewire(mixed $value): mixed
+    {
+        return in_livewire() ? null : $value;
     }
 }
 

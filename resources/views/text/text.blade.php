@@ -9,7 +9,7 @@
 <tk:element.wrapper
     kind="text"
     as="p"
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->classes(
+    :attributes="$attributes->withElementProps(get_defined_vars())->classes(
         TALLKit::fontSize(size: $size, mode: $scale, weight: $weight),
         TALLKit::iconSize(size: $size, mode: $scale),
         TALLKit::text(color: $color) ?? match ($variant) {

@@ -1,6 +1,5 @@
 @props([
     'value' => null,
-    'name' => null,
     'id' => null,
     'size' => null,
     'color' => null,
@@ -28,7 +27,7 @@
 $locale = TALLKit::resolveLocale($locale);
 $startDay ??= TALLKit::localeFirstDay($locale);
 
-[$name, $fieldName, , , $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: false, id: $id);
+[$name, $fieldName, , , $invalid, $wireModel, $id] = $attributes->fieldContext(label: false, id: $id);
 $value = TALLKit::fieldOldValue($fieldName, $value);
 
 $value = TALLKit::fieldDateValue($value);
@@ -60,7 +59,7 @@ $initialValueString = match (true) {
 <div
     @if ($standalone !== false)
         wire:ignore
-        x-data="calendar(@js([
+        x-data="calendar({{ Js::from([
             'value' => $value,
             'multiple' => (bool) $multiple,
             'range' => (bool) $range,
@@ -79,19 +78,19 @@ $initialValueString = match (true) {
             'openTo' => $openTo,
             'weekNumbers' => (bool) $weekNumbers,
             'locale' => $locale,
-        ]))"
+        ]) }})"
     @endif
     x-cloak
     {{
         $attributes
             ->whereDoesntStartWith([
-                'hidden:',
+                'hidden:', 'wire:model', 'x-model',
                 'header:', 'nav-prev:', 'nav-next:', 'today:',
                 'months:', 'month:', 'month-label:', 'month-select:', 'year-select:',
                 'weekdays:', 'weekday:', 'week:', 'week-number:', 'day:',
             ])
             ->dataKey('calendar')
-            ->merge(['data-invalid' => $invalid ? true : null])
+            ->merge(['id' => $id, 'data-invalid' => $invalid ? true : null])
             ->classes([
                 'inline-flex flex-col',
                 TALLKit::gap(size: $size),
@@ -105,11 +104,12 @@ $initialValueString = match (true) {
         <input
             type="hidden"
             {{
-                $attributes->prefixed('hidden:')
+                $attributes->whereStartsWith(['wire:model', 'x-model'])
+                    ->merge($attributes->prefixed('hidden:')->getAttributes())
                     ->dataKey('calendar-field')
                     ->merge([
                         'name' => $name,
-                        'value' => in_livewire() ? null : $initialValueString,
+                        'value' => unless_livewire($initialValueString),
                         'wire:model' => $wireModel,
                     ])
             }}

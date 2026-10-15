@@ -17,7 +17,7 @@ $panelId = $tabId.'-panel';
 
 @endphp
 <tk:button
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())
+    :attributes="$attributes->withElementProps(get_defined_vars())
         ->classes(
             'shrink-0',
             TALLKit::padding(size: $size),
@@ -70,7 +70,7 @@ $panelId = $tabId.'-panel';
             'id' => $tabId,
             'aria-controls' => $panelId,
             'role' => 'tab',
-            ':tabindex' => 'isSelected(' . Js::from($name) . ') ? 0 : -1',
+            ':tabindex' => '(isSelected(' . Js::from($name) . ') || (selected === null && tabs()[0] === $el)) ? 0 : -1',
             ':aria-selected' => 'isSelected(' . Js::from($name) . ')',
             ':data-selected' => 'isSelected(' . Js::from($name) . ')',
             'x-on:click' => 'select(' . Js::from($name) . ')',

@@ -1,4 +1,3 @@
-// Laravel's app()->getLocale() gives 'pt_BR', an invalid tag to Intl: it throws.
 function canonical(locale) {
   try {
     return Intl.getCanonicalLocales(String(locale).replace('_', '-'))[0] ?? null

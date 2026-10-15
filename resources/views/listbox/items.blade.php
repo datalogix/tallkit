@@ -3,10 +3,17 @@
     'size' => null,
     'multiple' => null,
     'color' => null,
+    'id' => null,
 ])
+@php
+
+$id ??= TALLKit::stableId('listbox');
+
+@endphp
 <ul
     {{
         $attributes
+            ->merge(['id' => $id])
             ->whereDoesntStartWith(['item:'])
             ->classes(
                 '
@@ -34,7 +41,7 @@
         <tk:listbox.item
             :attributes="$attributes->prefixed('item:')
                 ->merge(TALLKit::attributesFromItem($item), false)
-                ->wireKey(TALLKit::generateId(prefix: 'listbox-item', name: (string) data_get($item, 'value', $index)))
+                ->wireKey(TALLKit::generateId(prefix: 'listbox-item', name: $id.'-'.data_get($item, 'value', $index)))
             "
             :$size
         />

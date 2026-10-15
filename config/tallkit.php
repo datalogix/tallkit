@@ -16,6 +16,13 @@ return [
         'unavatar' => true,
     ],
 
+    'address' => [
+        // true sends the zipcode from the browser to viacep.com.br and brasilapi.com.br, third parties.
+        // A URL of your own with {zipcode} answers JSON with address, neighborhood, city and state (404: not found).
+        // false: no lookup.
+        'lookup' => true,
+    ],
+
     // By app locale (or its language): mask => input names, the most specific first. A locale without one gets none.
     'masks' => [
         'pt_BR' => [

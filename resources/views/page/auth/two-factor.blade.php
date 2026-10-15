@@ -43,7 +43,7 @@ $resendUrl ??= route_detect(['two-factor.resend', 'auth.two-factor.resend'], def
                 :attributes="$attributes->prefixed('recovery-toggle:')"
                 :$size
                 variant="ghost"
-                x-on:click="recovery = ! recovery"
+                x-on:click="recovery = ! recovery; if (typeof $wire !== 'undefined') $wire.$set(recovery ? 'code' : 'recovery_code', '', false)"
             >
                 <span x-show="! recovery">{{ __('Use a recovery code') }}</span>
                 <span x-show="recovery" x-cloak>{{ __('Use an authentication code') }}</span>

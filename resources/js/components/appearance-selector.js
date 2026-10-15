@@ -1,6 +1,5 @@
 import { bind, isRtl } from '../utils'
-
-const MODES = ['system', 'light', 'dark']
+import { MODES } from '../appearance'
 
 export function appearanceSelector() {
   return {

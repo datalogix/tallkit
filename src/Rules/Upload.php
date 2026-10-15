@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Contracts\Validation\ValidatorAwareRule;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Validator as ValidationValidator;
@@ -15,7 +16,6 @@ class Upload implements ValidationRule, ValidatorAwareRule
 {
     protected ?ValidationValidator $validator = null;
 
-    // $stored: the value saved before, from the model, never from the browser.
     public function __construct(
         protected array $rules,
         protected mixed $stored = null,
@@ -49,13 +49,15 @@ class Upload implements ValidationRule, ValidatorAwareRule
 
         $maxSize = TALLKit::uploadMaxSize($this->type ?? TALLKit::uploadedFileType($value), $this->maxSize);
 
-        // A plain key: a dotted one would be read as a path into the data.
-        $check = Validator::make(['file' => $value], ['file' => [...$this->rules, "max:{$maxSize}"]], [], [
-            'file' => $this->attributeName($attribute),
-        ]);
+        $check = Validator::make(
+            Arr::undot([$attribute => $value]),
+            [$attribute => [...$this->rules, "max:{$maxSize}"]],
+            $this->validator?->customMessages ?? [],
+            [$attribute => $this->attributeName($attribute)],
+        );
 
         if ($check->fails()) {
-            $fail($check->errors()->first('file'));
+            $fail($check->errors()->first($attribute));
         }
     }
 

@@ -11,27 +11,34 @@
 $items = collect(TALLKit::parseOptions(attributes: $attributes))
     ->flatMap(fn ($label, $value) => is_array($label) ? array_values($label) : [$label])
     ->all();
-$config = ['hideEmpty' => $hideEmpty, 'clearOnSelect' => $clearOnSelect, ...($fuseOptions ?? [])];
 
 $listboxId = $attributes->prefixed('items:')->get('id') ?? TALLKit::stableId('listbox', $attributes->get('name'));
 
 @endphp
 <div
     wire:ignore.self
-    x-data="autocomplete(@js($config))"
+    x-data="autocomplete({{ Js::from([
+        'hideEmpty' => $hideEmpty,
+        'clearOnSelect' => $clearOnSelect,
+        'texts' => [
+            'none' => __('No records found'),
+            'one' => __(':count result available'),
+            'other' => __(':count results available'),
+        ],
+        ...($fuseOptions ?? []),
+    ]) }})"
     {{
         $attributes->prefixed('container:')
             ->classes('[:where(&)]:w-full relative')
     }}
 >
     <tk:input
-        :attributes="TALLKit::fieldWithProps($attributes, get_defined_vars())->whereDoesntStartWith(['container:', 'popover:', 'items:'])"
+        :attributes="$attributes->withFieldProps(get_defined_vars(), TALLKit::fieldControlProps())->whereDoesntStartWith(['container:', 'popover:', 'items:'])"
         :$size
         role="combobox"
         aria-autocomplete="list"
         aria-haspopup="listbox"
         :aria-controls="$listboxId"
-        ::aria-expanded="opened ? 'true' : 'false'"
         autocomplete="off"
     />
 
@@ -46,7 +53,7 @@ $listboxId = $attributes->prefixed('items:')->get('id') ?? TALLKit::stableId('li
             :$size
             :id="$listboxId"
         >
-            {{ $slot}}
+            {{ $slot }}
         </tk:listbox.items>
     </tk:popover>
 </div>

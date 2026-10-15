@@ -1,6 +1,5 @@
-import { toNumber } from './number'
+import { clamp, toNumber } from './number'
 
-// A bare number is milliseconds; a CSS time ('0.3s', '300ms') by its unit. 0 is a time too: only an unreadable value takes the fallback.
 export function toMilliseconds(value, fallback = 0) {
   const parsed = toNumber(value)
 
@@ -28,4 +27,25 @@ export function debounce(callback, delay = 300) {
   debounced.cancel = () => clearTimeout(timeout)
 
   return debounced
+}
+
+export function readingDuration(title = '', message = '') {
+  const text = `${title} ${message}`.trim()
+
+  const min = 3000
+  const max = 9000
+  const base = 1000
+
+  const weightedLength =
+    (title?.length ?? 0) * 1.2 +
+    (message?.length ?? 0) * 1.6
+
+  const readingSpeed = 16
+
+  let time = base + (weightedLength / readingSpeed) * 1000
+
+  const lines = text.split('\n').length
+  time += lines * 300
+
+  return clamp(time, min, max)
 }

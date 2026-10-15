@@ -109,13 +109,13 @@ $hasControls = $canPin || $canDrag || $canResize || $canHide || $hasHandle;
             @if ($canPin)
                 <button
                     type="button"
-                    x-on:click="columnTogglePin(@js($key))"
-                    x-bind:aria-pressed="isColumnPinned(@js($key))"
-                    x-bind:aria-label="isColumnPinned(@js($key)) ? @js(__('Unpin column')) : @js(__('Pin column'))"
+                    x-on:click="columnTogglePin({{ Js::from($key) }})"
+                    x-bind:aria-pressed="isColumnPinned({{ Js::from($key) }})"
+                    x-bind:aria-label="isColumnPinned({{ Js::from($key) }}) ? {{ Js::from(__('Unpin column')) }} : {{ Js::from(__('Pin column')) }}"
                     class="cursor-pointer opacity-60 hover:opacity-100 aria-pressed:opacity-100"
                 >
-                    <span x-cloak x-show="! isColumnPinned(@js($key))"><tk:icon icon="pin-outline" size="xs" /></span>
-                    <span x-cloak x-show="isColumnPinned(@js($key))"><tk:icon icon="pin" size="xs" /></span>
+                    <span x-cloak x-show="! isColumnPinned({{ Js::from($key) }})"><tk:icon icon="pin-outline" size="xs" /></span>
+                    <span x-cloak x-show="isColumnPinned({{ Js::from($key) }})"><tk:icon icon="pin" size="xs" /></span>
                 </button>
             @endif
 
@@ -132,10 +132,10 @@ $hasControls = $canPin || $canDrag || $canResize || $canHide || $hasHandle;
 
             @if ($canResize)
                 <span
-                    x-on:pointerdown="columnResizeStart(@js($key), $event)"
-                    x-on:dblclick="columnResizeFit(@js($key))"
-                    x-on:keydown="columnResizeKey(@js($key), $event)"
-                    x-bind:aria-valuenow="columnResizeValue(@js($key), $el)"
+                    x-on:pointerdown="columnResizeStart({{ Js::from($key) }}, $event)"
+                    x-on:dblclick="columnResizeFit({{ Js::from($key) }})"
+                    x-on:keydown="columnResizeKey({{ Js::from($key) }}, $event)"
+                    x-bind:aria-valuenow="columnResizeValue({{ Js::from($key) }}, $el)"
                     tabindex="0"
                     role="separator"
                     aria-orientation="vertical"
@@ -152,8 +152,9 @@ $hasControls = $canPin || $canDrag || $canResize || $canHide || $hasHandle;
             @if ($canHide)
                 <button
                     type="button"
-                    x-on:click="columnHide(@js($key))"
+                    x-on:click="columnHide({{ Js::from($key) }})"
                     aria-label="{{ __('Hide column') }}"
+                    {{ TALLKit::dataKey('column-hide') }}
                     class="cursor-pointer opacity-60 hover:opacity-100"
                 >
                     <tk:icon icon="eye-off" size="xs" />

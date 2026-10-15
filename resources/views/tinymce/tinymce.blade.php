@@ -11,17 +11,17 @@
 
 $upload = TALLKit::editorUpload($upload);
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = $attributes->fieldContext(label: $label, id: $id, scope: get_defined_vars());
 $value = TALLKit::fieldOldValue($fieldName, $value);
 
 @endphp
 <tk:field.wrapper
     :$name
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :attributes="$attributes->withFieldProps(get_defined_vars())"
 >
     <tk:field.control
         :$size
-        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())"
+        :attributes="$attributes->withFieldControlProps(get_defined_vars())"
     >
         <div
             wire:ignore
@@ -53,12 +53,11 @@ $value = TALLKit::fieldOldValue($fieldName, $value);
                             'id' => $id,
                             'wire:model' => $wireModel,
                             'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
-                            'aria-invalid' => $invalid ? 'true' : null,
-                            'data-invalid' => $invalid ? true : null,
+                            ...TALLKit::fieldInvalid($invalid),
                         ])
-                        ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: ['editor:']))
+                        ->withoutFieldPrefixes(['editor:'])
                 }}
-            >{{ in_livewire() ? null : ($value ?? $slot) }}</textarea>
+            >{{ unless_livewire($value ?? $slot) }}</textarea>
         </div>
     </tk:field.control>
 </tk:field.wrapper>

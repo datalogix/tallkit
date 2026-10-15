@@ -8,15 +8,13 @@ $separatorClasses = TALLKit::classes('group-last/breadcrumb:hidden mx-2 opacity-
 @endphp
 @if ($icon == null)
     <tk:icon
-        :attributes="$attributes->classes($separatorClasses, 'rtl:hidden')"
+        :attributes="$attributes->classes($separatorClasses, 'rtl:-scale-x-100')"
         icon="chevron-right"
     />
-    <tk:icon
-        :attributes="$attributes->classes($separatorClasses, 'hidden rtl:inline')"
-        icon="chevron-left"
-    />
 @elseif (TALLKit::isSlot(slot: $icon))
-    {{ $icon }}
+    <span {{ $attributes->classes($separatorClasses, 'inline-flex items-center')->merge(['aria-hidden' => 'true']) }}>
+        {{ $icon }}
+    </span>
 @elseif ($icon === 'slash')
     <tk:icon
         :attributes="$attributes->classes($separatorClasses, 'rtl:-scale-x-100')"

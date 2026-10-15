@@ -11,7 +11,12 @@ export function onLivewireCommit(handler) {
   return typeof off === 'function' ? off : () => {}
 }
 
-// An update puts the server's attributes back: the ones set here on a matching element are kept.
+export function onLivewireMorphed(handler) {
+  const off = window.Livewire?.hook('morphed', handler)
+
+  return typeof off === 'function' ? off : () => {}
+}
+
 export function keepAttributesOnMorph(match, names) {
   const off = window.Livewire?.hook('morph.updating', ({ el, toEl }) => {
     if (!toEl?.setAttribute || !el?.getAttribute || !match(el)) return
@@ -27,7 +32,6 @@ export function keepAttributesOnMorph(match, names) {
 
 let skippingDismissed = false
 
-// Left out of the morph, or Livewire's next update would put it back.
 export function keepDismissed(el) {
   el.hidden = true
   el.setAttribute(dataKey('dismissed'), '')
@@ -59,7 +63,6 @@ export function keepDismissed(el) {
 
 let syncingIgnoredFields = false
 
-// wire:ignore keeps the field's error state out of Livewire's updates too: copied over here.
 export function syncIgnoredFieldState() {
   if (syncingIgnoredFields || !window.Livewire) return
 

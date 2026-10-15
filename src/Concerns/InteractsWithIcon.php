@@ -22,7 +22,6 @@ trait InteractsWithIcon
 
     protected function iconStoragePath(string $name)
     {
-        // A folder per collection: ":" isn't allowed in Windows file names.
         return storage_path('app/tallkit/icons/'.str_replace(':', '/', Str::lower($name)).'.svg');
     }
 
@@ -49,7 +48,10 @@ trait InteractsWithIcon
 
     protected function iconCollections(): array
     {
-        return (array) config('tallkit.icon.collections', ['mdi', 'material-symbols', 'material-symbols-light', 'ic', 'ph', 'solar', 'tabler', 'hugeicons', 'fluent', 'heroicons', 'arcticons', 'openmoji', 'game-icons']);
+        return (array) config('tallkit.icon.collections', [
+            'mdi', 'material-symbols', 'material-symbols-light', 'ic', 'ph', 'solar', 'tabler',
+            'hugeicons', 'fluent', 'heroicons', 'arcticons', 'openmoji', 'game-icons',
+        ]);
     }
 
     public function iconLookup(array $names, bool $retry = false, bool $refresh = false): array
@@ -159,7 +161,7 @@ trait InteractsWithIcon
         return static::$iconManifest;
     }
 
-    protected function iconRemember(array $icons): void
+    protected function iconRemember(array $icons, bool $replace = false): void
     {
         $path = $this->iconManifestPath();
 
@@ -170,7 +172,7 @@ trait InteractsWithIcon
         try {
             flock($lock, LOCK_EX);
 
-            $icons = [...$this->iconManifest(fresh: true), ...$icons];
+            $icons = $replace ? $icons : [...$this->iconManifest(fresh: true), ...$icons];
             ksort($icons);
 
             $temporary = $path.'.'.Str::random(8).'.tmp';
@@ -194,22 +196,12 @@ trait InteractsWithIcon
         $root = dirname($this->iconManifestPath());
 
         foreach (File::isDirectory($root) ? File::allFiles($root) : [] as $file) {
-            if ($file->getExtension() === 'svg') {
-                $icons[Str::before($file->getRelativePathname(), '.svg')] = $file->getContents();
+            if ($file->getExtension() === 'svg' && ($svg = $this->iconSanitize($file->getContents())) !== null) {
+                $icons[str_replace([DIRECTORY_SEPARATOR, '/'], ':', Str::before($file->getRelativePathname(), '.svg'))] = $svg;
             }
         }
 
-        $icons = collect($icons)->mapWithKeys(fn ($svg, $file) => [str_replace(DIRECTORY_SEPARATOR, ':', str_replace('/', ':', $file)) => $svg])->all();
-
-        $path = $this->iconManifestPath();
-        File::ensureDirectoryExists(dirname($path));
-        File::put($path, '<?php'.PHP_EOL.PHP_EOL.'return '.var_export(Arr::sortRecursive($icons), true).';'.PHP_EOL);
-
-        if (function_exists('opcache_invalidate')) {
-            opcache_invalidate($path, true);
-        }
-
-        static::$iconManifest = $icons;
+        $this->iconRemember($icons, replace: true);
 
         return count($icons);
     }
@@ -223,7 +215,7 @@ trait InteractsWithIcon
 
     protected function iconMissingKey(string $name): string
     {
-        return $this->iconKey('missing:'.$this->iconCandidates($name)[0]);
+        return $this->iconKey('missing:'.Str::lower($name));
     }
 
     protected function iconStored(array $candidates): ?string
@@ -231,7 +223,6 @@ trait InteractsWithIcon
         foreach ($candidates as $candidate) {
             $path = $this->iconStoragePath($candidate);
 
-            // Sanitized as it's read: a file in the folder may have been put there by hand.
             if (File::exists($path)) {
                 return $this->iconSanitize(File::get($path));
             }
@@ -247,7 +238,7 @@ trait InteractsWithIcon
 
         try {
             // No LIBXML_NOENT: entities aren't expanded (and a DOCTYPE isn't taken at all).
-            $loaded = $document->loadXML($svg, LIBXML_NONET);
+            $loaded = $document->loadXML($svg, LIBXML_NONET | LIBXML_NOCDATA);
         } finally {
             libxml_clear_errors();
             libxml_use_internal_errors($errors);
@@ -258,19 +249,20 @@ trait InteractsWithIcon
         }
 
         $xpath = new \DOMXPath($document);
-        $changed = false;
+        $lower = 'translate(local-name(), "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz")';
+        $breakout = ' b big blockquote body br center code dd div dl dt em embed font h1 h2 h3 h4 h5 h6 head hr i img li listing menu'
+            .' meta nobr ol p pre ruby s small span strike strong sub sup table tt u ul var ';
 
-        $elements = $xpath->query('//*[contains(" script foreignobject iframe object embed handler listener ", concat(" ", translate(local-name(), "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"), " "))]');
+        $nodes = $xpath->query('//processing-instruction() | //comment() | //*['.$lower.' = "title" or '.$lower.' = "desc"]/*'
+            .' | //*[contains(" script foreignobject iframe object handler listener'.$breakout.'", concat(" ", '.$lower.', " "))]');
 
-        foreach (iterator_to_array($elements) as $element) {
-            $element->parentNode->removeChild($element);
-            $changed = true;
+        foreach (iterator_to_array($nodes) as $node) {
+            $node->parentNode?->removeChild($node);
         }
 
         foreach (iterator_to_array($xpath->query('//*[translate(local-name(), "STYLE", "style") = "style"]')) as $style) {
             if (preg_match('/@import|url\(\s*[\'"]?\s*(?!#)/i', html_entity_decode($style->textContent))) {
                 $style->parentNode->removeChild($style);
-                $changed = true;
             }
         }
 
@@ -281,11 +273,10 @@ trait InteractsWithIcon
             // Anywhere in the value: values="0;javascript:…" applies it on a later step.
             if (Str::startsWith($name, 'on') || Str::contains($value, ['javascript:', 'data:text/html', 'vbscript:'])) {
                 $attribute->ownerElement->removeAttributeNode($attribute);
-                $changed = true;
             }
         }
 
-        return $changed ? $document->saveXML($document->documentElement) : $svg;
+        return $document->saveXML($document->documentElement);
     }
 
     protected function iconFetchSets(array $wanted): array
@@ -323,7 +314,6 @@ trait InteractsWithIcon
                 continue;
             }
 
-            // A collection iconify doesn't have answers "404" with a 200.
             $set = trim($response->body()) === '404' ? [] : $response->json();
 
             if (! is_array($set)) {
@@ -338,7 +328,6 @@ trait InteractsWithIcon
         return [$sets, $failed];
     }
 
-    // A preferred collection that didn't answer leaves it undecided, or a lower one would win for good.
     protected function iconPick(string $name, array $candidates, array $sets, array $failed): array
     {
         foreach ($candidates as $candidate) {

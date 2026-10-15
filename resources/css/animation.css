@@ -19,7 +19,7 @@
   [data-tallkit-modal],
   [data-tallkit-modal]::backdrop,
   .tilt-shaking,
-  :is([data-tallkit-disclosure-item], .group\/disclosure) [x-collapse],
+  :is([data-tallkit-disclosure-item], .group\/disclosure) > [x-show],
   [data-tallkit-icon],
   [data-tallkit-sidebar],
   [data-tallkit-carousel-track] {
@@ -27,4 +27,8 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }
+}
+
+[data-tallkit-disclosure-settling] :is([x-show], [data-tallkit-icon]) {
+  transition-duration: 0.01ms !important;
 }

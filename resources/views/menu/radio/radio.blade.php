@@ -6,7 +6,7 @@
 ])
 <tk:menu.choice
     type="radio"
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps(), ['checked' => null, 'iconOn' => null, 'iconOff' => null, 'keepOpen' => null])"
+    :attributes="$attributes->withElementProps(get_defined_vars(), ['checked' => null, 'iconOn' => null, 'iconOff' => null, 'keepOpen' => null])"
 >
     {{ $slot }}
 </tk:menu.choice>

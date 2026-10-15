@@ -1,5 +1,7 @@
-import { bind, generateId } from '../utils'
+import { bind, dataSelector, generateId, keepAttributesOnMorph } from '../utils'
 import { toggleable } from '../mixins/toggleable'
+
+export const TRIGGER_SELECTOR = ':scope > button, :scope > [role="heading"] > button'
 
 export function disclosure() {
   const _toggleable = toggleable()
@@ -18,10 +20,45 @@ export function disclosure() {
         panel.id = generateId('disclosure')
       }
 
-      this.observer = new MutationObserver(() => this.setOpened(this.$root.hasAttribute('data-open')))
+      const buttons = Array.from(this.$root.querySelectorAll(TRIGGER_SELECTOR))
+
+      buttons.forEach((button) => {
+        if (!button.id) button.id = generateId('disclosure', null, 'trigger')
+      })
+
+      if (panel?.getAttribute('role') === 'region' && buttons[0] && !panel.hasAttribute('aria-labelledby')) {
+        panel.setAttribute('aria-labelledby', buttons[0].id)
+      }
+
+      this.observer = new MutationObserver(() => {
+        const opened = this.$root.hasAttribute('data-open')
+
+        if (this.$root.closest(dataSelector('disclosure-settling'))) {
+          this.opened = opened
+        } else {
+          this.setOpened(opened)
+        }
+      })
+
       this.observer.observe(this.$root, { attributeFilter: ['data-open'] })
 
-      bind(this.$root.querySelectorAll(':scope > button, :scope > [role="heading"] > button'), {
+      const stops = [
+        keepAttributesOnMorph((el) => buttons.includes(el), ['id', 'aria-controls', 'aria-expanded']),
+        keepAttributesOnMorph((el) => el === panel, ['id', 'aria-labelledby']),
+        window.Livewire?.hook('morph.updating', ({ el, toEl }) => {
+          if (el !== this.$root || !toEl?.querySelectorAll) return
+
+          const incoming = [...toEl.querySelectorAll(TRIGGER_SELECTOR), toEl.querySelector(':scope > button + *, :scope > [role="heading"] + *')]
+
+          ;[...buttons, panel].forEach((node, index) => {
+            if (node && incoming[index]) incoming[index].id ||= node.id
+          })
+        }),
+      ]
+
+      this._stopMorphHook = () => stops.forEach((stop) => stop?.())
+
+      bind(buttons, {
         [':aria-controls']() {
           return panel?.id ?? null
         },
@@ -48,6 +85,7 @@ export function disclosure() {
 
     destroy() {
       this.observer?.disconnect()
+      this._stopMorphHook?.()
     },
   }
 }

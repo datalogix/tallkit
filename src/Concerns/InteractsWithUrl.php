@@ -30,11 +30,18 @@ trait InteractsWithUrl
         return null;
     }
 
-    public function findImage(string $name, array $dirs = ['', 'imgs/', 'images/'], array $exts = ['png', 'jpg', 'jpeg']): ?string
+    public function findImage(string $name, array $dirs = ['', 'imgs/', 'images/'], array $extensions = ['png', 'jpg', 'jpeg']): ?string
     {
-        $paths = collect($dirs)->flatMap(fn ($dir) => collect($exts)->map(fn ($ext) => "{$dir}{$name}.{$ext}"))->all();
+        $found = app('tallkit.found-images');
+        $key = implode('|', [$name, ...$dirs, ...$extensions]);
 
-        return $this->findAsset($paths);
+        if (! $found->offsetExists($key)) {
+            $found[$key] = $this->findAsset(collect($dirs)
+                ->flatMap(fn ($dir) => collect($extensions)->map(fn ($ext) => "{$dir}{$name}.{$ext}"))
+                ->all());
+        }
+
+        return $found[$key];
     }
 
     public function safeUrl(?string $url): ?string
@@ -102,7 +109,6 @@ trait InteractsWithUrl
             return null;
         }
 
-        // Decoded: route() percent-encodes non-ASCII paths.
         $path = rawurldecode((string) parse_url($href, PHP_URL_PATH));
 
         if ($path === '' && ! $host) {

@@ -26,8 +26,7 @@ $locale ??= TALLKit::locale();
 $canonical = $canonical === true
     ? (fn ($query) => url()->current().($query ? '?'.Arr::query($query) : ''))(
         Arr::where(request()->query(), fn ($value, $key) => ! preg_match('/^(utm_|fbclid$|gclid$|msclkid$|mc_|_ga$)/', (string) $key))
-    )
-    : $canonical;
+    ) : $canonical;
 $siteName ??= config('app.name');
 
 @endphp

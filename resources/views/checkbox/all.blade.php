@@ -3,9 +3,12 @@
     'group' => null,
     'label' => 'Mark All',
 ])
-<div x-data="checkboxAll({ group: @js($group) })" class="contents">
+<div
+    x-data="checkboxAll({{ Js::from(['group' => $group]) }})"
+    class="contents"
+>
     <tk:checkbox
-        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps(), ['iconOn' => null, 'iconOff' => null, 'iconIndeterminate' => null])"
+        :attributes="$attributes->withFieldProps(get_defined_vars(), ['iconOn' => null, 'iconOff' => null, 'iconIndeterminate' => null])"
         indeterminate
     />
 </div>

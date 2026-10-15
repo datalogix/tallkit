@@ -4,6 +4,7 @@
     'size' => null,
     'identifier' => null,
     'oauth' => null,
+    'magicLinkUrl' => null,
 ])
 @php
 
@@ -20,7 +21,7 @@ $signUpUrl ??= route_detect([
 
 @endphp
 <tk:form.section
-    :attributes="$attributes->whereDoesntStartWith(['identifier:', 'password:', 'forgot-password:', 'remember:', 'submit:', 'oauth:', 'sign-up:'])->merge(['title' => 'Sign in to your account', 'subtitle' => 'Enter your access details below to sign in:'])"
+    :attributes="$attributes->whereDoesntStartWith(['identifier:', 'password:', 'forgot-password:', 'remember:', 'submit:', 'magic-link:', 'oauth:', 'sign-up:'])->merge(['title' => 'Sign in to your account', 'subtitle' => 'Enter your access details below to sign in:'])"
     :$size
 >
     {{ $slot }}
@@ -59,6 +60,15 @@ $signUpUrl ??= route_detect([
         :$size
         variant="accent"
     />
+
+    @if ($magicLinkUrl)
+        <tk:button
+            :attributes="$attributes->prefixed('magic-link:')->classes('w-full')->merge(['label' => 'E-mail me a sign-in link'])"
+            :$size
+            :href="$magicLinkUrl"
+            variant="ghost"
+        />
+    @endif
 
     <tk:page.auth.oauth
         :attributes="$attributes->prefixed('oauth:')"

@@ -40,7 +40,8 @@ export function checkAll(type, group) {
         succeed(() => this.$nextTick(() => this.updateState()))
       })
 
-      this.updateState()
+      // After the inner checkbox's x-init, which forces indeterminate on.
+      this.$nextTick(() => this.updateState())
     },
 
     destroy() {

@@ -4,10 +4,13 @@
     'reversed' => null,
     'size' => null,
     'border' => null,
+    'disabled' => null,
     'level' => 2,
+    'region' => null,
 ])
 <div
-    x-data="disclosureGroup({ exclusive: @js($exclusive) })"
+    x-data="disclosureGroup({{ Js::from(['exclusive' => (bool) $exclusive]) }})"
+    x-modelable="value"
     {{
         $attributes
             ->classes([

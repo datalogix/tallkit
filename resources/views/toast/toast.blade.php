@@ -3,7 +3,14 @@
 ])
 <div
     wire:ignore
-    x-data="toast(@js($flashed ? TALLKit::toastPullFlashed() : []), @js(['loading' => __('Loading...'), 'success' => __('Success!'), 'error' => __('Error!')]))"
+    x-data="toast({{ Js::from([
+        'flashed' => $flashed ? TALLKit::toastPullFlashed() : [],
+        'texts' => [
+            'loading' => __('Loading...'),
+            'success' => __('Success!'),
+            'error' => __('Error!'),
+        ],
+    ]) }})"
     tabindex="-1"
     {{
         $attributes
@@ -15,7 +22,6 @@
             ->classes('fixed inset-0 overflow-hidden pointer-events-none z-9999999')
     }}
 >
-    {{-- On the page before any toast: a live region added with its content often isn't read. --}}
     <div x-ref="politeRegion" role="status" aria-live="polite" aria-atomic="true" class="sr-only"></div>
     <div x-ref="assertiveRegion" role="alert" aria-live="assertive" aria-atomic="true" class="sr-only"></div>
 

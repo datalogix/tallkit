@@ -26,7 +26,7 @@
         variant="subtle"
         icon="chevron-left"
         icon:class="rtl:-scale-x-100"
-        ::disabled="isFirst()"
+        ::aria-disabled="isFirst()"
         @click="prev()"
     />
 
@@ -42,7 +42,7 @@
         variant="subtle"
         icon="chevron-right"
         icon:class="rtl:-scale-x-100"
-        ::disabled="isLast()"
+        ::aria-disabled="isLast()"
         @click="next()"
     />
 </div>

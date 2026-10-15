@@ -6,10 +6,10 @@
 ])
 <div
     wire:ignore.self
-    x-data="tab({
-        selectFirst: {{ $selectFirst !== false ? 'true' : 'false' }},
-        orientation: @js($orientation === 'vertical' ? 'vertical' : 'horizontal')
-    })"
+    x-data="tab({{ Js::from([
+        'selectFirst' => $selectFirst !== false,
+        'orientation' => $orientation === 'vertical' ? 'vertical' : 'horizontal',
+    ]) }})"
     x-modelable="selected"
     x-cloak
     {{

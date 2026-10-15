@@ -1,4 +1,4 @@
-@aware(['size', 'collapse', 'reversed', 'border', 'level'])
+@aware(['size', 'collapse', 'reversed', 'border', 'disabled', 'level', 'region'])
 @props([
     'size' => null,
     'collapse' => null,
@@ -8,6 +8,8 @@
     'disabled' => null,
     'label' => null,
     'level' => 2,
+    'region' => null,
+    'name' => null,
 ])
 <div
     wire:ignore.self
@@ -17,10 +19,13 @@
             ->dataKey('disclosure-item')
             ->whereDoesntStartWith(['trigger:', 'content:'])
             ->classes('group/disclosure')
-            ->merge(['data-open' => $expanded])
+            ->merge([
+                'data-open' => $expanded,
+                'data-name' => $name
+            ])
     }}
 >
-    @if ($label !== null)
+    @if (has_content($label))
         <tk:accordion.heading
             :attributes="$attributes->prefixed('trigger:')"
             :$size
@@ -37,6 +42,7 @@
             :$size
             :$collapse
             :$border
+            :$region
         >
             {{ $slot }}
         </tk:accordion.content>

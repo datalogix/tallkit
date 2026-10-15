@@ -7,12 +7,12 @@
 ])
 @php
 
-[$name, $fieldName, $label, , , $wireModel, $groupId] = TALLKit::fieldContext(attributes: $attributes, label: $label);
+[$name, $fieldName, $label, , , $wireModel, $groupId] = $attributes->fieldContext(label: $label);
 
 $optionId = fn ($value) => $groupId.'-'.TALLKit::idPart($value);
 $modelAttributes = $attributes->whereStartsWith(['wire:model', 'x-model'])->getAttributes() ?: array_filter(['wire:model' => $wireModel]);
 $options = TALLKit::parseOptions(attributes: $attributes);
-$required = TALLKit::isAttributeEnabled($attributes->get('required')) ?: null;
+$required = $attributes->enabled('required') ?: null;
 $errorId = $fieldName && filled(TALLKit::errorMessage(name: $fieldName, bag: TALLKit::fieldErrorBag($groupId))) ? $groupId.'-error' : null;
 
 @endphp
@@ -20,7 +20,7 @@ $errorId = $fieldName && filled(TALLKit::errorMessage(name: $fieldName, bag: TAL
     <tk:fieldset
         :$label
         :$size
-        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), ['description' => null])->whereDoesntStartWith(['heading:', 'radio:', 'error:', 'wire:model', 'x-model'])->except('required')
+        :attributes="$attributes->withProps(get_defined_vars(), ['description' => null])->whereDoesntStartWith(['heading:', 'radio:', 'error:', 'wire:model', 'x-model'])->except('required')
             ->mergeDefined(['aria-describedby' => $errorId])
             ->classes('[&_[data-tallkit-heading]]:mb-2 [&>[data-tallkit-heading]:not(:first-of-type)]:pt-2')
         "
@@ -47,7 +47,7 @@ $errorId = $fieldName && filled(TALLKit::errorMessage(name: $fieldName, bag: TAL
                         :checked="(string) $optionItemGroupValue === (string) $value"
                         :show-error="false"
                         :id="$optionId($optionItemGroupValue)"
-                        :$name
+                        :name="$name ?? $groupId"
                         :$size
                         :$align
                     />
@@ -64,7 +64,7 @@ $errorId = $fieldName && filled(TALLKit::errorMessage(name: $fieldName, bag: TAL
                     :checked="(string) $optionItemValue === (string) $value"
                     :show-error="false"
                     :id="$optionId($optionItemValue)"
-                    :$name
+                    :name="$name ?? $groupId"
                     :$size
                     :$align
                 />

@@ -8,7 +8,6 @@ use TALLKit\TALLKit;
 
 trait InteractsWithToast
 {
-    /** A string is escaped; only an HtmlString or a view is rendered as HTML. */
     public function toast(
         null|string|Htmlable $message = null,
         null|string|Htmlable $title = null,
@@ -93,7 +92,6 @@ trait InteractsWithToast
         return $this->livewireComponent()?->js('$tallkit.toast().close', $id);
     }
 
-    /** Passed by name, so `type` never collides with the positional argument. */
     protected function withTypeProxy(string $target)
     {
         $names = collect((new \ReflectionMethod($this, $target))->getParameters())

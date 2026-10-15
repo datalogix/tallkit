@@ -6,7 +6,7 @@
     'color' => null,
 ])
 <div
-    x-data="carouselControls(@js(['name' => $name]))"
+    x-data="carouselControls({{ Js::from(['name' => $name]) }})"
     {{
         $attributes
             ->dataKey('carousel-controls')

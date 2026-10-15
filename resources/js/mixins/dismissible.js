@@ -15,7 +15,6 @@ export function dismissible(animation) {
     _dismissTimeout: null,
 
     init() {
-      // A property, not an attribute: Livewire's morph would remove an attribute.
       this.$root.__tallkitDismissible = true
 
       bind(this.$root, {
@@ -25,6 +24,7 @@ export function dismissible(animation) {
           if (!trigger || !this.$root.contains(trigger)) return
           if (closestDismissible(trigger) !== this.$root) return
 
+          event.preventDefault()
           event.stopPropagation()
           this.dismiss('manual')
         },
@@ -65,7 +65,6 @@ export function dismissible(animation) {
 
         if (!this.$root.isConnected) return
 
-        // Hidden, not removed, inside Livewire: the next update would bring it back.
         if (hasLivewire() && this.$root.closest('[wire\\:id]')) {
           keepDismissed(this.$root)
         } else {
@@ -74,7 +73,7 @@ export function dismissible(animation) {
       }
 
       if (animation === 'fade') {
-        this.cancelDismiss = fadeOut(this.$root, { onDone })
+        this.cancelDismiss = fadeOut(this.$root, { onDone, remove: false })
       } else if (animation === 'collapse') {
         this.cancelDismiss = collapse(this.$root, { onDone })
       } else {

@@ -6,6 +6,16 @@
         "header  header  header"
         "sidebar main    aside"
         "sidebar footer  aside";
+
+    @variant max-lg {
+        grid-template-rows: auto 1fr auto auto;
+        grid-template-columns: min-content minmax(0, 1fr);
+        grid-template-areas:
+            "header  header"
+            "sidebar main"
+            "sidebar aside"
+            "sidebar footer";
+    }
 }
 
 *:has(>[data-tallkit-sidebar]+[data-tallkit-header]) {
@@ -13,12 +23,27 @@
         "sidebar header  header"
         "sidebar main    aside"
         "sidebar footer  aside";
+
+    @variant max-lg {
+        grid-template-areas:
+            "sidebar header"
+            "sidebar main"
+            "sidebar aside"
+            "sidebar footer";
+    }
 }
 
 html:has(dialog[open]:modal) {
   overflow: hidden;
+}
+
+/* Only when the page scrolls: on a page without a scrollbar the reserved gutter would shift the content. */
+html[data-tallkit-modal-gutter]:has(dialog[open]:modal) {
   scrollbar-gutter: stable;
 }
+
+/* TALLKit::containerWidth(): built in PHP, not in the views for Tailwind to find. */
+@source inline('[:where(&)]:max-w-{xl,2xl,4xl,5xl,6xl,7xl,[96rem],none}');
 
 /* TALLKit::frameClasses(): built in PHP, not in the views for Tailwind to find. */
 @source inline('bg-[var(--color-accent)] text-[var(--color-accent-foreground)] bg-zinc-800 dark:bg-zinc-100 bg-zinc-200 dark:bg-zinc-950 bg-white dark:bg-zinc-900 bg-transparent bg-zinc-50 dark:bg-zinc-800');

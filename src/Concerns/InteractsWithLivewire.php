@@ -26,7 +26,6 @@ trait InteractsWithLivewire
         return $this->livewireInstalled() && ExtendBlade::isRenderingLivewireComponent();
     }
 
-    // Livewire's current() is false when there is no component.
     public function livewireComponent(): ?Component
     {
         return $this->livewireInstalled() ? (app('livewire')->current() ?: null) : null;

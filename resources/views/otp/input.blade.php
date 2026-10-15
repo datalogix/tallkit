@@ -10,7 +10,7 @@
     'total' => 1,
 ])
 <tk:input
-    :attributes="TALLKit::fieldWithProps($attributes, get_defined_vars())->except('input:class')"
+    :attributes="$attributes->withFieldProps(get_defined_vars(), TALLKit::fieldControlProps())->except('input:class')"
     :$size
     :$color
     :input:class="TALLKit::classes(

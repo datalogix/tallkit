@@ -6,7 +6,7 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = $attributes->fieldContext(label: $label, id: $id, scope: get_defined_vars());
 $value = TALLKit::fieldOldValue($fieldName, $value);
 $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd || $attributes->has('class');
 $options = TALLKit::parseOptions(attributes: $attributes);
@@ -18,11 +18,11 @@ $hasMatchingOption = (bool) array_intersect($valueStrings, array_map('strval', $
 @endphp
 <tk:field.wrapper
     :$name
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :attributes="$attributes->withFieldProps(get_defined_vars())"
 >
     <tk:field.control
         :$size
-        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
+        :attributes="$attributes->withFieldControlProps(get_defined_vars())
             ->when(
                 $hasControl,
                 fn ($attrs) => $attrs->classes(
@@ -46,10 +46,9 @@ $hasMatchingOption = (bool) array_intersect($valueStrings, array_map('strval', $
                         'size' => $multiple ? ($rows ?? 5) : null,
                         'wire:model' => $wireModel,
                         'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
-                        'aria-invalid' => $invalid ? 'true' : null,
-                        'data-invalid' => $invalid ? true : null,
+                        ...TALLKit::fieldInvalid($invalid),
                     ])
-                    ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: ['select:', 'placeholder:', 'optgroup:', 'option:']))
+                    ->withoutFieldPrefixes(['select:', 'placeholder:', 'optgroup:', 'option:'])
                     ->except('class')
                     ->classes(
                         '
@@ -105,7 +104,7 @@ $hasMatchingOption = (bool) array_intersect($valueStrings, array_map('strval', $
             @if (($placeholder ?? true) && ! $multiple)
                 <tk:select.option
                     :attributes="$attributes->prefixed('placeholder:')->classes('placeholder')"
-                    :label="is_string($placeholder) ? $placeholder : '---'"
+                    :label="string_value($placeholder, '---')"
                     :selected="! $hasMatchingOption"
                     :value="''"
                 />

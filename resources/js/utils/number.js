@@ -1,6 +1,5 @@
 import { resolveLocale } from './locale'
 
-// parseFloat, not Number(): Number('') and Number(null) are 0, and '2.5px' or '300ms' are numbers too.
 export function toNumber(value, fallback = null) {
   const parsed = Number.parseFloat(value)
 

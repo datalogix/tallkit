@@ -4,7 +4,7 @@
     'icon' => 'palette-outline',
 ])
 <tk:menu.item
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->whereDoesntStartWith(['selector:'])->classes('data-active:bg-transparent!')"
+    :attributes="$attributes->withElementProps(get_defined_vars())->whereDoesntStartWith(['selector:'])->classes('data-active:bg-transparent!')"
     as="div"
     keepOpen
 >

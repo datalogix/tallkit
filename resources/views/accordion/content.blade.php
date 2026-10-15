@@ -1,8 +1,9 @@
-@aware(['size', 'collapse', 'border'])
+@aware(['size', 'collapse', 'border', 'region'])
 @props([
     'size' => null,
     'collapse' => null,
     'border' => null,
+    'region' => null,
 ])
 <div
     x-cloak
@@ -14,6 +15,7 @@
                 TALLKit::paddingBlock(size: $size, mode: 'largest'),
                 'pt-0!',
             )
+            ->when($region !== false, fn ($attrs) => $attrs->merge(['role' => 'region']))
             ->merge(['x-show' => 'opened'])
             ->merge(
                 match (true) {

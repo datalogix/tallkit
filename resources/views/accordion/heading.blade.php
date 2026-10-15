@@ -13,7 +13,7 @@
     :attributes="$attributes->classes(
         TALLKit::paddingInline(size: $border ? $size : 'none', mode: 'largest'),
         TALLKit::paddingBlock(size: $size, mode: 'largest'),
-        'w-full [&_[data-tallkit-icon]]:ml-auto',
+        'w-full whitespace-normal text-start [&_[data-tallkit-icon]]:ms-auto [&_[data-tallkit-icon]]:shrink-0',
     )"
     :$size
     :$disabled

@@ -5,7 +5,7 @@
 ])
 <tk:button
     :icon="$slot->isEmpty() ? $icon ?? 'close' : null"
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())
+    :attributes="$attributes->withElementProps(get_defined_vars())
         ->merge(['variant' => 'none', 'tooltip' => 'Close'])
         ->dataKey('dismissible')
         ->dataKey('alert-close')

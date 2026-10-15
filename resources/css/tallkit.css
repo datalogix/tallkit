@@ -1,4 +1,3 @@
-/* theme.css first: the others read its variables. */
 @import './theme.css';
 @import './animation.css';
 @import './alpine.css';

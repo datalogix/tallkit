@@ -3,7 +3,7 @@
     'label' => 'Send',
 ])
 <tk:button
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())"
+    :attributes="$attributes->withElementProps(get_defined_vars())"
     type="submit"
 >
     {{ $slot }}

@@ -13,16 +13,22 @@
 @php
 
 $swatches ??= ['#ffffff', '#000000', '#71717a', '#ef4444', '#f97316', '#eab308', '#22c55e', '#14b8a6', '#0ea5e9', '#6366f1', '#a855f7', '#ec4899', '#84cc16', '#78716c', '#18181b'];
-$style = $preview === 'underline' ? "value ? 'box-shadow: inset 0 -2px 0 0 ' + value : ''" : "'background-color: ' + (value || 'transparent')";
+$style = $preview === 'underline'
+    ? "{ boxShadow: shownValue() ? 'inset 0 -4px 0 0 ' + shownValue() : '' }"
+    : 'swatchStyle(shownValue())';
 $fieldAttributes = $standalone !== false
-    ? $attributes->filter(fn ($value, $key) => $key === 'name' || str_starts_with($key, 'wire:model') || str_starts_with($key, 'x-model'))
+    ? $attributes->filter(fn ($value, $key) => in_array($key, ['name', 'disabled', 'readonly']) || str_starts_with($key, 'wire:model') || str_starts_with($key, 'x-model'))
     : null;
+$ariaLabelBinding = has_content($ariaLabel) ?Js::from(__($ariaLabel))." + (shownValue() ? ', ' + shownValue() : '')" : null;
 
 @endphp
 @if ($standalone !== false)
 <div
     wire:ignore.self
-    x-data="colorPicker(@js(['value' => $value, 'format' => $format]))"
+    x-data="colorPicker({{ Js::from([
+        'value' => $value,
+        'format' => $format,
+    ]) }})"
     class="inline-flex"
 >
     <input
@@ -30,19 +36,19 @@ $fieldAttributes = $standalone !== false
         {{
             $fieldAttributes
                 ->dataKey('color-picker')
-                ->merge(['value' => in_livewire() ? null : $value])
+                ->merge(['value' => unless_livewire($value)])
         }}
     />
 @endif
 
 <tk:dropdown :attributes="$attributes->prefixed('dropdown:')">
     <tk:dropdown.button
-        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->whereDoesntStartWith(['dropdown:', 'popover:', 'swatch:', 'option:', 'footer:', 'custom:', 'dropper:', 'clearable:', 'wire:model', 'x-model'])->except('name')->merge(['icon' => 'palette'])"
+        :attributes="$attributes->withElementProps(get_defined_vars())->whereDoesntStartWith(['dropdown:', 'popover:', 'swatch:', 'option:', 'footer:', 'custom:', 'dropper:', 'clearable:', 'wire:model', 'x-model'])->except('name')->merge(['icon' => 'palette'])->merge($ariaLabelBinding ? ['x-bind:aria-label' => $ariaLabelBinding] : [])"
         :$size
         ::style="{{ $style }}"
         :icon::class="$preview === 'underline' ? null : '{
-            \'opacity-100\': !value,
-            \'opacity-0\': value,
+            \'opacity-100\': !shownValue(),
+            \'opacity-0\': shownValue(),
         }'"
         :arrow="false"
     />
@@ -52,12 +58,13 @@ $fieldAttributes = $standalone !== false
         :$keepOpen
     >
         <div {{ $attributes->prefixed('swatch:')->classes('grid grid-cols-5 gap-1') }}>
-            <template x-for="(swatch, index) in @js(array_values($swatches))" :key="index">
+            <template x-for="(swatch, index) in {{ Js::from(array_values($swatches)) }}" :key="index">
                 <tk:button
                     :attributes="$attributes->prefixed('option:')
                         ->classes(
                             '
                                 tk-control-transition
+                                inset-ring inset-ring-black/10 dark:inset-ring-white/20
 
                                 [&[data-active]]:ring-2
                                 [&[data-active]]:ring-offset-2
@@ -69,10 +76,12 @@ $fieldAttributes = $standalone !== false
                             TALLKit::widthHeight(size: $size)
                         )
                     "
-                    ::data-active="value === swatch"
+                    ::data-active="isActive(swatch)"
+                    ::aria-pressed="String(isActive(swatch))"
                     @click="pick(swatch)"
                     ::title="swatch"
-                    ::style="{ backgroundColor: swatch }"
+                    ::aria-label="swatch"
+                    ::style="swatchStyle(swatch)"
                 />
             </template>
         </div>
@@ -87,8 +96,9 @@ $fieldAttributes = $standalone !== false
                 <input
                     type="color"
                     data-keep-open
-                    x-bind:value="value || '#000000'"
-                    @input="pick($event.target.value)"
+                    x-bind:value="hexValue()"
+                    @input="previewNative($event.target.value)"
+                    @change="pickNative($event.target.value)"
                     {{
                         $attributes->prefixed('custom:')
                             ->classes(
@@ -102,7 +112,7 @@ $fieldAttributes = $standalone !== false
 
                 @if ($dropper)
                     <tk:button
-                        :attributes="$attributes->prefixed('dropper:')->merge(['tooltip' => __('Pick color'), 'variant' => 'none'])"
+                        :attributes="$attributes->prefixed('dropper:')->merge(['tooltip' => 'Pick color from screen', 'variant' => 'none'])"
                         :size="TALLKit::adjustSize(size: $size)"
                         @click="dropColor()"
                         x-show="hasEyeDropper()"
@@ -115,8 +125,10 @@ $fieldAttributes = $standalone !== false
                 <tk:clearable
                     :attributes="$attributes->prefixed('clearable:')"
                     :size="TALLKit::adjustSize(size: $size)"
-                    :label="is_string($clearable) ? $clearable : 'Clear'"
+                    :label="string_value($clearable, 'Clear')"
                     :icon="false"
+                    action="clear()"
+                    x-bind:class="{ 'hidden': !value }"
                 />
             @endif
         </div>

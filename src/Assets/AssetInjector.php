@@ -13,9 +13,9 @@ class AssetInjector
             try {
                 static::handle($handled);
             } finally {
-                // Shared by every request of an Octane worker.
                 app(AssetManager::class)->hasRenderedScripts = false;
                 app(AssetManager::class)->hasRenderedComponents = false;
+                app(AssetManager::class)->listenForComponents();
             }
         });
     }
@@ -26,7 +26,7 @@ class AssetInjector
             return;
         }
 
-        if (! method_exists($handled->response, 'status') || $handled->response->status() !== 200) {
+        if ($handled->response->isRedirection() || (config('app.debug') && $handled->response->isServerError())) {
             return;
         }
 
@@ -38,9 +38,9 @@ class AssetInjector
 
         $html = $handled->response->getContent();
 
-        if (is_string($html) && Str::contains($html, '</html>', true)) {
+        if (is_string($html) && ($injected = static::injectAssets($html, $assetsBody)) !== null) {
             $originalContent = $handled->response->original;
-            $handled->response->setContent(static::injectAssets($html, $assetsBody));
+            $handled->response->setContent($injected);
             $handled->response->original = $originalContent;
         }
     }
@@ -61,14 +61,14 @@ class AssetInjector
     // Before the last </body> (else </html>): an earlier one is in the content, like a string in an inline script.
     protected static function injectAssets(string $html, string $assetsBody)
     {
-        foreach (['body', 'html'] as $tag) {
-            if (preg_match_all('/<\s*\/\s*'.$tag.'\s*>/i', $html, $matches, PREG_OFFSET_CAPTURE)) {
-                $offset = end($matches[0])[1];
+        $offset = strripos($html, '</html');
 
-                return substr_replace($html, $assetsBody, $offset, 0);
-            }
+        if ($offset === false) {
+            return null;
         }
 
-        return $html;
+        $offset = strripos($html, '</body', $offset - strlen($html)) ?: $offset;
+
+        return substr_replace($html, $assetsBody, $offset, 0);
     }
 }

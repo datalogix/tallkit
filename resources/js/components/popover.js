@@ -1,12 +1,16 @@
-import { dataSelector, queryData, eventName, generateId, isRtl, onLivewireCommit, getTransitionTimeout, toMilliseconds, isRendered, placeNextTo, pushEscapeLayer, removeEscapeLayer } from '../utils'
+import { dataSelector, queryData, eventName, generateId, isRtl, onLivewireCommit, keepAttributesOnMorph, getTransitionTimeout, toMilliseconds, isRendered, placeNextTo, pushEscapeLayer, removeEscapeLayer } from '../utils'
 import { toggleable } from '../mixins/toggleable'
+
+const LONG_PRESS = 500
+
+const claimedEvents = new WeakSet()
 
 export function popover({ mode = 'hover', position = 'bottom', align = 'end', matchTriggerWidth = false, margin = 4, delay = 0 } = {}) {
   delay = toMilliseconds(delay)
 
   const _toggleable = toggleable()
 
-  const usesClick = () => mode !== 'manual' && (window.matchMedia('(hover: none)').matches || mode === 'dropdown')
+  const usesClick = () => !['manual', 'context'].includes(mode) && (window.matchMedia('(hover: none)').matches || mode === 'dropdown')
 
   return {
     ..._toggleable,
@@ -28,9 +32,8 @@ export function popover({ mode = 'hover', position = 'bottom', align = 'end', ma
     _hoverCloseTimer: null,
     _hoverOpenTimer: null,
 
-    mouseX: 0,
-    mouseY: 0,
-    _hasPointerPosition: false,
+    _pointerOffset: null,
+    _contextEvent: null,
 
     init() {
       _toggleable.init.call(this)
@@ -61,7 +64,6 @@ export function popover({ mode = 'hover', position = 'bottom', align = 'end', ma
         })
       })
 
-      // Livewire may replace the trigger or the panel and strip attributes added from JS: no stale references.
       this._syncObserver = new MutationObserver((records) => {
         const relevant = records.some((record) => record.type === 'childList'
           ? !this.popoverElement?.contains(record.target)
@@ -143,7 +145,6 @@ export function popover({ mode = 'hover', position = 'bottom', align = 'end', ma
 
       if (!el || !popoverElement) return
 
-      // Stable across replacements, so aria-controls/describedby never dangle.
       if (!popoverElement.id) {
         popoverElement.id = (this._popoverId ??= generateId('popover'))
       }
@@ -192,7 +193,6 @@ export function popover({ mode = 'hover', position = 'bottom', align = 'end', ma
       }
     },
 
-    // Plain listeners: Alpine.bind resolves `this` from the closest x-data, which may not be ours.
     bindPopoverTrigger() {
       this.unbindPopoverTrigger()
 
@@ -204,11 +204,10 @@ export function popover({ mode = 'hover', position = 'bottom', align = 'end', ma
       }
 
       if (usesClick()) {
-        // Enter or Space make a click with detail 0.
         on(trigger, 'click', (event) => this.toggle(this.popoverRole() !== 'menu' || event.detail === 0))
 
         on(trigger, 'keydown', (event) => {
-          if (!['ArrowDown', 'ArrowUp'].includes(event.key) || this.isOpened()) return
+          if (!['ArrowDown', 'ArrowUp'].includes(event.key) || (this.isOpened() && this.popoverRole() !== 'menu')) return
 
           event.preventDefault()
           this.open(event.key === 'ArrowUp' ? 'last' : true)
@@ -229,7 +228,6 @@ export function popover({ mode = 'hover', position = 'bottom', align = 'end', ma
         on(trigger, 'mouseenter', () => this.hoverOpen())
         on(trigger, 'mouseleave', () => this.hoverClose())
 
-        // Focus stays on the trigger: losing it would close the panel.
         const holdsFocus = (el) => !!el && (this.trigger?.contains(el) || this.popoverElement?.contains(el))
 
         on(trigger, 'focusin', (event) => {
@@ -255,26 +253,85 @@ export function popover({ mode = 'hover', position = 'bottom', align = 'end', ma
           on(this.popoverElement, 'mouseleave', () => this.hoverClose())
         }
       } else if (mode === 'context') {
+        let pressTimer = null
+        let pressStart = null
+        let pressed = false
+
+        const cancelPress = () => {
+          clearTimeout(pressTimer)
+          pressTimer = null
+        }
+
+        const openAt = ({ clientX, clientY }) => {
+          const rect = trigger.getBoundingClientRect()
+
+          this._pointerOffset = { x: clientX - rect.left, y: clientY - rect.top }
+
+          if (this.isOpened()) this.boundSetPosition()
+          else this.open()
+        }
+
+        cleanups.push(cancelPress, keepAttributesOnMorph((el) => el === trigger, ['tabindex']))
+
         on(trigger, 'contextmenu', (event) => {
+          if (claimedEvents.has(event)) return
+
+          claimedEvents.add(event)
+          this._contextEvent = event
           event.preventDefault()
-          this.close()
-          this.mouseX = event.clientX
-          this.mouseY = event.clientY
-          this._hasPointerPosition = true
-          this.open()
+          cancelPress()
+
+          if (pressed) return
+
+          openAt(event)
+        })
+
+        on(trigger, 'pointerdown', (event) => {
+          pressed = false
+          cancelPress()
+
+          if (event.pointerType !== 'touch' || claimedEvents.has(event)) return
+
+          claimedEvents.add(event)
+          pressStart = { clientX: event.clientX, clientY: event.clientY }
+          pressTimer = setTimeout(() => {
+            pressTimer = null
+            pressed = true
+            openAt(pressStart)
+          }, LONG_PRESS)
+        })
+
+        on(trigger, 'pointermove', (event) => {
+          if (pressTimer && Math.hypot(event.clientX - pressStart.clientX, event.clientY - pressStart.clientY) > 10) cancelPress()
+        })
+        on(trigger, 'pointerup', cancelPress)
+        on(trigger, 'pointercancel', cancelPress)
+
+        on(trigger, 'click', (event) => {
+          if (!pressed) return
+
+          pressed = false
+          event.preventDefault()
+          event.stopPropagation()
         })
 
         on(trigger, 'keydown', (event) => {
           if (event.key !== 'ContextMenu' && !(event.shiftKey && event.key === 'F10')) return
+          if (claimedEvents.has(event)) return
 
+          claimedEvents.add(event)
           event.preventDefault()
-          this.close()
-          this._hasPointerPosition = false
-          this.open()
+          this._pointerOffset = null
+
+          if (this.isOpened()) this.boundSetPosition()
+          else this.open()
         })
       }
 
-      on(trigger, eventName('open'), () => this.open())
+      on(trigger, eventName('open'), () => {
+        this._pointerOffset = null
+        this.open()
+      })
       on(trigger, eventName('close'), () => this.close())
 
       this._unbindTrigger = () => cleanups.forEach((cleanup) => cleanup())
@@ -335,7 +392,8 @@ export function popover({ mode = 'hover', position = 'bottom', align = 'end', ma
             return
           }
         } else if (mode === 'context') {
-          if (this.popoverElement?.contains(e.target)) return
+          if (e === this._contextEvent) return
+          if (this.popoverElement?.contains(e.target) && (e.type === 'contextmenu' || this.popoverElement.hasAttribute('data-keep-open') || e.target.closest('[data-keep-open]'))) return
         } else {
           return
         }
@@ -343,8 +401,10 @@ export function popover({ mode = 'hover', position = 'bottom', align = 'end', ma
         this.close()
       }
 
-      document.addEventListener('click', handler)
-      this._stopOutsideClick = () => document.removeEventListener('click', handler)
+      const types = mode === 'context' ? ['click', 'contextmenu'] : ['click']
+
+      types.forEach((type) => document.addEventListener(type, handler))
+      this._stopOutsideClick = () => types.forEach((type) => document.removeEventListener(type, handler))
     },
 
     stopOutsideClick() {
@@ -376,12 +436,13 @@ export function popover({ mode = 'hover', position = 'bottom', align = 'end', ma
           this._cancelPendingClose()
           this._cancelPendingClose = null
           this.onOpen()
+        } else if (this.popoverElement.matches(':popover-open')) {
+          // Already open: only a call that asks for focus goes on, e.g. arrows after a mouse open.
+          if (!focus) return
         } else {
-          if (this.popoverElement.matches(':popover-open')) return
           this.popoverElement.showPopover()
         }
 
-        // Next tick: neither focus() nor scrolling works on a hidden element.
         this.$nextTick(() => requestAnimationFrame(() => {
           if (!this.popoverElement?.matches(':popover-open')) return
 
@@ -402,7 +463,6 @@ export function popover({ mode = 'hover', position = 'bottom', align = 'end', ma
       })
     },
 
-    // Hidden after the leave transition, not in the middle of it.
     close() {
       this.cancelHoverOpen()
 
@@ -418,7 +478,6 @@ export function popover({ mode = 'hover', position = 'bottom', align = 'end', ma
         let fallback
 
         const hide = (event) => {
-          // Only its own transitionend: a child's bubbles up too.
           if (event && event.target !== target) return
 
           target.removeEventListener('transitionend', hide)
@@ -426,7 +485,6 @@ export function popover({ mode = 'hover', position = 'bottom', align = 'end', ma
           this._cancelPendingClose = null
 
           if (this.popoverElement?.isConnected && this.popoverElement.matches(':popover-open')) {
-            // Focus inside a hidden panel would be lost: back to the trigger.
             const hadFocus = this.popoverElement.contains(document.activeElement)
 
             this.popoverElement.hidePopover()
@@ -511,22 +569,15 @@ export function popover({ mode = 'hover', position = 'bottom', align = 'end', ma
       if (!this.popoverElement?.isConnected) return
       if (!this.popoverElement.matches(':popover-open')) return
 
-      const usesTriggerRect = mode !== 'context' || !this._hasPointerPosition
-      if (usesTriggerRect && !this.trigger?.isConnected) return
+      if (!this.trigger?.isConnected) return
 
-      let triggerRect
+      let triggerRect = this.trigger.getBoundingClientRect()
 
-      if (mode === 'context' && this._hasPointerPosition) {
-        triggerRect = {
-          top: this.mouseY,
-          bottom: this.mouseY,
-          left: this.mouseX,
-          right: this.mouseX,
-          height: 0,
-          width: 0,
-        }
-      } else {
-        triggerRect = this.trigger.getBoundingClientRect()
+      if (mode === 'context' && this._pointerOffset) {
+        const x = triggerRect.left + this._pointerOffset.x
+        const y = triggerRect.top + this._pointerOffset.y
+
+        triggerRect = { top: y, bottom: y, left: x, right: x, height: 0, width: 0 }
       }
 
       if (matchTriggerWidth) {

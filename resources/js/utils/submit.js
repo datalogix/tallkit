@@ -2,7 +2,6 @@ import { dataKey, dataSelector, queryAllData } from './naming'
 
 let guarding = false
 
-// After the submit event: a disabled button leaves its name and value out of the data.
 export function guardFormResubmit() {
   if (guarding) return
 
@@ -47,14 +46,12 @@ export function guardFormResubmit() {
 
 let guardingLoading = false
 
-// Stopped before Livewire's listener: Enter or Space would run the action again while it loads.
 export function guardLoadingButtons() {
   if (guardingLoading) return
 
   guardingLoading = true
 
   document.addEventListener('click', (event) => {
-    // A disabled link-button takes the pointer (its tooltip shows): its clicks are stopped here.
     if (event.target?.closest?.(`${dataSelector('button')}[aria-disabled=true]`)) {
       event.preventDefault()
       event.stopImmediatePropagation()

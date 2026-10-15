@@ -45,6 +45,7 @@
 
     <tk:header
         :attributes="$attributes->prefixed('header:')->classes('gap-2')"
+        sticky
     >
         <tk:sidebar.toggle
             :attributes="$attributes->prefixed('sidebar-open:')->classes('lg:hidden')"
@@ -74,12 +75,12 @@
         {{ $slot }}
     </tk:main>
 
-    @isset ($aside)
+    @if (has_content($aside ?? null))
         <tk:aside
             :attributes="$attributes->prefixed('aside:')"
             sticky
         >
             {{ $aside }}
         </tk:aside>
-    @endisset
+    @endif
 </div>

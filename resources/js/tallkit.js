@@ -1,7 +1,6 @@
 import { bootAlpine } from './alpine'
 import { tallkit, exposeGlobals } from './core'
 
-// document.currentScript is only set while the script runs.
 const script = document.currentScript
 const load = script?.dataset.loadAlpine !== 'false'
 

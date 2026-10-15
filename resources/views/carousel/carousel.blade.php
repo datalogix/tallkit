@@ -33,19 +33,20 @@ $progressAttributes = $attributes->prefixed('progress:')
 @if ($hasSlotSlides || $slides->isNotEmpty())
     <div
         wire:ignore.self
-        x-data="carousel(@js([
+        x-data="carousel({{ Js::from([
             'name' => $name ?? TALLKit::stableId('carousel'),
             'autoplay' => (bool) $autoplay,
             'interval' => (int) ($interval ?: 5000),
             'advance' => $advance === 'page' ? 'page' : 'slide',
             'wrap' => $wrap !== false,
             'fade' => (bool) $fade,
-        ]))"
+        ]) }})"
         x-modelable="current"
         x-cloak
         role="{{ $label ? 'region' : 'group' }}"
         {{
-            $attributes->prefixed('container:')
+            $attributes->whereStartsWith(['wire:model', 'x-model'])
+                ->merge($attributes->prefixed('container:')->getAttributes())
                 ->dataKey('carousel')
                 ->classes('flex flex-col gap-2')
                 ->merge(['aria-label' => $label ? __($label) : null, 'aria-roledescription' => __('carousel')])
@@ -60,7 +61,7 @@ $progressAttributes = $attributes->prefixed('progress:')
             <div
                 {{
                     $attributes
-                        ->whereDoesntStartWith(['container:', 'area:', 'track:', 'slide:', 'arrows:', 'prev:', 'next:', 'indicators:', 'thumbnails:', 'progress:', 'pause:', 'pause-area:'])
+                        ->whereDoesntStartWith(['wire:model', 'x-model', 'container:', 'area:', 'track:', 'slide:', 'arrows:', 'prev:', 'next:', 'indicators:', 'thumbnails:', 'progress:', 'pause:', 'pause-area:'])
                         ->dataKey('carousel-viewport')
                         ->classes('overflow-hidden touch-pan-y')
                 }}

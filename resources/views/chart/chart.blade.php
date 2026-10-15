@@ -19,8 +19,7 @@ $tag = $library === 'chartjs' ? 'canvas' : 'div';
                 ->merge(['role' => 'figure', 'aria-label' => __($label ?? 'Chart')])
         }}
         x-ref="target"
-        @if ($options) x-init="render(serverOptions() ?? @js($options))" @endif
+        @if ($options || ($attributes->has('data-options') && ! $attributes->has('x-effect'))) x-init="render(serverOptions() ?? {{ Js::from($options) }})" @endif
     ></{{ $tag }}>
 </tk:loadable>
-{{-- Outside wire:ignore, so each Livewire update brings them. --}}
 <script type="application/json" {{ TALLKit::dataKey('options') }}>{!! Illuminate\Support\Js::encode($options) !!}</script>

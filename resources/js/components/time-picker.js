@@ -67,7 +67,6 @@ export function timePicker({
       _bindableField.init.call(this)
       this.syncTyped()
 
-      // Not while typed in: a time read halfway ("09:30" before "PM") would be written over it.
       this.$watch('value', () => {
         if (!this.typing) this.syncTyped()
       })

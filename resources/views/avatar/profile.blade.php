@@ -1,16 +1,14 @@
 @props([
     ...TALLKit::elementProps(),
     'size' => null,
-    'prepend' => null,
     'description' => null,
-    'append' => null,
     'actions' => null,
     'image' => null,
     'showEmail' => true,
 ])
 @php
 
-[$user, $name, $email] = TALLKit::userContext(attributes: $attributes);
+[$user, $name, $email, $username] = TALLKit::userContext(attributes: $attributes);
 $image ??= data_get($user, 'image');
 $description ??= data_get($user, 'description', $showEmail ? $email : null);
 
@@ -34,10 +32,14 @@ $description ??= data_get($user, 'description', $showEmail ? $email : null);
 >
     <x-slot:icon>
         <tk:avatar
-            :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->whereDoesntStartWith([
+            :attributes="$attributes->withProps(get_defined_vars(), array_diff_key(TALLKit::elementProps(), ['prepend' => null, 'append' => null]))->whereDoesntStartWith([
                 'content:', 'container:', 'name:', 'description:', 'list:', 'actions:',
             ])
             ->merge(['alt' => ''])"
+            :$user
+            :$name
+            :$email
+            :$username
             :$size
             :src="$image"
         />

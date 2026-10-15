@@ -68,6 +68,9 @@ export function calendar({
 
       this.anchorMonth = startOfMonth(this.firstAnchorDate())
       this.focused = this.firstSelectedIso() ?? formatIsoDate(new Date())
+
+      // An x-model value only reaches the hidden field after this init.
+      if (!this.firstSelectedIso()) this.$nextTick(() => { this.anchorMonth = startOfMonth(this.firstAnchorDate()) })
     },
 
     parseInitialValue(raw) {
@@ -521,7 +524,6 @@ export function calendar({
     },
 
     focusIso(iso) {
-      // Taken now: a change of month removes the cell the key came from.
       const root = this.$root
       const targetMonth = startOfMonth(parseIsoDate(iso))
 

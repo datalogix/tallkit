@@ -6,15 +6,15 @@
 ])
 @php
 
-$hasPrefix = ! $inline && ($prefix || $attributes->prefixed('prefix:')->isNotEmpty());
-$hasSuffix = ! $inline && ($suffix || $attributes->prefixed('suffix:')->isNotEmpty());
+$hasPrefix = ! $inline && (has_content($prefix) || $attributes->prefixed('prefix:')->isNotEmpty());
+$hasSuffix = ! $inline && (has_content($suffix) || $attributes->prefixed('suffix:')->isNotEmpty());
 
-$shows = fn ($text, string $prefix) => $text || $attributes->prefixed($prefix)->only(['label', 'icon', 'prefix', 'suffix', 'icon-trailing', 'info', 'badge', 'prepend', 'append', 'kbd'])->filter(fn ($value) => (bool) $value)->isNotEmpty();
+$shows = fn ($text, string $prefix) => has_content($text) || $attributes->prefixed($prefix)->only(['label', 'icon', 'prefix', 'suffix', 'icon-trailing', 'info', 'badge', 'prepend', 'append', 'kbd'])->filter(fn ($value) => (bool) $value)->isNotEmpty();
 $hasDescription = $shows($description, 'description:');
 $hasHelp = $shows($help, 'help:');
 
 @endphp
-@if ($label || $description || $help || $hasPrefix || $hasSuffix)
+@if (has_content($label, $description, $help) || $hasPrefix || $hasSuffix)
     <tk:field :$inline :$align :attributes="$attributes->prefixed('field:')">
         <tk:label
             :attributes="TALLKit::attributesMerge(

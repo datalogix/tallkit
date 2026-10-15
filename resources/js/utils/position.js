@@ -3,7 +3,6 @@ import { clamp } from './number'
 export function placeNextTo(panel, rect, { position = 'bottom', align = 'end', margin = 4, rtl = false } = {}) {
   if (!panel.offsetWidth && !panel.offsetHeight) return false
 
-  // Measured from the origin: shrink-to-fit width depends on the room left of where it is.
   panel.style.position = 'absolute'
   panel.style.inset = 'auto'
   panel.style.top = '0px'
@@ -11,7 +10,6 @@ export function placeNextTo(panel, rect, { position = 'bottom', align = 'end', m
 
   const scrollTop = window.scrollY
   const scrollLeft = window.scrollX
-  // Without the scrollbars: innerWidth includes them.
   const viewportWidth = document.documentElement.clientWidth || window.innerWidth
   const viewportHeight = document.documentElement.clientHeight || window.innerHeight
 

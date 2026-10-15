@@ -89,10 +89,9 @@ async function loadLanguage(locale) {
   return null
 }
 
-export function tinymce({ options = {}, scripts = [], toolbar = null, upload = null, messages = {}, title = null, locale = null } = {}) {
+export function tinymce({ options = {}, scripts = [], styles = [], toolbar = null, upload = null, messages = {}, title = null, locale = null } = {}) {
   const _loadable = loadable()
 
-  // Out of Alpine's reactive data: called through its proxy, the editor breaks.
   let editor = null
 
   return {
@@ -111,7 +110,8 @@ export function tinymce({ options = {}, scripts = [], toolbar = null, upload = n
 
       this.load(() => loadRemoteAssets(
         () => !!window.tinymce,
-        ['https://cdn.jsdelivr.net/npm/tinymce@8/tinymce.min.js', ...scripts]
+        ['https://cdn.jsdelivr.net/npm/tinymce@8/tinymce.min.js', ...scripts],
+        styles
       ).then(() => this.mount()))
 
       let dark = isDark()
@@ -137,7 +137,6 @@ export function tinymce({ options = {}, scripts = [], toolbar = null, upload = n
     async mount() {
       if (this.isDestroyed()) return
 
-      // Not caught here: load() shows it, and its completion would hide it.
       const { plugins, toolbar: buttons } = resolveConfig(toolbar)
       const dark = isDark()
 
@@ -155,7 +154,6 @@ export function tinymce({ options = {}, scripts = [], toolbar = null, upload = n
         skin: dark ? 'oxide-dark' : 'oxide',
         content_css: dark ? 'dark' : 'default',
         ...(upload?.url ? { images_upload_handler: (blobInfo) => this.uploadImage(blobInfo) } : {}),
-        // Absolute addresses: a relative one breaks wherever the content is shown at another path.
         convert_urls: false,
         ...(title ? { iframe_aria_text: title } : {}),
         setup: (instance) => {
@@ -173,8 +171,6 @@ export function tinymce({ options = {}, scripts = [], toolbar = null, upload = n
       }
 
       editor = created
-
-      // iframe_aria_text names the text, not the iframe: its title is set here.
       editor.iframeElement?.setAttribute('title', title || editor.options?.get?.('iframe_aria_text') || 'Rich Text Area')
 
       this.followLockState((locked) => editor?.mode.set(locked ? 'readonly' : 'design'))

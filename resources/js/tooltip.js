@@ -89,7 +89,9 @@ export const tooltip = {
     if (!('restore' in current)) current.restore = original
   },
 
-  hide() {
+  hide(el = null) {
+    if (el && current?.trigger !== el) return
+
     hide()
   },
 
@@ -306,7 +308,6 @@ function fill(trigger) {
   if (template) {
     text.replaceChildren(template.content.cloneNode(true))
   } else {
-    // Text only: a name from data never turns into markup.
     text.textContent = textOf(trigger) ?? ''
   }
 
@@ -484,7 +485,6 @@ function descriptionsHost() {
   return descriptions
 }
 
-// prune() reads the whole page: once per pass, not once per x-tooltip.
 function schedulePrune() {
   if (pruneScheduled) return
 

@@ -13,5 +13,4 @@
         x-init="render()"
     ></div>
 </tk:loadable>
-{{-- Outside wire:ignore, so each Livewire update brings them. --}}
 <script type="application/json" {{ TALLKit::dataKey('options') }}>{!! Illuminate\Support\Js::encode($options) !!}</script>

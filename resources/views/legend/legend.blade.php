@@ -6,7 +6,7 @@
     kind="legend"
     as="legend"
     :$label
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())"
+    :attributes="$attributes->withElementProps(get_defined_vars())"
 >
     {{ $slot }}
 </tk:heading>

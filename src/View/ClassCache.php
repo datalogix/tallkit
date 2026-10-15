@@ -5,7 +5,6 @@ namespace TALLKit\View;
 use Composer\InstalledVersions;
 use TailwindMerge\TailwindMerge;
 
-/** tailwind-merge's own cache is the app's store: a query per call with a database store. */
 class ClassCache
 {
     protected static array $merged = [];
@@ -18,7 +17,6 @@ class ClassCache
 
     protected static ?string $fingerprint = null;
 
-    // A file this big has gone wrong: it isn't written any more.
     protected const MAX_ENTRIES = 20000;
 
     public static function merge(string $added, string $current): string
@@ -29,7 +27,6 @@ class ClassCache
             return $merged;
         }
 
-        // Without a cache: misses would still hit the app's store.
         static::$merger ??= TailwindMerge::factory()->withConfiguration(config('tailwind-merge', []))->make();
 
         static::put($key, $merged = static::$merger->merge($added, $current));
@@ -48,7 +45,6 @@ class ClassCache
 
     protected static function put(string $key, string $classes): void
     {
-        // A long-lived process (Octane, a queue worker) doesn't grow it forever.
         if (\count(static::$merged) >= static::MAX_ENTRIES * 2) {
             static::$merged = [];
             static::$loaded = false;
@@ -130,7 +126,10 @@ class ClassCache
 
         $temporary = $path.'.'.bin2hex(random_bytes(6)).'.tmp';
 
-        if (@file_put_contents($temporary, '<?php return '.var_export(['fingerprint' => static::fingerprint(), 'classes' => $merged], true).';'.PHP_EOL) === false) {
+        if (@file_put_contents(
+            $temporary,
+            '<?php return '.var_export(['fingerprint' => static::fingerprint(), 'classes' => $merged], true).';'.PHP_EOL,
+        ) === false) {
             return;
         }
 

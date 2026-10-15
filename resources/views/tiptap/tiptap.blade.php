@@ -12,7 +12,7 @@
 
 $upload = TALLKit::editorUpload($upload);
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = $attributes->fieldContext(label: $label, id: $id, scope: get_defined_vars());
 $value = TALLKit::fieldOldValue($fieldName, $value);
 
 $toolbarButtons = [
@@ -65,31 +65,27 @@ $toolbarSections = $toolbarSections->map(fn ($section, $index) => [
 @endphp
 <tk:field.wrapper
     :$name
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :attributes="$attributes->withFieldProps(get_defined_vars())"
 >
     <tk:field.control
         :$size
-        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())"
+        :attributes="$attributes->withFieldControlProps(get_defined_vars())"
     >
         <div
             wire:ignore
-            x-data="tiptap(
-                {{
-                    Js::from([
-                        'toolbar' => $toolbar,
-                        'version' => $version,
-                        'options' => $options ?? [],
-                        'scripts' => $scripts ?? [],
-                        'styles' => $styles ?? [],
-                        'upload' => $upload,
-                        'labelledBy' => $label ? $id.'-label' : null,
-                        'messages' => [
-                            'linkUrl' => __('Link URL'),
-                            ...TALLKit::editorUploadMessages(),
-                        ],
-                    ])
-                }}
-            )"
+            x-data="tiptap({{ Js::from([
+                'toolbar' => $toolbar,
+                'version' => $version,
+                'options' => $options ?? [],
+                'scripts' => $scripts ?? [],
+                'styles' => $styles ?? [],
+                'upload' => $upload,
+                'labelledBy' => $label ? $id.'-label' : null,
+                'messages' => [
+                    'linkUrl' => __('Link URL'),
+                    ...TALLKit::editorUploadMessages(),
+                ],
+            ]) }})"
             {{
                 $attributes->prefixed('editor:')
                     ->classes(
@@ -116,13 +112,12 @@ $toolbarSections = $toolbarSections->map(fn ($section, $index) => [
                             'id' => $id,
                             'wire:model' => $wireModel,
                             'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
-                            'aria-invalid' => $invalid ? 'true' : null,
-                            'data-invalid' => $invalid ? true : null,
+                            ...TALLKit::fieldInvalid($invalid),
                         ])
-                        ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: ['editor:', 'toolbar']))
+                        ->withoutFieldPrefixes(['editor:', 'toolbar'])
                         ->class('hidden')
                 }}
-            >{{ in_livewire() ? null : ($value ?? $slot) }}</textarea>
+            >{{ unless_livewire($value ?? $slot) }}</textarea>
 
             <input type="file" accept="image/*" x-ref="imageInput" @change="insertImage($event)" class="hidden">
             <input type="file" accept="video/*" x-ref="videoInput" @change="insertVideo($event)" class="hidden">
@@ -170,7 +165,7 @@ $toolbarSections = $toolbarSections->map(fn ($section, $index) => [
                                         $attributes->prefixed('toolbar-button-text-color:'),
                                     )
                                 "
-                                @input="setColor($event.target.value)"
+                                @picked="setColor($event.detail.value)"
                                 trigger="button"
                                 preview="underline"
                                 icon="palette"
@@ -184,7 +179,7 @@ $toolbarSections = $toolbarSections->map(fn ($section, $index) => [
                                         $attributes->prefixed('toolbar-button-highlight-color:'),
                                     )
                                 "
-                                @input="setBackgroundColor($event.target.value)"
+                                @picked="setBackgroundColor($event.detail.value)"
                                 trigger="button"
                                 preview="underline"
                                 icon="highlight"
@@ -235,7 +230,7 @@ $toolbarSections = $toolbarSections->map(fn ($section, $index) => [
 
                     @if (count($section['remainingGroups']))
                         <div
-                            x-show="@js($section['groups']).some((g) => groups.includes(g)) && @js($section['remainingGroups']).some((g) => groups.includes(g))"
+                            x-show="{{ Js::from($section['groups']) }}.some((g) => groups.includes(g)) && {{ Js::from($section['remainingGroups']) }}.some((g) => groups.includes(g))"
                             {{
                                 $attributes->prefixed('toolbar-separator:')
                                     ->classes('h-5 w-px bg-zinc-200 dark:bg-white/10')

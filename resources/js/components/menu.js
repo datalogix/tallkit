@@ -63,25 +63,30 @@ export function menu() {
           }
         },
 
-        ['@keydown.arrow-down.prevent']() {
+        ['@keydown.arrow-down.prevent'](event) {
+          if (event.target.closest(dataSelector('menu')) !== menu) return
           this.focusItem(this.menuItems(), 1)
         },
 
-        ['@keydown.arrow-up.prevent']() {
+        ['@keydown.arrow-up.prevent'](event) {
+          if (event.target.closest(dataSelector('menu')) !== menu) return
           this.focusItem(this.menuItems(), -1)
         },
 
-        ['@keydown.home.prevent']() {
+        ['@keydown.home.prevent'](event) {
+          if (event.target.closest(dataSelector('menu')) !== menu) return
           this.focusItem(this.menuItems(), 'first')
         },
 
-        ['@keydown.end.prevent']() {
+        ['@keydown.end.prevent'](event) {
+          if (event.target.closest(dataSelector('menu')) !== menu) return
           this.focusItem(this.menuItems(), 'last')
         },
 
         ['@keydown'](event) {
           if (event.key.length !== 1 || event.ctrlKey || event.metaKey || event.altKey || event.key === ' ') return
           if (event.target.closest?.('input, textarea, select, [contenteditable]')) return
+          if (event.target.closest(dataSelector('menu')) !== menu) return
 
           this.typeAhead(event.key)
         },

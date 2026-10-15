@@ -19,8 +19,11 @@ if (is_string($loading) || $loading === true) {
     }
 }
 
+$hasPrepend = has_content($prepend, $icon);
+$hasAppend = has_content($append);
+
 @endphp
-@if ($prepend || $icon || $append || $loading || $iconTrailing || $kbd || $attributes->has('class'))
+@if ($hasPrepend || $hasAppend || $loading || $iconTrailing || $kbd || $attributes->has('class'))
     <div
         {{
             $attributes->prefixed('control:')
@@ -40,7 +43,7 @@ if (is_string($loading) || $loading === true) {
                 )
         }}
     >
-        @if ($prepend || $icon)
+        @if ($hasPrepend)
             <div
                 {{
                     $attributes->prefixed('prepend:')
@@ -70,7 +73,7 @@ if (is_string($loading) || $loading === true) {
 
         {{ $slot }}
 
-        @if ($append || $loading || $iconTrailing || $kbd)
+        @if ($hasAppend || $loading || $iconTrailing || $kbd)
             <div
                 {{
                     $attributes->prefixed('append:')
@@ -78,7 +81,7 @@ if (is_string($loading) || $loading === true) {
                         ->classes([
                             'flex items-center justify-center gap-x-1.5 pe-3',
                             TALLKit::textNeutral(variant: 'subtle'),
-                            '[&:has([data-tallkit-loading].hidden)]:pe-0' => ! $append && $loading && ! $iconTrailing && ! $kbd,
+                            '[&:has([data-tallkit-loading].hidden)]:pe-0' => ! $hasAppend && $loading && ! $iconTrailing && ! $kbd,
                         ])
                 }}
             >

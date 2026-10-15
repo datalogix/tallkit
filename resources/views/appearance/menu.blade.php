@@ -2,15 +2,15 @@
     'control' => null,
     'items' => null,
 ])
-@if ($control === 'toggle' || (($control === null || $control === true) && !($items || $slot->isNotEmpty())))
+@if ($control === 'toggle' || (($control === null || $control === true) && !($items || has_content($slot))))
     <tk:appearance.toggle
         :attributes="$attributes->prefixed('toggle:')"
     />
 @endif
 
-@if ($items || $slot->isNotEmpty())
+@if ($items || has_content($slot))
     <tk:avatar.menu
-        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), ['keepOpen' => null])->whereDoesntStartWith(['toggle:', 'menu-item:'])"
+        :attributes="$attributes->withProps(get_defined_vars(), ['keepOpen' => null])->whereDoesntStartWith(['toggle:', 'menu-item:'])"
         :$items
     >
         {{ $slot ?? '' }}

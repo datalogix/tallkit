@@ -2,6 +2,8 @@
 
 namespace TALLKit\Concerns;
 
+use Illuminate\Http\Client\Pool;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -25,35 +27,61 @@ trait InteractsWithAvatar
             return null;
         }
 
-        $store = Cache::store();
-        // Hashed: an email may hold what a store refuses in a key (Memcached: spaces, over 250 characters).
         $hash = hash('xxh128', (string) $value);
+        $avatars = app('tallkit.avatars');
+
+        if ($avatars->offsetExists($hash)) {
+            return $avatars[$hash];
+        }
+
+        $store = Cache::store();
         $key = $this->storageKey('avatar', $hash);
         $cached = $store->get($key);
 
         if ($cached !== null) {
-            return $cached !== '' ? $cached : null;
+            return $avatars[$hash] = $cached !== '' ? $cached : null;
         }
 
-        if ($store->add($this->storageKey('avatar', 'pending', $hash), true, 60)) {
-            defer(function () use ($store, $key, $value, $ttl) {
-                [$url, $answered] = $this->avatarLookup($value);
+        $avatars[$hash] = null;
 
-                $store->put($key, $url ?? '', $answered ? ($ttl ?? 60 * 60 * 24 * 30) : 60 * 60);
-            });
+        if ($store->add($this->storageKey('avatar', 'pending', $hash), true, 60)) {
+            $lookups = app('tallkit.avatar-lookups');
+
+            if (! count($lookups)) {
+                defer(fn () => $this->runAvatarLookups($store, $lookups));
+            }
+
+            $lookups[$key] = [(string) $value, $ttl];
         }
 
         return null;
     }
 
-    protected function avatarLookup(string $value): array
+    protected function runAvatarLookups($store, \ArrayObject $lookups): void
     {
-        try {
-            $response = Http::connectTimeout(2)
-                ->timeout(3)
-                ->get('https://unavatar.io/'.rawurlencode($value).'?json');
-        } catch (\Throwable $e) {
-            report($e);
+        foreach (array_chunk($lookups->getArrayCopy(), 10, true) as $chunk) {
+            $responses = Http::pool(fn (Pool $pool) => array_map(
+                fn ($key) => $pool->as($key)->connectTimeout(2)->timeout(3)
+                    ->get('https://unavatar.io/'.rawurlencode($chunk[$key][0]).'?json'),
+                array_keys($chunk),
+            ));
+
+            foreach ($chunk as $key => [$value, $ttl]) {
+                [$url, $answered] = $this->avatarLookup($responses[$key] ?? null);
+
+                $store->put($key, $url ?? '', $answered ? ($ttl ?? 60 * 60 * 24 * 30) : 60 * 60);
+            }
+        }
+
+        $lookups->exchangeArray([]);
+    }
+
+    protected function avatarLookup(mixed $response): array
+    {
+        if (! $response instanceof Response) {
+            if ($response instanceof \Throwable) {
+                report($response);
+            }
 
             return [null, false];
         }

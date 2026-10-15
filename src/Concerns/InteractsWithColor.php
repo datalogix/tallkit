@@ -155,9 +155,9 @@ trait InteractsWithColor
         ');
     }
 
-    public function solidBackground(?string $color): ?string
+    public function solidBackground(?string $color, string $as = 'button'): ?string
     {
-        return $this->colorClass($color, fn () => 'bg-(--tk-solid) text-(--tk-on-solid) [&:is(button)]:hover:bg-(--tk-solid-hover)');
+        return $this->colorClass($color, fn () => "bg-(--tk-solid) text-(--tk-on-solid) [&:is({$as})]:hover:bg-(--tk-solid-hover)");
     }
 
     public function pastelBackground(?string $color): ?string

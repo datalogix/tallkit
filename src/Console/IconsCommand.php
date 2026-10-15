@@ -27,6 +27,7 @@ class IconsCommand extends Command
         $names = collect($this->argument('icons'))
             ->merge($this->iconsInViews($this->viewPaths()))
             ->filter(fn ($name) => TALLKit::iconNameIsValid($name))
+            ->map(fn ($name) => Str::lower($name))
             ->unique()
             ->sort()
             ->values();
@@ -59,7 +60,13 @@ class IconsCommand extends Command
         }
 
         $this->newLine();
-        $this->components->info(sprintf('%d icons, %d not found. %d in %s.', $names->count(), count($missing), count(TALLKit::iconManifest()), str_replace(base_path().DIRECTORY_SEPARATOR, '', TALLKit::iconManifestPath())));
+        $this->components->info(sprintf(
+            '%d icons, %d not found. %d in %s.',
+            $names->count(),
+            count($missing),
+            count(TALLKit::iconManifest()),
+            str_replace(base_path().DIRECTORY_SEPARATOR, '', TALLKit::iconManifestPath()),
+        ));
 
         if ($failed !== []) {
             $this->components->warn(sprintf('%d icons could not be checked: iconify did not answer. Run the command again in a while.', count($failed)));
@@ -70,10 +77,15 @@ class IconsCommand extends Command
 
     protected function bundle(): int
     {
-        $views = __DIR__.'/../../resources/views';
+        try {
+            $collections = Http::timeout(10)->get('https://api.iconify.design/collections')->throw()->json();
+        } catch (\Throwable $e) {
+            $this->components->error('Not written, iconify did not answer: '.$e->getMessage());
 
-        $names = collect($this->iconsInViews([$views]))
-            ->merge($this->prefixedNamesInViews($views))
+            return self::FAILURE;
+        }
+
+        $names = collect($this->iconsInViews([__DIR__.'/../../resources/views', __DIR__.'/..'], $collections))
             ->merge(collect(array_keys(TALLKit::uploadFileTypes()))->map(fn ($type) => "ph:file-{$type}")->push('ph:file'))
             ->filter(fn ($name) => TALLKit::iconNameIsValid($name))
             ->map(fn ($name) => Str::lower($name))
@@ -84,7 +96,6 @@ class IconsCommand extends Command
         $results = TALLKit::iconLookup($names->all(), retry: true, refresh: true);
         $notFound = array_keys(array_filter($results, fn ($result) => $result['status'] !== 'found'));
 
-        // All or nothing: a partial bundle would send those icons to iconify for every app.
         if ($notFound !== []) {
             $this->components->error('Not written, these could not be fetched: '.implode(', ', $notFound));
 
@@ -107,7 +118,6 @@ class IconsCommand extends Command
         ]));
 
         $byCollection = collect($results)->groupBy(fn ($result) => $result['collection'], preserveKeys: true)->map->keys();
-        $collections = Http::timeout(10)->get('https://api.iconify.design/collections', ['prefixes' => $byCollection->keys()->implode(',')])->json() ?? [];
 
         File::put($directory.'/LICENSES.md', collect([
             '# Icon licenses',
@@ -127,24 +137,6 @@ class IconsCommand extends Command
         return self::SUCCESS;
     }
 
-    protected function prefixedNamesInViews(string $path): array
-    {
-        $collections = array_keys(Http::timeout(10)->get('https://api.iconify.design/collections')->json() ?? []);
-        $names = [];
-
-        foreach (File::allFiles($path) as $file) {
-            preg_match_all("/['\"]([a-z0-9]+(?:-[a-z0-9]+)*):([a-z0-9]+(?:-[a-z0-9]+)*)['\"]/", $file->getContents(), $matches, PREG_SET_ORDER);
-
-            foreach ($matches as [, $collection, $icon]) {
-                if (in_array($collection, $collections, true)) {
-                    $names[] = "{$collection}:{$icon}";
-                }
-            }
-        }
-
-        return $names;
-    }
-
     protected function quotedValues(string $expression): array
     {
         preg_match_all("/'([^']*)'/", $expression, $matches, PREG_OFFSET_CAPTURE);
@@ -155,7 +147,7 @@ class IconsCommand extends Command
                 $before = rtrim(substr($expression, 0, $at));
                 $after = ltrim(substr($expression, $at + strlen($text)));
 
-                return ! Str::endsWith($before, ['[', '(']) && ! Str::startsWith($after, ['=>', ']']);
+                return ! Str::endsWith($before, ['[', '(', '==']) && ! Str::startsWith($after, ['=>', ']']);
             })
             ->map(fn (array $match) => trim($match[0], "'"))
             ->filter()
@@ -170,7 +162,7 @@ class IconsCommand extends Command
             ->all();
     }
 
-    protected function iconsInViews(array $paths): array
+    protected function iconsInViews(array $paths, array $collections = []): array
     {
         $names = [];
 
@@ -186,10 +178,21 @@ class IconsCommand extends Command
                 preg_match_all('/<(?:tk[:-]|x-tallkit::)icon\b(?:[^>"\']|"[^"]*"|\'[^\']*\')*?\bname="([^"{$]+)"/', $contents, $tags);
                 preg_match_all('/[\'"]icon(?:Trailing|On|Off)?[\'"]\s*=>\s*(?:\$[\w\->\[\]\'"]+\s*(?:\?\?|\?:)\s*)?\'([^\']+)\'|\bicon:\s*\'([^\']+)\'/', $contents, $arrays);
                 preg_match_all('/(?<![\w-]):icon(?:-?(?:trailing|leading|on|off|Trailing|Leading|On|Off))?="([^"]*)"/', $contents, $bound);
+                preg_match_all('/\$icon(?:Trailing|Leading|On|Off)?\s*\?\?=\s*([^;]+);/', $contents, $defaults);
 
-                $quoted = collect($bound[1])->flatMap(fn ($expression) => $this->quotedValues($expression));
+                $quoted = collect([...$bound[1], ...$defaults[1]])->flatMap(fn ($expression) => $this->quotedValues($expression));
 
                 array_push($names, ...$attributes[1], ...$tags[1], ...array_filter($arrays[1]), ...array_filter($arrays[2]), ...$quoted);
+
+                if ($collections !== []) {
+                    preg_match_all("/['\"]([a-z0-9]+(?:-[a-z0-9]+)*):([a-z0-9]+(?:-[a-z0-9]+)*)['\"]/", $contents, $prefixed, PREG_SET_ORDER);
+
+                    foreach ($prefixed as [$match, $collection]) {
+                        if (isset($collections[$collection])) {
+                            $names[] = trim($match, '\'"');
+                        }
+                    }
+                }
             }
         }
 

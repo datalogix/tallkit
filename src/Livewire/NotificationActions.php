@@ -4,7 +4,6 @@ namespace TALLKit\Livewire;
 
 use function Livewire\on;
 
-/** Macros: Livewire only calls a component's own public methods from the browser, so they go through this hook. */
 class NotificationActions
 {
     protected const MAX_IDS = 1000;
@@ -23,7 +22,12 @@ class NotificationActions
 
             $valid = match (static::ACTIONS[$method]) {
                 'id' => $isId($first),
-                'ids' => $first === null || (is_array($first) && array_is_list($first) && count($first) <= static::MAX_IDS && count($first) === count(array_filter($first, $isId))),
+                'ids' => $first === null || (
+                    is_array($first)
+                    && array_is_list($first)
+                    && count($first) <= static::MAX_IDS
+                    && count($first) === count(array_filter($first, $isId))
+                ),
             };
 
             if (! $valid || ($guard !== null && ! is_string($guard))) {

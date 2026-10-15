@@ -6,7 +6,6 @@ import { loadable } from './loadable'
 export function apexcharts() {
   const _loadable = loadable()
 
-  // Out of Alpine's reactive data: called through its proxy, the library breaks.
   let chart = null
   let source = null
 
@@ -30,7 +29,6 @@ export function apexcharts() {
         if (this.isCompleted() && this.$refs.target) this.render(next)
       })
 
-      // Drawn again from what it was given: updating only its mode would bring in the dark palette's colors.
       this._stopColorScheme = onColorSchemeChange(() => {
         if (!chart || this._fixedMode || !source) return
 

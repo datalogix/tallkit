@@ -10,28 +10,32 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = $attributes->fieldContext(label: $label, id: $id, scope: get_defined_vars());
 $value = TALLKit::fieldOldValue($fieldName, $value);
-$hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd || $copyable || $attributes->has('class');
+$hasControl = has_content($prepend, $icon, $append) || $loading || $iconTrailing || $kbd || $copyable || $attributes->has('class');
 $maxlength = (int) $maxlength;
 $hasCounter = (bool) ($counter ?? $maxlength);
-$initialLength = mb_strlen((string) (in_livewire() ? null : ($value ?? $slot)));
+$initialLength = mb_strlen((string) unless_livewire($value ?? $slot));
 $counterExpression = $maxlength ? sprintf("length + ' / %d'", $maxlength) : 'length';
 
 @endphp
 @if ($hasCounter || $maxRows)
     <div
-        x-data="textarea({ maxRows: @js($maxRows), counter: @js($hasCounter), length: @js($initialLength) })"
+        x-data="textarea({{ Js::from([
+            'maxRows' => $maxRows,
+            'counter' => $hasCounter,
+            'length' => $initialLength,
+        ]) }})"
         {{ $attributes->prefixed('area:') }}
     >
 @endif
 <tk:field.wrapper
     :$name
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :attributes="$attributes->withFieldProps(get_defined_vars())"
 >
     <tk:field.control
         :$size
-        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
+        :attributes="$attributes->withFieldControlProps(get_defined_vars())
             ->when(
                 $hasControl,
                 fn ($attrs) => $attrs->classes(
@@ -59,10 +63,9 @@ $counterExpression = $maxlength ? sprintf("length + ' / %d'", $maxlength) : 'len
                             TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                             $hasCounter && $id ? $id.'-counter' : null,
                         ])->filter()->implode(' ') ?: null,
-                        'aria-invalid' => $invalid ? 'true' : null,
-                        'data-invalid' => $invalid ? true : null,
+                        ...TALLKit::fieldInvalid($invalid),
                     ])
-                    ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: ['area:', 'counter:', 'textarea:', 'copyable:']))
+                    ->withoutFieldPrefixes(['area:', 'counter:', 'textarea:', 'copyable:'])
                     ->except('class')
                     ->classes(['field-sizing-content' => $rows === 'auto'])
                     ->classes(
@@ -91,7 +94,7 @@ $counterExpression = $maxlength ? sprintf("length + ' / %d'", $maxlength) : 'len
                         ),
                     )
             }}
-        >{{ in_livewire() ? null : ($value ?? $slot) }}</textarea>
+        >{{ unless_livewire($value ?? $slot) }}</textarea>
 
         @if ($copyable)
             <x-slot:append>
@@ -100,7 +103,7 @@ $counterExpression = $maxlength ? sprintf("length + ' / %d'", $maxlength) : 'len
                 <tk:copyable
                     :attributes="$attributes->prefixed('copyable:')"
                     :$size
-                    :label="is_string($copyable) ? $copyable : null"
+                    :label="string_value($copyable)"
                 />
             </x-slot:append>
         @endif

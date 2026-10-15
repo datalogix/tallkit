@@ -66,14 +66,11 @@ $componentAttributes = new \Illuminate\View\ComponentAttributeBag(array_map(
     @if ($csrfToken && session()->isStarted()) <meta name="csrf-token" content="{{ csrf_token() }}"> @endif
     @foreach ($metaTags as $metaName => $metaContent) <meta name="{{ $metaName }}" content="{{ $metaContent }}"> @endforeach
     @if ($meta) <tk:html.meta :attributes="$attributes->prefixed('meta:')->merge(is_array($meta) ? $meta : [])->merge(['title' => $title])" /> @endif
-    {{-- The nonce too: its loader is an inline script, blocked by a nonce-based Content-Security-Policy. --}}
     @if ($googleFonts) <tk:google.fonts :attributes="$attributes->prefixed('google-fonts:')->merge($googleFonts)->merge(['noscript' => false, 'nonce' => $nonce])" /> @endif
     <title>{{ $title }}</title>
     {{ $head ?? '' }}
-    @if ($appearance) <tk:appearance :nonce="is_string($appearance) ? $appearance : $nonce" /> @endif
-    @if ($consent && (($gtag === true ? config('services.google.gtag') : $gtag) || ($gtm === true ? config('services.google.gtm') : $gtm)))
-        <tk:google.consent :$nonce />
-    @endif
+    @if ($appearance) <tk:appearance :nonce="string_value($appearance, $nonce)" /> @endif
+    @if ($consent && (($gtag === true ? config('services.google.gtag') : $gtag) || ($gtm === true ? config('services.google.gtm') : $gtm))) <tk:google.consent :$nonce /> @endif
     @if ($gtag) <tk:google.gtag :id="$gtag" :$nonce /> @endif
     @if ($gtm) <tk:google.gtm :id="$gtm" :$nonce /> @endif
     @if ($typekit) <link href="https://use.typekit.net/{{ $typekit }}.css" rel="stylesheet" @if ($nonce) nonce="{{ $nonce }}" @endif> @endif
@@ -92,7 +89,6 @@ $componentAttributes = new \Illuminate\View\ComponentAttributeBag(array_map(
         )
 }}>
     @if ($googleFonts) <tk:google.fonts :attributes="$attributes->prefixed('google-fonts:')->merge($googleFonts)->merge(['noscript' => true])" /> @endif
-    {{-- Not with consent on: a <noscript> iframe can't wait for consent. --}}
     @if ($gtm && ! $consent) <tk:google.gtm :id="$gtm" noscript /> @endif
     {{ $slot }}
     @foreach ($components as $c => $component) <x-dynamic-component :attributes="$componentAttributes" :$component /> @endforeach

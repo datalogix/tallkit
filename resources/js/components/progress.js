@@ -17,3 +17,17 @@ export function progress(percentage = null) {
     }
   }
 }
+
+export function progressBar() {
+  return {
+    paint(value) {
+      const percent = clamp(toNumber(value, 0), 0, 100)
+      const bar = this.$root
+
+      // Going back (a restart) jumps instead of sliding backwards.
+      bar.style.transition = percent < toNumber(bar.dataset.value, 0) ? 'none' : ''
+      bar.style.width = `${percent}%`
+      bar.dataset.value = percent
+    },
+  }
+}

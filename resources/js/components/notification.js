@@ -1,9 +1,6 @@
 import { queryAllData, bind, emit, eventName } from '../utils'
 
-// For an Echo with no stopListeningForNotification().
 const NOTIFICATION_EVENT = '.Illuminate\\Notifications\\Events\\BroadcastNotificationCreated'
-
-// Counted: the channel is left when the last listener goes, not the first.
 const listening = new Map()
 
 let warned = false
@@ -40,7 +37,6 @@ export function notification({ channel = null } = {}) {
 
       const subscription = window.Echo.private(channel)
 
-      // Echo 2 has its own call; an older one takes the event's name.
       subscription.stopListeningForNotification
         ? subscription.stopListeningForNotification(this._onNotification)
         : subscription.stopListening(NOTIFICATION_EVENT, this._onNotification)

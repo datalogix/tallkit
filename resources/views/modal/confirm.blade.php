@@ -12,7 +12,7 @@
     'append' => null,
 ])
 <tk:modal
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), ['description' => null, 'prepend' => null, 'append' => null])->whereDoesntStartWith(['actions:', 'cancel:', 'confirm:'])
+    :attributes="$attributes->withProps(get_defined_vars(), ['description' => null, 'prepend' => null, 'append' => null])->whereDoesntStartWith(['actions:', 'cancel:', 'confirm:'])
         ->classes('[:where(&)]:max-w-sm')
         ->merge(['role' => 'alertdialog'])"
     :$size
@@ -35,7 +35,6 @@
         @isset ($actions)
             {{ $actions }}
         @else
-            {{-- Focus starts on the way out: an Enter pressed out of habit mustn't confirm. --}}
             <tk:modal.close
                 :attributes="$attributes->prefixed('cancel:')->merge(['label' => 'Cancel'])"
                 :$size
@@ -43,7 +42,6 @@
                 autofocus
             />
 
-            {{-- Only what it is told to call: no method guessed from the variant. --}}
             <tk:button
                 :attributes="$attributes->prefixed('confirm:')
                     ->dataKey($autoClose === false ? null : 'modal-auto-close')

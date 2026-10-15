@@ -4,11 +4,11 @@
     'size' => null,
     'variant' => null,
 ])
-@if ($slot->hasActualContent() || $label)
+@if ($slot->hasActualContent() || has_content($label))
     <tk:element
         kind="kbd"
         as="kbd"
-        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->classes(
+        :attributes="$attributes->withElementProps(get_defined_vars())->classes(
             TALLKit::fontSize(size: $size, weight: true),
             'pointer-events-none rounded',
             'text-zinc-600 dark:text-zinc-300',

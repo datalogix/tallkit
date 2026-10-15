@@ -8,8 +8,8 @@
 ])
 @php
 
-$boxPlaceholder = is_string($placeholder) ? $placeholder : null;
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
+$boxPlaceholder = string_value($placeholder);
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = $attributes->fieldContext(label: $label, id: $id, scope: get_defined_vars());
 
 $format ??= str_repeat(match ($charset) { 'alpha' => 'A', 'alphanumeric' => '*', default => '9' }, 6);
 $groups = explode('-', $format);
@@ -19,11 +19,11 @@ $digitIndex = 0;
 @endphp
 <tk:field.wrapper
     :$name
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :attributes="$attributes->withFieldProps(get_defined_vars())"
 >
     <div
         wire:ignore
-        x-data="otp(@js($submit))"
+        x-data="otp({{ Js::from($submit) }})"
         role="group"
         dir="ltr"
         id="{{ $id }}"
@@ -43,7 +43,7 @@ $digitIndex = 0;
                     ->dataKey('otp-field')
                     ->merge([
                         'name' => $name,
-                        'value' => in_livewire() ? null : $value,
+                        'value' => unless_livewire($value),
                     ])
                     ->merge($attributes->whereStartsWith(['wire:model', 'x-model'])->getAttributes() ?: array_filter(['wire:model' => $wireModel]), false)
             }}
@@ -51,7 +51,7 @@ $digitIndex = 0;
 
         <tk:field.control
             :$size
-            :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
+            :attributes="$attributes->withFieldControlProps(get_defined_vars())
                 ->classes(
                     'w-fit flex items-center isolate',
                     TALLKit::gap(size: $size),
@@ -64,7 +64,6 @@ $digitIndex = 0;
                 @foreach ($groups as $group)
                     <tk:otp.group>
                         @for ($i = 0; $i < strlen($group); $i++)
-                            {{-- Counted here: inside a bound attribute, ++ runs twice. --}}
                             @php($digitIndex++)
                             <tk:otp.input
                                 :attributes="$attributes->whereDoesntStartWith(['wire:', 'x-model', 'hidden:'])"

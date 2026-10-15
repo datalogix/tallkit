@@ -2,6 +2,7 @@
     'items' => null,
     'size' => null,
     'scale' => null,
+    'separator' => null,
 ])
 @if ($slot->hasActualContent() || collect($items)->isNotEmpty())
     @if (Str::of($slot)->trim()->startsWith('<'.'nav'))
@@ -14,7 +15,7 @@
                     ->merge(['aria-label' => __('Breadcrumb')])
             }}
         >
-            <ol {{ $attributes->prefixed('list:')->classes('flex items-center') }}>
+            <ol {{ $attributes->prefixed('list:')->classes('flex flex-wrap items-center gap-y-1 min-w-0') }}>
                 @foreach (collect($items) as $index => $item)
                     <tk:breadcrumb.item
                         :attributes="$attributes->prefixed('item:')

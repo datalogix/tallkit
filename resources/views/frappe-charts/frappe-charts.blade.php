@@ -1,4 +1,8 @@
 @props([
     'options' => null,
 ])
-<tk:chart library="frappe-charts" :$options :$attributes />
+<tk:chart
+    library="frappe-charts"
+    :$attributes
+    :$options :$attributes
+/>

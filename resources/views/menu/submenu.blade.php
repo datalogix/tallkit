@@ -13,7 +13,7 @@
     }}
 >
     <tk:menu.item
-        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->whereDoesntStartWith(['container:', 'menu:'])"
+        :attributes="$attributes->withElementProps(get_defined_vars())->whereDoesntStartWith(['container:', 'menu:'])"
         :$size
         keepOpen
         iconTrailing="chevron-right"

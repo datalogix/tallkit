@@ -20,7 +20,11 @@ $listId = $attributes->get('items:id') ?? TALLKit::stableId('listbox');
 <div
     wire:ignore.self
     @if ($standalone !== false)
-        x-data="listbox({ hideEmpty: @js($hideEmpty), clearOnSelect: @js($clearOnSelect), ...@js($fuseOptions) })"
+        x-data="listbox({{ Js::from([
+            'hideEmpty' => $hideEmpty,
+            'clearOnSelect' => $clearOnSelect,
+            ...($fuseOptions ?? []),
+        ]) }})"
     @endif
     {{
         $attributes
@@ -54,12 +58,12 @@ $listId = $attributes->get('items:id') ?? TALLKit::stableId('listbox');
 
     @if ($hasSearchable)
         @isset ($empty)
-            {{ $empty }}
+            <div {{ TALLKit::dataKey('listbox-no-records') }} hidden role="status" aria-live="polite">{{ $empty }}</div>
         @elseif ($noRecords !== false)
             <tk:listbox.no-records
                 :attributes="$attributes->prefixed('no-records:')"
                 :$size
-                :label="is_string($noRecords) ? $noRecords : null"
+                :label="string_value($noRecords)"
             />
         @endisset
     @endif

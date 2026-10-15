@@ -9,7 +9,7 @@ trait InteractsWithUser
     public function userContext(ComponentAttributeBag $attributes): array
     {
         $guard = $attributes->pluck('guard');
-        $user = $attributes->pluck('user', fn () => auth($guard)->user());
+        $user = $attributes->pluck('user', fn () => $attributes->hasAny(['name', 'email', 'username']) ? null : auth($guard)->user());
         $name = $attributes->pluck('name', data_get($user, 'name'));
         $email = $attributes->pluck('email', data_get($user, 'email'));
         $username = $attributes->pluck('username', data_get($user, 'username'));

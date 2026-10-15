@@ -1,6 +1,5 @@
 import { dataSelector, onLivewireCommit } from '../utils'
 
-// Outside the wire:ignore around the chart, so each Livewire update brings them.
 export function serverOptions() {
   return {
     _serverOptionsText: null,

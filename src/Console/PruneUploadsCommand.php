@@ -42,7 +42,10 @@ class PruneUploadsCommand extends Command
             ->values();
 
         $unused = $candidates->chunk(500)
-            ->flatMap(fn ($paths) => $paths->diff(TALLKit::uploadsInUseOf($paths->values()->all(), $disk)))
+            ->flatMap(fn ($paths) => $paths->diff(array_map(
+                fn ($path) => ltrim($path, '/'),
+                TALLKit::uploadsInUseOf($paths->values()->all(), $disk),
+            )))
             ->values();
 
         foreach ($unused as $path) {

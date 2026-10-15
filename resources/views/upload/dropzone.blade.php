@@ -23,7 +23,7 @@ $edgeButton = match ($size) {
 };
 $ariaLabel ??= in_array($variant, ['avatar', 'button', 'list'], true) || $label ? null : ($multiple ? 'Add files' : 'Add file');
 
-$button = TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps(), ['tooltip' => null])
+$button = $attributes->withElementProps(get_defined_vars(), ['tooltip' => null])
     ->whereDoesntStartWith(['container:', 'edit:', 'remove:', 'cancel:', 'progress:']);
 
 @endphp

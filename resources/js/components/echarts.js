@@ -6,7 +6,6 @@ import { loadable } from './loadable'
 export function echarts() {
   const _loadable = loadable()
 
-  // Out of Alpine's reactive data: called through its proxy, the library breaks.
   let chart = null
   let source = null
 
@@ -56,7 +55,6 @@ export function echarts() {
 
         const option = { ...options, ...this.getDataOptions(this.$refs.target) }
 
-        // Series replaced, not merged: fewer series would leave old ones drawn.
         chart.setOption(option, 'series' in option ? { replaceMerge: ['series'] } : {})
         emit(this.$refs.target, 'rendered', { chart }, { later: true })
       } catch (e) {

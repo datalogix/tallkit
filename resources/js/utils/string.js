@@ -72,7 +72,6 @@ export function normalizeText(str, options) {
   return str
 }
 
-// A javascript:, data: or vbscript: link runs code when clicked.
 export function safeUrl(url) {
   if (url === null || url === undefined || String(url).trim() === '') return null
 

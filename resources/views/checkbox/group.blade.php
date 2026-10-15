@@ -10,7 +10,7 @@
 ])
 @php
 
-[$name, $fieldName, $label, , , , $groupId] = TALLKit::fieldContext(attributes: $attributes, label: $label);
+[$name, $fieldName, $label, , , , $groupId] = $attributes->fieldContext(label: $label);
 
 $optionId = fn ($value) => $groupId.'-'.TALLKit::idPart($value);
 $modelAttributes = $attributes->whereStartsWith(['wire:model', 'x-model'])->getAttributes();
@@ -25,7 +25,7 @@ $errorId = $fieldName && filled(TALLKit::errorMessage(name: $fieldName, bag: TAL
     <tk:fieldset
         :$label
         :$size
-        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), ['description' => null])->whereDoesntStartWith(['heading:', 'checkbox:', 'error:', 'wire:model', 'x-model'])
+        :attributes="$attributes->withProps(get_defined_vars(), ['description' => null])->whereDoesntStartWith(['heading:', 'checkbox:', 'error:', 'wire:model', 'x-model'])
             ->mergeDefined(['aria-describedby' => $errorId])
             ->classes('[&_[data-tallkit-heading]]:mb-2 [&>[data-tallkit-heading]:not(:first-of-type)]:pt-2')
         "

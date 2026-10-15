@@ -19,13 +19,18 @@ use UnitEnum;
 
 trait InteractsWithTable
 {
-    public function tableColumnAttributes(?string $name, bool $toggleable = false, bool $hidden = false, bool|string|null $sticky = null, bool $pinnable = false): ComponentAttributeBag
-    {
+    public function tableColumnAttributes(
+        ?string $name,
+        bool $toggleable = false,
+        bool $hidden = false,
+        bool|string|null $sticky = null,
+        bool $pinnable = false,
+    ): ComponentAttributeBag {
         if ($name === null || $name === '') {
             return $this->attributesMerge();
         }
 
-        $attributes = ['data-column-key' => $name];
+        $attributes = ['data-column-key' => e($name)];
 
         if ($hidden) {
             $attributes['hidden'] = true;
@@ -86,7 +91,10 @@ trait InteractsWithTable
                 $labelled = ! is_array($value) && ! is_numeric($key);
                 $name = data_get($value, 'name', is_array($value) || $labelled ? $key : $value);
 
-                return is_string($name) && $name === $by && ! Str::contains($name, '.') && data_get($value, 'sortable', true) !== false;
+                return is_string($name)
+                    && $name === $by
+                    && ! Str::contains($name, '.')
+                    && data_get($value, 'sortable', true) !== false;
             });
 
         return $allowed ? $query->orderBy($by, $direction) : $query;
@@ -103,7 +111,9 @@ trait InteractsWithTable
                 $row->usesTimestamps() ? $row->getUpdatedAtColumn() : null,
             ],
             $row instanceof Model => array_diff(
-                $row->getAttributes() ? array_keys($row->getAttributes()) : Schema::connection($row->getConnectionName())->getColumnListing($row->getTable()),
+                $row->getAttributes()
+                    ? array_keys($row->getAttributes())
+                    : Schema::connection($row->getConnectionName())->getColumnListing($row->getTable()),
                 $row->getHidden(),
             ),
             default => collect($row)->keys()->all(),
@@ -119,7 +129,6 @@ trait InteractsWithTable
 
     protected function tableColumnVar(string $side, string $name): string
     {
-        // Matches the script's /[^\w-]/g, which counts UTF-16 units.
         return "--tk-column-{$side}-".preg_replace_callback(
             '/[^A-Za-z0-9_-]/u',
             fn ($match) => mb_ord($match[0]) > 0xFFFF ? '--' : '-',
@@ -145,7 +154,6 @@ trait InteractsWithTable
                 is_string($value) => is_string($translated = ($col['translate'] ?? false) ? __($value) : $value) && $translated !== $value
                     ? $translated
                     : nl2br(e($value)),
-                // Only its name: a related model of it would chain a query at each step.
                 $value instanceof Model => $html(
                     (! $value->isRelation($key) && ! (($own = data_get($value, $key)) instanceof Model || $own instanceof Enumerable) ? $own : null)
                         ?? data_get($value, 'name') ?? data_get($value, 'title') ?? data_get($value, 'text') ?? $value->getKey(),

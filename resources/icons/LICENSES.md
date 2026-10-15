@@ -42,4 +42,4 @@ The icons in `icons.php` come from these collections, through [Iconify](https://
 
 - Author: [Paweł Kuna](https://github.com/tabler/tabler-icons)
 - License: [MIT](https://github.com/tabler/tabler-icons/blob/master/LICENSE)
-- Icons: `blockquote`, `bold`, `grip-vertical`, `h-1`, `h-2`, `h-3`, `italic`, `slash`, `source-code`, `strikethrough`, `tabler:caret-down-filled`, `underline`
+- Icons: `blockquote`, `bold`, `grip-vertical`, `h-1`, `h-2`, `h-3`, `italic`, `slash`, `source-code`, `strikethrough`, `underline`

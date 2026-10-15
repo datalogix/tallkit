@@ -1,5 +1,6 @@
 @props([
     'type' => null,
+    'variant' => null,
     'icon' => null,
     'prepend' => null,
     'title' => null,
@@ -12,7 +13,6 @@
     'progress' => null,
     'duration' => null,
     'pauseOnHover' => null,
-    'options' => null,
 ])
 @php
 
@@ -20,10 +20,13 @@ $type = $type === 'error' ? 'danger' : $type;
 
 $duration ??= $progress ? true : null;
 $duration = match (true) {
-    $duration === true, $duration === 'true' => 7000,
+    $duration === true, $duration === 'true' => true,
     is_numeric($duration) => max((int) $duration, 0),
+    is_string($duration) && preg_match('/^\s*(\d+(?:\.\d+)?)\s*(ms|s)\s*$/i', $duration, $matches) => (int) round($matches[1] * (strtolower($matches[2]) === 's' ? 1000 : 1)),
     default => 0,
 };
+
+$progress = $duration === true || $duration > 0 ? $progress : null;
 
 $palette = match ($type) {
     'danger' => 'red',
@@ -33,9 +36,12 @@ $palette = match ($type) {
     default => 'zinc',
 };
 
+$variant = in_array($variant, ['outline', 'subtle'], true) ? $variant : 'soft';
+$border ??= $variant === 'outline' ? true : null;
+
 @endphp
 <tk:content
-    x-data="alertComponent({{ Js::from(($options ?? []) + [
+    x-data="alertComponent({{ Js::from([
         'duration' => $duration,
         'pauseOnHover' => $pauseOnHover ?? true,
     ]) }})"
@@ -49,10 +55,13 @@ $palette = match ($type) {
             'aria-live' => in_array($type, ['danger', 'warning']) ? 'assertive' : 'polite',
         ])
         ->classes(
-            'relative overflow-hidden mb-4 transition-all duration-300 ease-out opacity-100',
+            'relative overflow-hidden transition-all duration-300 ease-out opacity-100',
             TALLKit::padding(size: $size),
-            TALLKit::mutedBackground(color: $palette),
-            TALLKit::mutedText(color: $palette),
+            match ($variant) {
+                'outline' => 'bg-transparent '.TALLKit::textNeutral(),
+                'subtle' => TALLKit::backgroundNeutral('faint').' '.TALLKit::textNeutral(),
+                default => TALLKit::mutedBackground(color: $palette).' '.TALLKit::mutedText(color: $palette),
+            },
             match ($border) {
                 'top' => 'border-t-3',
                 'left' => 'border-l-3',
@@ -65,14 +74,11 @@ $palette = match ($type) {
                 'top', 'left', 'right', 'bottom' => '',
                 default => TALLKit::roundedSize(size: $size, mode: 'small'),
             },
-            match ($title && ($message || $slot->hasActualContent())) {
-                true => 'items-start',
-                default => 'items-center',
-            },
+            'items-start',
         )
         ->when(
             $border,
-            fn ($c) => $c->classes('border-(--tk-border)')
+            fn ($c) => $c->classes($variant === 'soft' ? 'border-(--tk-border)' : TALLKit::border(color: $palette))
         )
     "
     :$size
@@ -82,7 +88,7 @@ $palette = match ($type) {
         'warning' => 'warning-outline',
         default => 'info-circle-outline',
     }"
-    icon:class="shrink-0"
+    :icon:class="TALLKit::classes('shrink-0', $variant === 'soft' ? null : TALLKit::text(color: $palette))"
     :$title
     title:scale="large"
     title:variant="none"
@@ -92,17 +98,22 @@ $palette = match ($type) {
 >
     {{ $slot }}
 
-    @if ($prepend || $progress)
+    @if (has_content($prepend) || $progress)
         <x-slot:prepend>
             {{ $prepend }}
 
             @if ($progress)
                 <tk:progress
                     :attributes="$attributes->prefixed('progress:')
+                        ->dataKey('alert-progress')
                         ->except('bar:class')
                         ->merge([
                             'bar:class' => (string) TALLKit::classes(
-                                in_array($progress, ['top', 'bottom'], true) ? 'bg-current/40' : 'bg-black/5 dark:bg-white/10',
+                                match (true) {
+                                    ! in_array($progress, ['top', 'bottom'], true) => 'bg-black/5 dark:bg-white/10',
+                                    $variant === 'soft' => 'bg-current/40',
+                                    default => TALLKit::background(color: $palette),
+                                },
                                 $attributes->get('progress:bar:class'),
                             ),
                         ])
@@ -114,14 +125,16 @@ $palette = match ($type) {
         </x-slot:prepend>
     @endif
 
-    @if ($actions || $closable)
+    @if (has_content($actions) || $closable)
         <x-slot:actions>
             {{ $actions }}
 
             @if ($closable)
                 <tk:alert.close
-                    :attributes="$attributes->prefixed('close:')"
-                    :icon="is_string($closable) ? $closable : null"
+                    :attributes="$attributes->prefixed('close:')
+                        ->when($variant !== 'soft', fn ($attrs) => $attrs->classes('text-current', TALLKit::backgroundNeutral('faint', 'hover:')))
+                    "
+                    :icon="string_value($closable)"
                     :$size
                 />
             @endif

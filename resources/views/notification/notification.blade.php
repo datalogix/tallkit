@@ -34,7 +34,7 @@ $channel = match (true) {
 
 @endphp
 <div
-    x-data="notification({ channel: @js($channel) })"
+    x-data="notification({{ Js::from(['channel' => $channel]) }})"
     @if ($component && $interval) wire:poll.{{ max(1, (int) $interval) }}s @endif
     {{
         $attributes
@@ -48,7 +48,7 @@ $channel = match (true) {
 >
     @if ($variant === 'inline')
         <tk:notification.panel
-            :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), ['unreadCount' => null, 'markAll' => null, 'actions' => null, 'markAllIds' => null])"
+            :attributes="$attributes->withProps(get_defined_vars(), ['unreadCount' => null, 'markAll' => null, 'actions' => null, 'markAllIds' => null])"
             :$size
             :$unread
             :$read
@@ -86,7 +86,7 @@ $channel = match (true) {
                 keep-open
             >
                 <tk:notification.panel
-                    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), ['unreadCount' => null, 'markAll' => null, 'actions' => null, 'markAllIds' => null])"
+                    :attributes="$attributes->withProps(get_defined_vars(), ['unreadCount' => null, 'markAll' => null, 'actions' => null, 'markAllIds' => null])"
                     :$size
                     :$unread
                     :$read

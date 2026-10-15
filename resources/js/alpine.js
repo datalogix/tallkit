@@ -5,7 +5,6 @@ const ALPINE_VERSION = '3.17.4'
 const ALPINE_URL = (name) => `https://unpkg.com/${name}@${ALPINE_VERSION}/dist/cdn.min.js`
 const ALPINE_PLUGINS = ['@alpinejs/collapse', '@alpinejs/focus', '@alpinejs/persist', '@alpinejs/resize', '@alpinejs/mask', '@alpinejs/sort']
 
-// Plugins in parallel: each one only waits for alpine:init. The core last, as it fires it.
 function loadAlpine() {
   return Promise.all(ALPINE_PLUGINS.map((name) => loadScript(ALPINE_URL(name)))).then(() => loadScript(ALPINE_URL('alpinejs')))
 }
@@ -30,7 +29,6 @@ export function install(Alpine, tallkit) {
   installTooltips()
   tooltipDirective(Alpine)
 
-  // Replaces the object itself, so window.tallkit hands out the same reactive one.
   tallkit.appearance = Alpine.reactive(tallkit.appearance)
 
   Alpine.store('tallkit', tallkit)

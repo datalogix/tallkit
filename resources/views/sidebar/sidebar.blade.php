@@ -12,7 +12,11 @@
 @endif
 <div
     wire:ignore.self
-    x-data="sidebar(@js($name), @js($sticky), @js($stashable))"
+    x-data="sidebar({{ Js::from([
+        'name' => $name,
+        'sticky' => $sticky,
+        'stashable' => $stashable,
+    ]) }})"
     data-mobile-cloak
     {{
         $attributes

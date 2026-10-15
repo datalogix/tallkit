@@ -67,11 +67,18 @@ enum DateRangePreset: string
             self::NextYear => [$now->copy()->addYear()->startOfYear(), $now->copy()->addYear()->endOfYear()],
             self::Next14Days => [$now->copy()->startOfDay(), $now->copy()->addDays(13)->endOfDay()],
             self::Next30Days => [$now->copy()->startOfDay(), $now->copy()->addDays(29)->endOfDay()],
-            self::Next3Months => [$now->copy()->startOfDay(), $now->copy()->subDay()->addMonthsNoOverflow(3)->endOfDay()],
-            self::Next6Months => [$now->copy()->startOfDay(), $now->copy()->subDay()->addMonthsNoOverflow(6)->endOfDay()],
+            self::Next3Months => [$now->copy()->startOfDay(), self::months($now, 3)->endOfDay()],
+            self::Next6Months => [$now->copy()->startOfDay(), self::months($now, 6)->endOfDay()],
             self::AllTime => [$start?->copy()->startOfDay(), $now->copy()->endOfDay()],
             self::Custom => throw new \LogicException('A custom date range has no dates of its own.'),
         };
+    }
+
+    protected static function months(Carbon $date, int $months): Carbon
+    {
+        $end = $date->copy()->addMonthsNoOverflow($months);
+
+        return $end->day < $date->day ? $end : $end->subDay();
     }
 
     protected static function week(Carbon $date): array

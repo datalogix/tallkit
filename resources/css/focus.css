@@ -12,6 +12,7 @@
   [data-tallkit-link],
   [data-tallkit-nav-item],
   [data-tallkit-brand],
+  [data-tallkit-badge],
   [data-tallkit-badge-link],
   [data-tallkit-avatar]
 ):focus-visible {

@@ -31,7 +31,7 @@ $message ??= TALLKit::errorMessage(name: $name, slot: $slot, bag: $bag);
         @if ($message && $icon !== false)
             <tk:icon
                 :attributes="$attributes->prefixed('icon:')"
-                :icon="is_string($icon) ? $icon : 'alert-outline'"
+                :icon="string_value($icon, 'alert-outline')"
             />
         @endif
 

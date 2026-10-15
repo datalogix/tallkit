@@ -17,6 +17,7 @@ use TALLKit\Concerns\InteractsWithLivewire;
 use TALLKit\Concerns\InteractsWithLocale;
 use TALLKit\Concerns\InteractsWithModal;
 use TALLKit\Concerns\InteractsWithNaming;
+use TALLKit\Concerns\InteractsWithOAuth;
 use TALLKit\Concerns\InteractsWithOptions;
 use TALLKit\Concerns\InteractsWithSize;
 use TALLKit\Concerns\InteractsWithStepper;
@@ -44,6 +45,7 @@ class TALLKit
     use InteractsWithLocale;
     use InteractsWithModal;
     use InteractsWithNaming;
+    use InteractsWithOAuth;
     use InteractsWithOptions;
     use InteractsWithSize;
     use InteractsWithStepper;
@@ -72,5 +74,10 @@ class TALLKit
     public function isSlot($slot)
     {
         return $slot instanceof ComponentSlot;
+    }
+
+    public function hasContent($value): bool
+    {
+        return $this->isSlot($value) ? $value->hasActualContent() : $value !== false && filled($value);
     }
 }

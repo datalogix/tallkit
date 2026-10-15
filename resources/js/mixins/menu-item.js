@@ -1,6 +1,5 @@
 import { bind } from '../utils'
 
-// No `value` of its own: it would hide the group's.
 export function menuItem(checked, type) {
   return {
     checked,
@@ -29,7 +28,6 @@ export function menuItem(checked, type) {
       bind(this.$el, {
         ['@click']: () => this.toggle(),
         [':data-checked']: () => this.isChecked(),
-        // Always set, "false" too: menuitemcheckbox and menuitemradio require it.
         [':aria-checked']: () => (this.isChecked() ? 'true' : 'false')
       })
     },

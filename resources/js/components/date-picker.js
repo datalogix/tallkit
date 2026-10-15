@@ -37,7 +37,6 @@ export function datePicker({
 
       return this.parseInitialValue(raw)
     },
-    // A DateRange property gets an object, so the preset reaches the server.
     toWire: dateRange ? function () { return this.committedRange() } : null,
   })
 
@@ -105,8 +104,18 @@ export function datePicker({
     onOpen() {
       if (confirm) this.value = this.committed
       if (forceOpenTo && openTo) this.anchorMonth = startOfMonth(parseIsoDate(openTo))
+      else if (this.firstSelectedIso()) {
+        this.focused = this.firstSelectedIso()
+        this.anchorMonth = startOfMonth(this.firstAnchorDate())
+      }
 
       _popover.onOpen.call(this)
+    },
+
+    close() {
+      if (confirm) this.value = this.committed
+
+      _popover.close.call(this)
     },
 
     apply() {
@@ -146,7 +155,6 @@ export function datePicker({
         const start = parseIsoDate(this.value.start)
         const end = parseIsoDate(this.value.end)
 
-        // format(null) is the epoch.
         if (!start || !end) return null
 
         return fmt.formatRange ? fmt.formatRange(start, end) : `${fmt.format(start)} – ${fmt.format(end)}`
@@ -269,7 +277,6 @@ export function datePicker({
       this.syncTyped()
     },
 
-    // The same as the server's (TALLKit\Livewire\DateRangePreset::dates()).
     presetRange(key) {
       if (mode !== 'range') return null
 
@@ -333,7 +340,6 @@ export function datePicker({
       const range = this.presetRange(key)
       if (!range) return false
 
-      // Two presets can have the same days (this week and last 7 days).
       const chosen = this.presetRange(this.preset)
       if (chosen && this.value?.start === chosen.start && this.value?.end === chosen.end) return key === this.preset
 

@@ -5,13 +5,13 @@
 ])
 <div
     wire:ignore.self
-    x-data="navIndicator({ mode: @js($mode) })"
+    x-data="navIndicator({{ Js::from(['mode' => $mode]) }})"
     {{
         $attributes
             ->classes(
                 '
                     absolute top-0 left-0 pointer-events-none
-                    duration-700 ease-in-out will-change-transform
+                    duration-700 ease-in-out will-change-transform motion-reduce:transition-none
                     transition-[transform,width,height,border-radius,opacity,top,left]
                 ',
                 match ($mode) {

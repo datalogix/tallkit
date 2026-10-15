@@ -38,7 +38,13 @@ $subtitleId = TALLKit::generateId(prefix: 'modal', name: $name, suffix: 'subtitl
 @endisset
 <dialog
     wire:ignore.self
-    x-data="modal({ name: @js($name), dismissible: @js($dismissible), persist: @js($persist), shortcut: @js($shortcut), open: @js(TALLKit::modalFlashed($name)) })"
+    x-data="modal({{ Js::from([
+        'name' => $name,
+        'dismissible' => $dismissible,
+        'persist' => $persist,
+        'shortcut' => $shortcut,
+        'open' => TALLKit::modalFlashed($name),
+    ]) }})"
     closedby="none"
     {{
         $attributes->whereDoesntStartWith([

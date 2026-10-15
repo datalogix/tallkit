@@ -18,7 +18,7 @@ trait CanPretendToBeAFile
 
         $expires = strtotime('+1 year');
         $lastModified = @filemtime($file);
-        $cacheControl = 'public, max-age=31536000';
+        $cacheControl = 'public, max-age=31536000, immutable';
 
         if ($this->matchesCache($lastModified)) {
             return response()->make('', 304, [
@@ -30,10 +30,6 @@ trait CanPretendToBeAFile
         $headers['Expires'] = $this->httpDate($expires);
         $headers['Cache-Control'] = $cacheControl;
         $headers['Last-Modified'] = $this->httpDate($lastModified);
-
-        if (Str::endsWith($file, '.br')) {
-            $headers['Content-Encoding'] = 'br';
-        }
 
         return response()->file($file, $headers);
     }
@@ -62,10 +58,6 @@ trait CanPretendToBeAFile
 
     protected function getContentType($file)
     {
-        if (Str::endsWith($file, '.css')) {
-            return 'text/css; charset=utf-8';
-        }
-
         if (Str::endsWith($file, '.js')) {
             return 'application/javascript; charset=utf-8';
         }

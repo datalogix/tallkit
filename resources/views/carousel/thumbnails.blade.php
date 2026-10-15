@@ -32,7 +32,7 @@
             type="button"
             x-on:click="goTo(index)"
             :aria-current="index === current ? 'true' : null"
-            :aria-label="@js(__('Go to slide :number')).replace(':number', index + 1)"
+            :aria-label="{{ Js::from(__('Go to slide :number')) }}.replace(':number', index + 1)"
             :data-active="isIndexVisible(index) ? '' : null"
         >
             <template x-if="thumbnailOf(slide)">

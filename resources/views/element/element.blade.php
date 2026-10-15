@@ -32,7 +32,7 @@ $href ??= route_detect($route, $parameters, $href);
 $href = TALLKit::safeHref($href);
 $ariaLabel = $ariaLabel === true || $ariaLabel === null
     ? (in_array($as, ['a', 'button'], true) || $href || $type || $action || $attributes->has('role')
-        ? (is_string($label) && $label !== '' ? $label : ($slot->hasActualContent() ? null : $tooltip))
+        ? string_value($label, $slot->hasActualContent() ? null : $tooltip)
         : null)
     : $ariaLabel;
 $current ??= TALLKit::isCurrentHref($href, $exact, $matchQuery);
@@ -47,25 +47,28 @@ $external ??= $attributes->get('target') === '_blank';
 
 $linksToFile = $href && preg_match('/\.(?!html?$|php$)[a-z0-9]{2,5}$/i', (string) parse_url((string) $href, PHP_URL_PATH));
 
-$isDisabledLink = $as === 'a' && TALLKit::isAttributeEnabled($attributes->get('disabled'));
+$isDisabledLink = $as === 'a' && $attributes->enabled('disabled');
 
 if ($isDisabledLink) {
     $attributes = $attributes->except('disabled')->merge(['role' => 'link', 'aria-disabled' => 'true']);
 }
 
+$hasIcon = has_content($icon);
+$iconDotLabel = (is_string($iconDot) || is_int($iconDot)) && strlen((string) $iconDot) <= 2 ? (string) $iconDot : null;
+$hasInfo = has_content($info);
 $tip = TALLKit::tooltip($tooltip, $attributes, name: $ariaLabel ? __($ariaLabel) : (is_string($label) && $label !== '' ? __($label) : strip_tags((string) $slot)));
 
 @endphp
 <{{ $as }} {{ $attributes
     ->dataKey($kind)
-    ->dataKey($kind ? $kind.'-has-icon' : null, (bool) $icon)
+    ->dataKey($kind ? $kind.'-has-icon' : null, $hasIcon)
     ->whereDoesntStartWith(['tooltip:', 'icon-wrapper:', 'icon:', 'icon-dot:', 'content:', 'prefix:', 'suffix:', 'icon-trailing:', 'info:', 'badge:', 'kbd:'])
     ->when($current && $as !== 'p' && $as !== 'span', fn ($attrs) => $attrs->merge([
         'data-current' => true,
         'aria-current' => $current === true ? 'page' : $current,
     ]))
     ->classes('[:where(&)]:[overflow-wrap:anywhere]')
-    ->when($as !== 'p' || $icon, fn ($attrs) => $attrs->classes('
+    ->when($as !== 'p' || $hasIcon, fn ($attrs) => $attrs->classes('
         [:where(&)]:inline-flex
         [:where(&)]:justify-center
         [:where(&)]:items-center
@@ -91,7 +94,7 @@ $tip = TALLKit::tooltip($tooltip, $attributes, name: $ariaLabel ? __($ariaLabel)
 
     {{ $prepend ?? '' }}
 
-    @if ($icon && $iconDot)
+    @if ($hasIcon && has_content($iconDot))
         <span {{ $attributes->prefixed('icon-wrapper:')->classes('relative') }}>
             @if (is_string($icon) && $icon !== '')
                 <tk:icon
@@ -105,7 +108,7 @@ $tip = TALLKit::tooltip($tooltip, $attributes, name: $ariaLabel ? __($ariaLabel)
                 />
             @endif
 
-            @if ($iconDot)
+            @if (has_content($iconDot))
                 <span class="absolute -top-2 end-.5">
                     <tk:element
                         :attributes="$attributes->prefixed('icon-dot:')->classes([
@@ -114,14 +117,14 @@ $tip = TALLKit::tooltip($tooltip, $attributes, name: $ariaLabel ? __($ariaLabel)
                                 flex items-center justify-center
                                 text-white tracking-tighter font-bold
                                 text-[11px] size-4
-                            ' => is_string($iconDot) && strlen($iconDot) <= 2,
+                            ' => $iconDotLabel !== null,
                         ])"
-                        :label="is_string($iconDot) && strlen($iconDot) <= 2 ? $iconDot : null"
+                        :label="$iconDotLabel"
                     />
                 </span>
             @endif
         </span>
-    @elseif ($icon)
+    @elseif ($hasIcon)
         @if (is_string($icon) && $icon !== '')
             <tk:icon
                 :attributes="$attributes->prefixed('icon:')"
@@ -137,7 +140,7 @@ $tip = TALLKit::tooltip($tooltip, $attributes, name: $ariaLabel ? __($ariaLabel)
         {{ $iconEmpty ?? '' }}
     @endif
 
-    @if (isset($prefix) && $prefix !== '')
+    @if (has_content($prefix))
         <tk:element
             :attributes="$attributes->prefixed('prefix:')
                 ->classes(
@@ -153,7 +156,7 @@ $tip = TALLKit::tooltip($tooltip, $attributes, name: $ariaLabel ? __($ariaLabel)
         />
     @endif
 
-    @if ($attributes->prefixed('content:')->isNotEmpty() && ($slot->hasActualContent() || $label))
+    @if ($attributes->prefixed('content:')->isNotEmpty() && ($slot->hasActualContent() || has_content($label)))
         <tk:element
             :attributes="$attributes->prefixed('content:')"
             :$label
@@ -165,7 +168,6 @@ $tip = TALLKit::tooltip($tooltip, $attributes, name: $ariaLabel ? __($ariaLabel)
     @elseif (TALLKit::isSlot(slot: $label))
         {{ $label }}
     @elseif ($label instanceof \Illuminate\Contracts\Support\Htmlable)
-        {{-- As given, not translated: __() takes only a string. --}}
         {!! $label->toHtml() !!}
     @elseif (is_string($label))
         @php($translatedLabel = e(__($label)))
@@ -175,7 +177,7 @@ $tip = TALLKit::tooltip($tooltip, $attributes, name: $ariaLabel ? __($ariaLabel)
         {!! e(__($label)) !!}
     @endif
 
-    @if (isset($suffix) && $suffix !== '')
+    @if (has_content($suffix))
         <tk:element
             :attributes="$attributes->prefixed('suffix:')
                 ->classes(
@@ -191,14 +193,14 @@ $tip = TALLKit::tooltip($tooltip, $attributes, name: $ariaLabel ? __($ariaLabel)
         />
     @endif
 
-    @if ((is_string($iconTrailing) && $iconTrailing !== '') || $info)
+    @if ((is_string($iconTrailing) && $iconTrailing !== '') || $hasInfo)
         <tk:icon
             :attributes="TALLKit::attributesMerge($attributes->prefixed('icon-trailing:'), $attributes->prefixed('info:'))
-                ->merge($info && in_array($as, ['a', 'button'], true) ? ['tabindex' => null] : [])"
-            :icon="$info ? 'help' : $iconTrailing"
+                ->merge($hasInfo && in_array($as, ['a', 'button'], true) ? ['tabindex' => null] : [])"
+            :icon="$hasInfo ? 'help' : $iconTrailing"
             :tooltip="$info"
         />
-    @elseif ($iconTrailing)
+    @elseif (has_content($iconTrailing))
         <tk:element
             :attributes="$attributes->prefixed('icon-trailing:')->classes('[:where(&)]:ms-auto')"
             :label="$iconTrailing"
@@ -207,14 +209,14 @@ $tip = TALLKit::tooltip($tooltip, $attributes, name: $ariaLabel ? __($ariaLabel)
         {{ $iconTrailingEmpty ?? '' }}
     @endif
 
-    @if (isset($badge) && $badge !== '')
+    @if (has_content($badge))
         <tk:badge
             :attributes="$attributes->prefixed('badge:')->classes('[:where(&)]:ms-auto')"
             :label="$badge"
         />
     @endif
 
-    @if (isset($kbd) && $kbd !== '')
+    @if (has_content($kbd))
         <tk:kbd
             :attributes="$attributes->prefixed('kbd:')->classes('[:where(&)]:ms-auto')"
             :label="$kbd"

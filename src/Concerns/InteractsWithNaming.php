@@ -40,7 +40,6 @@ trait InteractsWithNaming
             ->implode('-');
     }
 
-    /** Its slug plus a short hash: "1.5" and "15", "Ação" and "Acao" don't collide, and "日本" isn't empty. */
     public function idPart(string|int $value): string
     {
         $value = (string) $value;
@@ -58,17 +57,23 @@ trait InteractsWithNaming
 
     public function stableId(string $prefix, ?string $name = null, ?string $suffix = null): string
     {
-        // Counted by the resulting id: "a.bc" and "ab.c" would collide.
-        $name = $name === null ? null : (Str::slug(str_replace(['.', '[', ']'], '-', $name)) ?: null);
+        $name = $name === null ? null : Str::slug(str_replace(['.', '[', ']'], '-', $name));
+        $name = $name === '' ? null : $name;
         $scope = $this->livewireRendering() ? $this->livewireComponentId() : null;
         $counts = app('tallkit.ids');
         $key = $prefix.'|'.$scope.'|'.$name.'|'.$suffix;
-        $count = $counts[$key] = ($counts[$key] ?? 0) + 1;
 
-        return $this->generateId(
-            prefix: $scope ? "{$prefix}-{$scope}" : $prefix,
-            name: $name ?? (string) $count,
-            suffix: collect([$name !== null && $count > 1 ? $count : null, $suffix])->filter()->implode('-'),
-        );
+        do {
+            $count = $counts[$key] = ($counts[$key] ?? 0) + 1;
+            $id = $this->generateId(
+                prefix: $scope ? "{$prefix}-{$scope}" : $prefix,
+                name: $name ?? (string) $count,
+                suffix: collect([$name !== null && $count > 1 ? $count : null, $suffix])->filter()->implode('-'),
+            );
+        } while (isset($counts['#'.$id]));
+
+        $counts['#'.$id] = true;
+
+        return $id;
     }
 }

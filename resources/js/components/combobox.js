@@ -12,7 +12,7 @@ export function combobox(
 ) {
   const isInputTrigger = trigger === 'input'
   const _popover = popover({ mode: 'manual', position: 'bottom', align: 'start', matchTriggerWidth: true })
-  const _listbox = listbox({ hideEmpty: false, clearOnSelect: !multiple })
+  const _listbox = listbox({ hideEmpty: false, clearOnSelect: !multiple, tabSelects: false })
   const _bindableField = bindableField({
     key: 'combobox-field',
     serialize() { return this.valueString() },
@@ -75,7 +75,6 @@ export function combobox(
       setFieldValue(this.input, multiple ? '' : (this.selectedLabel() ?? ''))
     },
 
-    // Both halves: spread one after the other, the listbox's destroy() replaces the popover's.
     destroy() {
       _popover.destroy.call(this)
       _listbox.destroy.call(this)
@@ -165,6 +164,13 @@ export function combobox(
 
       bind(this.input, {
         ['@keydown.enter.prevent']() {},
+
+        ['@keydown.tab']() {
+          if (multiple || !this.opened || !this.filteredItems[this.index]) return
+          this.value = this.getElementValue(this.filteredItems[this.index].el)
+          this.syncInputDisplay()
+          this.dispatchPicked(this.value)
+        },
       })
 
       bind(this.$root, {
@@ -206,8 +212,6 @@ export function combobox(
 
       highlightChosen()
 
-      // Once the popover is on screen: a hidden element can't take focus. Its search clears the highlight, so set after
-      // it.
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           this.input?.focus()

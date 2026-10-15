@@ -21,7 +21,6 @@ export function otp(submit) {
 
       _bindableField.init.call(this)
 
-      // Only the user completing the code submits it: a prefilled code must not send itself.
       this.$nextTick(() => {
         this.syncFromModel()
         this.updateModel(false)
@@ -63,8 +62,6 @@ export function otp(submit) {
     },
 
     handleFocus(input, index, inputs, event = null) {
-      // From another of its boxes, focus stays: sent back to the first empty one, Tab would never leave (a keyboard
-      // trap).
       if (input.value || inputs.includes(event?.relatedTarget)) {
         input.select()
         this.emitOnBox('focused', { input, index }, input)
@@ -135,7 +132,6 @@ export function otp(submit) {
 
     syncFromModel(val) {
       val ??= this.value
-      // String(null) would be "null".
       const chars = String(val ?? '').padEnd(this.inputs.length).split('')
 
       this._syncing = true
@@ -159,7 +155,6 @@ export function otp(submit) {
 
       const filled = values.filter(Boolean).length
 
-      // No events: a field set by a script fires none.
       if (!byUser) {
         if (filled < this.inputs.length) this._submitted = null
 

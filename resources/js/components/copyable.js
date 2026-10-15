@@ -1,7 +1,7 @@
-import { dataSelector, queryData, announce, bind, emit } from '../utils'
+import { dataKey, dataSelector, queryData, announce, bind, emit } from '../utils'
 import { tooltip } from '../tooltip'
 
-export function copyable(targetId = null, content = null) {
+export function copyable({ targetId = null, content = null, failedText = null } = {}) {
   return {
     copied: false,
     timeout: null,
@@ -32,13 +32,21 @@ export function copyable(targetId = null, content = null) {
       bind(this.$el, {
         async ['@click']() {
           clearTimeout(this.timeout)
+          tooltip.hide(this.$el)
+          this.copied = false
 
           const currentTarget = content ? null : this.findTarget()
           const text = content ?? (currentTarget ? ('value' in currentTarget ? currentTarget.value : currentTarget.innerText) : null)
+          const eventTarget = currentTarget ?? this.$root
 
-          if (text === null || !(await copyText(text))) {
-            this.copied = false
-            emit(this.$root, 'failed')
+          if (text === null || text === '' || !(await copyText(text, this.$el))) {
+            emit(eventTarget, 'failed', {}, { bubbles: true })
+
+            if (failedText) {
+              tooltip.show(this.$el, failedText)
+              announce(failedText)
+              this.reset()
+            }
 
             return
           }
@@ -46,26 +54,33 @@ export function copyable(targetId = null, content = null) {
           this.copied = true
           this.$nextTick(() => {
             tooltip.show(this.$el)
-            announce(this.$el.getAttribute('aria-label'))
+            announce(this.$el.getAttribute(dataKey('tooltip')))
           })
-          emit(currentTarget, 'copied', {}, { bubbles: true })
 
-          this.timeout = setTimeout(() => {
-            tooltip.hide()
-            this.copied = false
-            this.timeout = null
-          }, 1000)
+          emit(eventTarget, 'copied', {}, { bubbles: true })
+          this.reset()
         }
       })
     },
 
+    reset() {
+      this.timeout = setTimeout(() => {
+        tooltip.hide(this.$el)
+        this.copied = false
+        this.timeout = null
+      }, 1500)
+    },
+
     destroy() {
       clearTimeout(this.timeout)
+      tooltip.hide(this.$el)
     }
   }
 }
 
-async function copyText(text) {
+async function copyText(value, anchor) {
+  const text = String(value)
+
   try {
     if (navigator.clipboard?.writeText) {
       await navigator.clipboard.writeText(text)
@@ -75,13 +90,17 @@ async function copyText(text) {
   } catch {
   }
 
+  const active = document.activeElement
   const area = document.createElement('textarea')
   area.value = text
   area.setAttribute('readonly', '')
-  area.style.position = 'fixed'
-  area.style.opacity = '0'
-  document.body.appendChild(area)
+  area.setAttribute('aria-hidden', 'true')
+  area.tabIndex = -1
+  Object.assign(area.style, { position: 'fixed', top: '0', left: '0', opacity: '0', pointerEvents: 'none' })
+  ;(anchor?.parentElement ?? document.body).appendChild(area)
+  area.focus({ preventScroll: true })
   area.select()
+  area.setSelectionRange(0, text.length)
 
   try {
     return document.execCommand('copy')
@@ -89,5 +108,6 @@ async function copyText(text) {
     return false
   } finally {
     area.remove()
+    active?.focus?.({ preventScroll: true })
   }
 }

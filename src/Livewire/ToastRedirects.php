@@ -7,7 +7,6 @@ use TALLKit\TALLKit;
 use function Livewire\on;
 use function Livewire\store;
 
-/** Actions that call a method are dropped: their component is on the page that went away. */
 class ToastRedirects
 {
     public static function register()
@@ -20,7 +19,6 @@ class ToastRedirects
             $isToast = fn ($js) => is_array($js) && ($js['expression'] ?? null) === '$tallkit.toast';
             $withoutToasts = fn ($items) => array_values(array_filter((array) $items, fn ($js) => ! $isToast($js)));
 
-            // The store keeps every toast even after Livewire copies it to the `xjs` effect.
             $js = (array) store($component)->get('js', []);
             $pending = array_filter($js, $isToast);
 

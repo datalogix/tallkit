@@ -29,7 +29,7 @@
 $locale = TALLKit::resolveLocale($locale);
 $startDay ??= TALLKit::localeFirstDay($locale);
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = $attributes->fieldContext(label: $label, id: $id, scope: get_defined_vars());
 $value = TALLKit::fieldOldValue($fieldName, $value);
 
 $value = TALLKit::fieldDateValue($value);
@@ -45,9 +45,9 @@ if (is_string($value) && $range) {
     $value = array_values(array_filter(explode(',', $value)));
 }
 
-$placeholderText = __(is_string($placeholder) ? $placeholder : 'Select date');
-$disabled = TALLKit::isAttributeEnabled($attributes->get('disabled'));
-$readonly = TALLKit::isAttributeEnabled($attributes->get('readonly'));
+$placeholderText = __(string_value($placeholder, 'Select date'));
+$disabled = $attributes->enabled('disabled');
+$readonly = $attributes->enabled('readonly');
 $describedBy = TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError);
 $innerSize = TALLKit::adjustSize(size: $size);
 
@@ -66,18 +66,18 @@ $presetLabels = collect(\TALLKit\Livewire\DateRangePreset::cases())
     ->all();
 $defaultPresets = 'today yesterday thisWeek last7Days last14Days last30Days thisMonth lastMonth thisYear lastYear';
 $presetKeys = $presets && $range
-    ? array_values(array_filter(explode(' ', is_string($presets) ? $presets : $defaultPresets), fn ($key) => isset($presetLabels[$key])))
+    ? array_values(array_filter(explode(' ', string_value($presets, $defaultPresets)), fn ($key) => isset($presetLabels[$key])))
     : [];
 $showPresets = count($presetKeys) > 0;
 
 @endphp
 <tk:field.wrapper
     :$name
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :attributes="$attributes->withFieldProps(get_defined_vars())"
 >
     <div
         wire:ignore
-        x-data="datePicker(@js([
+        x-data="datePicker({{ Js::from([
             'value' => $value,
             'multiple' => (bool) $multiple,
             'range' => (bool) $range,
@@ -99,7 +99,7 @@ $showPresets = count($presetKeys) > 0;
             'locale' => $locale,
             'format' => $format,
             'confirm' => (bool) $confirm,
-        ]))"
+        ]) }})"
         {{
             $attributes->prefixed('picker:')
                 ->classes('flex-1')
@@ -107,7 +107,7 @@ $showPresets = count($presetKeys) > 0;
     >
         <tk:field.control
             :$size
-            :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
+            :attributes="$attributes->withFieldControlProps(get_defined_vars())
                 ->classes(
                     'tk-control-wrapper-expanded',
                     TALLKit::roundedSize(size: $size, mode: 'large'),
@@ -126,14 +126,14 @@ $showPresets = count($presetKeys) > 0;
                         ->dataKey('date-picker')
                         ->merge([
                             'name' => $name,
-                            'value' => in_livewire() ? null : $initialCommittedString,
+                            'value' => unless_livewire($initialCommittedString),
                             'wire:model' => $wireModel,
                         ])
-                        ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: [
+                        ->withoutFieldPrefixes([
                             'picker:', 'trigger:', 'placeholder:', 'formatted:', 'popover:', 'layout:', 'presets:', 'preset:', 'calendar:', 'inputs:',
                             'start-date:', 'divider:', 'end-date:', 'single-date:',
                             'footer:', 'clearable:', 'cancel:', 'apply:',
-                        ]))
+                        ])
                 }}
             />
 
@@ -152,9 +152,8 @@ $showPresets = count($presetKeys) > 0;
                                 'id' => $id,
                                 'placeholder' => $placeholderText,
                                 'aria-describedby' => $describedBy,
-                                'aria-invalid' => $invalid ? 'true' : null,
+                                ...TALLKit::fieldInvalid($invalid),
                                 'aria-readonly' => $readonly ? 'true' : null,
-                                'data-invalid' => $invalid ? true : null,
                                 'disabled' => $disabled ?: null,
                                 'readonly' => ($multiple || $readonly) ?: null,
                             ])
@@ -184,9 +183,8 @@ $showPresets = count($presetKeys) > 0;
                             'id' => $id,
                             'aria-labelledby' => trim(($label ? $id.'-label ' : '').$id.'-value'),
                             'aria-describedby' => $describedBy,
-                            'aria-invalid' => $invalid ? 'true' : null,
+                            ...TALLKit::fieldInvalid($invalid),
                             'aria-readonly' => $readonly ? 'true' : null,
-                            'data-invalid' => $invalid ? true : null,
                         ])
                         ->classes(
                             '
@@ -379,8 +377,9 @@ $showPresets = count($presetKeys) > 0;
                         <tk:clearable
                             :attributes="$attributes->prefixed('clearable:')->classes(['me-auto' => $confirm])"
                             :size="$innerSize"
-                            :label="is_string($clearable) ? $clearable : 'Clear'"
+                            :label="string_value($clearable, 'Clear')"
                             :icon="false"
+                            action="clear()"
                         />
                     @endif
 

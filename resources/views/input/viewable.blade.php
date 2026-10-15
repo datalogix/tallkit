@@ -6,7 +6,7 @@
     x-cloak
     x-data="inputViewable()"
     ::aria-pressed="viewed ? 'true' : 'false'"
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())
+    :attributes="$attributes->withElementProps(get_defined_vars())
         ->merge(['variant' => 'none', 'tooltip' => 'Toggle password visibility'])
         ->classes('min-w-6 min-h-6')"
     icon="eye"

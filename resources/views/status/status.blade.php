@@ -31,7 +31,7 @@
     "
 >
     <tk:content
-        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), ['icon' => null, 'title' => null, 'description' => null])->whereDoesntStartWith(['container:', 'value:'])->classes('flex-col justify-center items-center')"
+        :attributes="$attributes->withProps(get_defined_vars(), ['icon' => null, 'title' => null, 'description' => null])->whereDoesntStartWith(['container:', 'value:'])->classes('flex-col justify-center items-center')"
         :$size
         :$append
         :$actions

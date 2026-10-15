@@ -24,9 +24,23 @@ class AssetManager
 
         app()->instance(static::class, $instance);
 
-        View::composer(hash('xxh128', 'tallkit').'::*', fn () => $instance->hasRenderedComponents = true);
+        $instance->listenForComponents();
 
         AssetInjector::boot();
+    }
+
+    public function listenForComponents()
+    {
+        $views = hash('xxh128', 'tallkit').'::*';
+        $event = 'composing: '.$views;
+
+        app('events')->forget($event);
+
+        View::composer($views, function () use ($event) {
+            $this->hasRenderedComponents = true;
+
+            app('events')->forget($event);
+        });
     }
 
     public function registerAssetDirective()

@@ -13,7 +13,7 @@ $contentClasses = TALLKit::classes(
 );
 
 @endphp
-@if ($slot->hasActualContent() || $label)
+@if ($slot->hasActualContent() || has_content($label))
     <div
         role="separator"
         @if ($vertical) aria-orientation="vertical" @endif

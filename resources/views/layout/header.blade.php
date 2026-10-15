@@ -15,7 +15,7 @@
     }}
 >
     <tk:header
-        :attributes="$attributes->prefixed('header:')->classes(['flex-col items-start' => isset($header)])"
+        :attributes="$attributes->prefixed('header:')->classes(['flex-col items-start' => has_content($header ?? null)])"
     >
         <div {{ $attributes->prefixed('area:')->classes('flex-1 w-full flex items-center gap-2') }}>
             <tk:sidebar.toggle
@@ -64,7 +64,7 @@
             </tk:appearance.menu>
         </div>
 
-        @if (isset($header) && ((isset($nav) && filled($nav)) || ($menu && filled($menu))))
+        @if (has_content($header ?? null) && (has_content($nav ?? null) || filled($menu)))
             <div class="hidden lg:block">
                 <tk:nav
                     :attributes="$attributes->prefixed('menu:')->merge(['label' => 'Main menu'])"

@@ -61,7 +61,6 @@ export function runTransition(el, options = {}) {
   applyClasses(options.to, options.from)
   options.start?.()
 
-  // Laid out first (offsetHeight), or it jumps to the end without a transition.
   requestAnimationFrame(() => {
     void el.offsetHeight
 
@@ -69,7 +68,6 @@ export function runTransition(el, options = {}) {
     options.finish?.()
   })
 
-  // Only its own transitionend: a child's bubbles up too.
   onTransitionEnd = (event) => {
     if (event.target !== el) return
 
@@ -80,7 +78,6 @@ export function runTransition(el, options = {}) {
 
   const timeout = getTransitionTimeout(el)
 
-  // transitionend may never come (no transition, hidden, removed): finished anyway.
   if (timeout === 0) {
     finish()
   } else {

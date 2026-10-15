@@ -17,7 +17,6 @@ export function slider() {
         }
       }
 
-      // A range ignores readonly: kept by hand.
       if (this.isReadonly()) this.input.setAttribute('aria-readonly', 'true')
 
       onFormReset(this.$root, this.input.form, () => this.updateRange())

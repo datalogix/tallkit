@@ -5,7 +5,7 @@
     'label' => null,
 ])
 <tk:listbox.item
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())"
+    :attributes="$attributes->withElementProps(get_defined_vars())"
     :$size
     :$label
     content:class="block truncate"

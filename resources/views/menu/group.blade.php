@@ -5,7 +5,8 @@
 ])
 @php
 
-$headingId = $label ? TALLKit::stableId('menu-group', $label) : null;
+$hasLabel = has_content($label);
+$headingId = $hasLabel ? TALLKit::stableId('menu-group', $label) : null;
 
 @endphp
 <div
@@ -32,7 +33,7 @@ $headingId = $label ? TALLKit::stableId('menu-group', $label) : null;
             ->merge(['container:'.TALLKit::dataKey(name: 'menu-group-separator-top-container') => ''])"
     />
 
-    @if ($label)
+    @if ($hasLabel)
         <tk:menu.heading
             :attributes="$attributes->prefixed('heading:')"
             :$label

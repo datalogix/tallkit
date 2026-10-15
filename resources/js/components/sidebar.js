@@ -2,7 +2,7 @@ import { dataSelector, bind, emit, eventName, isEscapeHandled, FOCUSABLE, isRend
 import { toggleable } from '../mixins/toggleable'
 import { stickable } from '../mixins/stickable'
 
-export function sidebar(name, sticky, stashable) {
+export function sidebar({ name = null, sticky = false, stashable = false } = {}) {
   const _toggleable = toggleable()
   const _sticky = stickable()
 
@@ -27,7 +27,6 @@ export function sidebar(name, sticky, stashable) {
             return !this.screenLg
           },
 
-          // Moved off screen is still reachable by Tab and screen readers: inert while closed.
           [':inert']() {
             return !this.screenLg && !this.isOpened()
           },

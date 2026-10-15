@@ -5,7 +5,7 @@
     'size' => null,
 ])
 <tk:text
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())
+    :attributes="$attributes->withElementProps(get_defined_vars())
         ->dataKey('slider-tick')
         ->classes(
             'flex items-center justify-center pointer-events-none',
@@ -16,7 +16,7 @@
     :$label
     :$size
 >
-    @if ($slot->hasActualContent() || $label)
+    @if ($slot->hasActualContent() || has_content($label))
         {{ $slot }}
     @else
         <span class="h-1.5 w-px bg-black/25 dark:bg-white/25"></span>

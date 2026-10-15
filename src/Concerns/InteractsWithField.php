@@ -45,30 +45,6 @@ trait InteractsWithField
         ];
     }
 
-    public function fieldExcludedPrefixes(array $extra = []): array
-    {
-        return [
-            'field:', 'label:', 'info:', 'badge:', 'description:',
-            'group:', 'prefix:', 'suffix:',
-            'help:', 'error:',
-            'control:',
-            'prepend:', 'icon:', 'append:', 'loading:', 'icon-trailing:', 'kbd:', 'tooltip:',
-            ...$extra,
-        ];
-    }
-
-    public function fieldWithProps(
-        ComponentAttributeBag $attributes,
-        array $scope
-    ): ComponentAttributeBag {
-        return $this->attributesWithProps(
-            $attributes,
-            $scope,
-            $this->fieldProps(),
-            $this->fieldControlProps(),
-        );
-    }
-
     public function fieldContext(
         ComponentAttributeBag $attributes,
         null|bool|string $label = null,
@@ -81,17 +57,27 @@ trait InteractsWithField
         $name = $attributes->pluck('name', $wireModel ?? $xModel);
         $fieldName = $name ? $this->errorKey($name) : $name;
 
-        $labelName = $fieldName ? collect(explode('.', $fieldName))->reject(fn ($part) => $part === '*' || is_numeric($part))->last() : null;
-        $label = $label === true || $label === null ? ($labelName ? Str::headline(preg_replace('/_id$/', '', $labelName)) : $fieldName) : $label;
+        $labelName = $fieldName
+            ? collect(explode('.', $fieldName))->reject(fn ($part) => $part === '*' || is_numeric($part))->last()
+            : null;
+        $label = $label === true || $label === null
+            ? ($labelName ? Str::headline(preg_replace('/_id$/', '', $labelName)) : $fieldName)
+            : $label;
 
         $placeholder = $scope['placeholder'] ?? $attributes->pluck('placeholder');
         $placeholder = $placeholder === true ? $label : $placeholder;
 
         $bag = $this->errorBagName($scope['bag'] ?? $attributes->pluck('bag') ?? $attributes->get('error:bag'));
         $invalid = $scope['invalid'] ?? $attributes->pluck('invalid', fn () => $name && $this->hasError($name, $bag));
-        // Bound only when the component has the property: binding a missing one breaks on the first change.
+
         $autoWireModel = ($scope['wireModel'] ?? $attributes->pluck('wire-model')) !== false;
-        $wireModel = $autoWireModel && ! $wireModel && ! $xModel && $fieldName && ! Str::contains($fieldName, '*') && $this->livewireRendering() && $this->livewireHasProperty($fieldName)
+        $wireModel = $autoWireModel
+            && ! $wireModel
+            && ! $xModel
+            && $fieldName
+            && ! Str::contains($fieldName, '*')
+            && $this->livewireRendering()
+            && $this->livewireHasProperty($fieldName)
             ? $fieldName
             : false;
         $id ??= $this->fieldId($fieldName ?: null);
@@ -121,7 +107,6 @@ trait InteractsWithField
         return $this->stableId('field', $fieldName);
     }
 
-    /** Passwords and files are never sent back. */
     public function fieldOldValue(?string $fieldName, mixed $value = null, ?string $type = null): mixed
     {
         if (blank($fieldName) || in_array($type, ['password', 'file'], true) || ! $this->hasOldInput()) {
@@ -131,7 +116,6 @@ trait InteractsWithField
         return request()->session()->hasOldInput($fieldName) ? request()->old($fieldName) : $value;
     }
 
-    /** Formatted in its own timezone: as JSON a Carbon becomes UTC and can shift the day. */
     public function fieldDateValue(mixed $value, string $format = 'Y-m-d'): mixed
     {
         return match (true) {
@@ -188,6 +172,14 @@ trait InteractsWithField
         return $ids->isNotEmpty() ? $ids->implode(' ') : null;
     }
 
+    public function fieldInvalid(mixed $invalid): array
+    {
+        return [
+            'aria-invalid' => $invalid ? 'true' : null,
+            'data-invalid' => $invalid ? true : null,
+        ];
+    }
+
     public function fieldType(?string $name = null): string
     {
         if (blank($name)) {
@@ -224,9 +216,9 @@ trait InteractsWithField
         $words = $this->fieldNameWords($name);
 
         foreach ($needles as $needle) {
-            $matches = Str::startsWith($needle, '_')
-                ? Str::endsWith($words, $this->fieldNameWords($needle))
-                : Str::contains($words, $this->fieldNameWords($needle));
+            $matches = str_starts_with($needle, '_')
+                ? str_ends_with($words, $this->fieldNameWords($needle))
+                : str_contains($words, $this->fieldNameWords($needle));
 
             if ($matches) {
                 return true;
@@ -238,10 +230,20 @@ trait InteractsWithField
 
     protected function fieldNameWords(string $name): string
     {
-        $name = preg_replace('/(?<=[a-z0-9])(?=[A-Z])/', '_', $name);
-        $words = array_filter(preg_split('/[^a-z0-9]+/', Str::lower($name)), 'strlen');
+        static $memo = [];
 
-        return '_'.implode('_', $words).'_';
+        if (isset($memo[$name])) {
+            return $memo[$name];
+        }
+
+        if (count($memo) >= 1000) {
+            $memo = [];
+        }
+
+        $words = preg_replace('/(?<=[a-z0-9])(?=[A-Z])/', '_', $name);
+        $words = array_filter(preg_split('/[^a-z0-9]+/', Str::lower($words)), 'strlen');
+
+        return $memo[$name] = '_'.implode('_', $words).'_';
     }
 
     protected function fieldMasks(bool $all = false): array
@@ -256,10 +258,16 @@ trait InteractsWithField
             return array_values(array_map(fn ($set) => (array) $set, $masks));
         }
 
-        $locale = $this->resolveLocale();
-        $sets = collect($masks)->mapWithKeys(fn ($set, $key) => [$this->resolveLocale($key) => (array) $set]);
+        static $memo = null;
 
-        return $sets[$locale] ?? $sets[Str::before($locale, '-')] ?? [];
+        $locale = $this->resolveLocale();
+
+        if ($memo === null || $memo[0] !== $masks || $memo[1] !== $locale) {
+            $sets = collect($masks)->mapWithKeys(fn ($set, $key) => [$this->resolveLocale($key) => (array) $set]);
+            $memo = [$masks, $locale, $sets[$locale] ?? $sets[Str::before($locale, '-')] ?? []];
+        }
+
+        return $memo[2];
     }
 
     public function fieldMask(
@@ -274,7 +282,6 @@ trait InteractsWithField
         $masks = $this->fieldMasks();
 
         if (is_string($mask)) {
-            // A mask asked by name works in any locale.
             foreach ([$masks, ...$this->fieldMasks(all: true)] as $set) {
                 foreach ($set as $maskValue => $names) {
                     if ($this->fieldNameMatches($mask, $names)) {

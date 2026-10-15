@@ -1,5 +1,4 @@
 @aware(['verticalLines', 'sticky', 'dense'])
-{{-- Built, not written: a literal opening tag in a directive's arguments unbalances Livewire's precompiler. --}}
 @php($slotHas = fn (string $tag) => Str::contains($slot, '<'.$tag, true))
 <thead {{ $attributes->prefixed('head:')->classes([
     '[:where(&)]:bg-zinc-100/80 dark:[:where(&)]:bg-zinc-800/80' => $dense,

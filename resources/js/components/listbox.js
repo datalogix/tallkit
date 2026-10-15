@@ -14,7 +14,6 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, autoHighligh
     fuse: null,
     lastInteraction: null,
     debouncedSearch: null,
-    // Its own name: the combobox and the autocomplete are popovers too, whose hook is livewireCommitCleanup.
     listboxCommitCleanup: null,
     _itemsByElement: null,
 
@@ -71,9 +70,6 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, autoHighligh
           this.next()
         },
 
-        // No Home/End: in a text field they move the caret.
-
-        // Only with an option highlighted: otherwise Enter submits the form, as in any field.
         ['@keydown.enter'](e) {
           if (this.index === null || !this.filteredItems[this.index]) return
 
@@ -89,7 +85,6 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, autoHighligh
       bind(this.list, {
         ['@mouseleave']: () => this.clear(),
 
-        // On mousedown, not click: the field's blur would close the list first.
         ['@mousedown']: (e) => {
           const item = (e.target).closest('[role=option]')
           if (!item) return
@@ -102,7 +97,6 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, autoHighligh
         },
 
         ['@mousemove']: (e) => {
-          // A mousemove with no movement is the list scrolling under the pointer.
           if (
             this.lastInteraction === 'keyboard' &&
             e.movementX === 0 &&
@@ -207,6 +201,7 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, autoHighligh
           ignoreDiacritics: true,
           includeScore: true,
           threshold: 0.1,
+          ignoreLocation: true,
           keys: ['title'],
           ...fuseOptions,
         },
@@ -350,7 +345,6 @@ export function listbox({ hideEmpty = false, clearOnSelect = false, autoHighligh
       const item = this.filteredItems[index]
       if (!item) return
 
-      // aria-selected is what is chosen: the highlighted one is told by aria-activedescendant.
       item.el.dataset.active = 'true'
 
       if (!item.li.id) item.li.id = generateId('listbox-option')

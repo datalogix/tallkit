@@ -4,7 +4,7 @@
     'controls' => null,
 ])
 <tk:input
-    :attributes="TALLKit::fieldWithProps($attributes, get_defined_vars())
+    :attributes="$attributes->withFieldProps(get_defined_vars(), TALLKit::fieldControlProps())
         ->merge(array_filter([
             'role' => 'combobox',
             'aria-autocomplete' => 'list',

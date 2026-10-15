@@ -14,7 +14,7 @@
         });
         (function () {
             var state = null
-            try { state = window.localStorage.getItem(@js(TALLKit::storageKey('consent'))) } catch (e) {}
+            try { state = window.localStorage.getItem({{ Js::from(TALLKit::storageKey('consent')) }}) } catch (e) {}
             if (state === 'granted' || state === 'denied') {
                 gtag('consent', 'update', { ad_storage: state, ad_user_data: state, ad_personalization: state, analytics_storage: state });
             }

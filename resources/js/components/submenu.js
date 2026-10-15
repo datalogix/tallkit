@@ -1,3 +1,4 @@
+import { isRtl } from '../utils'
 import { popover } from './popover'
 
 export function submenu() {
@@ -38,7 +39,21 @@ export function submenu() {
         this.timerToClose()
       })
 
-      on(trigger, 'click', () => this.toggle(false))
+      on(trigger, 'click', (event) => this.toggle(event.detail === 0))
+
+      on(trigger, 'keydown', (event) => {
+        if (event.key !== (isRtl(trigger) ? 'ArrowLeft' : 'ArrowRight')) return
+        event.preventDefault()
+        this.open(true)
+      })
+
+      on(panel, 'keydown', (event) => {
+        if (event.key !== (isRtl(trigger) ? 'ArrowRight' : 'ArrowLeft')) return
+        event.preventDefault()
+        event.stopPropagation()
+        this.close()
+        trigger.focus()
+      })
 
       on(trigger, 'mouseenter', () => {
         clearTimeout(this._i)

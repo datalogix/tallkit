@@ -7,7 +7,6 @@ export function consent(state = 'granted') {
 
   const update = { ad_storage: value, ad_user_data: value, ad_personalization: value, analytics_storage: value }
 
-  // gtag() needs `arguments`, not an array.
   window.gtag = window.gtag || function () { window.dataLayer.push(arguments) }
   window.gtag('consent', 'update', update)
 

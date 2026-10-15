@@ -23,7 +23,11 @@ class PropsCompiler
 
             $props = \substr($value, $open + 1, $end - $open - 1);
             // Evaluated once: Blade's @props evaluates its expression twice more.
-            $compiled = "<?php \$__tkProps = {$props}; foreach (\\TALLKit\\View\\Compilers\\PropsCompiler::unescape(get_defined_vars(), \$__tkProps) as \$__tkName => \$__tkValue) { \$\$__tkName = \$__tkValue; } unset(\$__tkName, \$__tkValue); ?>\n@props(\$__tkProps)\n<?php unset(\$__tkProps); ?>";
+            $compiled = "<?php \$__tkProps = {$props}; "
+                .'foreach (\\TALLKit\\View\\Compilers\\PropsCompiler::unescape(get_defined_vars(), $__tkProps) as $__tkName => $__tkValue) { $$__tkName = $__tkValue; } '
+                .'unset($__tkName, $__tkValue); ?>'."\n"
+                .'@props($__tkProps)'."\n"
+                .'<?php unset($__tkProps); ?>';
             $value = \substr_replace($value, $compiled, $start, $end + 1 - $start);
             $offset = $start + \strlen($compiled);
         }

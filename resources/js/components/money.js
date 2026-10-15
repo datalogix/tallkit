@@ -1,7 +1,6 @@
 import { debounce, listenWhileConnected } from '../utils'
 
 export function money({ delimiter = ',', thousands = '.', precision = 2, as = 'decimal', model = null, modifiers = '' } = {}) {
-  // As text all the way: a float loses digits.
   const toDecimal = (text) => {
     let value = String(text ?? '').trim()
 
@@ -20,7 +19,6 @@ export function money({ delimiter = ',', thousands = '.', precision = 2, as = 'd
     return negative ? `-${decimal}` : decimal
   }
 
-  // Cents from the digits: 1234.56 * 100 is 123455.99… in float.
   const toValue = (text) => {
     const decimal = toDecimal(text)
 
@@ -34,7 +32,6 @@ export function money({ delimiter = ',', thousands = '.', precision = 2, as = 'd
     return Number.isSafeInteger(cents) ? (sign ? -cents : cents) : sign + digits
   }
 
-  // As text, rounded half up: a float loses digits past 15.
   const toDisplay = (amount) => {
     if (amount === null || amount === undefined || amount === '') return ''
 

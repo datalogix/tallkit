@@ -14,7 +14,7 @@ $hint = TALLKit::uploadHintText($accept, $maxSize, $maxFiles, (bool) $multiple);
 @endphp
 @if ($hint)
     <tk:text
-        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->merge(['variant' => 'subtle'])"
+        :attributes="$attributes->withElementProps(get_defined_vars())->merge(['variant' => 'subtle'])"
         :id="$id ? $id . '-hint' : null"
         :size="TALLKit::adjustSize(size: $size)"
         :label="$hint"

@@ -13,9 +13,9 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = $attributes->fieldContext(label: $label, id: $id, scope: get_defined_vars());
 $value = TALLKit::fieldOldValue($fieldName, $value);
-$disabled = TALLKit::isAttributeEnabled($attributes->get('disabled'));
+$locked = $attributes->enabled('disabled') || $attributes->enabled('readonly');
 $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) {
     'hexa' => '#00000000',
     'rgba' => 'rgba(0, 0, 0, 0)',
@@ -26,15 +26,20 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
 @endphp
 <tk:field.wrapper
     :$name
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :attributes="$attributes->withFieldProps(get_defined_vars())"
 >
     <div
         wire:ignore.self
-        x-data="colorPicker(@js(['value' => $value, 'format' => $format]))"
+        x-data="colorPicker({{
+            Js::from([
+                'value' => $value,
+                'format' => $format
+            ])
+        }})"
         {{
             $attributes->prefixed('picker:')
                 ->classes(['flex-1' => $trigger !== 'button'])
-                ->merge(['x-effect' => $live ? "value = ($live) ?? null" : false])
+                ->merge(['x-effect' => $live ? "setLive(($live) ?? null)" : false])
         }}
     >
         @if ($trigger === 'button')
@@ -45,14 +50,14 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
                         ->dataKey('color-picker')
                         ->merge([
                             'name' => $name,
-                            'value' => in_livewire() ? null : $value,
+                            'value' => unless_livewire($value),
                             'wire:model' => $wireModel,
                             'data-invalid' => $invalid ? true : null,
                         ])
-                        ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: [
+                        ->withoutFieldPrefixes([
                             'picker:', 'trigger:',
                             'dropdown:', 'popover:', 'swatch:', 'option:', 'footer:', 'custom:', 'dropper:', 'clearable:',
-                        ]))
+                        ])
                 }}
             />
 
@@ -65,8 +70,7 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
                         'variant' => 'subtle',
                         'id' => $id,
                         'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
-                        'aria-invalid' => $invalid ? 'true' : null,
-                        'data-invalid' => $invalid ? true : null,
+                        ...TALLKit::fieldInvalid($invalid),
                         TALLKit::dataKey('group-target') => true,
                     ])
                     ->mergeDefined(['aria-label' => ! $label && ! $attributes->has('trigger:tooltip') ? 'Pick color' : null])
@@ -89,14 +93,14 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
                 :$clearable
                 :$dropper
                 :$size
-                :$disabled
                 :$keepOpen
+                :disabled="$locked"
                 :standalone="false"
             />
         @else
             <tk:field.control
                 :$size
-                :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
+                :attributes="$attributes->withFieldControlProps(get_defined_vars())
                     ->classes(
                         'tk-control-wrapper-expanded',
                         TALLKit::roundedSize(size: $size, mode: 'large'),
@@ -121,12 +125,12 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
                             ])
                             ->mergeDefined(['aria-label' => ! $attributes->has('trigger:tooltip') ? 'Pick color' : null])
                         "
+                        :disabled="$locked"
                         :icon="false"
                         :$swatches
                         :$clearable
                         :$dropper
                         :$size
-                        :$disabled
                         :$keepOpen
                         :standalone="false"
                     />
@@ -148,16 +152,15 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
                             ->merge([
                                 'name' => $name,
                                 'id' => $id,
-                                'value' => in_livewire() ? null : $value,
+                                'value' => unless_livewire($value),
                                 'wire:model' => $wireModel,
                                 'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
-                                'aria-invalid' => $invalid ? 'true' : null,
-                                'data-invalid' => $invalid ? true : null,
+                                ...TALLKit::fieldInvalid($invalid),
                             ])
-                            ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: [
+                            ->withoutFieldPrefixes([
                                 'picker:', 'trigger:', 'copyable:',
                                 'dropdown:', 'popover:', 'swatch:', 'option:', 'footer:', 'custom:', 'dropper:', 'clearable:',
-                            ]))
+                            ])
                             ->except('class')
                             ->classes(
                                 '
@@ -181,7 +184,8 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
                             <tk:clearable
                                 :attributes="$attributes->prefixed('clearable:')"
                                 :$size
-                                :label="is_string($clearable) ? $clearable : null"
+                                :label="string_value($clearable)"
+                                action="clear()"
                             />
                         @endif
 
@@ -189,7 +193,7 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
                             <tk:copyable
                                 :attributes="$attributes->prefixed('copyable:')"
                                 :$size
-                                :label="is_string($copyable) ? $copyable : null"
+                                :label="string_value($copyable)"
                             />
                         @endif
                     </x-slot:append>

@@ -5,7 +5,7 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = $attributes->fieldContext(label: $label, id: $id, scope: get_defined_vars());
 $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
 $checked = TALLKit::fieldOldChecked($fieldName, $checked, $value);
 
@@ -14,7 +14,7 @@ $checked = TALLKit::fieldOldChecked($fieldName, $checked, $value);
     inline
     :$align
     :$name
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :attributes="$attributes->withFieldProps(get_defined_vars())"
     :label="$slot->isEmpty() ? $label : $slot"
 >
     <div
@@ -39,11 +39,10 @@ $checked = TALLKit::fieldOldChecked($fieldName, $checked, $value);
                         'value' => $value,
                         'wire:model' => $wireModel,
                         'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
-                        'aria-invalid' => $invalid ? 'true' : null,
-                        'data-invalid' => $invalid ? true : null,
-                        'aria-label' => $label ? null : __('Radio'),
+                        ...TALLKit::fieldInvalid($invalid),
+                        'aria-label' => $label || $slot->isNotEmpty() ? null : __('Radio'),
                     ])
-                    ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: ['icon-area:']))
+                    ->withoutFieldPrefixes(['icon-area:'])
                     ->classes(
                         '
                             tk-control-transition

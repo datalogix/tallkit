@@ -1,15 +1,21 @@
 import { storageKey, getStoredText, setStoredText, removeStored, prefersReducedMotion } from './utils'
 
-// Stored as the plain word: the inline head script (appearance.blade.php) reads it as it is.
 const STORAGE_KEY = storageKey('appearance')
+export const MODES = ['system', 'light', 'dark']
+
+const toMode = (value) => (MODES.includes(value) ? value : 'system')
 
 export const appearance = {
-  mode: getStoredText(STORAGE_KEY) || 'system',
+  mode: toMode(getStoredText(STORAGE_KEY)),
 
   init() {
     this.apply(this.mode)
 
     document.addEventListener('livewire:navigated', () => this.apply(this.mode))
+
+    window.addEventListener('storage', (event) => {
+      if (event.key === STORAGE_KEY || event.key === null) window.tallkit.appearance.apply(toMode(event.newValue))
+    })
 
     const media = window.matchMedia('(prefers-color-scheme: dark)')
     media.addEventListener('change', () => {
@@ -66,8 +72,10 @@ export const appearance = {
     }
 
     const transition = document.startViewTransition(() => this.isDark() ? this.applyLight() : this.applyDark())
-    const x = event.clientX || 0
-    const y = event.clientY || 0
+    const rect = event.currentTarget?.getBoundingClientRect?.()
+    const fromKeyboard = !event.clientX && !event.clientY && rect
+    const x = fromKeyboard ? rect.left + rect.width / 2 : event.clientX || 0
+    const y = fromKeyboard ? rect.top + rect.height / 2 : event.clientY || 0
     const endRadius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y))
 
     transition.ready.then(() => {

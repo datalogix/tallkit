@@ -59,6 +59,15 @@
 		debounced.cancel = () => clearTimeout(timeout);
 		return debounced;
 	}
+	function readingDuration(title = "", message = "") {
+		const text = `${title} ${message}`.trim();
+		const min = 3e3;
+		const max = 9e3;
+		let time = 1e3 + ((title?.length ?? 0) * 1.2 + (message?.length ?? 0) * 1.6) / 16 * 1e3;
+		const lines = text.split("\n").length;
+		time += lines * 300;
+		return clamp(time, min, max);
+	}
 	//#endregion
 	//#region resources/js/utils/animation.js
 	function prefersReducedMotion() {
@@ -976,7 +985,7 @@
 		try {
 			return await fn();
 		} catch (e) {
-			if (retries <= 0 || e.name === "AbortError" || e.name === "NotFoundError") throw e;
+			if (retries <= 0 || e.name === "AbortError" || e.name === "NotFoundError" || e.name === "TimeoutError") throw e;
 			return fetchWithRetry(fn, retries - 1);
 		}
 	}
@@ -1068,6 +1077,10 @@
 	}
 	function onLivewireCommit(handler) {
 		const off = window.Livewire?.hook("commit", handler);
+		return typeof off === "function" ? off : () => {};
+	}
+	function onLivewireMorphed(handler) {
+		const off = window.Livewire?.hook("morphed", handler);
 		return typeof off === "function" ? off : () => {};
 	}
 	function keepAttributesOnMorph(match, names) {
@@ -1431,65 +1444,124 @@
 	//#endregion
 	//#region resources/js/components/address-form.js
 	var address_form_exports = /* @__PURE__ */ __exportAll({ addressForm: () => addressForm });
-	function addressForm(options = {}) {
+	var FILLABLE = [
+		"address",
+		"neighborhood",
+		"city",
+		"state"
+	];
+	function failure(message, name = "Error") {
+		const error = new Error(message);
+		error.name = name;
+		return error;
+	}
+	function addressForm({ timeout = 5e3, url = null, messages = {}, ...options } = {}) {
 		const _cache = createCache("zipcode", {
 			storage: "session",
 			...options
 		});
 		return {
 			abortController: null,
+			debouncedSearch: null,
 			$els: {},
+			blocked: [],
+			filled: {},
+			loading: false,
+			invalid: false,
 			init() {
 				this.$els = {
-					loading: queryData(this.$root, "loading"),
 					zipcode: queryData(this.$root, "address-form-zipcode"),
 					address: queryData(this.$root, "address-form-address"),
 					number: queryData(this.$root, "address-form-number"),
 					complement: queryData(this.$root, "address-form-complement"),
 					neighborhood: queryData(this.$root, "address-form-neighborhood"),
 					city: queryData(this.$root, "address-form-city"),
-					state: queryData(this.$root, "address-form-state")
+					state: queryData(this.$root, "address-form-state"),
+					error: queryData(this.$root, "address-form-error")
 				};
-				const debouncedSearch = debounce(this.search.bind(this));
+				this.$els.loading = findInField(this.$els.address, "loading");
+				const debouncedSearch = this.debouncedSearch = debounce(this.search.bind(this));
 				bind(this.$els.zipcode, { ["@input"]() {
 					debouncedSearch(this.$el.value);
 				} });
+				this._stopMorphHook = onLivewireMorphed(({ el }) => {
+					if (!el?.contains?.(this.$root)) return;
+					if (this.loading) this.syncLoading();
+					if (this.invalid) this.syncError();
+				});
+				onFormReset(this.$root, this.$root.closest("form"), () => this.reset());
 			},
 			setLoading(state) {
-				this.$els.loading?.classList.toggle("hidden", !state);
-				[
-					"address",
-					"neighborhood",
-					"city",
-					"state"
-				].map((k) => this.$els[k]).filter(Boolean).forEach((el) => el.disabled = state);
+				if (state === this.loading) return;
+				if (state) this.blocked = FILLABLE.map((k) => this.$els[k]).filter((el) => el && !el.inert);
+				this.loading = state;
+				this.syncLoading();
+				if (!state) this.blocked = [];
+			},
+			syncLoading() {
+				this.$els.loading?.classList.toggle("hidden", !this.loading);
+				this.blocked.forEach((el) => {
+					el.inert = this.loading;
+					if (this.loading) el.setAttribute("aria-busy", "true");
+					else el.removeAttribute("aria-busy");
+				});
+			},
+			setError(state) {
+				if (state === this.invalid) return;
+				this.invalid = state;
+				this.syncError();
+			},
+			syncError() {
+				const { zipcode, error } = this.$els;
+				error?.toggleAttribute("hidden", !this.invalid);
+				if (!zipcode) return;
+				const describedBy = (zipcode.getAttribute("aria-describedby") ?? "").split(/\s+/).filter((id) => id && id !== error?.id);
+				if (this.invalid) {
+					zipcode.setAttribute("aria-invalid", "true");
+					if (error?.id) describedBy.push(error.id);
+				} else zipcode.removeAttribute("aria-invalid");
+				if (describedBy.length) zipcode.setAttribute("aria-describedby", describedBy.join(" "));
+				else zipcode.removeAttribute("aria-describedby");
+			},
+			focus(el) {
+				const active = document.activeElement;
+				if (active && active !== document.body && active !== this.$els.zipcode) return;
+				el?.focus();
 			},
 			resolveState(data) {
 				const el = this.$els.state;
 				if (!el) return "";
-				const value = data.estado ?? data.uf;
-				if (el.tagName.toLowerCase() === "input") return value ?? "";
-				return value != null && Array.from(el.options ?? []).some((option) => option.value === value) ? value : data.uf ?? "";
+				if (el.tagName.toLowerCase() !== "select") return data.uf ?? data.estado ?? "";
+				const options = Array.from(el.options ?? []).map((option) => option.value);
+				return [data.uf, data.estado].find((value) => value && options.includes(value)) ?? "";
 			},
-			normalizeZipcode(value) {
-				return value.replace(/\D/g, "");
+			async request(input, signal) {
+				const controller = new AbortController();
+				const abort = () => controller.abort();
+				let timedOut = false;
+				if (signal.aborted) abort();
+				signal.addEventListener("abort", abort, { once: true });
+				const timer = setTimeout(() => {
+					timedOut = true;
+					abort();
+				}, timeout);
+				try {
+					return await fetch(input, { signal: controller.signal });
+				} catch (e) {
+					throw timedOut ? failure("Timeout", "TimeoutError") : e;
+				} finally {
+					clearTimeout(timer);
+					signal.removeEventListener("abort", abort);
+				}
 			},
 			async viaCep(zipcode, signal) {
-				const data = await (await fetch(`https://viacep.com.br/ws/${zipcode}/json/`, { signal })).json();
-				if (data.erro) {
-					const error = /* @__PURE__ */ new Error("ViaCEP not found");
-					error.name = "NotFoundError";
-					throw error;
-				}
+				const data = await (await this.request(`https://viacep.com.br/ws/${zipcode}/json/`, signal)).json();
+				if (data.erro) throw failure("ViaCEP not found", "NotFoundError");
 				return data;
 			},
 			async brasilApi(zipcode, signal) {
-				const res = await fetch(`https://brasilapi.com.br/api/cep/v1/${zipcode}`, { signal });
-				if (!res.ok) {
-					const error = /* @__PURE__ */ new Error("BrasilAPI error");
-					if (res.status === 404) error.name = "NotFoundError";
-					throw error;
-				}
+				const res = await this.request(`https://brasilapi.com.br/api/cep/v1/${zipcode}`, signal);
+				if (!res.ok) throw failure("BrasilAPI error", res.status === 404 ? "NotFoundError" : "Error");
 				const data = await res.json();
 				return {
 					logradouro: data.street,
@@ -1498,54 +1570,92 @@
 					uf: data.state
 				};
 			},
+			async custom(zipcode, signal) {
+				const res = await this.request(url.replace("{zipcode}", zipcode), signal);
+				if (!res.ok) throw failure("Zipcode lookup error", res.status === 404 ? "NotFoundError" : "Error");
+				const data = await res.json();
+				return {
+					logradouro: data.address,
+					bairro: data.neighborhood,
+					localidade: data.city,
+					uf: data.state
+				};
+			},
 			async resolveAddress(zipcode, signal) {
-				const providers = [this.viaCep.bind(this), this.brasilApi.bind(this)];
+				const providers = url ? [this.custom] : [this.viaCep, this.brasilApi];
+				let notFound = null;
+				let last = null;
 				for (const provider of providers) try {
-					return await fetchWithRetry(() => provider(zipcode, signal));
+					return await fetchWithRetry(() => provider.call(this, zipcode, signal));
 				} catch (e) {
 					if (e.name === "AbortError") throw e;
+					if (e.name === "NotFoundError") notFound = e;
+					last = e;
 				}
-				throw new Error("All providers failed");
+				throw notFound ?? last;
+			},
+			clearFilled() {
+				FILLABLE.forEach((key) => {
+					const el = this.$els[key];
+					if (el && key in this.filled && el.value === this.filled[key]) setFieldValue(el, "");
+				});
+				this.filled = {};
 			},
 			fill(data) {
-				setFieldValue(this.$els.address, data.logradouro);
-				setFieldValue(this.$els.neighborhood, data.bairro);
-				setFieldValue(this.$els.city, data.localidade);
-				setFieldValue(this.$els.state, this.resolveState(data));
-				this.$els.number?.focus();
+				const values = {
+					address: data.logradouro,
+					neighborhood: data.bairro,
+					city: data.localidade,
+					state: this.resolveState(data)
+				};
+				this.clearFilled();
+				Object.entries(values).forEach(([key, value]) => {
+					const el = this.$els[key];
+					if (!el || !value) return;
+					setFieldValue(el, value);
+					this.filled[key] = el.value;
+				});
+				announce(messages.filled);
+				this.focus(values.address ? this.$els.number : this.$els.address);
+			},
+			abort() {
+				if (!this.abortController) return;
+				this.abortController.abort();
+				this.abortController = null;
+				this.setLoading(false);
+			},
+			reset() {
+				this.debouncedSearch?.cancel();
+				this.abort();
+				this.setError(false);
+				this.filled = {};
 			},
 			async search(value) {
-				const zipcode = this.normalizeZipcode(value);
-				if (this.abortController) {
-					this.abortController.abort();
-					this.abortController = null;
-					this.setLoading(false);
-				}
+				const zipcode = value.replace(/\D/g, "");
+				this.abort();
+				this.setError(false);
 				if (zipcode.length !== 8) return;
-				const controller = new AbortController();
-				this.abortController = controller;
-				const { signal } = controller;
+				emit(this.$root, "loading", { zipcode });
 				const cached = _cache.get(zipcode);
 				if (cached) {
-					this.setLoading(true);
-					await new Promise((r) => setTimeout(r, 120));
-					if (signal.aborted) return;
 					this.fill(cached);
 					emit(this.$root, "loaded", {
 						zipcode,
 						data: cached,
 						cached: true
 					});
-					this.setLoading(false);
-					this.abortController = null;
 					return;
 				}
+				const controller = new AbortController();
+				this.abortController = controller;
+				const { signal } = controller;
 				this.setLoading(true);
-				emit(this.$root, "loading", { zipcode });
+				announce(messages.searching);
 				try {
 					const data = await this.resolveAddress(zipcode, signal);
 					if (signal.aborted) return;
 					_cache.set(zipcode, data);
+					this.setLoading(false);
 					this.fill(data);
 					emit(this.$root, "loaded", {
 						zipcode,
@@ -1554,18 +1664,29 @@
 					});
 				} catch (e) {
 					if (e.name === "AbortError" || signal.aborted) return;
+					this.setLoading(false);
 					emit(this.$root, "error", {
 						zipcode,
 						error: e
 					});
-					this.$els.zipcode?.focus();
+					this.clearFilled();
+					if (e.name !== "NotFoundError") {
+						announce(messages.failed);
+						this.focus(this.$els.address);
+						return;
+					}
+					this.setError(true);
+					announce(this.$els.error?.textContent.trim());
+					this.focus(this.$els.zipcode);
 				} finally {
 					if (!signal.aborted) this.setLoading(false);
 					if (this.abortController === controller) this.abortController = null;
 				}
 			},
 			destroy() {
+				this.debouncedSearch?.cancel();
 				this.abortController?.abort();
+				this._stopMorphHook?.();
 			}
 		};
 	}
@@ -1587,6 +1708,7 @@
 						const trigger = event.target.closest?.(dataSelector("dismissible"));
 						if (!trigger || !this.$root.contains(trigger)) return;
 						if (closestDismissible(trigger) !== this.$root) return;
+						event.preventDefault();
 						event.stopPropagation();
 						this.dismiss("manual");
 					},
@@ -1614,7 +1736,10 @@
 					if (hasLivewire() && this.$root.closest("[wire\\:id]")) keepDismissed(this.$root);
 					else this.$root.remove();
 				};
-				if (animation === "fade") this.cancelDismiss = fadeOut(this.$root, { onDone });
+				if (animation === "fade") this.cancelDismiss = fadeOut(this.$root, {
+					onDone,
+					remove: false
+				});
 				else if (animation === "collapse") this.cancelDismiss = collapse(this.$root, { onDone });
 				else onDone();
 				if (this._dismissTimeout) clearTimeout(this._dismissTimeout);
@@ -1639,19 +1764,21 @@
 	var alert_component_exports = /* @__PURE__ */ __exportAll({ alertComponent: () => alertComponent });
 	function alertComponent({ duration: given = 0, pauseOnHover = false } = {}) {
 		const _dismissible = dismissible("collapse");
-		const duration = given === true ? 7e3 : toMilliseconds(given);
+		let duration = 0;
 		return {
 			..._dismissible,
 			timeoutId: null,
-			remaining: duration,
+			remaining: 0,
 			startedAt: 0,
 			pauseReasons: /* @__PURE__ */ new Set(),
 			progressValue: 100,
-			progressFrame: null,
+			progressAnimation: null,
 			visibilityHandler: null,
 			state: "idle",
 			init() {
 				_dismissible.init.call(this);
+				duration = given === true ? readingDuration("", this.$root.textContent.replace(/\s+/g, " ").trim()) : toMilliseconds(given);
+				this.remaining = duration;
 				this.startTimer();
 				this.visibilityHandler = this.handleVisibility.bind(this);
 				document.addEventListener("visibilitychange", this.visibilityHandler);
@@ -1678,14 +1805,22 @@
 				this.trackProgress();
 			},
 			trackProgress() {
-				cancelAnimationFrame(this.progressFrame);
-				const step = () => {
-					if (this.state !== "running") return;
-					const left = this.remaining - (Date.now() - this.startedAt);
-					this.progressValue = Math.max(0, Math.min(100, left / duration * 100));
-					this.progressFrame = requestAnimationFrame(step);
-				};
-				step();
+				const bar = queryData(queryData(this.$root, "alert-progress"), "progress-bar");
+				if (!bar?.animate) return;
+				if (this.progressAnimation?.playState === "paused") {
+					this.progressAnimation.play();
+					return;
+				}
+				this.stopProgress();
+				this.progressAnimation = bar.animate([{ width: `${this.remaining / duration * 100}%` }, { width: "0%" }], {
+					duration: this.remaining,
+					easing: "linear",
+					fill: "forwards"
+				});
+			},
+			stopProgress() {
+				this.progressAnimation?.cancel();
+				this.progressAnimation = null;
 			},
 			pause(reason = "manual") {
 				this.pauseReasons.add(reason);
@@ -1695,7 +1830,7 @@
 				clearTimeout(this.timeoutId);
 				this.timeoutId = null;
 				this.state = "paused";
-				cancelAnimationFrame(this.progressFrame);
+				this.progressAnimation?.pause();
 				this.progressValue = this.remaining / duration * 100;
 			},
 			resume(reason = "manual") {
@@ -1711,6 +1846,7 @@
 				this.state = "idle";
 				this.pauseReasons.clear();
 				this.progressValue = 100;
+				this.stopProgress();
 				this.startTimer();
 				if (document.hidden) this.pause("visibility");
 			},
@@ -1721,14 +1857,14 @@
 			beforeDismiss() {
 				this.state = "dismissing";
 				this.remaining = 0;
-				cancelAnimationFrame(this.progressFrame);
+				this.progressAnimation?.pause();
 				if (this.timeoutId) {
 					clearTimeout(this.timeoutId);
 					this.timeoutId = null;
 				}
 			},
 			destroy() {
-				cancelAnimationFrame(this.progressFrame);
+				this.stopProgress();
 				if (this.timeoutId) {
 					clearTimeout(this.timeoutId);
 					this.timeoutId = null;
@@ -1956,13 +2092,74 @@
 		};
 	}
 	//#endregion
-	//#region resources/js/components/appearance-selector.js
-	var appearance_selector_exports = /* @__PURE__ */ __exportAll({ appearanceSelector: () => appearanceSelector });
+	//#region resources/js/appearance.js
+	var STORAGE_KEY = storageKey("appearance");
 	var MODES = [
 		"system",
 		"light",
 		"dark"
 	];
+	var toMode = (value) => MODES.includes(value) ? value : "system";
+	var appearance = {
+		mode: toMode(getStoredText(STORAGE_KEY)),
+		init() {
+			this.apply(this.mode);
+			document.addEventListener("livewire:navigated", () => this.apply(this.mode));
+			window.addEventListener("storage", (event) => {
+				if (event.key === STORAGE_KEY || event.key === null) window.tallkit.appearance.apply(toMode(event.newValue));
+			});
+			window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+				if (this.mode === "system") this.apply("system");
+			});
+		},
+		isDark() {
+			return document.documentElement.classList.contains("dark");
+		},
+		isLight() {
+			return !this.isDark();
+		},
+		applyDark(persist = true) {
+			document.documentElement.classList.add("dark");
+			if (persist) setStoredText(STORAGE_KEY, "dark");
+			this.mode = "dark";
+		},
+		applyLight(persist = true) {
+			document.documentElement.classList.remove("dark");
+			if (persist) setStoredText(STORAGE_KEY, "light");
+			this.mode = "light";
+		},
+		apply(appearance) {
+			if (appearance === "system") {
+				const media = window.matchMedia("(prefers-color-scheme: dark)");
+				removeStored(STORAGE_KEY);
+				if (media.matches) this.applyDark(false);
+				else this.applyLight(false);
+				this.mode = "system";
+			} else if (appearance === "dark") this.applyDark();
+			else if (appearance === "light") this.applyLight();
+		},
+		toggle(event, options = {}) {
+			if (!(typeof document !== "undefined" && typeof document.startViewTransition === "function" && !prefersReducedMotion()) || !event) return this.isDark() ? this.applyLight() : this.applyDark();
+			const transition = document.startViewTransition(() => this.isDark() ? this.applyLight() : this.applyDark());
+			const rect = event.currentTarget?.getBoundingClientRect?.();
+			const fromKeyboard = !event.clientX && !event.clientY && rect;
+			const x = fromKeyboard ? rect.left + rect.width / 2 : event.clientX || 0;
+			const y = fromKeyboard ? rect.top + rect.height / 2 : event.clientY || 0;
+			const endRadius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+			transition.ready.then(() => {
+				const clipPath = [`circle(0px at ${x}px ${y}px)`, `circle(${endRadius}px at ${x}px ${y}px)`];
+				document.documentElement.animate({ clipPath: this.isDark() ? [...clipPath].reverse() : clipPath }, {
+					duration: 300,
+					easing: "ease-in",
+					...options || {},
+					pseudoElement: this.isDark() ? "::view-transition-old(root)" : "::view-transition-new(root)"
+				});
+			});
+		}
+	};
+	//#endregion
+	//#region resources/js/components/appearance-selector.js
+	var appearance_selector_exports = /* @__PURE__ */ __exportAll({ appearanceSelector: () => appearanceSelector });
 	function appearanceSelector() {
 		return {
 			init() {
@@ -2054,10 +2251,12 @@
 	//#endregion
 	//#region resources/js/components/popover.js
 	var popover_exports = /* @__PURE__ */ __exportAll({ popover: () => popover });
+	var LONG_PRESS = 500;
+	var claimedEvents = /* @__PURE__ */ new WeakSet();
 	function popover({ mode = "hover", position = "bottom", align = "end", matchTriggerWidth = false, margin = 4, delay = 0 } = {}) {
 		delay = toMilliseconds(delay);
 		const _toggleable = toggleable();
-		const usesClick = () => mode !== "manual" && (window.matchMedia("(hover: none)").matches || mode === "dropdown");
+		const usesClick = () => !["manual", "context"].includes(mode) && (window.matchMedia("(hover: none)").matches || mode === "dropdown");
 		return {
 			..._toggleable,
 			popoverElement: null,
@@ -2075,9 +2274,8 @@
 			_cancelPendingClose: null,
 			_hoverCloseTimer: null,
 			_hoverOpenTimer: null,
-			mouseX: 0,
-			mouseY: 0,
-			_hasPointerPosition: false,
+			_pointerOffset: null,
+			_contextEvent: null,
 			init() {
 				_toggleable.init.call(this);
 				this._onBeforeToggle = (e) => {
@@ -2196,7 +2394,7 @@
 				if (usesClick()) {
 					on(trigger, "click", (event) => this.toggle(this.popoverRole() !== "menu" || event.detail === 0));
 					on(trigger, "keydown", (event) => {
-						if (!["ArrowDown", "ArrowUp"].includes(event.key) || this.isOpened()) return;
+						if (!["ArrowDown", "ArrowUp"].includes(event.key) || this.isOpened() && this.popoverRole() !== "menu") return;
 						event.preventDefault();
 						this.open(event.key === "ArrowUp" ? "last" : true);
 					});
@@ -2231,23 +2429,72 @@
 						on(this.popoverElement, "mouseleave", () => this.hoverClose());
 					}
 				} else if (mode === "context") {
+					let pressTimer = null;
+					let pressStart = null;
+					let pressed = false;
+					const cancelPress = () => {
+						clearTimeout(pressTimer);
+						pressTimer = null;
+					};
+					const openAt = ({ clientX, clientY }) => {
+						const rect = trigger.getBoundingClientRect();
+						this._pointerOffset = {
+							x: clientX - rect.left,
+							y: clientY - rect.top
+						};
+						if (this.isOpened()) this.boundSetPosition();
+						else this.open();
+					};
+					cleanups.push(cancelPress, keepAttributesOnMorph((el) => el === trigger, ["tabindex"]));
 					on(trigger, "contextmenu", (event) => {
+						if (claimedEvents.has(event)) return;
+						claimedEvents.add(event);
+						this._contextEvent = event;
 						event.preventDefault();
-						this.close();
-						this.mouseX = event.clientX;
-						this.mouseY = event.clientY;
-						this._hasPointerPosition = true;
-						this.open();
+						cancelPress();
+						if (pressed) return;
+						openAt(event);
+					});
+					on(trigger, "pointerdown", (event) => {
+						pressed = false;
+						cancelPress();
+						if (event.pointerType !== "touch" || claimedEvents.has(event)) return;
+						claimedEvents.add(event);
+						pressStart = {
+							clientX: event.clientX,
+							clientY: event.clientY
+						};
+						pressTimer = setTimeout(() => {
+							pressTimer = null;
+							pressed = true;
+							openAt(pressStart);
+						}, LONG_PRESS);
+					});
+					on(trigger, "pointermove", (event) => {
+						if (pressTimer && Math.hypot(event.clientX - pressStart.clientX, event.clientY - pressStart.clientY) > 10) cancelPress();
+					});
+					on(trigger, "pointerup", cancelPress);
+					on(trigger, "pointercancel", cancelPress);
+					on(trigger, "click", (event) => {
+						if (!pressed) return;
+						pressed = false;
+						event.preventDefault();
+						event.stopPropagation();
 					});
 					on(trigger, "keydown", (event) => {
 						if (event.key !== "ContextMenu" && !(event.shiftKey && event.key === "F10")) return;
+						if (claimedEvents.has(event)) return;
+						claimedEvents.add(event);
 						event.preventDefault();
-						this.close();
-						this._hasPointerPosition = false;
-						this.open();
+						this._pointerOffset = null;
+						if (this.isOpened()) this.boundSetPosition();
+						else this.open();
 					});
 				}
-				on(trigger, eventName("open"), () => this.open());
+				on(trigger, eventName("open"), () => {
+					this._pointerOffset = null;
+					this.open();
+				});
 				on(trigger, eventName("close"), () => this.close());
 				this._unbindTrigger = () => cleanups.forEach((cleanup) => cleanup());
 			},
@@ -2290,12 +2537,14 @@
 						if (this.trigger?.contains(e.target)) return;
 						if ((this.popoverElement?.hasAttribute("data-keep-open") || e.target.hasAttribute("data-keep-open") || e.target.closest("[data-keep-open]")) && this.popoverElement?.contains(e.target)) return;
 					} else if (mode === "context") {
-						if (this.popoverElement?.contains(e.target)) return;
+						if (e === this._contextEvent) return;
+						if (this.popoverElement?.contains(e.target) && (e.type === "contextmenu" || this.popoverElement.hasAttribute("data-keep-open") || e.target.closest("[data-keep-open]"))) return;
 					} else return;
 					this.close();
 				};
-				document.addEventListener("click", handler);
-				this._stopOutsideClick = () => document.removeEventListener("click", handler);
+				const types = mode === "context" ? ["click", "contextmenu"] : ["click"];
+				types.forEach((type) => document.addEventListener(type, handler));
+				this._stopOutsideClick = () => types.forEach((type) => document.removeEventListener(type, handler));
 			},
 			stopOutsideClick() {
 				this._stopOutsideClick?.();
@@ -2321,10 +2570,9 @@
 						this._cancelPendingClose();
 						this._cancelPendingClose = null;
 						this.onOpen();
-					} else {
-						if (this.popoverElement.matches(":popover-open")) return;
-						this.popoverElement.showPopover();
-					}
+					} else if (this.popoverElement.matches(":popover-open")) {
+						if (!focus) return;
+					} else this.popoverElement.showPopover();
 					this.$nextTick(() => requestAnimationFrame(() => {
 						if (!this.popoverElement?.matches(":popover-open")) return;
 						this.popoverElement.querySelector("[role=option][data-active]:not([data-active=\"false\"]), [role=option][aria-selected=\"true\"]")?.scrollIntoView({ block: "nearest" });
@@ -2407,17 +2655,20 @@
 			setPosition() {
 				if (!this.popoverElement?.isConnected) return;
 				if (!this.popoverElement.matches(":popover-open")) return;
-				if ((mode !== "context" || !this._hasPointerPosition) && !this.trigger?.isConnected) return;
-				let triggerRect;
-				if (mode === "context" && this._hasPointerPosition) triggerRect = {
-					top: this.mouseY,
-					bottom: this.mouseY,
-					left: this.mouseX,
-					right: this.mouseX,
-					height: 0,
-					width: 0
-				};
-				else triggerRect = this.trigger.getBoundingClientRect();
+				if (!this.trigger?.isConnected) return;
+				let triggerRect = this.trigger.getBoundingClientRect();
+				if (mode === "context" && this._pointerOffset) {
+					const x = triggerRect.left + this._pointerOffset.x;
+					const y = triggerRect.top + this._pointerOffset.y;
+					triggerRect = {
+						top: y,
+						bottom: y,
+						left: x,
+						right: x,
+						height: 0,
+						width: 0
+					};
+				}
 				if (matchTriggerWidth) this.popoverElement.style.width = `${triggerRect.width}px`;
 				placeNextTo(this.popoverElement, triggerRect, {
 					position,
@@ -4128,6 +4379,7 @@
 					ignoreDiacritics: true,
 					includeScore: true,
 					threshold: .1,
+					ignoreLocation: true,
 					keys: ["title"],
 					...fuseOptions
 				}, fuseIndex);
@@ -4251,7 +4503,7 @@
 	//#endregion
 	//#region resources/js/components/autocomplete.js
 	var autocomplete_exports = /* @__PURE__ */ __exportAll({ autocomplete: () => autocomplete });
-	function autocomplete(options = {}) {
+	function autocomplete({ texts = {}, ...options } = {}) {
 		const _popover = popover({
 			mode: "manual",
 			position: "bottom",
@@ -4269,6 +4521,7 @@
 			..._popover,
 			..._listbox,
 			_chosen: false,
+			_typed: false,
 			resolvePopoverTrigger() {
 				return this.input ?? _popover.resolvePopoverTrigger.call(this);
 			},
@@ -4281,29 +4534,61 @@
 				_listbox.init.call(this);
 				this.trigger = this.input;
 				bind(this.input, {
-					["@keydown"]() {
+					["@input"](event) {
+						if (!event.isTrusted) return;
 						this._chosen = false;
+						this._typed = true;
 					},
 					["@blur"]() {
 						this.close();
 					},
 					["@keydown.escape.prevent"]() {
+						this._chosen = true;
 						this.close();
 					}
 				});
 				bind(this.$root, { ["@selected"]({ detail }) {
-					setFieldValue(this.input, detail.item.title);
+					if (!options.clearOnSelect) setFieldValue(this.input, detail.item.title);
 					this.debouncedSearch?.cancel();
 					this._chosen = true;
 					this.close();
 				} });
+				bind(this.$root, { ["@mousedown"](event) {
+					if (this.popoverElement?.contains(event.target)) event.preventDefault();
+				} });
+				bind(this.$root, Object.fromEntries([
+					"ready",
+					"searched",
+					"filtered",
+					"highlighted",
+					"selected",
+					"opened",
+					"closed"
+				].map((name) => [`@${name}`, (event) => emit(this.input, name, event.detail)])));
 			},
 			search() {
 				_listbox.search.call(this);
 				if (this._chosen) return this.close();
+				if (this._typed && this.input.value.trim()) this.announceCount();
+				this._typed = false;
 				const typing = document.activeElement === this.input && !this.input.disabled && !this.input.readOnly;
 				if (this.filteredItems.length && typing) this.open();
 				else this.close();
+			},
+			announceCount() {
+				const count = this.filteredItems.length;
+				announce((count === 0 ? texts.none : count === 1 ? texts.one : texts.other)?.replace(":count", count));
+			},
+			prev() {
+				if (!this.isOpened()) return this.reopen();
+				_listbox.prev.call(this);
+			},
+			next() {
+				if (!this.isOpened()) return this.reopen();
+				_listbox.next.call(this);
+			},
+			reopen() {
+				if (this.filteredItems.length) this.open();
 			},
 			open() {
 				_popover.open.call(this, false);
@@ -4431,6 +4716,9 @@
 				_bindableField.init.call(this);
 				this.anchorMonth = startOfMonth(this.firstAnchorDate());
 				this.focused = this.firstSelectedIso() ?? formatIsoDate(/* @__PURE__ */ new Date());
+				if (!this.firstSelectedIso()) this.$nextTick(() => {
+					this.anchorMonth = startOfMonth(this.firstAnchorDate());
+				});
 			},
 			parseInitialValue(raw) {
 				if (mode === "range") return this.normalizeRange(raw);
@@ -4833,7 +5121,6 @@
 			_autoplayId: null,
 			_paused: false,
 			_hovered: false,
-			_focused: false,
 			_hidden: false,
 			_offscreen: false,
 			init() {
@@ -4841,6 +5128,7 @@
 				if (name) registry()[name] = this;
 				this.measure();
 				this.$nextTick(() => this.render({ instant: true }));
+				this.$watch("current", () => this.render());
 				this.bindDrag();
 				this._slidesObserver = new MutationObserver(() => {
 					this.measure();
@@ -4872,11 +5160,8 @@
 					["@mouseleave"]() {
 						this._hovered = false;
 					},
-					["@focusin"]() {
-						this._focused = true;
-					},
-					["@focusout"](event) {
-						if (!this._root.contains(event.relatedTarget)) this._focused = false;
+					["@focusin"](event) {
+						if (event.target.matches(":focus-visible")) this._paused = true;
 					},
 					["x-resize"]() {
 						this.measure();
@@ -5127,7 +5412,7 @@
 				return this._paused;
 			},
 			isRotating() {
-				return this.autoplays() && !this._paused && !this._hovered && !this._focused && !this._hidden && !this._offscreen;
+				return this.autoplays() && !this._paused && !this._hovered && !this._hidden && !this._offscreen;
 			},
 			togglePause() {
 				this._paused = !this._paused;
@@ -5277,7 +5562,7 @@
 				this._stopCommits = onLivewireCommit(({ succeed }) => {
 					succeed(() => this.$nextTick(() => this.updateState()));
 				});
-				this.updateState();
+				this.$nextTick(() => this.updateState());
 			},
 			destroy() {
 				document.removeEventListener("change", this._onChange);
@@ -5317,33 +5602,46 @@
 	//#endregion
 	//#region resources/js/components/clearable.js
 	var clearable_exports = /* @__PURE__ */ __exportAll({ clearable: () => clearable });
-	function clearable() {
+	function clearable(action = null) {
 		return {
 			destroy() {
 				this._stopCommits?.();
+				if (this._modelEffect) window.Alpine?.release(this._modelEffect);
 			},
 			init() {
 				const button = this.$el;
-				if (this.clear) bind(button, { ["@click"]() {
-					this.clear();
-				} });
 				const input = findFieldInput(button);
-				if (!input) return;
 				const sync = () => {
-					button.style.display = input.value ? "" : "none";
+					if (input) button.style.display = input.value || input.validity?.badInput ? "" : "none";
 				};
+				bind(button, { ["@click"]() {
+					if (input && (input.disabled || input.readOnly)) return;
+					if (action) window.Alpine.evaluate(button, action);
+					setFieldValue(input, "");
+					emit(input ?? button, "cleared", {}, { bubbles: true });
+					input?.focus();
+					this.$nextTick(sync);
+				} });
+				if (!input) return;
+				bind(button, { ["@mousedown"](event) {
+					event.preventDefault();
+				} });
 				sync();
-				bind(input, { ["@input"]: sync });
+				listenWhileConnected(button, input, "input", sync);
+				listenWhileConnected(button, input, "change", sync);
+				onFormReset(button, input.form, sync);
+				this.$nextTick(() => {
+					const model = input._x_model;
+					if (!model || !window.Alpine?.effect) return;
+					this._modelEffect = window.Alpine.effect(() => {
+						model.get();
+						this.$nextTick(sync);
+					});
+				});
 				this._stopCommits = onLivewireCommit(({ component, succeed }) => {
 					if (!component?.el?.contains(input)) return;
 					succeed(() => this.$nextTick(sync));
 				});
-				bind(button, { ["@click"]() {
-					if (input.disabled || input.readOnly) return;
-					setFieldValue(input, "");
-					emit(input, "cleared", {}, { bubbles: true });
-					input.focus();
-				} });
 			}
 		};
 	}
@@ -5351,39 +5649,86 @@
 	//#region resources/js/components/color-picker.js
 	var color_picker_exports = /* @__PURE__ */ __exportAll({ colorPicker: () => colorPicker });
 	function colorPicker({ value = null, format = null } = {}) {
-		const _bindableField = bindableField({ key: "color-picker" });
+		const _bindableField = bindableField({
+			key: "color-picker",
+			deserialize(raw) {
+				if (this.field && document.activeElement === this.field && raw === this.field.value) return this.value;
+				return raw ? normalizeColor(raw, this.format) ?? raw : null;
+			}
+		});
 		return {
 			..._bindableField,
 			value,
 			format: format ?? "hex",
+			draft: null,
 			init() {
+				if (this.value) this.value = normalizeColor(this.value, this.format) ?? this.value;
 				_bindableField.init.call(this);
+			},
+			shownValue() {
+				return this.draft ?? this.value;
+			},
+			hexValue() {
+				return normalizeColor(this.shownValue(), "hex") ?? "#000000";
+			},
+			fromNative(hex) {
+				const next = parseColor(hex);
+				const current = parseColor(this.value);
+				if (!next) return null;
+				if (current) next.a = current.a;
+				return formatColor(next, this.format);
+			},
+			previewNative(hex) {
+				if (this.isLocked()) return;
+				this.draft = this.fromNative(hex);
+			},
+			pickNative(hex) {
+				this.draft = null;
+				this.pick(this.fromNative(hex));
 			},
 			hasEyeDropper() {
 				return typeof window !== "undefined" && "EyeDropper" in window;
 			},
-			isDisabled() {
-				return !!this.field?.disabled;
+			isLocked() {
+				return !!(this.field?.disabled || this.field?.readOnly);
+			},
+			setLive(color) {
+				this.value = color ? normalizeColor(color, this.format) ?? color : null;
+			},
+			swatchStyle(color) {
+				if (!color) return {
+					backgroundColor: "transparent",
+					backgroundImage: "none",
+					backgroundSize: "auto"
+				};
+				return {
+					backgroundColor: "transparent",
+					backgroundImage: `linear-gradient(${color}, ${color}), repeating-conic-gradient(#d4d4d8 0 25%, #fff 0 50%)`,
+					backgroundSize: "auto, 8px 8px"
+				};
 			},
 			pick(color) {
-				if (this.isDisabled()) return;
+				if (this.isLocked()) return;
 				const normalized = color ? normalizeColor(color, this.format) ?? color : null;
 				if (normalized === this.value) return;
 				this.value = normalized;
 				this.dispatchPicked(normalized);
 			},
 			commitTyped(raw) {
-				if (this.isDisabled()) return;
-				if (!raw) {
-					this.pick(null);
-					return;
-				}
-				const normalized = normalizeColor(raw, this.format);
-				if (normalized) this.pick(normalized);
-				else if (this.field) this.field.value = this.value ?? "";
+				if (this.isLocked()) return;
+				const normalized = raw ? normalizeColor(raw, this.format) : null;
+				if (!raw || normalized) this.pick(normalized);
+				this.$nextTick(() => {
+					const current = this.value ?? "";
+					if (this.field && this.field.value !== current) setFieldValue(this.field, current);
+				});
+			},
+			isActive(swatch) {
+				if (!this.value) return false;
+				return (normalizeColor(swatch, this.format) ?? swatch) === (normalizeColor(this.value, this.format) ?? this.value);
 			},
 			async dropColor() {
-				if (!this.hasEyeDropper() || this.isDisabled()) return;
+				if (!this.hasEyeDropper() || this.isLocked()) return;
 				try {
 					const result = await new window.EyeDropper().open();
 					this.pick(result.sRGBHex);
@@ -5407,7 +5752,8 @@
 		});
 		const _listbox = listbox({
 			hideEmpty: false,
-			clearOnSelect: !multiple
+			clearOnSelect: !multiple,
+			tabSelects: false
 		});
 		const _bindableField = bindableField({
 			key: "combobox-field",
@@ -5527,7 +5873,15 @@
 				], { ["@keydown.escape.prevent"]() {
 					this.closeAndFocus();
 				} });
-				bind(this.input, { ["@keydown.enter.prevent"]() {} });
+				bind(this.input, {
+					["@keydown.enter.prevent"]() {},
+					["@keydown.tab"]() {
+						if (multiple || !this.opened || !this.filteredItems[this.index]) return;
+						this.value = this.getElementValue(this.filteredItems[this.index].el);
+						this.syncInputDisplay();
+						this.dispatchPicked(this.value);
+					}
+				});
 				bind(this.$root, {
 					["@click.outside"]() {
 						this.close();
@@ -5629,8 +5983,8 @@
 			init() {
 				_bindableField.init.call(this);
 				if (hasBlurModel(this.$root)) blurOnFocusLeave(this.$root, this.$root);
-				const modes = !submit ? [] : Array.isArray(submit) ? submit : [submit];
-				const control = queryData(this.$el, "control");
+				const modes = !submit ? [] : submit === true ? ["enter"] : Array.isArray(submit) ? submit : [submit];
+				const control = this.$el.querySelector(`:scope > ${dataSelector("field-control")} ${dataSelector("control")}`);
 				const labelFor = control && !control.id ? findInField(this.$el.parentElement, "label")?.getAttribute("for") : null;
 				bind(control, {
 					"x-model": "value",
@@ -5729,7 +6083,8 @@
 			fill(el);
 			if (!("restore" in current)) current.restore = original;
 		},
-		hide() {
+		hide(el = null) {
+			if (el && current?.trigger !== el) return;
 			hide();
 		},
 		configure(options = {}) {
@@ -6049,7 +6404,7 @@
 	//#endregion
 	//#region resources/js/components/copyable.js
 	var copyable_exports = /* @__PURE__ */ __exportAll({ copyable: () => copyable });
-	function copyable(targetId = null, content = null) {
+	function copyable({ targetId = null, content = null, failedText = null } = {}) {
 		return {
 			copied: false,
 			timeout: null,
@@ -6067,100 +6422,232 @@
 				}
 				bind(this.$el, { async ["@click"]() {
 					clearTimeout(this.timeout);
+					tooltip.hide(this.$el);
+					this.copied = false;
 					const currentTarget = content ? null : this.findTarget();
 					const text = content ?? (currentTarget ? "value" in currentTarget ? currentTarget.value : currentTarget.innerText : null);
-					if (text === null || !await copyText(text)) {
-						this.copied = false;
-						emit(this.$root, "failed");
+					const eventTarget = currentTarget ?? this.$root;
+					if (text === null || text === "" || !await copyText(text, this.$el)) {
+						emit(eventTarget, "failed", {}, { bubbles: true });
+						if (failedText) {
+							tooltip.show(this.$el, failedText);
+							announce(failedText);
+							this.reset();
+						}
 						return;
 					}
 					this.copied = true;
 					this.$nextTick(() => {
 						tooltip.show(this.$el);
-						announce(this.$el.getAttribute("aria-label"));
+						announce(this.$el.getAttribute(dataKey("tooltip")));
 					});
-					emit(currentTarget, "copied", {}, { bubbles: true });
-					this.timeout = setTimeout(() => {
-						tooltip.hide();
-						this.copied = false;
-						this.timeout = null;
-					}, 1e3);
+					emit(eventTarget, "copied", {}, { bubbles: true });
+					this.reset();
 				} });
+			},
+			reset() {
+				this.timeout = setTimeout(() => {
+					tooltip.hide(this.$el);
+					this.copied = false;
+					this.timeout = null;
+				}, 1500);
 			},
 			destroy() {
 				clearTimeout(this.timeout);
+				tooltip.hide(this.$el);
 			}
 		};
 	}
-	async function copyText(text) {
+	async function copyText(value, anchor) {
+		const text = String(value);
 		try {
 			if (navigator.clipboard?.writeText) {
 				await navigator.clipboard.writeText(text);
 				return true;
 			}
 		} catch {}
+		const active = document.activeElement;
 		const area = document.createElement("textarea");
 		area.value = text;
 		area.setAttribute("readonly", "");
-		area.style.position = "fixed";
-		area.style.opacity = "0";
-		document.body.appendChild(area);
+		area.setAttribute("aria-hidden", "true");
+		area.tabIndex = -1;
+		Object.assign(area.style, {
+			position: "fixed",
+			top: "0",
+			left: "0",
+			opacity: "0",
+			pointerEvents: "none"
+		});
+		(anchor?.parentElement ?? document.body).appendChild(area);
+		area.focus({ preventScroll: true });
 		area.select();
+		area.setSelectionRange(0, text.length);
 		try {
 			return document.execCommand("copy");
 		} catch {
 			return false;
 		} finally {
 			area.remove();
+			active?.focus?.({ preventScroll: true });
 		}
 	}
 	//#endregion
 	//#region resources/js/components/credit-card.js
-	var credit_card_exports = /* @__PURE__ */ __exportAll({ creditCard: () => creditCard });
-	function creditCard(types = {}, options = {}) {
-		const _toggleable = toggleable();
+	var credit_card_exports = /* @__PURE__ */ __exportAll({
+		creditCard: () => creditCard,
+		detectCardBrand: () => detectCardBrand
+	});
+	var BRANDS = [
+		["americanexpress", /^3[47]/],
+		["diners", /^3(0[0-5]|[68])/],
+		["jcb", /^35(2[89]|[3-8])/],
+		["discover", /^(6011|65|64[4-9]|622(12[6-9]|1[3-9]\d|[2-8]\d\d|9[01]\d|92[0-5]))/],
+		["unionpay", /^62/],
+		["maestro", /^(5018|5020|5038|5893|6304|6759|676[1-3])/],
+		["mastercard", /^(5[1-5]|2(2[2-9]|[3-6]|7[01]|720))/],
+		["visa", /^4/]
+	];
+	var GROUPS$4 = {
+		americanexpress: [
+			4,
+			6,
+			5
+		],
+		diners: [
+			4,
+			6,
+			4
+		],
+		default: [
+			4,
+			4,
+			4,
+			4
+		]
+	};
+	var FIELDS = {
+		number: "cc-number",
+		holderName: "cc-name",
+		expirationDate: "cc-exp",
+		cvv: "cc-csc"
+	};
+	function detectCardBrand(number) {
+		const digits = String(number ?? "").replace(/\D/g, "");
+		return BRANDS.find(([, pattern]) => pattern.test(digits))?.[0] ?? null;
+	}
+	function autocompleteField(container, token) {
+		return container?.querySelector(`[autocomplete~="${token}"]`) ?? null;
+	}
+	function creditCard({ brands = {}, ...options } = {}) {
 		return {
-			..._toggleable,
-			types,
-			_iconUid: generateId("card-icon"),
-			options: {
-				opened: true,
-				holderName: null,
-				number: null,
-				type: null,
-				expirationDate: null,
-				cvv: null,
-				...options
+			brands,
+			back: Boolean(options?.back),
+			type: options?.type ?? null,
+			values: {
+				holderName: options?.holderName ?? null,
+				number: options?.number ?? null,
+				expirationDate: options?.expirationDate ?? null,
+				cvv: options?.cvv ?? null
 			},
+			_container: null,
+			_stopCommits: null,
 			init() {
-				_toggleable.init.call(this);
-				this.opened = this.options.opened;
-				bind(this.$el, {
+				const label = this.$root.getAttribute("aria-label");
+				bind(this.$root, {
 					["@click"]() {
-						this.toggle();
+						this.flip();
 					},
-					[":class"]() {
-						return { "rotate-y-180": !this.isOpened() };
+					[":data-flipped"]() {
+						return this.back ? "" : null;
+					},
+					[":aria-label"]() {
+						return [label, this.brandOptions().label].filter(Boolean).join(" ");
 					}
 				});
+				bind(queryData(this.$root, "credit-card-flip"), { [":aria-pressed"]() {
+					return String(this.back);
+				} });
+				this.connectFields();
 			},
-			typeIcon() {
-				const uid = this._iconUid;
-				return (this.typeOptions().icon ?? "").replace(/id="([^"]+)"/g, `id="$1-${uid}"`).replace(/url\(#([^)]+)\)/g, `url(#$1-${uid})`).replace(/href="#([^"]+)"/g, `href="#$1-${uid}"`);
+			destroy() {
+				this._stopCommits?.();
 			},
-			typeOptions() {
-				return this.types[this.options.type] ? this.types[this.options.type] : this.types.unknown;
-			},
-			update(options = {}) {
-				this.options = {
-					...this.options,
-					...options
+			connectFields() {
+				const target = options?.for;
+				this._container = target ? document.getElementById(target) ?? document.querySelector(target) : this.$root.closest("form");
+				if (!this._container) return;
+				this.readFields();
+				const read = (e) => {
+					if (this.fieldKey(e.target)) this.readFields();
 				};
-				if ("opened" in options) this.opened = this.options.opened;
+				listenWhileConnected(this.$root, this._container, "input", read);
+				listenWhileConnected(this.$root, this._container, "change", read);
+				listenWhileConnected(this.$root, this._container, "focusin", (e) => {
+					const key = this.fieldKey(e.target);
+					if (key) this.flip(key === "cvv");
+				});
+				onFormReset(this.$root, this._container.closest("form") ?? this._container.querySelector("form"), () => this.readFields());
+				this._stopCommits = onLivewireCommit(({ succeed }) => succeed(() => this.$nextTick(() => this.readFields())));
 			},
-			flip(isBack = false) {
-				if (isBack) this.close();
-				else this.open();
+			fieldKey(el) {
+				if (!el?.getAttribute) return null;
+				const tokens = (el.getAttribute("autocomplete") ?? "").split(/\s+/);
+				if (tokens.includes("cc-exp-month") || tokens.includes("cc-exp-year")) return "expirationDate";
+				return Object.keys(FIELDS).find((key) => tokens.includes(FIELDS[key])) ?? null;
+			},
+			readFields() {
+				const container = this._container;
+				for (const [key, token] of Object.entries(FIELDS)) {
+					const field = autocompleteField(container, token);
+					if (field) this.values[key] = field.value || null;
+				}
+				const month = autocompleteField(container, "cc-exp-month");
+				const year = autocompleteField(container, "cc-exp-year");
+				if (month || year) this.values.expirationDate = month?.value || year?.value ? `${month?.value || "MM"}/${year?.value || "YYYY"}` : null;
+			},
+			brand() {
+				if (this.type) return this.brands[this.type] ? this.type : "unknown";
+				return detectCardBrand(this.values.number) ?? "unknown";
+			},
+			brandOptions() {
+				return this.brands[this.brand()] ?? this.brands.unknown;
+			},
+			displayNumber() {
+				const groups = GROUPS$4[this.brand()] ?? GROUPS$4.default;
+				const number = String(this.values.number ?? "");
+				if (!number) return groups.map((size) => "0".repeat(size)).join(" ");
+				if (/[^\d\s]/.test(number)) return number;
+				const digits = number.replace(/\D/g, "");
+				const parts = [];
+				let start = 0;
+				for (const size of groups) {
+					if (start >= digits.length) break;
+					parts.push(digits.slice(start, start + size));
+					start += size;
+				}
+				if (start < digits.length) parts.push(digits.slice(start));
+				return parts.join(" ");
+			},
+			fit(el, max) {
+				this.$nextTick(() => {
+					el.removeAttribute("textLength");
+					el.removeAttribute("lengthAdjust");
+					if (el.getComputedTextLength() <= max) return;
+					el.setAttribute("textLength", max);
+					el.setAttribute("lengthAdjust", "spacingAndGlyphs");
+				});
+			},
+			update(values = {}) {
+				const { back, type, ...rest } = values;
+				if (type !== void 0) this.type = type;
+				for (const key of Object.keys(rest)) if (key in this.values) this.values[key] = rest[key];
+				if (back !== void 0) this.flip(Boolean(back));
+			},
+			flip(back = !this.back) {
+				if (this.back === back) return;
+				this.back = back;
+				emit(this.$root, "flipped", { back });
 			}
 		};
 	}
@@ -6249,7 +6736,15 @@
 			onOpen() {
 				if (confirm) this.value = this.committed;
 				if (forceOpenTo && openTo) this.anchorMonth = startOfMonth(parseIsoDate(openTo));
+				else if (this.firstSelectedIso()) {
+					this.focused = this.firstSelectedIso();
+					this.anchorMonth = startOfMonth(this.firstAnchorDate());
+				}
 				_popover.onOpen.call(this);
+			},
+			close() {
+				if (confirm) this.value = this.committed;
+				_popover.close.call(this);
 			},
 			apply() {
 				this.committed = this.value;
@@ -6495,42 +6990,12 @@
 		};
 	}
 	//#endregion
-	//#region resources/js/components/disclosure-group.js
-	var disclosure_group_exports = /* @__PURE__ */ __exportAll({ disclosureGroup: () => disclosureGroup });
-	function disclosureGroup({ exclusive = false } = {}) {
-		return {
-			observer: null,
-			init() {
-				const own = (el) => el.matches?.(dataSelector("disclosure-item")) && el.closest("[x-data^=\"disclosureGroup\"]") === this.$root;
-				const getItems = () => queryAllData(this.$root, "disclosure-item").filter(own);
-				const observe = () => this.observer.observe(this.$root, {
-					subtree: true,
-					attributeFilter: ["data-open"]
-				});
-				this.observer = new MutationObserver((records) => {
-					const changed = records.map((record) => record.target).filter(own);
-					if (!changed.length) return;
-					const items = getItems();
-					if (exclusive) {
-						const opened = new Set(changed.filter((item) => item.hasAttribute("data-open")));
-						if (opened.size) items.forEach((item) => {
-							if (!opened.has(item)) item.removeAttribute("data-open");
-						});
-					}
-					this.observer.disconnect();
-					emit(this.$root, "changed", { items });
-					this.$nextTick(observe);
-				});
-				observe();
-			},
-			destroy() {
-				this.observer?.disconnect();
-			}
-		};
-	}
-	//#endregion
 	//#region resources/js/components/disclosure.js
-	var disclosure_exports = /* @__PURE__ */ __exportAll({ disclosure: () => disclosure });
+	var disclosure_exports = /* @__PURE__ */ __exportAll({
+		TRIGGER_SELECTOR: () => TRIGGER_SELECTOR,
+		disclosure: () => disclosure
+	});
+	var TRIGGER_SELECTOR = ":scope > button, :scope > [role=\"heading\"] > button";
 	function disclosure() {
 		const _toggleable = toggleable();
 		return {
@@ -6540,9 +7005,34 @@
 				_toggleable.init.call(this, this.$root.hasAttribute("data-open"));
 				const panel = this.$root.querySelector(":scope > button + *, :scope > [role=\"heading\"] + *");
 				if (panel && !panel.id) panel.id = generateId("disclosure");
-				this.observer = new MutationObserver(() => this.setOpened(this.$root.hasAttribute("data-open")));
+				const buttons = Array.from(this.$root.querySelectorAll(TRIGGER_SELECTOR));
+				buttons.forEach((button) => {
+					if (!button.id) button.id = generateId("disclosure", null, "trigger");
+				});
+				if (panel?.getAttribute("role") === "region" && buttons[0] && !panel.hasAttribute("aria-labelledby")) panel.setAttribute("aria-labelledby", buttons[0].id);
+				this.observer = new MutationObserver(() => {
+					const opened = this.$root.hasAttribute("data-open");
+					if (this.$root.closest(dataSelector("disclosure-settling"))) this.opened = opened;
+					else this.setOpened(opened);
+				});
 				this.observer.observe(this.$root, { attributeFilter: ["data-open"] });
-				bind(this.$root.querySelectorAll(":scope > button, :scope > [role=\"heading\"] > button"), {
+				const stops = [
+					keepAttributesOnMorph((el) => buttons.includes(el), [
+						"id",
+						"aria-controls",
+						"aria-expanded"
+					]),
+					keepAttributesOnMorph((el) => el === panel, ["id", "aria-labelledby"]),
+					window.Livewire?.hook("morph.updating", ({ el, toEl }) => {
+						if (el !== this.$root || !toEl?.querySelectorAll) return;
+						const incoming = [...toEl.querySelectorAll(TRIGGER_SELECTOR), toEl.querySelector(":scope > button + *, :scope > [role=\"heading\"] + *")];
+						[...buttons, panel].forEach((node, index) => {
+							if (node && incoming[index]) incoming[index].id ||= node.id;
+						});
+					})
+				];
+				this._stopMorphHook = () => stops.forEach((stop) => stop?.());
+				bind(buttons, {
 					[":aria-controls"]() {
 						return panel?.id ?? null;
 					},
@@ -6561,6 +7051,95 @@
 			close() {
 				this.$root.removeAttribute("data-open");
 				_toggleable.close.call(this);
+			},
+			destroy() {
+				this.observer?.disconnect();
+				this._stopMorphHook?.();
+			}
+		};
+	}
+	//#endregion
+	//#region resources/js/components/disclosure-group.js
+	var disclosure_group_exports = /* @__PURE__ */ __exportAll({ disclosureGroup: () => disclosureGroup });
+	function disclosureGroup({ exclusive = false } = {}) {
+		return {
+			observer: null,
+			value: exclusive ? null : [],
+			init() {
+				const selector = dataSelector("disclosure-item");
+				const own = (el) => el.matches?.(selector) && el.closest("[x-data^=\"disclosureGroup\"]") === this.$root;
+				const getItems = () => queryAllData(this.$root, "disclosure-item").filter(own);
+				const itemsIn = (node) => node instanceof Element ? [node, ...queryAllData(node, "disclosure-item")].filter((el) => el.matches(selector)) : [];
+				const isOpen = (item) => item.hasAttribute("data-open");
+				const normalize = (value) => [].concat(value ?? []).map(String);
+				const settling = dataKey("disclosure-settling");
+				const closedByGroup = /* @__PURE__ */ new Set();
+				const closeOthers = (keep) => getItems().forEach((item) => {
+					if (item === keep || !isOpen(item)) return;
+					closedByGroup.add(item);
+					item.removeAttribute("data-open");
+				});
+				const readValue = () => {
+					const names = getItems().filter(isOpen).map((item) => item.dataset.name).filter((name) => name !== void 0);
+					return exclusive ? names[0] ?? null : names;
+				};
+				const syncValue = () => {
+					const value = readValue();
+					if (JSON.stringify(normalize(value)) === JSON.stringify(normalize(this.value))) return false;
+					this.value = value;
+					return true;
+				};
+				const applyValue = () => {
+					const names = normalize(this.value);
+					getItems().filter((item) => item.dataset.name !== void 0).forEach((item) => item.toggleAttribute("data-open", names.includes(item.dataset.name)));
+				};
+				const triggers = () => getItems().flatMap((item) => Array.from(item.querySelectorAll(TRIGGER_SELECTOR))).filter((el) => !el.disabled && el.getAttribute("aria-disabled") !== "true");
+				const focusTrigger = (event, pick) => {
+					const list = triggers();
+					const index = list.indexOf(event.target);
+					if (index === -1) return;
+					event.preventDefault();
+					pick(list, index)?.focus();
+				};
+				if (exclusive) {
+					const [first, ...rest] = getItems().filter(isOpen);
+					if (rest.length) closeOthers(first);
+					closedByGroup.clear();
+				}
+				this.value = readValue();
+				this.observer = new MutationObserver((records) => {
+					const changed = [...new Set(records.filter((record) => record.type === "attributes").map((record) => record.target).filter(own))].filter((item) => !closedByGroup.delete(item));
+					const added = records.flatMap((record) => Array.from(record.addedNodes)).flatMap(itemsIn).filter(own);
+					const removed = records.some((record) => Array.from(record.removedNodes).some((node) => itemsIn(node).length));
+					if (!changed.length && !added.length && !removed) return;
+					if (exclusive) {
+						const opened = [...changed, ...added].filter(isOpen).at(-1);
+						if (opened) closeOthers(opened);
+					}
+					if ((syncValue() || changed.length) && !this.$root.hasAttribute(settling)) emit(this.$root, "changed", { items: getItems() });
+				});
+				this.observer.observe(this.$root, {
+					subtree: true,
+					childList: true,
+					attributeFilter: ["data-open"]
+				});
+				this.$watch("value", applyValue);
+				this.$root.setAttribute(settling, "");
+				requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(() => this.$root.removeAttribute(settling))));
+				bind(this.$root, {
+					["@keydown.arrow-down"](event) {
+						focusTrigger(event, (list, index) => list[(index + 1) % list.length]);
+					},
+					["@keydown.arrow-up"](event) {
+						focusTrigger(event, (list, index) => list.at(index - 1));
+					},
+					["@keydown.home"](event) {
+						focusTrigger(event, (list) => list[0]);
+					},
+					["@keydown.end"](event) {
+						focusTrigger(event, (list) => list.at(-1));
+					}
+				});
 			},
 			destroy() {
 				this.observer?.disconnect();
@@ -7088,11 +7667,16 @@
 			render() {
 				try {
 					this._calendarEl ??= this.$el;
+					const current = calendar && {
+						initialDate: calendar.getDate(),
+						initialView: calendar.view.type
+					};
 					calendar?.destroy();
 					calendar = new window.FullCalendar.Calendar(this._calendarEl, {
 						locale: calendarLocale() || void 0,
 						...options,
-						...this.getDataOptions(this._calendarEl)
+						...this.getDataOptions(this._calendarEl),
+						...current
 					});
 					calendar.render();
 					emit(this._calendarEl, "rendered", { fullCalendar: calendar }, { later: true });
@@ -7320,21 +7904,26 @@
 						const to = event.relatedTarget;
 						if (to instanceof Element && !menu.contains(to) && typeof this.close === "function" && this.isOpened?.()) this.close();
 					},
-					["@keydown.arrow-down.prevent"]() {
+					["@keydown.arrow-down.prevent"](event) {
+						if (event.target.closest(dataSelector("menu")) !== menu) return;
 						this.focusItem(this.menuItems(), 1);
 					},
-					["@keydown.arrow-up.prevent"]() {
+					["@keydown.arrow-up.prevent"](event) {
+						if (event.target.closest(dataSelector("menu")) !== menu) return;
 						this.focusItem(this.menuItems(), -1);
 					},
-					["@keydown.home.prevent"]() {
+					["@keydown.home.prevent"](event) {
+						if (event.target.closest(dataSelector("menu")) !== menu) return;
 						this.focusItem(this.menuItems(), "first");
 					},
-					["@keydown.end.prevent"]() {
+					["@keydown.end.prevent"](event) {
+						if (event.target.closest(dataSelector("menu")) !== menu) return;
 						this.focusItem(this.menuItems(), "last");
 					},
 					["@keydown"](event) {
 						if (event.key.length !== 1 || event.ctrlKey || event.metaKey || event.altKey || event.key === " ") return;
 						if (event.target.closest?.("input, textarea, select, [contenteditable]")) return;
+						if (event.target.closest(dataSelector("menu")) !== menu) return;
 						this.typeAhead(event.key);
 					}
 				});
@@ -7413,14 +8002,20 @@
 		return {
 			init() {
 				const dialog = this.$el;
+				const gutter = dataKey("modal-gutter");
+				const showModal = () => {
+					const root = document.documentElement;
+					root.toggleAttribute(gutter, root.scrollHeight > root.clientHeight);
+					dialog.showModal();
+				};
 				bind(dialog, {
 					[`@${eventName("modal-show")}.document`](event) {
 						if (event.detail.name === name && !event.detail.scope) {
-							dialog.showModal();
+							showModal();
 							return;
 						}
 						if (event.detail.name === name && event.detail.scope === this.$wire?.id) {
-							dialog.showModal();
+							showModal();
 							return;
 						}
 					},
@@ -7468,7 +8063,10 @@
 							start.focus();
 							emit(dialog, "opened", { name });
 						}
-						if (event.newState === "closed") emit(dialog, "closed", { name });
+						if (event.newState === "closed") {
+							if (!document.querySelector("dialog[open]:modal")) document.documentElement.removeAttribute(gutter);
+							emit(dialog, "closed", { name });
+						}
 					},
 					["@pointerdown"](event) {
 						pressedOn = event.target;
@@ -7491,7 +8089,7 @@
 					}
 				});
 				if (shortcut) bindShortcut(dialog, shortcut, () => this.$dispatch(eventName("modal-show"), { name }));
-				if (open) this.$nextTick(() => dialog.isConnected && !dialog.open && dialog.showModal());
+				if (open) this.$nextTick(() => dialog.isConnected && !dialog.open && showModal());
 			},
 			show() {
 				this.$dispatch(eventName("modal-show"), { name });
@@ -7589,6 +8187,7 @@
 						childList: true,
 						attributeFilter: ["data-current"]
 					});
+					nav.addEventListener("scroll", this._onMove, { passive: true });
 				}
 				this.$nextTick(() => this.move());
 			},
@@ -7597,6 +8196,7 @@
 				window.removeEventListener("resize", this._onMove);
 				this._resizeObserver?.disconnect();
 				this._mutationObserver?.disconnect();
+				this.findNav(this.$el)?.removeEventListener("scroll", this._onMove);
 				cancelAnimationFrame(this._frame);
 				clearTimeout(this._visibilityTimeout);
 			},
@@ -7619,9 +8219,10 @@
 					if (!link) return;
 					const indicatorRect = indicator.getBoundingClientRect();
 					const linkRect = link.getBoundingClientRect();
-					const x = link.offsetLeft + nav.offsetLeft;
-					const y = link.offsetTop + nav.offsetTop;
-					if (linkRect.width <= 0 || linkRect.height <= 0) {
+					const navRect = nav.getBoundingClientRect();
+					const x = link.offsetLeft + nav.offsetLeft - nav.scrollLeft;
+					const y = link.offsetTop + nav.offsetTop - nav.scrollTop;
+					if (linkRect.width <= 0 || linkRect.height <= 0 || linkRect.right <= navRect.left || linkRect.left >= navRect.right || linkRect.bottom <= navRect.top || linkRect.top >= navRect.bottom) {
 						indicator.style.opacity = "0";
 						return;
 					}
@@ -7909,7 +8510,10 @@
 	}
 	//#endregion
 	//#region resources/js/components/progress.js
-	var progress_exports = /* @__PURE__ */ __exportAll({ progress: () => progress });
+	var progress_exports = /* @__PURE__ */ __exportAll({
+		progress: () => progress,
+		progressBar: () => progressBar
+	});
 	function progress(percentage = null) {
 		return {
 			value: 0,
@@ -7922,6 +8526,15 @@
 				this.value = clamp(num, 0, 100);
 			}
 		};
+	}
+	function progressBar() {
+		return { paint(value) {
+			const percent = clamp(toNumber(value, 0), 0, 100);
+			const bar = this.$root;
+			bar.style.transition = percent < toNumber(bar.dataset.value, 0) ? "none" : "";
+			bar.style.width = `${percent}%`;
+			bar.dataset.value = percent;
+		} };
 	}
 	//#endregion
 	//#region resources/js/components/quill.js
@@ -8062,6 +8675,8 @@
 				editor.root.setAttribute("role", "textbox");
 				editor.root.setAttribute("aria-multiline", "true");
 				if (labelledBy) editor.root.setAttribute("aria-labelledby", labelledBy);
+				if (this.input.hasAttribute("aria-describedby")) editor.root.setAttribute("aria-describedby", this.input.getAttribute("aria-describedby"));
+				if (this.input.hasAttribute("aria-invalid")) editor.root.setAttribute("aria-invalid", "true");
 				if (this.input.value) this.setHtml(this.input.value);
 				editor.on("text-change", () => {
 					this.sync(this.html());
@@ -8101,7 +8716,7 @@
 	//#endregion
 	//#region resources/js/components/sidebar.js
 	var sidebar_exports = /* @__PURE__ */ __exportAll({ sidebar: () => sidebar });
-	function sidebar(name, sticky, stashable) {
+	function sidebar({ name = null, sticky = false, stashable = false } = {}) {
 		const _toggleable = toggleable();
 		const _sticky = stickable();
 		return {
@@ -8291,7 +8906,19 @@
 					this.inside = false;
 					this.timerToClose();
 				});
-				on(trigger, "click", () => this.toggle(false));
+				on(trigger, "click", (event) => this.toggle(event.detail === 0));
+				on(trigger, "keydown", (event) => {
+					if (event.key !== (isRtl(trigger) ? "ArrowLeft" : "ArrowRight")) return;
+					event.preventDefault();
+					this.open(true);
+				});
+				on(panel, "keydown", (event) => {
+					if (event.key !== (isRtl(trigger) ? "ArrowRight" : "ArrowLeft")) return;
+					event.preventDefault();
+					event.stopPropagation();
+					this.close();
+					trigger.focus();
+				});
 				on(trigger, "mouseenter", () => {
 					clearTimeout(this._i);
 					this.open(false);
@@ -8344,7 +8971,7 @@
 				const selected = this.own("[data-selected]")[0]?.dataset.name;
 				const tabs = this.tabs();
 				if (selected || selectFirst && tabs.length) this.$nextTick(() => {
-					this.selected = selected ?? tabs[0]?.dataset.name;
+					this.selected ??= selected ?? tabs[0]?.dataset.name;
 				});
 				const nextKey = orientation === "vertical" ? "arrow-down" : "arrow-right";
 				const previousKey = orientation === "vertical" ? "arrow-up" : "arrow-left";
@@ -8571,6 +9198,7 @@
 			},
 			columnHide(name) {
 				this.columnVisibility[name] = false;
+				this.$nextTick(() => this.$refs.showColumns?.focus());
 			},
 			columnsVisibilityInit() {
 				if (toggleable) {
@@ -8989,6 +9617,7 @@
 				};
 				sync();
 				bind(el, { ["@input"]: sync });
+				onFormReset(this.$root, el.form, sync);
 				this._stopCommits = onLivewireCommit(({ component, succeed }) => {
 					if (!component?.el?.contains(el)) return;
 					succeed(() => this.$nextTick(sync));
@@ -9276,7 +9905,7 @@
 		} catch {}
 		return null;
 	}
-	function tinymce({ options = {}, scripts = [], toolbar = null, upload = null, messages = {}, title = null, locale = null } = {}) {
+	function tinymce({ options = {}, scripts = [], styles = [], toolbar = null, upload = null, messages = {}, title = null, locale = null } = {}) {
 		const _loadable = loadable();
 		let editor = null;
 		return {
@@ -9289,7 +9918,7 @@
 			},
 			init() {
 				this.initField();
-				this.load(() => loadRemoteAssets(() => !!window.tinymce, ["https://cdn.jsdelivr.net/npm/tinymce@8/tinymce.min.js", ...scripts]).then(() => this.mount()));
+				this.load(() => loadRemoteAssets(() => !!window.tinymce, ["https://cdn.jsdelivr.net/npm/tinymce@8/tinymce.min.js", ...scripts], styles).then(() => this.mount()));
 				let dark = isDark();
 				this._appearanceObserver = new MutationObserver(() => {
 					if (isDark() === dark) return;
@@ -9432,7 +10061,7 @@
 		quote: {},
 		code: {}
 	};
-	function tiptap({ options = {}, scripts = [], toolbar = null, upload = {}, version = null, messages = {}, labelledBy = null } = {}) {
+	function tiptap({ options = {}, scripts = [], styles = [], toolbar = null, upload = {}, version = null, messages = {}, labelledBy = null } = {}) {
 		const _loadable = loadable();
 		let resolvedVersion = version || DEFAULT_TIPTAP_VERSION;
 		let editor = null;
@@ -9465,6 +10094,7 @@
 						}
 					}
 					if (scripts.length) this.extraModules = await loadRemoteModule(scripts);
+					await loadStyle(styles);
 					this.mount(Editor, extensions);
 				});
 			},
@@ -9557,7 +10187,9 @@
 						[dataKey("control")]: "",
 						role: "textbox",
 						"aria-multiline": "true",
-						...labelledBy ? { "aria-labelledby": labelledBy } : {}
+						...labelledBy ? { "aria-labelledby": labelledBy } : {},
+						...this.input.hasAttribute("aria-describedby") ? { "aria-describedby": this.input.getAttribute("aria-describedby") } : {},
+						...this.input.hasAttribute("aria-invalid") ? { "aria-invalid": "true" } : {}
 					} },
 					onUpdate: ({ editor }) => {
 						this.sync(editor.isEmpty ? "" : editor.getHTML());
@@ -9627,7 +10259,7 @@
 	//#endregion
 	//#region resources/js/components/toast.js
 	var toast_exports = /* @__PURE__ */ __exportAll({ toast: () => toast });
-	function toast(flashed = [], texts = {}) {
+	function toast({ flashed = [], texts = {} } = {}) {
 		texts = {
 			loading: "Loading...",
 			success: "Success!",
@@ -9726,6 +10358,8 @@
 				});
 			},
 			addToast(props) {
+				const currentToast = props.id ? this.toasts.find((t) => t.id === props.id) : null;
+				if (currentToast) return this.updateToast(currentToast.id, props);
 				const position = normalizePosition(props.position);
 				const maxStack = props.maxStack ?? 5;
 				if (maxStack !== false) {
@@ -9735,8 +10369,6 @@
 						if (oldest) this.removeToast(oldest.id);
 					}
 				}
-				const currentToast = props.id ? this.toasts.find((t) => t.id === props.id) : null;
-				if (currentToast) return this.updateToast(currentToast.id, props);
 				const toast = createToast(props, position, this);
 				this.toasts.push(toast);
 				this.announce(toast);
@@ -9875,7 +10507,7 @@
 					this.updateToast(toast.id, {
 						title: resolveMessage(messages.success, data) ?? texts.success,
 						type: "success",
-						duration: getDynamicDuration(resolveMessage(messages.success, data)),
+						duration: readingDuration(resolveMessage(messages.success, data)),
 						progress: true,
 						swipe: true
 					});
@@ -9884,7 +10516,7 @@
 					this.updateToast(toast.id, {
 						title: resolveMessage(messages.error, error) ?? texts.error,
 						type: "error",
-						duration: getDynamicDuration(resolveMessage(messages.error, error)) * 1.3,
+						duration: readingDuration(resolveMessage(messages.error, error)) * 1.3,
 						progress: true,
 						swipe: true
 					});
@@ -10084,24 +10716,15 @@
 	}
 	function resolveDuration(duration, title, message, hasActions = false) {
 		if (duration === false) return null;
-		if (duration === true) return getDynamicDuration(title, message);
-		if (duration == null) return hasActions ? null : getDynamicDuration(title, message);
-		return toMilliseconds(duration, getDynamicDuration(title, message));
+		if (duration === true) return readingDuration(title, message);
+		if (duration == null) return hasActions ? null : readingDuration(title, message);
+		return toMilliseconds(duration, readingDuration(title, message));
 	}
 	function normalizePosition(position) {
 		position ??= "bottom-right";
 		if (position === "top") return "top-right";
 		if (position === "bottom") return "bottom-right";
 		return position;
-	}
-	function getDynamicDuration(title = "", message = "") {
-		const text = `${title} ${message}`.trim();
-		const min = 3e3;
-		const max = 9e3;
-		let time = 1e3 + ((title?.length ?? 0) * 1.2 + (message?.length ?? 0) * 1.6) / 16 * 1e3;
-		const lines = text.split("\n").length;
-		time += lines * 300;
-		return clamp(time, min, max);
 	}
 	//#endregion
 	//#region resources/js/components/toggle.js
@@ -10748,61 +11371,6 @@
 		if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", callback, { once: true });
 		else callback();
 	}
-	//#endregion
-	//#region resources/js/appearance.js
-	var STORAGE_KEY = storageKey("appearance");
-	var appearance = {
-		mode: getStoredText(STORAGE_KEY) || "system",
-		init() {
-			this.apply(this.mode);
-			document.addEventListener("livewire:navigated", () => this.apply(this.mode));
-			window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
-				if (this.mode === "system") this.apply("system");
-			});
-		},
-		isDark() {
-			return document.documentElement.classList.contains("dark");
-		},
-		isLight() {
-			return !this.isDark();
-		},
-		applyDark(persist = true) {
-			document.documentElement.classList.add("dark");
-			if (persist) setStoredText(STORAGE_KEY, "dark");
-			this.mode = "dark";
-		},
-		applyLight(persist = true) {
-			document.documentElement.classList.remove("dark");
-			if (persist) setStoredText(STORAGE_KEY, "light");
-			this.mode = "light";
-		},
-		apply(appearance) {
-			if (appearance === "system") {
-				const media = window.matchMedia("(prefers-color-scheme: dark)");
-				removeStored(STORAGE_KEY);
-				if (media.matches) this.applyDark(false);
-				else this.applyLight(false);
-				this.mode = "system";
-			} else if (appearance === "dark") this.applyDark();
-			else if (appearance === "light") this.applyLight();
-		},
-		toggle(event, options = {}) {
-			if (!(typeof document !== "undefined" && typeof document.startViewTransition === "function" && !prefersReducedMotion()) || !event) return this.isDark() ? this.applyLight() : this.applyDark();
-			const transition = document.startViewTransition(() => this.isDark() ? this.applyLight() : this.applyDark());
-			const x = event.clientX || 0;
-			const y = event.clientY || 0;
-			const endRadius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
-			transition.ready.then(() => {
-				const clipPath = [`circle(0px at ${x}px ${y}px)`, `circle(${endRadius}px at ${x}px ${y}px)`];
-				document.documentElement.animate({ clipPath: this.isDark() ? [...clipPath].reverse() : clipPath }, {
-					duration: 300,
-					easing: "ease-in",
-					...options || {},
-					pseudoElement: this.isDark() ? "::view-transition-old(root)" : "::view-transition-new(root)"
-				});
-			});
-		}
-	};
 	//#endregion
 	//#region resources/js/consent.js
 	function consent(state = "granted") {

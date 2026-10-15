@@ -1,24 +1,24 @@
 @props([
     ...TALLKit::elementProps(),
     'label' => null,
+    'action' => null,
 ])
 <tk:button
     wire:ignore.self
     x-cloak
-    x-data="clearable()"
+    x-data="clearable({{ Js::from($action) }})"
     :$label
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())
-        ->merge(['variant' => 'none', 'tooltip' => 'Clear input'])
+    :attributes="$attributes->withElementProps(get_defined_vars())
+        ->merge(['variant' => 'none', 'icon' => 'close', 'tooltip' => $label || $slot->hasActualContent() ? null : 'Clear input'])
         ->classes(
             '
                 min-w-6 min-h-6
-                [[data-tallkit-control]:has(:placeholder-shown)_&]:hidden
-                [[data-tallkit-control]:has(:disabled)_&]:hidden
-                [[data-tallkit-control]:has([readonly])_&]:hidden
+                [[data-tallkit-field-control]:has([data-tallkit-input]:placeholder-shown)_&]:hidden
+                [[data-tallkit-field-control]:has([data-tallkit-input]:disabled)_&]:hidden
+                [[data-tallkit-field-control]:has([data-tallkit-input][readonly])_&]:hidden
             '
         )
     "
-    icon="close"
 >
     {{ $slot }}
 </tk:button>

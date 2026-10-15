@@ -3,6 +3,7 @@
     role="radiogroup"
     :aria-label="__('Theme')"
     x-data="appearanceSelector"
+    wire:ignore
 >
     <tk:button
         :attributes="$attributes->prefixed('system:')->merge(['tooltip' => 'System'])->classes('aria-checked:bg-current/10! dark:aria-checked:bg-current/30!')"

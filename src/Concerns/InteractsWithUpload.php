@@ -64,7 +64,7 @@ trait InteractsWithUpload
             ->map(fn ($path) => ltrim($path, '/'))
             ->map(fn ($path) => ($base = ltrim($basePath, '/')) !== '' && str_starts_with($path, $base) ? substr($path, strlen($base)) : $path)
             ->map(fn ($path) => ltrim($path, '/'))
-            ->filter(fn ($path) => str_starts_with($path, $directory))
+            ->filter(fn ($path) => str_starts_with($path, $directory) && ! preg_match('#(^|[/\\\\])\.\.?([/\\\\]|$)#', $path))
             ->unique()
             ->values();
     }
@@ -84,7 +84,6 @@ trait InteractsWithUpload
             throw new \InvalidArgumentException("The disk [{$disk}] isn't configured, or isn't in tallkit.upload.allowed_disks.");
         }
 
-        // Signed without the app's subfolder (as Laravel verifies it), then prefixed with it.
         return rtrim(request()->getBaseUrl(), '/').URL::temporarySignedRoute(
             'tallkit.upload',
             now()->addMinutes((int) ($guest
@@ -111,7 +110,6 @@ trait InteractsWithUpload
 
         $upload = is_array($upload) ? $upload : [];
 
-        // Only what an editor puts in its content: a guest's link isn't a place to store any file.
         $guest = (bool) ($upload['guest'] ?? false);
         $types = $upload['types'] ?? ['image', 'video'];
 
@@ -119,7 +117,6 @@ trait InteractsWithUpload
             $types = array_values(array_intersect($types, (array) $guestTypes));
         }
 
-        // A guest link with no kind left would take every kind: none at all.
         if ($types === []) {
             return null;
         }
@@ -213,7 +210,6 @@ trait InteractsWithUpload
         };
     }
 
-    // $stored: the value saved before, from the model, never from the browser (false: any path is looked up).
     public function uploadedFiles($value, ?string $disk = null, mixed $stored = false): Collection
     {
         $disk = $this->uploadDisk($disk);
@@ -257,14 +253,16 @@ trait InteractsWithUpload
             && (json_decode($entry['snapshot'], true)['memo']['id'] ?? null) === $component->getId());
 
         if ($entry === null) {
-            $trusted = $strings(Arr::wrap($value));
+            $trusted = $strings(is_iterable($value) ? $value : [$value]);
         } else {
             $before = $strings(json_decode($entry['snapshot'], true)['data'] ?? []);
             $sent = $strings(collect($entry['updates'] ?? [])
-                ->filter(fn ($update, $name) => $name === $field || str_starts_with((string) $name, $field.'.')));
+                ->filter(fn ($update, $name) => $name === $field
+                    || str_starts_with((string) $name, $field.'.')
+                    || str_starts_with($field, $name.'.')));
             $known = collect($shown[$key] ?? []);
 
-            $trusted = $strings(Arr::wrap($value))->filter(fn ($path) => $known->contains($path)
+            $trusted = $strings(is_iterable($value) ? $value : [$value])->filter(fn ($path) => $known->contains($path)
                 || (! $before->contains($path) && ! $sent->contains($path)));
 
             $value = is_array($value) || $value instanceof \Traversable
@@ -288,9 +286,13 @@ trait InteractsWithUpload
         if (! isset($request[$key])) {
             $local = config("filesystems.disks.{$disk}.driver") === 'local';
 
-            $request[$key] = $local
-                ? $this->describeStoredFile($path, $disk)
-                : Cache::remember($key, 60 * 5, fn () => $this->describeStoredFile($path, $disk) ?? false);
+            try {
+                $request[$key] = $local
+                    ? $this->describeStoredFile($path, $disk)
+                    : Cache::remember($key, 60 * 5, fn () => $this->describeStoredFile($path, $disk) ?? false);
+            } catch (\Throwable) {
+                $request[$key] = false;
+            }
         }
 
         $described = $request[$key];
@@ -300,23 +302,19 @@ trait InteractsWithUpload
 
     protected function describeStoredFile(string $path, string $disk): ?array
     {
-        try {
-            if (! Storage::disk($disk)->exists($path)) {
-                return null;
-            }
-
-            return [
-                'name' => File::basename($path),
-                'url' => Storage::disk($disk)->url($path),
-                'size' => Storage::disk($disk)->size($path),
-                'type' => $this->uploadFileType(File::extension($path)),
-                'status' => 'done',
-                'progress' => 100,
-                'tmpFilename' => null,
-            ];
-        } catch (\Throwable) {
+        if (! Storage::disk($disk)->exists($path)) {
             return null;
         }
+
+        return [
+            'name' => File::basename($path),
+            'url' => Storage::disk($disk)->url($path),
+            'size' => Storage::disk($disk)->size($path),
+            'type' => $this->uploadFileType(File::extension($path)),
+            'status' => 'done',
+            'progress' => 100,
+            'tmpFilename' => null,
+        ];
     }
 
     protected function uploadCacheKey(string $disk, string $path): string
@@ -329,14 +327,12 @@ trait InteractsWithUpload
         try {
             $base = Storage::disk($disk)->url('');
 
-            // Only at the start: a path containing the URL isn't that file.
             return $base !== '' && Str::startsWith($value, $base) ? Str::after($value, $base) : $value;
         } catch (\Throwable) {
             return $value;
         }
     }
 
-    /** The original must come from a trusted source (the model), never from the request. */
     public function uploadPrune($original, $current, ?string $disk = null): array
     {
         $disk = $this->uploadDisk($disk);
@@ -361,7 +357,6 @@ trait InteractsWithUpload
         return $removed;
     }
 
-    /** Any other path is someone else's file, and uploadPrune() would later delete it. */
     public function uploadKept($original, $current, ?string $disk = null): array
     {
         $disk = $this->uploadDisk($disk);
@@ -437,7 +432,6 @@ trait InteractsWithUpload
         return 'unknown';
     }
 
-    /** By its content for image, video and audio: a .png that is a video counts as a video. */
     public function uploadedFileType(?UploadedFile $file): string
     {
         if (! $file) {
@@ -530,7 +524,6 @@ trait InteractsWithUpload
         return in_array($disk, $allowed, true) && array_key_exists($disk, config('filesystems.disks', []));
     }
 
-    // $stored: the value saved before, from the model, never from the browser. Without it, only new uploads pass.
     public function uploadRules(
         string $field,
         ?string $type = null,

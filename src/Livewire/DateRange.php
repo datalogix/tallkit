@@ -66,7 +66,6 @@ class DateRange extends CarbonPeriod
         $start->startOfDay();
         $end?->endOfDay();
 
-        // Without an end it is one day: a period with no end never stops iterating.
         return $end ? new static($start, $end) : new static($start, 1);
     }
 

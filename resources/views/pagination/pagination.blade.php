@@ -52,7 +52,6 @@ $textColors = TALLKit::classes(TALLKit::textNeutral());
                                     :attributes="$attributes->prefixed('results:')->classes('hidden sm:block', $textColors)"
                                     :$size
                                 >
-                                    {{-- One sentence to translate: word by word, a language can't reorder them. --}}
                                     {!! __('Showing :first to :last of :total :results', [
                                         'first' => '<span class="font-medium">'.e($paginator->firstItem()).'</span>',
                                         'last' => '<span class="font-medium">'.e($paginator->lastItem()).'</span>',
@@ -175,8 +174,8 @@ $textColors = TALLKit::classes(TALLKit::textNeutral());
                     :$size
                 >
                     <span>{!! __('Total:') !!}</span>
-                    <span class="font-medium">{{ $paginator->total() }}</span>
-                    <span>{!! trans_choice('result|results', $paginator->total()) !!}</span>
+                    <span class="font-medium">{{ ($paginator instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator ? $paginator->total() : $paginator->count()) }}</span>
+                    <span>{!! trans_choice('result|results', ($paginator instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator ? $paginator->total() : $paginator->count())) !!}</span>
                 </tk:text>
             @elseif ($isArrayable)
                 <tk:text

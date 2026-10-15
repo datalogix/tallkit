@@ -10,29 +10,36 @@
 @php
 
 $hasContent = $slot->hasActualContent();
+$hasIcon = has_content($icon);
+$hasPrepend = has_content($prepend);
+$hasTitle = has_content($title);
+$hasDescription = has_content($description);
+$hasAppend = has_content($append);
+$hasActions = has_content($actions);
+$descriptionIsString = is_string($description) && filled($description);
 
 @endphp
-@if ($icon || $prepend || $title || filled($description) || $append || $actions || $hasContent)
+@if ($hasIcon || $hasPrepend || $hasTitle || $hasDescription || $hasAppend || $hasActions || $hasContent)
     <div {{ $attributes
         ->whereDoesntStartWith(['container:', 'icon:', 'title:', 'description:', 'list:', 'actions:'])
         ->classes(
             'flex-1 flex',
-            collect([$prepend, $title, $description, $append, $hasContent])->filter()->count() > 1 ? 'items-start' : 'items-center',
+            collect([$hasPrepend, $hasTitle, $hasDescription, $hasAppend, $hasContent])->filter()->count() > 1 ? 'items-start' : 'items-center',
             TALLKit::fontSize(size: $size),
             TALLKit::gap(size: $size),
         )
     }}>
-        @if (TALLKit::isSlot(slot: $icon))
+        @if ($hasIcon && TALLKit::isSlot(slot: $icon))
             @php($iconAttrs = $attributes->prefixed('icon:'))
             <div {{
-                $iconAttrs->when(
+                $iconAttrs->classes('shrink-0')->when(
                     ! $iconAttrs->has('aria-label') && ! $iconAttrs->has('aria-labelledby'),
                     fn ($attrs) => $attrs->merge(['aria-hidden' => 'true'])
                 )
             }}>
                 {{ $icon }}
             </div>
-        @elseif ($icon)
+        @elseif ($hasIcon)
             <tk:icon
                 :attributes="$attributes->prefixed('icon:')"
                 :$icon
@@ -58,10 +65,10 @@ $hasContent = $slot->hasActualContent();
             />
 
             @php($descriptionIsContent = $description !== null && ! is_string($description) && ! is_array($description) && filled((string) $description))
-            @if (is_string($description) || $descriptionIsContent)
+            @if ($descriptionIsString || $descriptionIsContent)
                 <tk:text
                     :attributes="$attributes->prefixed('description:')"
-                    :label="is_string($description) ? $description : null"
+                    :label="$descriptionIsString ? $description : null"
                     :$size
                 >
                     @if ($descriptionIsContent)
@@ -72,7 +79,7 @@ $hasContent = $slot->hasActualContent();
 
             @if ($hasContent)
                 <tk:text
-                    :attributes="$attributes->prefixed('description:')->when(is_string($description) || $descriptionIsContent, fn ($attrs) => $attrs->except('id'))"
+                    :attributes="$attributes->prefixed('description:')->when($descriptionIsString || $descriptionIsContent, fn ($attrs) => $attrs->except('id'))"
                     :$size
                 >
                     {{ $slot }}
@@ -90,7 +97,7 @@ $hasContent = $slot->hasActualContent();
             {{ $append }}
         </div>
 
-        @if ($actions)
+        @if ($hasActions)
             <div {{ $attributes->prefixed('actions:')->classes(
                 'shrink-0 flex items-center',
                 TALLKit::gap(size: $size)

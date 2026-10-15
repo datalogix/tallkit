@@ -7,7 +7,7 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = $attributes->fieldContext(label: $label, id: $id, scope: get_defined_vars());
 $value = TALLKit::fieldOldValue($fieldName, $value);
 
 if ($multiple && is_string($value)) {
@@ -18,19 +18,19 @@ $listName = $multiple && $name ? Str::finish(Str::before($name, '[]'), '[]') : n
 
 $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd || $attributes->has('class');
 $options = TALLKit::parseOptions(attributes: $attributes);
-$placeholderText = __(is_string($placeholder) ? $placeholder : '---');
+$placeholderText = __(string_value($placeholder, '---'));
 $isInputTrigger = $trigger === 'input';
-$disabled = TALLKit::isAttributeEnabled($attributes->get('disabled'));
-$readonly = TALLKit::isAttributeEnabled($attributes->get('readonly'));
+$disabled = $attributes->enabled('disabled');
+$readonly = $attributes->enabled('readonly');
 
 @endphp
 <tk:field.wrapper
     :$name
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :attributes="$attributes->withFieldProps(get_defined_vars())"
 >
     <tk:field.control
         :$size
-        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
+        :attributes="$attributes->withFieldControlProps(get_defined_vars())
             ->when(
                 $hasControl,
                 fn ($attrs) => $attrs->classes(
@@ -43,11 +43,11 @@ $readonly = TALLKit::isAttributeEnabled($attributes->get('readonly'));
     >
         <div
             wire:ignore
-            x-data="combobox({
-                value: @js($value ?? ($multiple ? [] : null)),
-                multiple: @js($multiple),
-                trigger: @js($trigger),
-            })"
+            x-data="combobox({{ Js::from([
+                'value' => $value ?? ($multiple ? [] : null),
+                'multiple' => $multiple,
+                'trigger' => $trigger,
+            ]) }})"
             class="flex-1"
         >
             @if ($isInputTrigger)
@@ -94,13 +94,13 @@ $readonly = TALLKit::isAttributeEnabled($attributes->get('readonly'));
                                 ->dataKey('combobox-field')
                                 ->merge([
                                     'name' => $multiple ? null : $name,
-                                    'value' => in_livewire() ? null : (is_array($value) ? implode(',', $value) : $value),
+                                    'value' => unless_livewire(is_array($value) ? implode(',', $value) : $value),
                                     'wire:model' => $wireModel,
                                 ])
-                                ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: [
+                                ->withoutFieldPrefixes([
                                     'trigger:', 'search:', 'selected:', 'selected-label:', 'selected-clear:', 'selected-option:', 'toggle:',
                                     'popover:', 'listbox:', 'heading:', 'option:',
-                                ]))
+                                ])
                         }}
                     />
 
@@ -145,9 +145,8 @@ $readonly = TALLKit::isAttributeEnabled($attributes->get('readonly'));
                                 ->merge([
                                     'id' => $id,
                                     'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
-                                    'aria-invalid' => $invalid ? 'true' : null,
+                                    ...TALLKit::fieldInvalid($invalid),
                                     'aria-readonly' => $readonly ? 'true' : null,
-                                    'data-invalid' => $invalid ? true : null,
                                     'disabled' => $disabled ?: null,
                                     'readonly' => $readonly ?: null,
                                 ])
@@ -202,9 +201,8 @@ $readonly = TALLKit::isAttributeEnabled($attributes->get('readonly'));
                             ->merge([
                                 'id' => $id,
                                 'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
-                                'aria-invalid' => $invalid ? 'true' : null,
+                                ...TALLKit::fieldInvalid($invalid),
                                 'aria-readonly' => $readonly ? 'true' : null,
-                                'data-invalid' => $invalid ? true : null,
                                 'disabled' => $disabled ?: null,
                                 'aria-disabled' => $disabled ? 'true' : null,
                             ])
@@ -253,13 +251,13 @@ $readonly = TALLKit::isAttributeEnabled($attributes->get('readonly'));
                                 ->dataKey('combobox-field')
                                 ->merge([
                                     'name' => $multiple ? null : $name,
-                                    'value' => in_livewire() ? null : (is_array($value) ? implode(',', $value) : $value),
+                                    'value' => unless_livewire(is_array($value) ? implode(',', $value) : $value),
                                     'wire:model' => $wireModel,
                                 ])
-                                ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: [
+                                ->withoutFieldPrefixes([
                                     'trigger:', 'search:', 'selected:', 'selected-label:', 'selected-clear:', 'selected-option:', 'toggle:',
                                     'popover:', 'listbox:', 'heading:', 'option:',
-                                ]))
+                                ])
                         }}
                     />
 
@@ -273,7 +271,7 @@ $readonly = TALLKit::isAttributeEnabled($attributes->get('readonly'));
                         <span
                             {{ $attributes->prefixed('selected-label:')->classes('truncate', TALLKit::textNeutral(variant: 'muted')) }}
                             x-show="selectedCount() === 0"
-                            x-text="@js($placeholderText)"
+                            x-text="{{ Js::from($placeholderText) }}"
                         ></span>
 
                         <div
@@ -299,7 +297,7 @@ $readonly = TALLKit::isAttributeEnabled($attributes->get('readonly'));
                         <div {{ $attributes->prefixed('selected:')->classes('truncate flex items-center gap-2') }}>
                             <span
                                 {{ $attributes->prefixed('selected-label:')->classes('truncate flex-1') }}
-                                x-text="selectedLabel() ?? @js($placeholderText)"
+                                x-text="selectedLabel() ?? {{ Js::from($placeholderText) }}"
                                 :class="{ '{{ TALLKit::textNeutral(variant: 'muted') }}': !selectedLabel() }"
                             ></span>
 

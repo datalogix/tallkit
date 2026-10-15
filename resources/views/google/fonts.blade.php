@@ -44,7 +44,7 @@ if (filter_var($families, FILTER_VALIDATE_URL) !== false) {
         <script @if ($nonce) nonce="{{ $nonce }}" @endif>
             var l=document.createElement('link');
             l.rel='stylesheet';
-            l.href=@js($url);
+            l.href={{ Js::from($url) }};
             document.querySelector("head").appendChild(l);
         </script>
     @endif

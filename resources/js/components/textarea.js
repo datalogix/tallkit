@@ -1,4 +1,4 @@
-import { bind, clamp, onLivewireCommit, toNumber } from '../utils'
+import { bind, clamp, onFormReset, onLivewireCommit, toNumber } from '../utils'
 
 export function textarea({ maxRows = null, counter = null, length = 0 } = {}) {
   return {
@@ -25,6 +25,8 @@ export function textarea({ maxRows = null, counter = null, length = 0 } = {}) {
         ['@input']: sync,
       })
 
+      onFormReset(this.$root, el.form, sync)
+
       this._stopCommits = onLivewireCommit(({ component, succeed }) => {
         if (!component?.el?.contains(el)) return
 
@@ -36,7 +38,6 @@ export function textarea({ maxRows = null, counter = null, length = 0 } = {}) {
       this._stopCommits?.()
     },
 
-    // Back to the smallest first, or scrollHeight never shrinks.
     resizeRows(el, minRows, maxRows) {
       el.rows = minRows
 

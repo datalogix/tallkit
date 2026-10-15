@@ -9,7 +9,7 @@
 ])
 <tk:dropdown :attributes="$attributes->prefixed('dropdown:')">
     <tk:nav.item
-        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->except(['href'])
+        :attributes="$attributes->withElementProps(get_defined_vars())->except(['href'])
             ->whereDoesntStartWith(['dropdown:', 'menu:'])
             ->when($animate !== false, fn ($attrs) => $attrs->merge([
                 'icon-trailing:class' => 'transition-transform',

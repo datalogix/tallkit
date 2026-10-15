@@ -7,7 +7,7 @@
     'actions' => null,
 ])
 <tk:modal
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), ['title' => null, 'subtitle' => null, 'description' => null, 'append' => null, 'actions' => null])->whereDoesntStartWith(['button:', 'preview:'])"
+    :attributes="$attributes->withProps(get_defined_vars(), ['title' => null, 'subtitle' => null, 'description' => null, 'append' => null, 'actions' => null])->whereDoesntStartWith(['button:', 'preview:'])"
     :$size
     x-on:closed="previewId = null"
 >

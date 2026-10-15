@@ -15,10 +15,14 @@
 >
     (function () {
         var mode = null
-        try { mode = window.localStorage.getItem(@js(TALLKit::storageKey('appearance'))) } catch (e) {}
+        try { mode = window.localStorage.getItem({{ Js::from(TALLKit::storageKey('appearance')) }}) } catch (e) {}
         var dark = mode === 'dark' || (mode !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)
         document.documentElement.classList.toggle('dark', dark)
     })()
 
-    document.addEventListener(@js(TALLKit::eventName('init')), () => window.tallkit.appearance.init())
+    if (window.tallkit) {
+        window.tallkit.appearance.init()
+    } else {
+        document.addEventListener({{ Js::from(TALLKit::eventName('init')) }}, () => window.tallkit.appearance.init(), { once: true })
+    }
 </script>

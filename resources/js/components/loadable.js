@@ -6,7 +6,6 @@ export function loadable() {
     loaded: null,
     error: null,
 
-    // Only the latest load changes the state.
     _loadToken: 0,
     _pendingLoad: null,
     _destroyed: false,

@@ -12,6 +12,7 @@
 @php
 
 $displayValue = $variable ? "Math.max(0, Math.min(100, Number({$variable}) || 0))" : 'value';
+$percent = max(0, min(100, (float) $value));
 $overlay = in_array($overlay, ['top', 'bottom', 'fill'], true) ? $overlay : null;
 
 if ($overlay) {
@@ -51,7 +52,7 @@ $decorative = $label === false;
             role="progressbar"
             aria-valuemin="0"
             aria-valuemax="100"
-            aria-valuenow="{{ (int) ($value ?? 0) }}"
+            aria-valuenow="{{ (int) round($percent) }}"
             x-bind:aria-valuenow="Math.round({{ $displayValue }})"
         @endunless
         {{
@@ -74,9 +75,10 @@ $decorative = $label === false;
             {{
                 $attributes->prefixed('bar:')
                     ->dataKey('progress-bar')
-                    ->merge(['x-effect' => "const value = {$displayValue}; \$el.style.transition = value < Number(\$el.dataset.value ?? 0) ? 'none' : ''; \$el.style.width = value + '%'; \$el.dataset.value = value"])
+                    ->merge(['x-data' => 'progressBar', 'x-effect' => 'paint('.($variable ?? 'value').')'])
+                    ->unless($variable, fn ($attrs) => $attrs->style('width: '.$percent.'%'))
                     ->classes([
-                        'w-0 h-full transition-[width] ease-linear',
+                        'w-0 h-full transition-[width] ease-linear motion-reduce:transition-none',
                         'rounded-full' => ! $square,
                         match ($variant) {
                             'accent' => 'bg-[var(--color-accent)]',
@@ -91,7 +93,7 @@ $decorative = $label === false;
         <tk:text
             :attributes="$attributes->prefixed('percent:')->dataKey('progress-percent')"
             :$size
-            :label="($value ?? 0).'%'"
+            :label="round($percent).'%'"
             x-text="Math.round({{ $displayValue }}) + '%'"
         />
     @endif

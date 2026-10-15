@@ -28,9 +28,9 @@ $descriptionId = "{$id}-description";
         )
         ->merge(['id' => $id])
         ->except('aria-describedby')
-        ->merge(['aria-describedby' => collect([$attributes->get('aria-describedby'), $description ? $descriptionId : null])->filter()->implode(' ') ?: null])
+        ->merge(['aria-describedby' => collect([$attributes->get('aria-describedby'), has_content($description) ? $descriptionId : null])->filter()->implode(' ') ?: null])
 }}>
-    @if ($label || $description)
+    @if (has_content($label, $description))
         <tk:legend
             :attributes="$attributes->prefixed('label:', with: ['badge', 'info'])"
             :$label
@@ -40,7 +40,7 @@ $descriptionId = "{$id}-description";
         <tk:text
             :attributes="$attributes->prefixed('description:')
                 ->classes('mb-4')
-                ->when($description, fn ($attrs) => $attrs->merge(['id' => $descriptionId]))
+                ->when(has_content($description), fn ($attrs) => $attrs->merge(['id' => $descriptionId]))
             "
             :label="$description"
             :$size

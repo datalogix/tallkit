@@ -30,7 +30,7 @@ export function tab(
 
       if (selected || (selectFirst && tabs.length)) {
         this.$nextTick(() => {
-          this.selected = selected ?? tabs[0]?.dataset.name
+          this.selected ??= selected ?? tabs[0]?.dataset.name
         })
       }
 

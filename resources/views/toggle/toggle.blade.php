@@ -15,7 +15,7 @@
 ])
 @php
 
-[$name, $fieldName, , $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: false, id: $id, scope: get_defined_vars());
+[$name, $fieldName, , $placeholder, $invalid, $wireModel, $id] = $attributes->fieldContext(label: false, id: $id, scope: get_defined_vars());
 $checked = TALLKit::fieldOldChecked($fieldName, (bool) $checked, $value ?? null);
 $iconOn ??= $icon;
 $iconOff ??= $icon;
@@ -40,7 +40,7 @@ $tipText = $tip['attributes'][TALLKit::dataKey('tooltip')] ?? null;
     inline
     :$align
     :$name
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :attributes="$attributes->withFieldProps(get_defined_vars())"
     :label="false"
 >
     <label
@@ -55,7 +55,7 @@ $tipText = $tip['attributes'][TALLKit::dataKey('tooltip')] ?? null;
                         'delay' => $loadingDelay,
                         'minDuration' => $loadingMinDuration,
                     ], fn ($value) => $value !== null)).')' : null,
-                    'disabled' => TALLKit::isAttributeEnabled($attributes->get('disabled')) ?: null,
+                    'disabled' => $attributes->enabled('disabled') ?: null,
                 ])
                 ->classes([
                     '
@@ -141,12 +141,11 @@ $tipText = $tip['attributes'][TALLKit::dataKey('tooltip')] ?? null;
                             TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                             $tip['describedBy'],
                         ])->filter()->implode(' ') ?: null,
-                        'aria-invalid' => $invalid ? 'true' : null,
-                        'data-invalid' => $invalid ? true : null,
+                        ...TALLKit::fieldInvalid($invalid),
                     ])
-                    ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: [
+                    ->withoutFieldPrefixes([
                         'icon-on:', 'icon-off:', 'label-checked:', 'label-unchecked:',
-                    ]))
+                    ])
                     ->classes('sr-only peer')
             }}
         />
@@ -159,7 +158,7 @@ $tipText = $tip['attributes'][TALLKit::dataKey('tooltip')] ?? null;
                         'hidden peer-checked:inline-flex [&_*]:fill-current',
                         $isColored ? TALLKit::mutedText(color: $color) : TALLKit::textNeutral(variant: 'strong'),
                     )
-                    ->when($loading, fn ($attrs) => $attrs->merge(['x-show' => '!blocking']))
+                    ->when($loading, fn ($attrs) => $attrs->merge(['x-show' => '!busy']))
                 "
             />
         @endif
@@ -169,7 +168,7 @@ $tipText = $tip['attributes'][TALLKit::dataKey('tooltip')] ?? null;
                 :icon="$iconOff"
                 :attributes="$attributes->prefixed('icon-off:')
                     ->classes('inline-flex peer-checked:hidden')
-                    ->when($loading, fn ($attrs) => $attrs->merge(['x-show' => '!blocking']))
+                    ->when($loading, fn ($attrs) => $attrs->merge(['x-show' => '!busy']))
                 "
             />
         @endif
@@ -177,7 +176,7 @@ $tipText = $tip['attributes'][TALLKit::dataKey('tooltip')] ?? null;
         @if ($loading)
             <tk:loading
                 :attributes="$attributes->prefixed('loading:')->dataKey('icon')"
-                x-show="blocking"
+                x-show="busy"
                 x-cloak
                 :announce="false"
             />

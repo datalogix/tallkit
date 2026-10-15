@@ -10,7 +10,6 @@ export const FOCUSABLE = [
   '[contenteditable]:not([contenteditable="false"])',
 ].join(',')
 
-// Hidden by display:none or an ancestor's: it has no boxes.
 export function isRendered(el) {
   return el.getClientRects().length > 0
 }

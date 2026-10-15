@@ -3,10 +3,12 @@
     'actions' => null,
 ])
 @php
+
 $titleId = ($attributes->get('id') ?? TALLKit::stableId('danger-zone')).'-title';
+
 @endphp
 <tk:alert
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), ['prepend' => null, 'actions' => null, 'pauseOnHover' => null])->whereDoesntStartWith(['modal:', 'trigger:'])
+    :attributes="$attributes->withProps(get_defined_vars(), ['prepend' => null, 'actions' => null, 'pauseOnHover' => null])->whereDoesntStartWith(['modal:', 'trigger:'])
         ->merge([
             'title' => 'Danger Zone',
             'title:id' => $titleId,

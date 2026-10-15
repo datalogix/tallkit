@@ -9,6 +9,13 @@
     'separator' => null,
     'content' => null,
 ])
+@php
+
+$hasTitle = has_content($title);
+$hasDetails = has_content($subtitle, $description, $append);
+$hasActions = has_content($actions);
+
+@endphp
 <section
     {{
         $attributes
@@ -24,7 +31,7 @@
             ])
     }}
 >
-    @if ($title || $subtitle || $description || $append || $actions)
+    @if ($hasTitle || $hasDetails || $hasActions)
         <tk:content
             :attributes="TALLKit::attributesMerge(
                 $attributes->prefixed('header:', with: ['container:', 'title:', 'description:' => 'subtitle:', 'list:', 'actions:']),
@@ -54,8 +61,8 @@
             $separator ||
             (
                 $separator === null &&
-                ($title && ($subtitle || $description || $append) || $actions) &&
-                ($slot->hasActualContent() || $content)
+                ($hasTitle && $hasDetails || $hasActions) &&
+                ($slot->hasActualContent() || has_content($content))
             )
         )
             <tk:separator :attributes="$attributes->prefixed('separator:')" />
@@ -70,7 +77,6 @@
                     ->classes(TALLKit::generateClassBySize(size: $size, name: 'space-y', values: [4, 5, 6, 7, 8, 9, 10]))
             }}
         >
-            {{-- A text is translated; a slot or HTML is shown as given (__() takes only a string). --}}
             {{ is_string($content) ? __($content) : $content }}
             {{ $slot }}
         </div>

@@ -1,6 +1,5 @@
 const STORAGES = { local: 'localStorage', session: 'sessionStorage' }
 
-// Where site data is blocked, reaching for it throws.
 function getBrowserStorage(type = 'local') {
   try {
     return STORAGES[type] ? window[STORAGES[type]] : null
@@ -91,7 +90,6 @@ export function browserStorage(type = 'local') {
     else remove(key)
   }
 
-  // All keys read first: removing while iterating skips some.
   const keys = (prefix = '') => {
     const s = store()
 

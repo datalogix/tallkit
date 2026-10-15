@@ -49,7 +49,6 @@ export function fetchable({ url = null, data = null, auto = null, options = {} }
         return
       }
 
-      // Cancelled: an older answer arriving last would replace the newer one.
       this._controller?.abort()
       const controller = new AbortController()
       this._controller = controller

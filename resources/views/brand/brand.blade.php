@@ -9,18 +9,23 @@
 ])
 @php
 
-$logo ??= TALLKit::findImage('logo', exts: ['svg', 'webp', 'png', 'jpg', 'jpeg']);
-$logoDark ??= TALLKit::findImage('logo-dark', exts: ['svg', 'webp', 'png', 'jpg', 'jpeg']);
-$name = $name === true ? config('app.name') : $name;
+$hasSlot = has_content($slot);
+$logo ??= $hasSlot ? null : TALLKit::findImage('logo', extensions: ['svg', 'webp', 'png', 'jpg', 'jpeg']);
+$logoDark ??= $hasSlot ? null : TALLKit::findImage('logo-dark', extensions: ['svg', 'webp', 'png', 'jpg', 'jpeg']);
+$name = $name === true || ($name === null && ! $logo && ! $logoDark && ! $hasSlot) ? config('app.name') : $name;
 $alt ??= $name ? '' : config('app.name');
 $href ??= route_detect('home');
+
+if ($href && ! has_content($name) && (TALLKit::isSlot(slot: $logo) || (! $logo && $hasSlot))) {
+    $ariaLabel ??= config('app.name');
+}
 
 @endphp
 <tk:element
     kind="brand"
     as="div"
     :$href
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->whereDoesntStartWith(['logo:', 'image:', 'image-dark:', 'name:'])
+    :attributes="$attributes->withElementProps(get_defined_vars())->whereDoesntStartWith(['logo:', 'image:', 'image-dark:', 'name:'])
         ->classes(
             'justify-center',
             TALLKit::paddingBlock(size: $size),
@@ -58,7 +63,7 @@ $href ??= route_detect('home');
                 {{ $logo }}
             @endif
         </div>
-    @elseif ($logo || $logoDark || $slot->isNotEmpty())
+    @elseif ($logo || $logoDark || $hasSlot)
         <div {{
             $attributes->prefixed('logo:')
                 ->classes(
@@ -92,6 +97,8 @@ $href ??= route_detect('home');
                             ->mergeDefined(['alt' => $alt])
                     }}
                 />
+            @elseif ($logoDark)
+                <span class="block dark:hidden">{{ $slot }}</span>
             @else
                 {{ $slot }}
             @endif

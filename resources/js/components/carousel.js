@@ -16,14 +16,12 @@ export function carousel({ name = null, autoplay = false, interval = 5000, advan
   return {
     current: 0,
     slideCount: 0,
-    // Cached by measure(): reactive, so slides already rendered see additions and removals.
     slideList: [],
     visibleCount: 1,
     elapsed: 0,
     _autoplayId: null,
     _paused: false,
     _hovered: false,
-    _focused: false,
     _hidden: false,
     _offscreen: false,
 
@@ -38,9 +36,10 @@ export function carousel({ name = null, autoplay = false, interval = 5000, advan
 
       this.$nextTick(() => this.render({ instant: true }))
 
+      this.$watch('current', () => this.render())
+
       this.bindDrag()
 
-      // Slides added or removed later (a Livewire morph, an x-for) are counted again.
       this._slidesObserver = new MutationObserver(() => {
         this.measure()
         this.current = Math.min(this.current, this.maxIndex())
@@ -51,7 +50,6 @@ export function carousel({ name = null, autoplay = false, interval = 5000, advan
 
       if (track) this._slidesObserver.observe(track, { childList: true })
 
-      // Autoplay holds while the tab is hidden or the carousel is scrolled away.
       this._onVisibilityChange = () => {
         this._hidden = document.hidden
       }
@@ -83,12 +81,8 @@ export function carousel({ name = null, autoplay = false, interval = 5000, advan
           this._hovered = false
         },
 
-        ['@focusin']() {
-          this._focused = true
-        },
-
-        ['@focusout'](event) {
-          if (!this._root.contains(event.relatedTarget)) this._focused = false
+        ['@focusin'](event) {
+          if (event.target.matches(':focus-visible')) this._paused = true
         },
 
         ['x-resize']() {
@@ -111,7 +105,6 @@ export function carousel({ name = null, autoplay = false, interval = 5000, advan
       }
     },
 
-    // Touch and pen only: a mouse drag would fight text selection and clicks on links.
     bindDrag() {
       const viewport = queryData(this._root, 'carousel-viewport')
 
@@ -131,7 +124,6 @@ export function carousel({ name = null, autoplay = false, interval = 5000, advan
           if (!drag.locked) {
             if (Math.max(Math.abs(dx), Math.abs(dy)) < DRAG_LOCK) return
 
-            // Mostly vertical: a page scroll, left to the browser.
             if (Math.abs(dy) > Math.abs(dx)) {
               drag = null
               return
@@ -149,7 +141,6 @@ export function carousel({ name = null, autoplay = false, interval = 5000, advan
           const forward = (dx < 0) !== isRtl(this._root)
           const atEdge = !wrap && (forward ? this.current >= this.maxIndex() : this.current <= 0)
 
-          // Resists past the ends, so the track can't be pulled away from them.
           track.style.transition = 'none'
           track.style.transform = `translateX(${offset + (atEdge ? dx / 3 : dx)}px)`
         },
@@ -170,7 +161,6 @@ export function carousel({ name = null, autoplay = false, interval = 5000, advan
             return
           }
 
-          // Swiping toward the start shows what comes after.
           const forward = (dx < 0) !== isRtl(this._root)
 
           forward ? this.next() : this.prev()
@@ -307,7 +297,6 @@ export function carousel({ name = null, autoplay = false, interval = 5000, advan
       const max = this.maxIndex()
       const previous = this.current
 
-      // Past an end: the other end, but only once this one was reached; a page step stops at it first.
       let target = Math.min(Math.max(index, 0), max)
       let wrapped = false
 
@@ -323,7 +312,6 @@ export function carousel({ name = null, autoplay = false, interval = 5000, advan
 
       this.current = target
 
-      // Wrapping jumps: sliding back across every slide reads as a rewind.
       this.render({ instant: wrapped })
       this.resetAutoplay()
 
@@ -367,13 +355,11 @@ export function carousel({ name = null, autoplay = false, interval = 5000, advan
       track.style.transform = `translateX(${offset}px)`
 
       if (instant) {
-        // Flushes the jump before the transition comes back.
         void track.offsetWidth
         track.style.transition = ''
       }
     },
 
-    // Lazy images in the visible slides and their neighbours load now, so they are ready when shown.
     preload() {
       const slides = this.slides()
       const count = slides.length
@@ -389,7 +375,6 @@ export function carousel({ name = null, autoplay = false, interval = 5000, advan
       }
     },
 
-    // Scrolls the strip itself: scrollIntoView() could scroll the page as well.
     revealThumbnail() {
       const strip = queryData(this._root, 'carousel-thumbnails')
       const thumb = strip?.querySelectorAll(':scope > button')[this.current]
@@ -409,7 +394,6 @@ export function carousel({ name = null, autoplay = false, interval = 5000, advan
       return autoplay && !prefersReducedMotion()
     },
 
-    // Counts only the time spent rotating, so a pause resumes where it stopped.
     startAutoplay() {
       if (!this.autoplays()) return
 
@@ -454,7 +438,7 @@ export function carousel({ name = null, autoplay = false, interval = 5000, advan
     },
 
     isRotating() {
-      return this.autoplays() && !this._paused && !this._hovered && !this._focused && !this._hidden && !this._offscreen
+      return this.autoplays() && !this._paused && !this._hovered && !this._hidden && !this._offscreen
     },
 
     togglePause() {

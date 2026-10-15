@@ -13,7 +13,7 @@
 $groupId = ($label || $description) && ! $attributes->has('label:for') ? ($attributes->get('id') ?? TALLKit::stableId('field-group')) : null;
 @endphp
 <tk:field.wrapper
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), ['label' => null, 'labelAppend' => null, 'labelPrepend' => null, 'description' => null, 'help' => null, 'badge' => null, 'info' => null, 'showError' => null])->whereDoesntStartWith(['prefix:', 'suffix:'])"
+    :attributes="$attributes->withProps(get_defined_vars(), ['label' => null, 'labelAppend' => null, 'labelPrepend' => null, 'description' => null, 'help' => null, 'badge' => null, 'info' => null, 'showError' => null])->whereDoesntStartWith(['prefix:', 'suffix:'])"
     :prefix="null"
     :suffix="null"
     :id="$groupId"
@@ -21,10 +21,10 @@ $groupId = ($label || $description) && ! $attributes->has('label:for') ? ($attri
 >
     <div {{ $attributes->only('class')->classes('tk-field-group')->merge($groupId ? [
         'role' => 'group',
-        'aria-labelledby' => $label ? $groupId.'-label' : null,
-        'aria-describedby' => $description ? $groupId.'-description' : null,
+        'aria-labelledby' => has_content($label) ? $groupId.'-label' : null,
+        'aria-describedby' => has_content($description) ? $groupId.'-description' : null,
     ] : []) }}>
-        @if ($prefix || $attributes->prefixed('prefix:')->isNotEmpty())
+        @if (has_content($prefix) || $attributes->prefixed('prefix:')->isNotEmpty())
             <tk:field.group.prefix
                 :attributes="$attributes->prefixed('prefix:')"
                 :$size
@@ -35,7 +35,7 @@ $groupId = ($label || $description) && ! $attributes->has('label:for') ? ($attri
 
         {{ $slot }}
 
-        @if ($suffix || $attributes->prefixed('suffix:')->isNotEmpty())
+        @if (has_content($suffix) || $attributes->prefixed('suffix:')->isNotEmpty())
             <tk:field.group.suffix
                 :attributes="$attributes->prefixed('suffix:')"
                 :$size

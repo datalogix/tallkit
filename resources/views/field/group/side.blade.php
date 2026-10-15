@@ -5,7 +5,7 @@
 ])
 <tk:element
     content:class="min-w-0 truncate"
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->dataKey('input-group-'.$side)->classes(
+    :attributes="$attributes->withElementProps(get_defined_vars())->dataKey('input-group-'.$side)->classes(
         '
             px-4 whitespace-nowrap max-w-1/2 min-w-0
             [:where(&)]:text-zinc-800 dark:[:where(&)]:text-white/85

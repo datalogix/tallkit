@@ -1,4 +1,4 @@
-import { queryData, bind, findInField, hasBlurModel, blurOnFocusLeave } from '../utils'
+import { dataSelector, bind, findInField, hasBlurModel, blurOnFocusLeave } from '../utils'
 import { bindableField } from '../mixins/bindable-field'
 
 export function composer({ submit = false } = {}) {
@@ -12,12 +12,10 @@ export function composer({ submit = false } = {}) {
     init() {
       _bindableField.init.call(this)
 
-      // Its wire:model is on the root, which never blurs.
       if (hasBlurModel(this.$root)) blurOnFocusLeave(this.$root, this.$root)
 
-      const modes = !submit ? [] : (Array.isArray(submit) ? submit : [submit])
-
-      const control = queryData(this.$el, 'control')
+      const modes = !submit ? [] : submit === true ? ['enter'] : (Array.isArray(submit) ? submit : [submit])
+      const control = this.$el.querySelector(`:scope > ${dataSelector('field-control')} ${dataSelector('control')}`)
       const labelFor = control && !control.id ? findInField(this.$el.parentElement, 'label')?.getAttribute('for') : null
 
       bind(control, {
@@ -25,7 +23,6 @@ export function composer({ submit = false } = {}) {
         ...(labelFor && { id: labelFor }),
         ...(modes.length && {
           ['@keydown'](e) {
-            // Enter confirming an IME composition isn't a send.
             if (e.isComposing || e.keyCode === 229) return
 
             const shouldSubmit = modes.some((mode) => {

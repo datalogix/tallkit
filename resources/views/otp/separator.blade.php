@@ -6,7 +6,7 @@
 ])
 <tk:text
     aria-hidden="true"
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->classes(TALLKit::paddingInline(size: $size, mode: 'smallest'))"
+    :attributes="$attributes->withElementProps(get_defined_vars())->classes(TALLKit::paddingInline(size: $size, mode: 'smallest'))"
     :$size
 >
     {{ $slot }}

@@ -2,9 +2,9 @@
     ...TALLKit::elementProps(),
     'info' => null,
 ])
-@if ($slot->hasActualContent() || $label || $icon || $prefix || $suffix || $iconTrailing || $info || $badge || $prepend || $append || $kbd)
+@if ($slot->hasActualContent() || has_content($label, $icon, $prefix, $suffix, $iconTrailing, $info, $badge, $prepend, $append, $kbd))
     <tk:element
-        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())"
+        :attributes="$attributes->withElementProps(get_defined_vars())"
         :$info
     >
         {{ $slot }}

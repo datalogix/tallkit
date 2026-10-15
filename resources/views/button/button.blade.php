@@ -1,5 +1,6 @@
 @aware(['size'])
 @props([
+    ...TALLKit::elementProps(),
     'size' => null,
     'type' => null,
     'href' => null,
@@ -9,7 +10,6 @@
     'variant' => null,
     'tooltip' => null,
     'color' => null,
-    ...TALLKit::elementProps(),
 ])
 @php
 
@@ -23,17 +23,18 @@ $solidColor = match (true) {
     in_array($variant, ['info', 'success', 'danger', 'warning'], true) => ['info' => 'blue', 'success' => 'green', 'danger' => 'red', 'warning' => 'yellow'][$variant],
     default => null,
 };
-$hasContent = $slot->hasActualContent() || $label !== null;
-$square ??= ! $circle && !($hasContent || $badge !== null);
-$isTypeSubmitAndNotDisabledOnRender = $type === 'submit' && ! $attributes->has('disabled');
-$isJsMethod = Str::startsWith($attributes->whereStartsWith('wire:click')->first() ?? '', '$js.');
-$loading ??= $isTypeSubmitAndNotDisabledOnRender || $attributes->whereStartsWith('wire:click')->isNotEmpty() && ! $isJsMethod;
+$hasContent = has_content($slot, $label);
+$square ??= ! ($hasContent || $badge !== null);
+$isTypeSubmitAndNotDisabledOnRender = $type === 'submit' && ! $attributes->hasAny(['disabled', ':disabled', 'x-bind:disabled']);
+$click = $attributes->whereStartsWith('wire:click')->first() ?? ($href ? null : $attributes->get('action'));
+$isJsMethod = Str::startsWith((string) $click, '$js.');
+$loading ??= $isTypeSubmitAndNotDisabledOnRender || $click && ! $isJsMethod;
 
 if ($loading && $type !== 'submit' && ! $isJsMethod) {
     $attributes = $attributes->merge(['wire:loading.attr' => TALLKit::dataKey(name: 'button-loading')]);
 
-    if (! $attributes->has('wire:target') && $target = $attributes->whereStartsWith('wire:click')->first()) {
-        $attributes = $attributes->merge(['wire:target' => $target], escape: false);
+    if ($click && ! $attributes->has('wire:target') && $attributes->get('wire:loading.attr') === TALLKit::dataKey(name: 'button-loading')) {
+        $attributes = $attributes->merge(['wire:target' => $click], escape: false);
     }
 } else {
     $attributes = $attributes->merge([TALLKit::dataKey(name: 'button-loading') => $loading]);
@@ -47,7 +48,7 @@ if ($loading && $type !== 'submit' && ! $isJsMethod) {
     :icon-trailing:size="TALLKit::adjustSize(size: $size)"
     :badge:size="TALLKit::adjustSize(size: $size)"
     :content:class="$loading && $hasContent ? 'flex-1' : ($badge !== null || $iconTrailing !== null ? 'flex-1' : null)"
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps(), ['href' => null, 'tooltip' => null])
+    :attributes="$attributes->withElementProps(get_defined_vars(), ['href' => null, 'tooltip' => null])
         ->whereDoesntStartWith(['loading-indicator:', 'loading:'])
         ->classes([
             '
@@ -206,10 +207,10 @@ if ($loading && $type !== 'submit' && ! $isJsMethod) {
                 default => 'shadow',
             },
             match ($variant) {
-                'accent' => '[:is([data-tallkit-button-group]>&:not(:last-child),_[data-tallkit-button-group]_:not(:last-child)>&)]:border-e-[color-mix(in_srgb,var(--color-accent-foreground),transparent_70%)]',
-                'filled' => '[[data-tallkit-button-group]_&]:border-e [:is([data-tallkit-button-group]>&:last-child,_[data-tallkit-button-group]_:last-child>&)]:border-e-0 [[data-tallkit-button-group]_&]:border-zinc-200/80 dark:[[data-tallkit-button-group]_&]:border-zinc-800',
-                'inverse', 'outline' => '[[data-tallkit-button-group]_&]:border-s-0 [:is([data-tallkit-button-group]>&:first-child,_[data-tallkit-button-group]_:first-child>&)]:border-s-[1px]',
-                'danger' => '[[data-tallkit-button-group]_&]:border-e [:is([data-tallkit-button-group]>&:last-child,_[data-tallkit-button-group]_:last-child>&)]:border-e-0 [[data-tallkit-button-group]_&]:border-red-200/80 dark:[[data-tallkit-button-group]_&]:border-red-800',
+                'accent' => '[:is([data-tallkit-button-group]>&:not(:last-child),_[data-tallkit-button-group]_:not(:last-child)>&):not([popover]_*)]:border-e-[color-mix(in_srgb,var(--color-accent-foreground),transparent_70%)]',
+                'filled' => '[[data-tallkit-button-group]_&:not([popover]_*)]:border-e [:is([data-tallkit-button-group]>&:last-child,_[data-tallkit-button-group]_:last-child>&):not([popover]_*)]:border-e-0 [[data-tallkit-button-group]_&:not([popover]_*)]:border-zinc-200/80 dark:[[data-tallkit-button-group]_&:not([popover]_*)]:border-zinc-800',
+                'inverse', 'outline' => '[[data-tallkit-button-group]_&:not([popover]_*)]:border-s-0 [:is([data-tallkit-button-group]>&:first-child,_[data-tallkit-button-group]_:first-child>&):not([popover]_*)]:border-s-[1px]',
+                'danger' => '[[data-tallkit-button-group]_&:not([popover]_*)]:border-e [:is([data-tallkit-button-group]>&:last-child,_[data-tallkit-button-group]_:last-child>&):not([popover]_*)]:border-e-0 [[data-tallkit-button-group]_&:not([popover]_*)]:border-red-200/80 dark:[[data-tallkit-button-group]_&:not([popover]_*)]:border-red-800',
                 default => '',
             },
         ])

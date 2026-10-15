@@ -14,7 +14,7 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = $attributes->fieldContext(label: $label, id: $id, scope: get_defined_vars());
 $value = TALLKit::fieldOldValue($fieldName, $value);
 
 $value = TALLKit::fieldDateValue($value, 'H:i');
@@ -24,33 +24,33 @@ $unavailable = TALLKit::fieldDateValue($unavailable, 'H:i');
 $openTo = TALLKit::fieldDateValue($openTo, 'H:i');
 $locale = TALLKit::resolveLocale($locale);
 
-$disabled = TALLKit::isAttributeEnabled($attributes->get('disabled'));
-$readonly = TALLKit::isAttributeEnabled($attributes->get('readonly'));
+$disabled = $attributes->enabled('disabled');
+$readonly = $attributes->enabled('readonly');
 
 @endphp
 <tk:field.wrapper
     :$name
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :attributes="$attributes->withFieldProps(get_defined_vars())"
 >
     <div
         wire:ignore
-        x-data="timePicker(@js([
-                'value' => $value,
-                'multiple' => (bool) $multiple,
-                'format' => $format,
-                'locale' => $locale,
-                'interval' => max(1, (int) ($interval ?? 30)),
-                'min' => $min,
-                'max' => $max,
-                'unavailable' => $unavailable,
-                'openTo' => $openTo,
-                'trigger' => $dropdown === false ? 'input' : $trigger,
-            ]))"
+        x-data="timePicker({{ Js::from([
+            'value' => $value,
+            'multiple' => (bool) $multiple,
+            'format' => $format,
+            'locale' => $locale,
+            'interval' => max(1, (int) ($interval ?? 30)),
+            'min' => $min,
+            'max' => $max,
+            'unavailable' => $unavailable,
+            'openTo' => $openTo,
+            'trigger' => $dropdown === false ? 'input' : $trigger,
+        ]) }})"
         {{ $attributes->prefixed('picker:')->classes('contents') }}
     >
         <tk:field.control
             :$size
-            :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
+            :attributes="$attributes->withFieldControlProps(get_defined_vars())
                 ->classes(
                     'tk-control-wrapper-expanded',
                     TALLKit::roundedSize(size: $size, mode: 'large'),
@@ -71,12 +71,12 @@ $readonly = TALLKit::isAttributeEnabled($attributes->get('readonly'));
                         ->dataKey('time-picker')
                         ->merge([
                             'name' => $name,
-                            'value' => in_livewire() ? null : (is_array($value) ? implode(',', $value) : $value),
+                            'value' => unless_livewire(is_array($value) ? implode(',', $value) : $value),
                             'wire:model' => $wireModel,
                         ])
-                        ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: [
+                        ->withoutFieldPrefixes([
                             'picker:', 'trigger:', 'placeholder:', 'formatted:', 'popover:', 'list:', 'slot:',
-                        ]))
+                        ])
                 }}
             />
 
@@ -93,11 +93,10 @@ $readonly = TALLKit::isAttributeEnabled($attributes->get('readonly'));
                                 'aria-haspopup' => $dropdown === false ? null : 'listbox',
                                 'autocomplete' => 'off',
                                 'id' => $id,
-                                'placeholder' => __(is_string($placeholder) ? $placeholder : 'Select time'),
+                                'placeholder' => __(string_value($placeholder, 'Select time')),
                                 'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
-                                'aria-invalid' => $invalid ? 'true' : null,
+                                ...TALLKit::fieldInvalid($invalid),
                                 'aria-readonly' => $readonly ? 'true' : null,
-                                'data-invalid' => $invalid ? true : null,
                                 'disabled' => $disabled ?: null,
                                 'readonly' => ($multiple || $readonly) ?: null,
                             ])
@@ -127,9 +126,8 @@ $readonly = TALLKit::isAttributeEnabled($attributes->get('readonly'));
                             'id' => $id,
                             'aria-labelledby' => trim(($label ? $id.'-label ' : '').$id.'-value'),
                             'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
-                            'aria-invalid' => $invalid ? 'true' : null,
+                            ...TALLKit::fieldInvalid($invalid),
                             'aria-readonly' => $readonly ? 'true' : null,
-                            'data-invalid' => $invalid ? true : null,
                         ])
                         ->classes(
                             '
@@ -154,7 +152,7 @@ $readonly = TALLKit::isAttributeEnabled($attributes->get('readonly'));
                             $attributes->prefixed('placeholder:')
                                 ->classes(TALLKit::textNeutral(variant: 'muted'))
                         }}
-                    >{{ __(is_string($placeholder) ? $placeholder : 'Select time') }}</span>
+                    >{{ __(string_value($placeholder, 'Select time')) }}</span>
                     <span
                         x-show="formatted()"
                         x-text="formatted()"

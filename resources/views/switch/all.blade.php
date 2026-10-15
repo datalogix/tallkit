@@ -3,8 +3,18 @@
     'group' => null,
     'label' => 'Mark All',
 ])
-<div x-data="switchAll({ group: @js($group) })" class="contents">
+<div
+    x-data="switchAll({{ Js::from(['group' => $group]) }})"
+    class="contents"
+>
     <tk:switch
-        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps(), ['iconOn' => null, 'iconOff' => null, 'labelOn' => null, 'labelOff' => null, 'loadingDelay' => null, 'loadingMinDuration' => null])"
+        :attributes="$attributes->withFieldProps(get_defined_vars(), [
+            'iconOn' => null,
+            'iconOff' => null,
+            'labelOn' => null,
+            'labelOff' => null,
+            'loadingDelay' => null,
+            'loadingMinDuration' => null
+        ])"
     />
 </div>

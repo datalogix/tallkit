@@ -6,7 +6,6 @@ import { loadable } from './loadable'
 export function frappeCharts() {
   const _loadable = loadable()
 
-  // Out of Alpine's reactive data: called through its proxy, the library breaks.
   let chart = null
 
   return {
@@ -33,7 +32,6 @@ export function frappeCharts() {
         chart?.destroy?.()
         chart = new window.frappe.Chart(this.$refs.target, { ...options, ...this.getDataOptions(this.$refs.target) })
 
-        // One redraw once the size settles: overlapping redraws throw (removeChild).
         if (chart.boundDrawFn) {
           chart.resizeObserver?.disconnect()
           window.removeEventListener('resize', chart.boundDrawFn)

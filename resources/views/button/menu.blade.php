@@ -7,8 +7,13 @@
 ])
 <tk:dropdown :attributes="$attributes->prefixed('dropdown:')">
     <tk:button
-        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->whereDoesntStartWith(['dropdown:', 'menu:'])
-            ->merge(['variant' => 'ghost', 'icon' => 'ellipsis-vertical', 'tooltip' => 'More options'])"
+        :attributes="$attributes->withElementProps(get_defined_vars())
+            ->whereDoesntStartWith(['dropdown:', 'menu:'])
+            ->merge([
+                'variant' => 'ghost',
+                'icon' => 'ellipsis-vertical',
+                'tooltip' => has_content($label) ? null : 'More options',
+            ])"
         :$size
     />
 

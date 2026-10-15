@@ -13,7 +13,7 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = $attributes->fieldContext(label: $label, id: $id, scope: get_defined_vars());
 $checked = is_array($checked) ? in_array($value, $checked) : (bool) $checked;
 $checked = TALLKit::fieldOldChecked($fieldName, $checked, $value);
 $hasStateLabel = $labelOn || $labelOff;
@@ -31,7 +31,7 @@ $loadingModel = $liveModel;
     :inline="! $hasStateLabel"
     :$align
     :$name
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :attributes="$attributes->withFieldProps(get_defined_vars())"
     :label="$slot->isEmpty() ? $label : $slot"
 >
     @if ($hasStateLabel)
@@ -57,7 +57,7 @@ $loadingModel = $liveModel;
                         'delay' => $loadingDelay,
                         'minDuration' => $loadingMinDuration,
                     ], fn ($value) => $value !== null)).')' : null,
-                    'disabled' => TALLKit::isAttributeEnabled($attributes->get('disabled')) ?: null,
+                    'disabled' => $attributes->enabled('disabled') ?: null,
                 ])
                 ->classes(
                     '
@@ -117,14 +117,13 @@ $loadingModel = $liveModel;
                         'value' => $value,
                         'wire:model' => $wireModel,
                         TALLKit::dataKey(name: 'switch-group') => $group,
-                        'aria-label' => ($label || $hasStateLabel) ? null : __('Switch'),
+                        'aria-label' => ($label || $hasStateLabel || $slot->isNotEmpty()) ? null : __('Switch'),
                         'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
-                        'aria-invalid' => $invalid ? 'true' : null,
-                        'data-invalid' => $invalid ? true : null,
+                        ...TALLKit::fieldInvalid($invalid),
                     ])
-                    ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: [
+                    ->withoutFieldPrefixes([
                         'icon-on:', 'icon-off:', 'state:', 'state-group:', 'label-checked:', 'label-unchecked:'
-                    ]))
+                    ])
                     ->classes('sr-only peer')
             }}
         />

@@ -13,8 +13,13 @@
 @php
 
 [$user, $name, $email, $username] = TALLKit::userContext(attributes: $attributes);
-$initials = TALLKit::avatarInitials(value: $initials ?? $name, singleInitials: $attributes->pluck('initials:single'));
-$src ??= TALLKit::avatarUrl(value: $email ?? $username, ttl: $ttl);
+$singleInitials = $attributes->pluck('initials:single');
+$initials = match (true) {
+    has_content($initials) => trim((string) $initials),
+    $slot->hasActualContent() => null,
+    default => TALLKit::avatarInitials(value: $name ?? $email ?? $username, singleInitials: $singleInitials),
+};
+$src ??= data_get($user, 'image') ?: TALLKit::avatarUrl(value: $email ?? $username, ttl: $ttl);
 
 if ($color === 'auto') {
     $colors = TALLKit::colors();
@@ -27,15 +32,15 @@ if ($tooltip === true) {
     $tooltip = $name ?? false;
 }
 
-$avatarName = $alt ?? $name ?? (is_string($tooltip) && $tooltip !== '' ? $tooltip : null);
+$avatarName = $alt ?? $name ?? string_value($tooltip) ?? $email ?? $username;
 
 @endphp
 <tk:element
     kind="avatar"
     :$tooltip
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), ['ariaLabel' => null, 'iconDot' => null, 'iconTrailing' => null])
+    :attributes="$attributes->withProps(get_defined_vars(), ['ariaLabel' => null, 'iconDot' => null, 'iconTrailing' => null])
         ->whereDoesntStartWith(['image:', 'initials:', 'icon:'])
-        ->merge($alt === '' ? ['aria-hidden' => 'true'] : ($avatarName ? ['role' => 'img', 'aria-label' => (string) $avatarName] : []))
+        ->merge($alt === '' ? ['aria-hidden' => 'true'] : ($avatarName ? ['role' => $attributes->hasAny(['href', 'route', 'action', 'type']) ? null : 'img', 'aria-label' => (string) $avatarName] : []))
         ->classes(
             '
                 justify-center
@@ -51,7 +56,7 @@ $avatarName = $alt ?? $name ?? (is_string($tooltip) && $tooltip !== '' ? $toolti
                 'accent' => 'bg-[var(--color-accent)] text-[var(--color-accent-foreground)]',
                 'inverse' => 'text-white bg-zinc-800 dark:text-zinc-800 dark:bg-white',
                 'filled' => TALLKit::backgroundNeutral(variant: 'faint'),
-                'outline' => '',
+                'outline' => 'bg-transparent after:inset-ring-zinc-300 dark:after:inset-ring-zinc-600',
                 'ghost' => 'bg-transparent',
                 'subtle' => 'bg-transparent text-zinc-500',
                 default => TALLKit::pastelBackground(color: $color) ?? '',
@@ -63,9 +68,10 @@ $avatarName = $alt ?? $name ?? (is_string($tooltip) && $tooltip !== '' ? $toolti
         <img
             {{
                 $attributes->prefixed('image:')
-                    ->classes(TALLKit::roundedSize(size: $square ? $size : 'full'))
+                    ->classes('size-full object-cover', TALLKit::roundedSize(size: $square ? $size : 'full'))
                     ->merge([
                         'src' => $src,
+                        'loading' => 'lazy',
                         'alt' => $avatarName ? '' : (string) $alt,
                         'x-data' => '',
                         'x-init' => "const fail = () => { \$el.nextElementSibling?.removeAttribute('hidden'); \$el.remove() }; \$el.complete ? \$el.decode().catch(fail) : \$el.addEventListener('error', fail, { once: true })",
@@ -80,7 +86,7 @@ $avatarName = $alt ?? $name ?? (is_string($tooltip) && $tooltip !== '' ? $toolti
     @else
         <tk:icon
             :attributes="$attributes->prefixed('icon:')->classes('shrink-0 opacity-75')->merge(['hidden' => (bool) $src])"
-            :icon="is_string($icon) ? $icon : 'user'"
+            :icon="string_value($icon, 'user')"
             :$size
         />
     @endif

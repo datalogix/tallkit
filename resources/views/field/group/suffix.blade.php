@@ -4,7 +4,7 @@
 ])
 <tk:field.group.side
     side="suffix"
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())"
+    :attributes="$attributes->withElementProps(get_defined_vars())"
     :$size
 >
     {{ $slot }}

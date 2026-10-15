@@ -25,7 +25,7 @@ if ($index === null && $current !== null) {
 
 $stepName = collect([
     $index && $total ? __('Step :current of :total', ['current' => $index, 'total' => $total]) : null,
-    is_string($label) && $label !== '' ? __($label) : null,
+    __(string_value($label)),
 ])->filter()->implode(': ');
 $stepName = $stepName !== '' ? $stepName.' ('.__(match ($status) {
     'completed' => 'completed',
@@ -60,7 +60,7 @@ $iconClass = TALLKit::classes(
 
 @endphp
 <tk:element
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->whereDoesntStartWith(['icon:', 'bullet:', 'line:'])
+    :attributes="$attributes->withElementProps(get_defined_vars())->whereDoesntStartWith(['icon:', 'bullet:', 'line:'])
         ->classes([
             '
                 flex flex-col items-center gap-2
@@ -88,7 +88,7 @@ $iconClass = TALLKit::classes(
     role="listitem"
 >
     <x-slot:icon>
-        @if ($icon)
+        @if ($icon || ($status === 'completed' && $iconCompleted) || ($status === 'active' && $iconActive))
             <tk:icon
                 :attributes="$attributes->prefixed('icon:')"
                 size="sm"

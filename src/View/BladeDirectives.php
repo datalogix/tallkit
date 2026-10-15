@@ -17,7 +17,6 @@ class BladeDirectives
     {
         $arguments = array_pad(static::splitArguments($expression), 2, '()');
 
-        // @scope('name', $item, $index): without parentheses, everything after the name is a parameter.
         [$name, $functionArguments, $functionUses] = Str::startsWith($arguments[1], '(')
             ? array_pad($arguments, 3, null)
             : [$arguments[0], '('.implode(', ', array_slice($arguments, 1)).')', null];

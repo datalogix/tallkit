@@ -6,27 +6,26 @@ use Illuminate\View\Factory;
 
 trait InteractsWithStepper
 {
-    // Steps render before the stepper's view, which resets the count; per component depth for nested steppers.
     public function stepperNextPosition(): int
     {
         $counts = app('tallkit.ids');
-        $key = 'stepper-step|'.$this->viewComponentDepth();
+        $steppers = array_filter($this->viewComponentStack(), fn ($view) => is_string($view) && str_ends_with($view, '::stepper.stepper'));
+        $key = 'stepper-step|'.array_key_last($steppers);
 
         return $counts[$key] = ($counts[$key] ?? 0) + 1;
     }
 
     public function stepperReset(): void
     {
-        unset(app('tallkit.ids')['stepper-step|'.($this->viewComponentDepth() + 1)]);
+        unset(app('tallkit.ids')['stepper-step|'.count($this->viewComponentStack())]);
     }
 
-    // Blade exposes no public component depth.
-    protected function viewComponentDepth(): int
+    protected function viewComponentStack(): array
     {
         static $stack;
 
         $stack ??= new \ReflectionProperty(Factory::class, 'componentStack');
 
-        return count($stack->getValue(app('view')));
+        return $stack->getValue(app('view'));
     }
 }

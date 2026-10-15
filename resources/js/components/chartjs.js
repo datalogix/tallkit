@@ -28,9 +28,7 @@ const copy = (value) => {
 export function chartjs() {
   const _loadable = loadable()
 
-  // Out of Alpine's reactive data: called through its proxy, the library breaks.
   let chart = null
-  // A copy: Chart.js writes its defaults into the config it gets.
   let source = null
 
   return {
@@ -56,7 +54,6 @@ export function chartjs() {
 
         if (!chart) return
 
-        // Drawn again: an update keeps the colors its scales have already taken.
         chart.destroy()
         chart = new window.Chart(this.$refs.target, copy(source))
         emit(this.$refs.target, 'rendered', { chart }, { later: true })
@@ -72,7 +69,6 @@ export function chartjs() {
         source = { ...source, ...merged }
 
         if (chart && !('plugins' in merged)) {
-          // Not plugins: it has only a getter, and Object.assign throws.
           for (const key of ['type', 'data', 'options']) {
             if (key in merged) chart.config[key] = copy(merged[key])
           }

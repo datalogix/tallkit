@@ -12,12 +12,11 @@
 $iconOn ??= 'check';
 
 @endphp
-{{-- Written whole: Tailwind only finds complete class names. --}}
 <tk:menu.item
     wire:ignore
     x-data="{{ $type === 'radio' ? 'menuRadio' : 'menuCheckbox' }}({{ Js::from($checked) }})"
     x-modelable="checked"
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps(), ['keepOpen' => null])->whereDoesntStartWith(['icon-on:', 'icon-off:'])->classes('group/menu-choice')"
+    :attributes="$attributes->withElementProps(get_defined_vars(), ['keepOpen' => null])->whereDoesntStartWith(['icon-on:', 'icon-off:'])->classes('group/menu-choice')"
     :role="$type === 'radio' ? 'menuitemradio' : 'menuitemcheckbox'"
     :$size
     :icon:class="TALLKit::classes('w-7', TALLKit::widthHeight(size: TALLKit::adjustSize(size: $size)))"

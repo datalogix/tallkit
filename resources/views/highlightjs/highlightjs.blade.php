@@ -8,7 +8,6 @@
 >
     <pre><code
         {{ $attributes->whereDoesntStartWith(['loadable:']) }}
-        {{-- The slot as text: the highlighter escapes it again. --}}
-        x-html="render(@js($code ?? html_entity_decode((string) $slot, ENT_QUOTES | ENT_HTML5)), @js($language))"
+        x-html="render({{ Js::from($code ?? html_entity_decode((string) $slot, ENT_QUOTES | ENT_HTML5)) }}, {{ Js::from($language) }})"
     ></code></pre>
 </tk:loadable>

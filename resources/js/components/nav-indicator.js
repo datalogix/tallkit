@@ -20,6 +20,8 @@ export function navIndicator({ mode = null } = {}) {
 
         this._mutationObserver = new MutationObserver(this._onMove)
         this._mutationObserver.observe(nav, { subtree: true, childList: true, attributeFilter: ['data-current'] })
+
+        nav.addEventListener('scroll', this._onMove, { passive: true })
       }
 
       this.$nextTick(() => this.move())
@@ -30,6 +32,7 @@ export function navIndicator({ mode = null } = {}) {
       window.removeEventListener('resize', this._onMove)
       this._resizeObserver?.disconnect()
       this._mutationObserver?.disconnect()
+      this.findNav(this.$el)?.removeEventListener('scroll', this._onMove)
       cancelAnimationFrame(this._frame)
       clearTimeout(this._visibilityTimeout)
     },
@@ -65,10 +68,12 @@ export function navIndicator({ mode = null } = {}) {
         const indicatorRect = indicator.getBoundingClientRect()
         const linkRect = link.getBoundingClientRect()
 
-        const x = link.offsetLeft + nav.offsetLeft
-        const y = link.offsetTop + nav.offsetTop
+        const navRect = nav.getBoundingClientRect()
 
-        if (linkRect.width <= 0 || linkRect.height <= 0) {
+        const x = link.offsetLeft + nav.offsetLeft - nav.scrollLeft
+        const y = link.offsetTop + nav.offsetTop - nav.scrollTop
+
+        if (linkRect.width <= 0 || linkRect.height <= 0 || linkRect.right <= navRect.left || linkRect.left >= navRect.right || linkRect.bottom <= navRect.top || linkRect.top >= navRect.bottom) {
           indicator.style.opacity = '0'
           return
         }

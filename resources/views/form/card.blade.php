@@ -10,7 +10,7 @@
     'footer' => null,
 ])
 <tk:form
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), ['errorGroup' => null, 'errorBag' => null, 'focusError' => null, 'clearErrorsOnSubmit' => null, 'errorMessage' => null, 'successMessage' => null, 'submit' => null])->whereDoesntStartWith([
+    :attributes="$attributes->withProps(get_defined_vars(), ['errorGroup' => null, 'errorBag' => null, 'focusError' => null, 'clearErrorsOnSubmit' => null, 'errorMessage' => null, 'successMessage' => null, 'submit' => null])->whereDoesntStartWith([
         'card:', 'alert:',
         'image', 'alt', 'icon', 'badge', 'separator', 'content',
         'title:', 'subtitle:', 'container:', 'list:', 'actions:',

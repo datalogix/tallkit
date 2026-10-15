@@ -26,7 +26,6 @@ export function bindableField({
       if (prop) {
         this[property] = deserialize.call(this, this.$wire.get(prop.name) ?? null)
 
-        // The property's new value, not the field's: Livewire may not have updated it yet.
         this.$wire.$watch(prop.name, (value) => {
           this[property] = deserialize.call(this, value ?? null)
         })
@@ -36,7 +35,6 @@ export function bindableField({
         this[property] = deserialize.call(this, this.field.value)
       }
 
-      // Next tick: its x-model directive is set up after the component.
       if (!prop) {
         this.$nextTick(() => {
           const model = this.field._x_model
@@ -49,7 +47,6 @@ export function bindableField({
 
             if (!this.$root.isConnected) return queueMicrotask(() => window.Alpine.release(effect))
 
-            // Only when the variable changed: the effect also runs on the component's own changes, and would undo them.
             const key = JSON.stringify(value ?? null)
             if (key === last) return
             last = key
@@ -61,7 +58,6 @@ export function bindableField({
         })
       }
 
-      // A hidden input has no default to go back to on reset.
       if (!prop && this.field.form) {
         let initial = null
 

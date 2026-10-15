@@ -84,7 +84,6 @@ function translateStylesheet(texts = {}) {
 export function quill({ options = {}, scripts = [], styles = [], toolbar = null, upload = null, messages = {}, labelledBy = null, i18n = {} } = {}) {
   const _loadable = loadable()
 
-  // Out of Alpine's reactive data: called through its proxy, Quill spreads a format over the text after it.
   let editor = null
 
   return {
@@ -114,12 +113,10 @@ export function quill({ options = {}, scripts = [], styles = [], toolbar = null,
       this.setHtml(value)
     },
 
-    // Silent: it is the field's value already.
     setHtml(value) {
       editor.setContents(editor.clipboard.convert({ html: window.DOMPurify.sanitize(value ?? '') }), 'silent')
     },
 
-    // An empty editor holds "<p><br></p>": sent as nothing, or a required field counts as filled.
     html() {
       return editor.getLength() <= 1 ? '' : editor.root.innerHTML
     },
@@ -127,7 +124,6 @@ export function quill({ options = {}, scripts = [], styles = [], toolbar = null,
     mount() {
       if (this.isDestroyed()) return
 
-      // Not caught here: load() shows it, and its completion would hide it.
       const { modules = {}, ...rest } = options
 
       editor = new window.Quill(this.$refs.root, {
@@ -140,7 +136,6 @@ export function quill({ options = {}, scripts = [], styles = [], toolbar = null,
             handler: (range, files) => this.uploadImages(range, files),
           },
           ...modules,
-          // Tab leaves the editor instead of typing a tab (a keyboard trap otherwise); in a list it still indents.
           keyboard: {
             ...(modules.keyboard ?? {}),
             bindings: {
@@ -155,8 +150,9 @@ export function quill({ options = {}, scripts = [], styles = [], toolbar = null,
       editor.root.setAttribute('role', 'textbox')
       editor.root.setAttribute('aria-multiline', 'true')
       if (labelledBy) editor.root.setAttribute('aria-labelledby', labelledBy)
+      if (this.input.hasAttribute('aria-describedby')) editor.root.setAttribute('aria-describedby', this.input.getAttribute('aria-describedby'))
+      if (this.input.hasAttribute('aria-invalid')) editor.root.setAttribute('aria-invalid', 'true')
 
-      // Started from the saved value, or the first key typed would replace it.
       if (this.input.value) {
         this.setHtml(this.input.value)
       }

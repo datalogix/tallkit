@@ -13,7 +13,7 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = $attributes->fieldContext(label: $label, id: $id, scope: get_defined_vars());
 $wireModel = $attributes->whereStartsWith('wire:model')->first() ?: $wireModel;
 $variant ??= 'dropzone';
 if ($variant === 'avatar') {
@@ -23,7 +23,7 @@ if ($variant === 'avatar') {
 $sortable ??= (bool) $multiple && ! in_array($variant, ['avatar', 'button']);
 $disk = TALLKit::uploadDisk($disk);
 $missing = '__tallkit_upload_missing__';
-$boundValue = in_livewire() && data_get($this, $fieldName, $missing) !== $missing ? data_get($this, $fieldName) : null;
+$boundValue = in_livewire() && $fieldName && data_get($this, $fieldName, $missing) !== $missing ? data_get($this, $fieldName) : null;
 
 if ($boundValue !== null && $stored === false) {
     $boundValue = TALLKit::uploadServerValue($this, $fieldName, $boundValue);
@@ -40,7 +40,10 @@ if (! in_livewire() && $name) {
     $oldInput = request()->hasSession() ? request()->session()->getOldInput() : [];
 
     if (Arr::has($oldInput, $keptField)) {
-        $value = array_values(array_filter((array) Arr::get($oldInput, $keptField)));
+        $value = array_values(array_filter(
+            (array) Arr::get($oldInput, $keptField),
+            fn ($file) => is_string($file) && TALLKit::uploadIsStored($file, $stored !== false ? $stored : $value, $disk),
+        ));
     }
 }
 
@@ -51,31 +54,31 @@ $hintText = $hint !== false ? TALLKit::uploadHintText($accept, $maxSize, $maxFil
 @endphp
 <tk:field.wrapper
     :$name
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+    :attributes="$attributes->withFieldProps(get_defined_vars())"
 >
     <div
         wire:ignore
         x-cloak
-        x-data="upload({
-            wireModel: @js($wireModel),
-            multiple: @js((bool) $multiple),
-            droppable: @js($droppable ?? true),
-            maxSize: @js($maxSize ?: null),
-            maxSizes: @js(collect([...array_keys(TALLKit::uploadFileTypes()), 'default'])->mapWithKeys(fn ($kind) => [$kind => TALLKit::uploadMaxSize($kind, $maxSize ? (int) $maxSize : null)])),
-            maxFiles: @js($maxFiles ?: null),
-            sortable: @js($sortable),
-            invalid: @js((bool) $invalid),
-            files: @js($files),
-            tooLargeMessage: @js(__('The file may not be larger than :size.')),
-            invalidTypeMessage: @js(__('This file type is not allowed.')),
-            tooManyFilesMessage: @js(__('Too many files selected.')),
-            uploadFailedMessage: @js(__('The file could not be uploaded.')),
-            movedMessage: @js(__('Moved to position :position of :total.')),
-            sortHint: @js(__('Drag, or press Alt and an arrow key, to move it.')),
-            sortHintId: @js($id.'-sort-hint'),
-            previewName: @js($previewName),
-            fileTypes: @js(TALLKit::uploadFileTypes()),
-        })"
+        x-data="upload({{ Js::from([
+            'wireModel' => $wireModel,
+            'multiple' => (bool) $multiple,
+            'droppable' => $droppable ?? true,
+            'maxSize' => $maxSize ?: null,
+            'maxSizes' => collect([...array_keys(TALLKit::uploadFileTypes()), 'default'])->mapWithKeys(fn ($kind) => [$kind => TALLKit::uploadMaxSize($kind, $maxSize ? (int) $maxSize : null)]),
+            'maxFiles' => $maxFiles ?: null,
+            'sortable' => $sortable,
+            'invalid' => (bool) $invalid,
+            'files' => $files,
+            'tooLargeMessage' => __('The file may not be larger than :size.'),
+            'invalidTypeMessage' => __('This file type is not allowed.'),
+            'tooManyFilesMessage' => __('Too many files selected.'),
+            'uploadFailedMessage' => __('The file could not be uploaded.'),
+            'movedMessage' => __('Moved to position :position of :total.'),
+            'sortHint' => __('Drag, or press Alt and an arrow key, to move it.'),
+            'sortHintId' => $id.'-sort-hint',
+            'previewName' => $previewName,
+            'fileTypes' => TALLKit::uploadFileTypes(),
+        ]) }})"
         :data-invalid="isInvalid() || null"
         :aria-invalid="isInvalid() ? 'true' : null"
         {{
@@ -83,22 +86,20 @@ $hintText = $hint !== false ? TALLKit::uploadHintText($accept, $maxSize, $maxFil
                 ->dataKey('control')
                 ->classes('flex flex-col gap-4')
                 ->merge([
-                    'aria-invalid' => $invalid ? 'true' : null,
-                    'data-invalid' => $invalid ? true : null,
+                    ...TALLKit::fieldInvalid($invalid),
                 ])
         }}
     >
         <input
             {{
-                $attributes->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: [
+                $attributes->withoutFieldPrefixes([
                     'dropzone:', 'progress:', 'tile:', 'hint:', 'modal:', 'preview:', 'error-message:', 'wire:model',
-                ]))->merge([
+                ])->merge([
                     'name' => $multiple && $name && ! str_ends_with($name, '[]') ? $name.'[]' : $name,
                     'id' => $id,
                     'accept' => $accept,
                     'multiple' => $multiple,
-                    'aria-invalid' => $invalid ? 'true' : null,
-                    'data-invalid' => $invalid ? true : null,
+                    ...TALLKit::fieldInvalid($invalid),
                     'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError, hint: $hintText)
                 ])
                 ->classes('sr-only peer/upload-input')
@@ -209,6 +210,5 @@ $hintText = $hint !== false ? TALLKit::uploadHintText($accept, $maxSize, $maxFil
         />
     </div>
 
-    {{-- Outside wire:ignore, so each Livewire update brings it. --}}
     <script type="application/json" {{ TALLKit::dataKey('upload-state') }}>{!! json_encode($files, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
 </tk:field.wrapper>

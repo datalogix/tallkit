@@ -2,7 +2,6 @@ export function padDatePart(n) {
   return String(n).padStart(2, '0')
 }
 
-// By its local day: toISOString gives the UTC one.
 export function formatIsoDate(date) {
   return `${date.getFullYear()}-${padDatePart(date.getMonth() + 1)}-${padDatePart(date.getDate())}`
 }
@@ -20,7 +19,6 @@ export function normalizeIsoDate(value) {
   return `${match[1]}-${match[2]}-${match[3]}`
 }
 
-// Local midnight: new Date("YYYY-MM-DD") is UTC midnight.
 export function parseIsoDate(iso) {
   iso = normalizeIsoDate(iso)
 
@@ -29,7 +27,6 @@ export function parseIsoDate(iso) {
   const [y, m, d] = iso.split('-').map(Number)
   const date = new Date(y, m - 1, d)
 
-  // Date would roll a day that doesn't exist into another month.
   if (date.getFullYear() !== y || date.getMonth() !== m - 1 || date.getDate() !== d) return null
 
   return date
@@ -64,7 +61,6 @@ export function isSameMonth(a, b) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth()
 }
 
-// Rounded: a day across a daylight saving change is 23 or 25 hours.
 export function diffDays(isoA, isoB) {
   return Math.round((parseIsoDate(isoB) - parseIsoDate(isoA)) / 86400000)
 }
@@ -138,7 +134,6 @@ export function parseTypedDate(text, locale) {
 
   const date = new Date(year, month - 1, day)
 
-  // Date would roll a day that doesn't exist into the next month.
   if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
     return null
   }

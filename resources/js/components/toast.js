@@ -1,7 +1,7 @@
-import { bind, clamp, eventName, generateId, safeUrl, toMilliseconds } from '../utils'
+import { bind, eventName, generateId, readingDuration, safeUrl, toMilliseconds } from '../utils'
 import { sendToastEvent } from '../toast'
 
-export function toast(flashed = [], texts = {}) {
+export function toast({ flashed = [], texts = {} } = {}) {
   texts = { loading: 'Loading...', success: 'Success!', error: 'Error!', ...texts }
 
   return {
@@ -121,6 +121,12 @@ export function toast(flashed = [], texts = {}) {
     },
 
     addToast(props) {
+      const currentToast = props.id ? this.toasts.find((t) => t.id === props.id) : null
+
+      if (currentToast) {
+        return this.updateToast(currentToast.id, props)
+      }
+
       const position = normalizePosition(props.position)
       const maxStack = props.maxStack ?? 5
 
@@ -134,12 +140,6 @@ export function toast(flashed = [], texts = {}) {
             this.removeToast(oldest.id)
           }
         }
-      }
-
-      const currentToast = props.id ? this.toasts.find((t) => t.id === props.id) : null
-
-      if (currentToast) {
-        return this.updateToast(currentToast.id, props)
       }
 
       const toast = createToast(props, position, this)
@@ -181,7 +181,6 @@ export function toast(flashed = [], texts = {}) {
         toast[key] = key === 'actions' ? normalizeActions(data[key]) : data[key]
       }
 
-      // Without html: true a new title or message is text, whatever the old one was.
       if ('title' in data || 'message' in data) {
         toast.html = data.html === true
       }
@@ -205,7 +204,6 @@ export function toast(flashed = [], texts = {}) {
 
       if (!region) return
 
-      // A parsed document runs nothing: no scripts, no onerror.
       const text = (value) => toast.html
         ? new DOMParser().parseFromString(String(value ?? ''), 'text/html').body.textContent
         : String(value ?? '')
@@ -218,7 +216,6 @@ export function toast(flashed = [], texts = {}) {
       region._tallkitAnnounce = setTimeout(() => { region.textContent = words }, 100)
     },
 
-    // Text unless given as HTML on purpose: a name from data never turns into markup.
     showContent(el, value, html) {
       if (html) {
         el.innerHTML = value ?? ''
@@ -329,7 +326,7 @@ export function toast(flashed = [], texts = {}) {
           this.updateToast(toast.id, {
             title: resolveMessage(messages.success, data) ?? texts.success,
             type: 'success',
-            duration: getDynamicDuration(resolveMessage(messages.success, data)),
+            duration: readingDuration(resolveMessage(messages.success, data)),
             progress: true,
             swipe: true,
           })
@@ -340,7 +337,7 @@ export function toast(flashed = [], texts = {}) {
           this.updateToast(toast.id, {
             title: resolveMessage(messages.error, error) ?? texts.error,
             type: 'error',
-            duration: getDynamicDuration(resolveMessage(messages.error, error)) * 1.3,
+            duration: readingDuration(resolveMessage(messages.error, error)) * 1.3,
             progress: true,
             swipe: true,
           })
@@ -525,7 +522,6 @@ function toastSwipe(manager) {
       if (!this.lockDirection && Math.max(Math.abs(this.currentX), Math.abs(this.currentY)) > 4) {
         this.lockDirection = Math.abs(this.currentX) > Math.abs(this.currentY) ? 'x' : 'y'
 
-        // Captured only once sideways: from the start, a tap's click would go to the toast instead of the button.
         if (this.lockDirection === 'x') {
           e.currentTarget.setPointerCapture?.(e.pointerId)
         }
@@ -573,7 +569,6 @@ function normalizeActions(actions) {
   return (actions ?? []).map((action) => ({
     loading: false,
     ...action,
-    // Only a page's address: actions may come from data.
     href: safeUrl(action.href),
     run() {
       let result
@@ -612,9 +607,9 @@ function normalizeParams(params) {
 
 function resolveDuration(duration, title, message, hasActions = false) {
   if (duration === false) return null
-  if (duration === true) return getDynamicDuration(title, message)
-  if (duration == null) return hasActions ? null : getDynamicDuration(title, message)
-  return toMilliseconds(duration, getDynamicDuration(title, message))
+  if (duration === true) return readingDuration(title, message)
+  if (duration == null) return hasActions ? null : readingDuration(title, message)
+  return toMilliseconds(duration, readingDuration(title, message))
 }
 
 function normalizePosition(position) {
@@ -623,25 +618,4 @@ function normalizePosition(position) {
   if (position === 'top') return 'top-right'
   if (position === 'bottom') return 'bottom-right'
   return position
-}
-
-function getDynamicDuration(title = '', message = '') {
-  const text = `${title} ${message}`.trim()
-
-  const min = 3000
-  const max = 9000
-  const base = 1000
-
-  const weightedLength =
-    (title?.length ?? 0) * 1.2 +
-    (message?.length ?? 0) * 1.6
-
-  const readingSpeed = 16
-
-  let time = base + (weightedLength / readingSpeed) * 1000
-
-  const lines = text.split('\n').length
-  time += lines * 300
-
-  return clamp(time, min, max)
 }

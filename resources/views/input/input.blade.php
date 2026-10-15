@@ -10,7 +10,7 @@
 ])
 @php
 
-[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = TALLKit::fieldContext(attributes: $attributes, label: $label, id: $id, scope: get_defined_vars());
+[$name, $fieldName, $label, $placeholder, $invalid, $wireModel, $id] = $attributes->fieldContext(label: $label, id: $id, scope: get_defined_vars());
 $type ??= TALLKit::fieldType(name: $name);
 $mask = TALLKit::fieldMask(name: $name, mask: $mask, type: $type);
 $viewable ??= $type === 'password';
@@ -22,29 +22,29 @@ $value = match ($type) {
     'month' => TALLKit::fieldDateValue($value, 'Y-m'),
     default => $value,
 };
-$hasControl = $clearable || $copyable || $viewable || $prepend || $icon || $append || $loading || $iconTrailing || $kbd || $attributes->has('class');
+$hasControl = $clearable || $copyable || $viewable || has_content($prepend, $icon, $append) || $loading || $iconTrailing || $kbd || $attributes->has('class');
 
 @endphp
 @if ($type === 'file')
-    <tk:upload :attributes="TALLKit::fieldWithProps($attributes, get_defined_vars())">{{ $slot }}</tk:upload>
+    <tk:upload :attributes="$attributes->withFieldProps(get_defined_vars(), TALLKit::fieldControlProps())" :$name>{{ $slot }}</tk:upload>
 @elseif ($type === 'checkbox')
-    <tk:checkbox :attributes="TALLKit::fieldWithProps($attributes, get_defined_vars())">{{ $slot }}</tk:checkbox>
+    <tk:checkbox :attributes="$attributes->withFieldProps(get_defined_vars(), TALLKit::fieldControlProps())" :$name>{{ $slot }}</tk:checkbox>
 @elseif ($type === 'radio')
-    <tk:radio :attributes="TALLKit::fieldWithProps($attributes, get_defined_vars())">{{ $slot }}</tk:radio>
+    <tk:radio :attributes="$attributes->withFieldProps(get_defined_vars(), TALLKit::fieldControlProps())" :$name>{{ $slot }}</tk:radio>
 @elseif ($type === 'reset' || $type === 'button')
-    <tk:button :attributes="TALLKit::fieldWithProps($attributes, get_defined_vars())" :$type>{{ $slot }}</tk:button>
+    <tk:button :attributes="$attributes->withFieldProps(get_defined_vars(), TALLKit::fieldControlProps())" :$type :$name>{{ $slot }}</tk:button>
 @elseif ($type === 'submit')
-    <tk:submit :attributes="TALLKit::fieldWithProps($attributes, get_defined_vars())">{{ $slot }}</tk:submit>
+    <tk:submit :attributes="$attributes->withFieldProps(get_defined_vars(), TALLKit::fieldControlProps())" :$name>{{ $slot }}</tk:submit>
 @elseif ($type === 'range')
-    <tk:slider :attributes="TALLKit::fieldWithProps($attributes, get_defined_vars())">{{ $slot }}</tk:slider>
+    <tk:slider :attributes="$attributes->withFieldProps(get_defined_vars(), TALLKit::fieldControlProps())" :$name>{{ $slot }}</tk:slider>
 @else
     <tk:field.wrapper
         :$name
-        :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldProps())"
+        :attributes="$attributes->withFieldProps(get_defined_vars())"
     >
         <tk:field.control
             :$size
-            :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::fieldControlProps())
+            :attributes="$attributes->withFieldControlProps(get_defined_vars())
                 ->when(
                     $hasControl,
                     fn ($attrs) => $attrs->classes(
@@ -65,17 +65,16 @@ $hasControl = $clearable || $copyable || $viewable || $prepend || $icon || $appe
                             'type' => $type,
                             'name' => $name,
                             'id' => $id,
-                            'value' => in_livewire() ? null : ($value ?? $slot),
+                            'value' => unless_livewire($value ?? $slot),
                             'placeholder' => $placeholder ? __((string) $placeholder) : null,
                             'wire:model' => $wireModel,
                             'x-data' => $mask ? true : null,
                             'x-mask' => $mask,
                             'inputmode' => $mask && $type === 'text' && preg_match('/^[^a-zA-Z*]*$/', $mask) ? 'numeric' : null,
                             'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
-                            'aria-invalid' => $invalid ? 'true' : null,
-                            'data-invalid' => $invalid ? true : null,
+                            ...TALLKit::fieldInvalid($invalid),
                         ])
-                        ->whereDoesntStartWith(TALLKit::fieldExcludedPrefixes(extra: ['input:', 'clearable:', 'copyable:', 'viewable:']))
+                        ->withoutFieldPrefixes(['input:', 'clearable:', 'copyable:', 'viewable:'])
                         ->except('class')
                         ->classes(
                             '
@@ -111,7 +110,7 @@ $hasControl = $clearable || $copyable || $viewable || $prepend || $icon || $appe
                         <tk:clearable
                             :attributes="$attributes->prefixed('clearable:')"
                             :$size
-                            :label="is_string($clearable) ? $clearable : null"
+                            :label="string_value($clearable)"
                         />
                     @endif
 
@@ -119,7 +118,7 @@ $hasControl = $clearable || $copyable || $viewable || $prepend || $icon || $appe
                         <tk:copyable
                             :attributes="$attributes->prefixed('copyable:')"
                             :$size
-                            :label="is_string($copyable) ? $copyable : null"
+                            :label="string_value($copyable)"
                         />
                     @endif
 
@@ -127,7 +126,7 @@ $hasControl = $clearable || $copyable || $viewable || $prepend || $icon || $appe
                         <tk:input.viewable
                             :attributes="$attributes->prefixed('viewable:')"
                             :$size
-                            :label="is_string($viewable) ? $viewable : null"
+                            :label="string_value($viewable)"
                         />
                     @endif
                 </x-slot:append>

@@ -1,6 +1,5 @@
 import { bind, setFieldChecked, allChecked, storageKey, getStoredPart, setStoredPart, removeStoredPart, isRtl, generateId, emit, clamp, prefersReducedMotion, keepAttributesOnMorph } from '../utils'
 
-// Not exported: every function exported from a component file is registered as an Alpine component.
 function columnVar(side, name) {
   return `--tk-column-${side}-${String(name).replace(/[^\w-]/g, '-')}`
 }
@@ -240,6 +239,7 @@ export function table({
 
     columnHide(name) {
       this.columnVisibility[name] = false
+      this.$nextTick(() => this.$refs.showColumns?.focus())
     },
 
     columnsVisibilityInit() {
@@ -280,7 +280,6 @@ export function table({
     columnResetVisibility() {
       this.columnVisibility = { ...this.columnVisibilityDefault }
 
-      // The watcher stores whatever it is given: the entry is dropped afterwards.
       this.$nextTick(() => removeStoredPart(tableKey, 'visibility'))
     },
 
@@ -302,7 +301,6 @@ export function table({
 
       this.applyColumnOrder()
 
-      // Livewire morphs put the cells back in the server's order; not while x-sort drags ('sorting' on the body).
       const table = this.tableElement()
 
       if (table) {
@@ -316,7 +314,6 @@ export function table({
     columnSortConfig() {
       return {
         onMove: (event) => event.related.hasAttribute('data-column-key') && !this.columnAnchored.includes(event.related.dataset.columnKey),
-        // Replaces x-sort's own: its onEnd would move a morph marker and break Livewire's morphing.
         onStart: (event) => {
           document.body.classList.add('sorting')
           this.columnDragging(event.item.dataset.columnKey)
@@ -380,7 +377,6 @@ export function table({
       const item = cells.find((cell) => cell.dataset.columnKey === key)
       const others = cells.filter((cell) => cell !== item)
 
-      // Put back inside the block Livewire's morph markers wrap: x-sort can append it past them.
       if (item && others.length) {
         const index = cells.indexOf(item)
 
@@ -456,7 +452,6 @@ export function table({
     columnResetOrder() {
       this.columnOrder = [...this.columnNames]
 
-      // The watcher stores whatever it is given: the entry is dropped afterwards.
       this.$nextTick(() => removeStoredPart(tableKey, 'order'))
     },
 
@@ -470,7 +465,6 @@ export function table({
         })
       }
 
-      // Next tick: the children's bindings are only applied after init().
       if (Object.keys(widths).length) {
         this.$nextTick(() => {
           this.columnFixedWidths = this.columnMeasure().fixed
@@ -747,7 +741,6 @@ export function table({
     columnResetPins() {
       this.columnPinned = { ...this.columnPinnedDefault }
 
-      // The watcher stores whatever it is given: the entry is dropped afterwards.
       this.$nextTick(() => removeStoredPart(tableKey, 'pinned'))
     },
 

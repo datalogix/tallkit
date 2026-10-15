@@ -2,7 +2,7 @@
     'size' => null,
 ])
 <tk:listbox
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), ['clearOnSelect' => null, 'fuseOptions' => null, 'hideEmpty' => null, 'noRecords' => null])->classes(
+    :attributes="$attributes->withProps(get_defined_vars(), ['clearOnSelect' => null, 'fuseOptions' => null, 'hideEmpty' => null, 'noRecords' => null])->classes(
         '
             [:where(&)]:bg-white dark:[:where(&)]:bg-zinc-700
             [:where(&)]:border [:where(&)]:border-zinc-200 dark:[:where(&)]:border-zinc-600
@@ -12,7 +12,10 @@
     )"
     :$size
     search:class="border-0 py-1 outline-none ring-0! rounded-none"
-    :items:class="TALLKit::paddingInline(size: $size, mode: 'smallest')"
+    :items:class="TALLKit::classes(
+        TALLKit::paddingInline(size: $size, mode: 'smallest'),
+        TALLKit::marginBottom(size: $size, mode: 'small'),
+    )"
 >
     {{ $slot }}
 

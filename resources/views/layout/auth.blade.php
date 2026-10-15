@@ -34,7 +34,7 @@ if ($bgs->isNotEmpty()) {
     }
 }
 
-$hasHero = $bg || isset($hero) || $attributes->prefixed('hero:')->isNotEmpty();
+$hasHero = $bg || has_content($hero ?? null) || $attributes->prefixed('hero:')->isNotEmpty();
 
 @endphp
 <div
@@ -52,8 +52,9 @@ $hasHero = $bg || isset($hero) || $attributes->prefixed('hero:')->isNotEmpty();
             />
         @endif
 
-        <tk:container :attributes="$attributes->prefixed('container:')
-            ->classes('[:where(&)]:max-w-xl px-0 flex flex-col justify-center space-y-8 h-full')"
+        <tk:container
+            :attributes="$attributes->prefixed('container:')->classes('px-0 lg:px-0 flex flex-col justify-center space-y-8 h-full')"
+            size="xs"
         >
             @isset ($brand)
                 {{ $brand }}

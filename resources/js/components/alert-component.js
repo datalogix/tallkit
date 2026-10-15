@@ -1,28 +1,34 @@
-import { eventName, startTimeout, toMilliseconds, bind } from '../utils'
+import { eventName, startTimeout, toMilliseconds, readingDuration, bind, queryData } from '../utils'
 import { dismissible } from '../mixins/dismissible'
 
 export function alertComponent({ duration: given = 0, pauseOnHover = false } = {}) {
   const _dismissible = dismissible('collapse')
-  const duration = given === true ? 7000 : toMilliseconds(given)
+  let duration = 0
 
   return {
     ..._dismissible,
 
     timeoutId: null,
 
-    remaining: duration,
+    remaining: 0,
     startedAt: 0,
 
     pauseReasons: new Set(),
 
     progressValue: 100,
-    progressFrame: null,
+    progressAnimation: null,
     visibilityHandler: null,
 
     state: 'idle',
 
     init() {
       _dismissible.init.call(this)
+
+      duration = given === true
+        ? readingDuration('', this.$root.textContent.replace(/\s+/g, ' ').trim())
+        : toMilliseconds(given)
+
+      this.remaining = duration
 
       this.startTimer()
 
@@ -65,18 +71,26 @@ export function alertComponent({ duration: given = 0, pauseOnHover = false } = {
     },
 
     trackProgress() {
-      cancelAnimationFrame(this.progressFrame)
+      const bar = queryData(queryData(this.$root, 'alert-progress'), 'progress-bar')
 
-      const step = () => {
-        if (this.state !== 'running') return
+      if (!bar?.animate) return
 
-        const left = this.remaining - (Date.now() - this.startedAt)
-
-        this.progressValue = Math.max(0, Math.min(100, (left / duration) * 100))
-        this.progressFrame = requestAnimationFrame(step)
+      if (this.progressAnimation?.playState === 'paused') {
+        this.progressAnimation.play()
+        return
       }
 
-      step()
+      this.stopProgress()
+
+      this.progressAnimation = bar.animate(
+        [{ width: `${(this.remaining / duration) * 100}%` }, { width: '0%' }],
+        { duration: this.remaining, easing: 'linear', fill: 'forwards' }
+      )
+    },
+
+    stopProgress() {
+      this.progressAnimation?.cancel()
+      this.progressAnimation = null
     },
 
     pause(reason = 'manual') {
@@ -92,7 +106,7 @@ export function alertComponent({ duration: given = 0, pauseOnHover = false } = {
 
       this.state = 'paused'
 
-      cancelAnimationFrame(this.progressFrame)
+      this.progressAnimation?.pause()
       this.progressValue = (this.remaining / duration) * 100
     },
 
@@ -113,6 +127,7 @@ export function alertComponent({ duration: given = 0, pauseOnHover = false } = {
       this.state = 'idle'
       this.pauseReasons.clear()
       this.progressValue = 100
+      this.stopProgress()
 
       this.startTimer()
 
@@ -131,7 +146,7 @@ export function alertComponent({ duration: given = 0, pauseOnHover = false } = {
       this.state = 'dismissing'
       this.remaining = 0
 
-      cancelAnimationFrame(this.progressFrame)
+      this.progressAnimation?.pause()
 
       if (this.timeoutId) {
         clearTimeout(this.timeoutId)
@@ -140,7 +155,7 @@ export function alertComponent({ duration: given = 0, pauseOnHover = false } = {
     },
 
     destroy() {
-      cancelAnimationFrame(this.progressFrame)
+      this.stopProgress()
 
       if (this.timeoutId) {
         clearTimeout(this.timeoutId)

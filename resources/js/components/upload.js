@@ -397,7 +397,6 @@ export function upload(
         return
       }
 
-      // Livewire only adds an upload to a list: an empty one starts as [].
       if (this.multiple() && !Array.isArray(this.$wire.get(wireModel))) {
         this.$wire.set(wireModel, [], false)
       }
@@ -532,7 +531,6 @@ export function upload(
       if (!this.$wire || !wireModel) return
 
       if (entry.tmpFilename) {
-        // Livewire only removes an upload from a list that starts with one: otherwise the list is written again.
         const first = [].concat(this.$wire.get(wireModel) ?? [])[0]
 
         if (!this.multiple() || (typeof first === 'string' && first.startsWith('livewire-file:'))) {
@@ -561,7 +559,6 @@ export function upload(
 
       this.needsValueSync = false
 
-      // Taken from the property: Livewire only knows a new upload in its signed form.
       const held = [].concat(this.$wire.get(wireModel) ?? [])
       const signed = (tmpFilename) => held.find((value) => typeof value === 'string'
         && value.startsWith('livewire-file:') && value.endsWith(`:${tmpFilename}`)) ?? null

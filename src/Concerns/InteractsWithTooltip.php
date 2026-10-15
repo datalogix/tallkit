@@ -48,7 +48,6 @@ trait InteractsWithTooltip
         ];
     }
 
-    // A bare number is milliseconds; '200ms' or '0.2s' go as they are (the script reads the unit).
     protected function tooltipDelay(mixed $delay): int|string|null
     {
         if (is_numeric($delay)) {
@@ -93,6 +92,10 @@ trait InteractsWithTooltip
 
     public function withTooltip(ComponentAttributeBag $attributes, array $tooltip, bool $describe = true): ComponentAttributeBag
     {
+        if ($tooltip['attributes'] === [] && ! $tooltip['describedBy'] && ! preg_grep('/^tooltip:/', array_keys($attributes->getAttributes()))) {
+            return $attributes;
+        }
+
         $attributes = $attributes->whereDoesntStartWith(['tooltip:'])->merge($tooltip['attributes']);
 
         return $describe ? $this->withDescribedBy($attributes, $tooltip['describedBy']) : $attributes;

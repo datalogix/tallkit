@@ -41,7 +41,7 @@
                 type="button"
                 x-on:click="goToPage(page - 1)"
                 :aria-current="isPageActive(page - 1) ? 'true' : null"
-                :aria-label="@js(__('Go to slide :number')).replace(':number', page)"
+                :aria-label="{{ Js::from(__('Go to slide :number')) }}.replace(':number', page)"
                 :data-active="isPageActive(page - 1) ? '' : null"
             ></button>
         </template>

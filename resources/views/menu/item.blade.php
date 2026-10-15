@@ -16,7 +16,7 @@
         'block flex-1 min-w-0 truncate leading-none text-start',
         TALLKit::fontSize(size: $size, weight: true),
     )"
-    :attributes="TALLKit::attributesWithProps($attributes, get_defined_vars(), TALLKit::elementProps())->classes(
+    :attributes="$attributes->withElementProps(get_defined_vars())->classes(
         '
             w-full focus:outline-hidden
             [[disabled]_&]:opacity-disabled [&[disabled]]:opacity-disabled

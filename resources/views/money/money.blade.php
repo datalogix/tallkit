@@ -5,8 +5,8 @@
     'thousands' => null,
     'position' => null,
     'placeholder' => null,
-    'prefix' => null,
-    'suffix' => null,
+    'prepend' => null,
+    'append' => null,
     'precision' => null,
     'as' => null,
 ])
@@ -17,7 +17,7 @@ $currencies = [
         'symbol' => 'R$',
         'delimiter' => ',',
         'thousands' => '.',
-        'position' => 'prefix',
+        'position' => 'prepend',
         'placeholder' => '0,00',
         'precision' => 2,
     ],
@@ -26,7 +26,7 @@ $currencies = [
         'symbol' => '$',
         'delimiter' => '.',
         'thousands' => ',',
-        'position' => 'prefix',
+        'position' => 'prepend',
         'placeholder' => '0.00',
         'precision' => 2,
     ],
@@ -35,7 +35,7 @@ $currencies = [
         'symbol' => '£',
         'delimiter' => '.',
         'thousands' => ',',
-        'position' => 'prefix',
+        'position' => 'prepend',
         'placeholder' => '0.00',
         'precision' => 2,
     ],
@@ -44,7 +44,7 @@ $currencies = [
         'symbol' => '¥',
         'delimiter' => '',
         'thousands' => ',',
-        'position' => 'prefix',
+        'position' => 'prepend',
         'placeholder' => '0',
         'precision' => 0,
     ],
@@ -53,7 +53,7 @@ $currencies = [
         'symbol' => '€',
         'delimiter' => ',',
         'thousands' => '.',
-        'position' => 'prefix',
+        'position' => 'prepend',
         'placeholder' => '0,00',
         'precision' => 2,
     ],
@@ -88,11 +88,11 @@ $as = $as === 'cents' ? 'cents' : 'decimal';
 
 $wireModel = $attributes->whereStartsWith('wire:model');
 $wireModelKey = array_key_first($wireModel->getAttributes());
-[$name, $fieldName, , , , $autoWireModel] = TALLKit::fieldContext(attributes: new \Illuminate\View\ComponentAttributeBag($attributes->getAttributes()), label: false, id: 'money');
+[$name, $fieldName, , , , $autoWireModel] = (clone $attributes)->fieldContext(label: false, id: 'money');
 $model = $wireModel->first() ?: ($autoWireModel ?: null);
 $modifiers = $wireModelKey ? Str::after($wireModelKey, 'wire:model') : '';
 
-$value = in_livewire() ? null : TALLKit::fieldOldValue($fieldName, $attributes->get('value'));
+$value = unless_livewire(TALLKit::fieldOldValue($fieldName, $attributes->get('value')));
 
 if (is_numeric($value)) {
     $amount = $as === 'cents' ? $value / (10 ** $precision) : $value;
@@ -101,12 +101,12 @@ if (is_numeric($value)) {
 
 @endphp
 <tk:input
-    :attributes="TALLKit::fieldWithProps(attributes: $attributes->whereDoesntStartWith(['wire:model', 'value']), scope: get_defined_vars())"
+    :attributes="$attributes->whereDoesntStartWith(['wire:model', 'value'])->withFieldProps(get_defined_vars(), TALLKit::fieldControlProps())"
     :$name
     :$value
     :$placeholder
-    :prefix="$prefix ?? ($position === 'prefix' ? $symbol : null)"
-    :suffix="$suffix ?? ($position === 'suffix' ? $symbol : null)"
+    :prepend="$prepend ?? ($position === 'prepend' ? $symbol : null)"
+    :append="$append ?? ($position === 'append' ? $symbol : null)"
     :old="false"
     :mask="false"
     :wire-model="false"

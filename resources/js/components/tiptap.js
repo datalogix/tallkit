@@ -1,10 +1,10 @@
-import { dataKey, queryData, loadRemoteModule, uploadEditorFile, reportUploadFailed, emit, isRtl, isRendered } from '../utils'
+import { dataKey, queryData, loadRemoteModule, loadStyle, uploadEditorFile, reportUploadFailed, emit, isRtl, isRendered } from '../utils'
 import { dataOptions } from '../mixins/data-options'
 import { EDITOR_GROUP_ORDER, editorField, parseToolbar } from '../mixins/editor'
 import { loadable } from './loadable'
 
 const DEFAULT_TIPTAP_VERSION = '3.30.3'
-// Pinned to one version: two copies of @tiptap/core on a page break it.
+
 const esm = (pkg, version) => {
   const deps = ['@tiptap/core', '@tiptap/pm'].filter((dep) => dep !== pkg).map((dep) => `${dep}@${version}`)
 
@@ -89,6 +89,7 @@ export function tiptap(
   {
     options = {},
     scripts = [],
+    styles = [],
     toolbar = null,
     upload = {},
     version = null,
@@ -117,10 +118,8 @@ export function tiptap(
     groups: [],
     extraModules: [],
 
-    // The editor isn't reactive: tick makes Alpine read its state again.
     tick: 0,
 
-    // Out of Alpine's reactive data: called through its proxy, the editor breaks.
     getEditor() {
       return editor
     },
@@ -156,6 +155,8 @@ export function tiptap(
         if (scripts.length) {
           this.extraModules = await loadRemoteModule(scripts)
         }
+
+        await loadStyle(styles)
 
         this.mount(Editor, extensions)
       })
@@ -262,7 +263,6 @@ export function tiptap(
     mount(EditorClass, extensions) {
       if (this.isDestroyed()) return
 
-      // Not caught here: load() shows it, and its completion would hide it.
       editor = new EditorClass({
         element: this.$refs.root,
         extensions,
@@ -271,13 +271,13 @@ export function tiptap(
           attributes: {
             class: 'tiptap-content',
             [dataKey('control')]: '',
-            // Given here: Tiptap only adds its own on the first draw, and setEditable() draws these again.
             role: 'textbox',
             'aria-multiline': 'true',
             ...(labelledBy ? { 'aria-labelledby': labelledBy } : {}),
+            ...(this.input.hasAttribute('aria-describedby') ? { 'aria-describedby': this.input.getAttribute('aria-describedby') } : {}),
+            ...(this.input.hasAttribute('aria-invalid') ? { 'aria-invalid': 'true' } : {}),
           },
         },
-        // An empty editor holds "<p></p>": sent as nothing, or a required field counts as filled.
         onUpdate: ({
           editor
         }) => { this.sync(editor.isEmpty ? '' : editor.getHTML()) },
