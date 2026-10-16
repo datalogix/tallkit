@@ -20,11 +20,10 @@
     'revokeAllDevices' => 'revokeAllTrustedDevices',
 ])
 <tk:section
-    :attributes="$attributes->whereDoesntStartWith(['qr:', 'recovery-codes:', 'devices:'])->merge([
-        'title' => 'Two-factor setup',
-        'subtitle' => $enabled ? 'Two-factor authentication is enabled for your account.' : 'Two-factor authentication is disabled.',
-        'separator' => false,
-    ])"
+    :attributes="$attributes->whereDoesntStartWith(['qr:', 'recovery-codes:', 'devices:'])"
+    title="Two-factor setup"
+    :subtitle="$enabled ? 'Two-factor authentication is enabled for your account.' : 'Two-factor authentication is disabled.'"
+    :separator="false"
 >
     @if ($enabled)
         @if ($secretUnreadable)
@@ -53,12 +52,11 @@
             <tk:separator />
             <tk:text label="Trusted devices:" />
             <tk:page.auth.devices
-                :attributes="$attributes->prefixed('devices:')->merge([
-                    'revoke:label' => 'Revoke',
-                    'revoke-all:label' => 'Revoke all trusted devices',
-                    'revoke:wire:confirm' => __('Revoke this device?'),
-                    'revoke-all:wire:confirm' => __('Revoke all trusted devices?'),
-                ])"
+                :attributes="$attributes->prefixed('devices:')"
+                revoke:label="Revoke"
+                revoke-all:label="Revoke all trusted devices"
+                :revoke:wire:confirm="__('Revoke this device?')"
+                :revoke-all:wire:confirm="__('Revoke all trusted devices?')"
                 :items="$trustedDevices"
                 :revoke="$revokeDevice"
                 :revoke-all="$revokeAllDevices"

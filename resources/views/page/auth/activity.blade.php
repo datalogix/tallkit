@@ -2,10 +2,13 @@
     'items' => [],
 ])
 <tk:section
-    :attributes="$attributes->whereDoesntStartWith(['table:', 'empty:'])->merge(['title' => 'Account activity', 'subtitle' => 'What happened to your account. If you don\'t recognize something, change your password.', 'separator' => false])"
+    :attributes="$attributes->whereDoesntStartWith(['table:', 'empty:'])"
+    title="Account activity"
+    subtitle="What happened to your account. If you don't recognize something, change your password."
+    :separator="false"
 >
     @if (count($items) === 0)
-        <tk:text :attributes="$attributes->prefixed('empty:')->merge(['label' => 'Nothing happened to your account yet.'])" />
+        <tk:text :attributes="$attributes->prefixed('empty:')" label="Nothing happened to your account yet." />
     @else
         <tk:table
             :attributes="$attributes->prefixed('table:')"

@@ -2,7 +2,10 @@
     'items' => [],
 ])
 <tk:section
-    :attributes="$attributes->whereDoesntStartWith(['link:'])->merge(['title' => 'Account', 'subtitle' => 'Manage how you sign in and keep your account safe.', 'separator' => false])"
+    :attributes="$attributes->whereDoesntStartWith(['link:'])"
+    title="Account"
+    subtitle="Manage how you sign in and keep your account safe."
+    :separator="false"
 >
     <nav class="divide-y divide-zinc-800/10 dark:divide-white/20">
         @foreach ($items as $item)

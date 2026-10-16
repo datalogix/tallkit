@@ -8,7 +8,7 @@
         $attributes
             ->dataKey('header')
             ->whereDoesntStartWith(['container:'])
-            ->mergeDefined(['x-data' => $sticky ? 'header' : null, 'wire:ignore.self' => $sticky ? true : null])
+            ->merge(['x-data' => $sticky ? 'header' : null, 'wire:ignore.self' => $sticky ? true : null])
             ->classes('[grid-area:header] z-10 min-h-16')
             ->classes([
                 'flex items-center px-4 lg:px-6' => ! $container,

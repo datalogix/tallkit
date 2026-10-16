@@ -87,10 +87,9 @@ $hasAppend = has_content($append);
             >
                 @if ($loading)
                     <tk:loading
-                        :attributes="$attributes->prefixed('loading:')->classes('hidden')->merge([
-                            'wire:loading.class.remove' => 'hidden',
-                            'wire:target' => $wireTarget
-                        ])"
+                        :attributes="$attributes->prefixed('loading:')->classes('hidden')"
+                        wire:loading.class.remove="hidden"
+                        :wire:target="$wireTarget"
                         :size="$innerSize"
                     />
                 @endif

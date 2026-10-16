@@ -6,19 +6,22 @@
     wire:ignore
 >
     <tk:button
-        :attributes="$attributes->prefixed('system:')->merge(['tooltip' => 'System'])->classes('aria-checked:bg-current/10! dark:aria-checked:bg-current/30!')"
+        :attributes="$attributes->prefixed('system:')->classes('aria-checked:bg-current/10! dark:aria-checked:bg-current/30!')"
+        tooltip="System"
         icon="ph:monitor"
         role="radio"
         data-mode="system"
     />
     <tk:button
-        :attributes="$attributes->prefixed('light:')->merge(['tooltip' => 'Light'])->classes('aria-checked:bg-current/10! dark:aria-checked:bg-current/30!')"
+        :attributes="$attributes->prefixed('light:')->classes('aria-checked:bg-current/10! dark:aria-checked:bg-current/30!')"
+        tooltip="Light"
         icon="ph:sun"
         role="radio"
         data-mode="light"
     />
     <tk:button
-        :attributes="$attributes->prefixed('dark:')->merge(['tooltip' => 'Dark'])->classes('aria-checked:bg-current/10! dark:aria-checked:bg-current/30!')"
+        :attributes="$attributes->prefixed('dark:')->classes('aria-checked:bg-current/10! dark:aria-checked:bg-current/30!')"
+        tooltip="Dark"
         icon="ph:moon"
         role="radio"
         data-mode="dark"

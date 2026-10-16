@@ -25,7 +25,8 @@
                         <tk:table.cell align="right">
                             @if ($revoke && ! ($item['current'] ?? false))
                                 <tk:button
-                                    :attributes="$attributes->prefixed('revoke:')->merge(['label' => 'Sign out'])"
+                                    :attributes="$attributes->prefixed('revoke:')"
+                                    label="Sign out"
                                     :action="$revoke.'('.$item['id'].')'"
                                 />
                             @endif
@@ -37,7 +38,8 @@
 
         @if ($revokeAll && count($items) > 1)
             <tk:button
-                :attributes="$attributes->prefixed('revoke-all:')->merge(['label' => 'Sign out all the others'])"
+                :attributes="$attributes->prefixed('revoke-all:')"
+                label="Sign out all the others"
                 :action="$revokeAll"
             />
         @endif

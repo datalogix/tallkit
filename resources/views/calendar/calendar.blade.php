@@ -125,7 +125,8 @@ $initialValueString = match (true) {
         <div class="flex items-center gap-2">
             @if ($selectableHeader && $canNavigate && $monthsCount === 1)
                 <tk:select
-                    :attributes="$attributes->prefixed('month-select:')->classes('border-none min-w-32')->merge(['aria-label' => __('Month')])"
+                    :attributes="$attributes->prefixed('month-select:')->classes('border-none min-w-32')"
+                    :aria-label="__('Month')"
                     :size="TALLKit::adjustSize(size: $size, move: -2)"
                     :label="false"
                     :placeholder="false"
@@ -139,7 +140,8 @@ $initialValueString = match (true) {
                 </tk:select>
 
                 <tk:select
-                    :attributes="$attributes->prefixed('year-select:')->classes('border-none')->merge(['aria-label' => __('Year')])"
+                    :attributes="$attributes->prefixed('year-select:')->classes('border-none')"
+                    :aria-label="__('Year')"
                     :size="TALLKit::adjustSize(size: $size, move: -2)"
                     :label="false"
                     :placeholder="false"
@@ -162,7 +164,8 @@ $initialValueString = match (true) {
         <div class="flex items-center gap-px">
             @if ($today && ! $isStatic)
                 <tk:button
-                    :attributes="$attributes->prefixed('today:')->classes(TALLKit::roundedSize(size: $size, mode: 'large'))->merge(['tooltip' => 'Today'])"
+                    :attributes="$attributes->prefixed('today:')->classes(TALLKit::roundedSize(size: $size, mode: 'large'))"
+                    tooltip="Today"
                     :size="TALLKit::adjustSize(size: $size)"
                     variant="subtle"
                     icon="calendar-today"
@@ -172,7 +175,8 @@ $initialValueString = match (true) {
 
             @if ($canNavigate)
                 <tk:button
-                    :attributes="$attributes->prefixed('nav-prev:')->classes(TALLKit::roundedSize(size: $size, mode: 'large'))->merge(['tooltip' => 'Previous month'])"
+                    :attributes="$attributes->prefixed('nav-prev:')->classes(TALLKit::roundedSize(size: $size, mode: 'large'))"
+                    tooltip="Previous month"
                     :size="TALLKit::adjustSize(size: $size)"
                     variant="subtle"
                     icon="chevron-left"
@@ -181,7 +185,8 @@ $initialValueString = match (true) {
                 />
 
                 <tk:button
-                    :attributes="$attributes->prefixed('nav-next:')->classes(TALLKit::roundedSize(size: $size, mode: 'large'))->merge(['tooltip' => 'Next month'])"
+                    :attributes="$attributes->prefixed('nav-next:')->classes(TALLKit::roundedSize(size: $size, mode: 'large'))"
+                    tooltip="Next month"
                     :size="TALLKit::adjustSize(size: $size)"
                     variant="subtle"
                     icon="chevron-right"
@@ -281,7 +286,7 @@ $initialValueString = match (true) {
 
                         <template x-for="day in week.days" :key="day.iso">
                             <tk:button
-                                :attributes="$attributes->prefixed('day:')->classes([
+                                :attributes="$attributes->prefixed('day:')->except('type')->classes([
                                     '
                                         relative z-10 tabular-nums
 

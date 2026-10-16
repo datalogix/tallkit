@@ -37,7 +37,7 @@ $columnAttributes = TALLKit::tableColumnAttributes(
     hidden: (bool) $hidden,
     sticky: $sticky,
     pinnable: $canPin,
-)->mergeDefined([
+)->merge([
     'data-column-draggable' => $canDrag ? true : null,
     'data-column-resizable' => $canResize ? true : null,
     'data-column-pinnable' => $canPin ? true : null,
@@ -62,7 +62,7 @@ $hasControls = $canPin || $canDrag || $canResize || $canHide || $hasHandle;
                 '[:where(&)]:font-medium [:where(&)]:text-sm',
                 TALLKit::textNeutral(variant: 'strong', prefix: '[:where(&)]:'),
             ])
-            ->mergeDefined($columnAttributes, escape: false)
+            ->merge($columnAttributes->getAttributes(), escape: false)
             ->merge([
                 'aria-sort' => match ($sortable) {
                     'asc' => 'ascending',
@@ -79,7 +79,7 @@ $hasControls = $canPin || $canDrag || $canResize || $canHide || $hasHandle;
 
     <tk:element
         as="div"
-        :attributes="$attributes->prefixed('container:')
+        :attributes="$attributes->prefixed('container:')->except('as')
             ->classes([
                 'flex w-full',
                 'group/sortable' => $sortable,

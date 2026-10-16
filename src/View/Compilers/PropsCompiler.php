@@ -3,9 +3,11 @@
 namespace TALLKit\View\Compilers;
 
 use Illuminate\Support\Str;
+use Illuminate\View\Compilers\BladeCompiler;
 use Illuminate\View\ComponentAttributeBag;
+use Illuminate\View\ComponentSlot;
 
-// Fixes two Blade bugs of forwarded props: a bound value escaped twice, a kebab-case one never reaching its camelCase.
+// Fixes Blade bugs of forwarded props: a bound value escaped twice, a kebab-case one never reaching its camelCase, the tag's value beating the forwarded one.
 class PropsCompiler
 {
     public static function compile(string $value): string
@@ -63,14 +65,22 @@ class PropsCompiler
 
             $decoded = \is_string($value) ? \htmlspecialchars_decode($value, ENT_QUOTES) : $value;
             $camel = Str::camel($key);
-            $name = $camel !== $key && isset($declared[$camel]) && ! $attributes->has($camel) ? $camel : $key;
+            $variable = $camel !== $key && isset($declared[$camel]) ? $camel : $key;
+            $name = $variable !== $key && ! $attributes->has($camel) ? $camel : $key;
 
             if ($decoded !== $value || $name !== $key) {
                 $changed = true;
 
-                if (\is_string($value) && ($vars[$key] ?? null) === $value) {
-                    $unescaped[$key] = $decoded;
+                if (\is_string($value) && ($vars[$variable] ?? null) === $value) {
+                    $unescaped[$variable] = $decoded;
                 }
+            }
+
+            // The tag's own value reaches the bag escaped by Blade; anything else came through :attributes and wins, except over a slot.
+            if (\array_key_exists($variable, $vars) && $vars[$variable] !== $value && ! $vars[$variable] instanceof ComponentSlot
+                && ($vars[$variable] === null || $value !== BladeCompiler::sanitizeComponentAttribute($vars[$variable]))) {
+                $changed = true;
+                $unescaped[$variable] = $decoded;
             }
 
             $values[$name] = $decoded;

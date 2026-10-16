@@ -5,7 +5,9 @@
     'identifierValue' => null,
 ])
 <tk:form.section
-    :attributes="$attributes->whereDoesntStartWith(['token:', 'identifier:', 'new-password:', 'new-password-confirmation:', 'submit:'])->merge(['title' => 'Reset password', 'subtitle' => 'Please enter your new password below:'])"
+    :attributes="$attributes->whereDoesntStartWith(['token:', 'identifier:', 'new-password:', 'new-password-confirmation:', 'submit:'])"
+    title="Reset password"
+    subtitle="Please enter your new password below:"
     :$size
 >
     <input
@@ -31,7 +33,9 @@
     />
 
     <tk:password
-        :attributes="$attributes->prefixed('new-password:')->merge(['placeholder' => true])->merge(['label' => 'New password'])"
+        :attributes="$attributes->prefixed('new-password:')"
+        placeholder
+        label="New password"
         :$size
         name="password"
         required
@@ -39,7 +43,9 @@
     />
 
     <tk:password
-        :attributes="$attributes->prefixed('new-password-confirmation:')->merge(['placeholder' => true])->merge(['label' => 'New password confirmation'])"
+        :attributes="$attributes->prefixed('new-password-confirmation:')"
+        placeholder
+        label="New password confirmation"
         :$size
         name="password_confirmation"
         required
@@ -47,7 +53,8 @@
     />
 
     <tk:submit
-        :attributes="$attributes->prefixed('submit:')->classes('w-full')->merge(['label' => 'Reset password'])"
+        :attributes="$attributes->prefixed('submit:')->classes('w-full')"
+        label="Reset password"
         :$size
         variant="accent"
     />

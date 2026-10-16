@@ -4,13 +4,14 @@
     'identifier' => null
 ])
 <tk:input
-    :attributes="$attributes->merge(['placeholder' => match ($identifier) {
+    :attributes="$attributes"
+    :placeholder="match ($identifier) {
         'cpf' => '000.000.000-00',
         'cnpj' => '00.000.000/0000-00',
         'username' => 'Username',
         'login' => 'Login',
         default => 'email@example.com',
-    }])"
+    }"
     :$size
     :name="match ($identifier) {
         'cpf' => 'cpf',

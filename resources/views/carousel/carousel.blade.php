@@ -76,7 +76,7 @@ $progressAttributes = $attributes->prefixed('progress:')
                                 'flex transition-transform duration-300 ease-in-out will-change-transform' => ! $fade,
                                 'gap-(--tk-carousel-gap)' => $gap && ! $fade,
                             ])
-                            ->mergeDefined([
+                            ->merge([
                                 'style' => collect([
                                     '--tk-carousel-per-view' => $perView && ! $fade ? max(1, (int) $perView) : null,
                                     '--tk-carousel-gap' => $gap && ! $fade ? $gap : null,
@@ -89,14 +89,9 @@ $progressAttributes = $attributes->prefixed('progress:')
 
                     @foreach ($slides as $slide)
                         <tk:carousel.slide
-                            :attributes="$attributes->prefixed('slide:')
-                                ->except('position')
-                                ->merge(TALLKit::attributesFromItem(Arr::except($slide, ['name', 'src', 'alt', 'content', 'position', 'thumbnail'])), false)
-                                ->mergeDefined([
-                                    'image:loading' => $loop->first && ! $hasSlotSlides ? null : 'lazy',
-                                    'image:fetchpriority' => $loop->first && ! $hasSlotSlides ? 'high' : null,
-                                ])
-                            "
+                            :attributes="$attributes->prefixed('slide:')->except('position')->merge(TALLKit::attributesFromItem(Arr::except($slide, ['name', 'src', 'alt', 'content', 'position', 'thumbnail'])), false)"
+                            :image:loading="$loop->first && ! $hasSlotSlides ? null : 'lazy'"
+                            :image:fetchpriority="$loop->first && ! $hasSlotSlides ? 'high' : null"
                             :name="$slide['name'] ?? null"
                             :src="$slide['src'] ?? null"
                             :alt="$slide['alt'] ?? null"

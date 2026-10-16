@@ -85,7 +85,7 @@ The last element can be a `tk:popover` with any content instead of a menu. It op
 | `position` | string | `bottom` | Which side of the pointer the menu opens on: `bottom`, `top`, `left`, `right`, or `start` / `end` (the side that follows the text direction). |
 | `align` | string | `start` | How the menu lines up with the pointer: `start`, `end`, `left`, `right` or `center`. `start` puts the pointer at the menu's leading corner. |
 
-These are the props of `tk:dropdown`, which receives every attribute of the tag. The open mode is fixed to the context menu: an `open` attribute is ignored. When the menu does not fit on the screen in that position, another side or alignment that fits is used.
+These are the props of `tk:dropdown`, which receives every attribute of the tag. `open` defaults to `context`, the right click or long press on the area. When the menu does not fit on the screen in that position, another side or alignment that fits is used.
 
 ## Slots
 

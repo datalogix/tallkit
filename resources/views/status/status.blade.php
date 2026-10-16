@@ -14,7 +14,7 @@
 <tk:element
     kind="status"
     :$href
-    :attributes="$attributes->prefixed('container:')
+    :attributes="$attributes->prefixed('container:')->except('kind')
         ->classes(
             '
                 justify-center

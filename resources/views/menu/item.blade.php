@@ -16,7 +16,7 @@
         'block flex-1 min-w-0 truncate leading-none text-start',
         TALLKit::fontSize(size: $size, weight: true),
     )"
-    :attributes="$attributes->withElementProps(get_defined_vars())->classes(
+    :attributes="$attributes->withElementProps(get_defined_vars())->except('kind')->classes(
         '
             w-full focus:outline-hidden
             [[disabled]_&]:opacity-disabled [&[disabled]]:opacity-disabled
@@ -38,7 +38,9 @@
                 'data-active:bg-zinc-100 dark:data-active:bg-white/10',
             ),
         },
-    )->merge(['as' => 'button', 'data-keep-open' => $keepOpen])"
+    )"
+    as="button"
+    :data-keep-open="$keepOpen"
 >
     <x-slot:icon-empty>
         <span class="w-5 hidden [[data-tallkit-menu]:has(>[data-tallkit-menu-item-has-icon])_&]:block"></span>

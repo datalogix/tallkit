@@ -63,19 +63,17 @@ $panelId = $tabId.'-panel';
                 },
             ),
         )
-        ->merge([
-            'data-selected' => $selected ? '' : false,
-            'wire:key' => $tabId,
-            'data-name' => $name,
-            'id' => $tabId,
-            'aria-controls' => $panelId,
-            'role' => 'tab',
-            ':tabindex' => '(isSelected(' . Js::from($name) . ') || (selected === null && tabs()[0] === $el)) ? 0 : -1',
-            ':aria-selected' => 'isSelected(' . Js::from($name) . ')',
-            ':data-selected' => 'isSelected(' . Js::from($name) . ')',
-            'x-on:click' => 'select(' . Js::from($name) . ')',
-        ])
     "
+    :data-selected="$selected ? '' : false"
+    :wire:key="$tabId"
+    :data-name="$name"
+    :id="$tabId"
+    :aria-controls="$panelId"
+    role="tab"
+    ::tabindex="(isSelected({{ Js::from($name) }}) || (selected === null && tabs()[0] === $el)) ? 0 : -1"
+    ::aria-selected="isSelected({{ Js::from($name) }})"
+    ::data-selected="isSelected({{ Js::from($name) }})"
+    x-on:click="select({{ Js::from($name) }})"
     :$size
     :$label
     :$badge

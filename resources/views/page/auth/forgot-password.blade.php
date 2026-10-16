@@ -13,7 +13,8 @@ $loginUrl ??= route_detect([
 
 @endphp
 <tk:form.section
-    :attributes="$attributes->whereDoesntStartWith(['identifier:', 'submit:', 'login:'])->merge(['title' => 'Forgot password'])"
+    :attributes="$attributes->whereDoesntStartWith(['identifier:', 'submit:', 'login:'])"
+    title="Forgot password"
     :$size
     :subtitle="match ($identifier) {
         'cpf' => 'Enter your CPF and we\'ll send you a password reset link.',
@@ -32,7 +33,8 @@ $loginUrl ??= route_detect([
     />
 
     <tk:submit
-        :attributes="$attributes->prefixed('submit:')->classes('w-full')->merge(['label' => 'Send password reset link'])"
+        :attributes="$attributes->prefixed('submit:')->classes('w-full')"
+        label="Send password reset link"
         :$size
         variant="accent"
     />
@@ -41,7 +43,8 @@ $loginUrl ??= route_detect([
         <tk:separator :attributes="$attributes->prefixed('login:separator:')" />
 
         <tk:link
-            :attributes="$attributes->prefixed('login:link:')->merge(['label' => 'Back to sign in'])"
+            :attributes="$attributes->prefixed('login:link:')"
+            label="Back to sign in"
             :href="$loginUrl"
             :$size
         />

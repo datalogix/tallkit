@@ -65,8 +65,8 @@ $componentAttributes = new \Illuminate\View\ComponentAttributeBag(array_map(
     @if ($themeColor) <meta name="theme-color" content="{{ $themeColor }}"> @endif
     @if ($csrfToken && session()->isStarted()) <meta name="csrf-token" content="{{ csrf_token() }}"> @endif
     @foreach ($metaTags as $metaName => $metaContent) <meta name="{{ $metaName }}" content="{{ $metaContent }}"> @endforeach
-    @if ($meta) <tk:html.meta :attributes="$attributes->prefixed('meta:')->merge(is_array($meta) ? $meta : [])->merge(['title' => $title])" /> @endif
-    @if ($googleFonts) <tk:google.fonts :attributes="$attributes->prefixed('google-fonts:')->merge($googleFonts)->merge(['noscript' => false, 'nonce' => $nonce])" /> @endif
+    @if ($meta) <tk:html.meta :attributes="$attributes->prefixed('meta:')->merge(is_array($meta) ? $meta : [])" :title="$title" /> @endif
+    @if ($googleFonts) <tk:google.fonts :attributes="$attributes->prefixed('google-fonts:')->merge($googleFonts)" :noscript="false" :nonce="$nonce" /> @endif
     <title>{{ $title }}</title>
     {{ $head ?? '' }}
     @if ($appearance) <tk:appearance :nonce="string_value($appearance, $nonce)" /> @endif
@@ -88,7 +88,7 @@ $componentAttributes = new \Illuminate\View\ComponentAttributeBag(array_map(
             'antialiased',
         )
 }}>
-    @if ($googleFonts) <tk:google.fonts :attributes="$attributes->prefixed('google-fonts:')->merge($googleFonts)->merge(['noscript' => true])" /> @endif
+    @if ($googleFonts) <tk:google.fonts :attributes="$attributes->prefixed('google-fonts:')->merge($googleFonts)" noscript /> @endif
     @if ($gtm && ! $consent) <tk:google.gtm :id="$gtm" noscript /> @endif
     {{ $slot }}
     @foreach ($components as $c => $component) <x-dynamic-component :attributes="$componentAttributes" :$component /> @endforeach

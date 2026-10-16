@@ -13,7 +13,7 @@ $hasControl = $prepend || $icon || $append || $loading || $iconTrailing || $kbd 
 @endphp
 <tk:field.wrapper
     :$name
-    :attributes="$attributes->withFieldProps(get_defined_vars())"
+    :attributes="$attributes->withFieldProps(get_defined_vars())->except(['prefix', 'suffix'])"
     :prefix="false"
     :suffix="false"
 >

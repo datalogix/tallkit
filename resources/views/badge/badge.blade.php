@@ -91,8 +91,8 @@ $pill = ($split ? $attributes->filter(fn ($value, $key) => ! $linkOwn($key)) : $
     >
         <tk:element
             content:class="min-w-0 truncate [&:has(>*)]:flex [&:has(>*)]:items-center"
+            :as="$asButton ? 'button' : null"
             :attributes="$attributes->filter(fn ($value, $key) => $linkOwn($key))
-                ->when($asButton, fn ($attrs) => $attrs->merge(['as' => 'button']))
                 ->dataKey('badge-link')
                 ->classes('min-w-0 rounded-[inherit] after:absolute after:inset-0 after:rounded-[inherit]')"
         >

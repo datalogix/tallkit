@@ -22,10 +22,9 @@ $busy = 'has-[[inert]]:opacity-disabled';
         :name="$field('address')"
         autocomplete="address-line1"
         field:class="col-span-4 sm:col-span-3 lg:col-span-2 {{ $busy }}"
-        :attributes="$attributes->prefixed('address:')->dataKey('address-form-address')->merge([
-            'loading:wire:loading.class.remove' => false,
-            'loading:wire:target' => false,
-        ])"
+        :attributes="$attributes->prefixed('address:')->dataKey('address-form-address')"
+        :loading:wire:loading.class.remove="false"
+        :loading:wire:target="false"
         :$required
         :$size
         loading="address"
@@ -48,12 +47,9 @@ $busy = 'has-[[inert]]:opacity-disabled';
         :attributes="$attributes
             ->prefixed('error:')
             ->dataKey('address-form-error')
-                ->merge([
-                'id' => TALLKit::stableId('address-form', $name, 'error'),
-                'hidden' => true,
-            ])
-            ->classes('col-span-full -mt-4')
-        "
+            ->classes('col-span-full -mt-4')"
+        :id="TALLKit::stableId('address-form', $name, 'error')"
+        hidden
         :message="__('Zipcode not found.')"
         :$size
     />

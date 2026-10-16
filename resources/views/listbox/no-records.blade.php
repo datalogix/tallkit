@@ -2,7 +2,9 @@
     ...TALLKit::elementProps(),
 ])
 <tk:text
-    :attributes="$attributes->withElementProps(get_defined_vars())->merge(['label' => 'No records found', 'variant' => 'subtle'])->dataKey('listbox-no-records')"
+    :attributes="$attributes->withElementProps(get_defined_vars())->dataKey('listbox-no-records')"
+    label="No records found"
+    variant="subtle"
     hidden
     class="p-4 text-center"
     aria-live="polite"

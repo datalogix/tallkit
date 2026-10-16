@@ -34,8 +34,7 @@ $arrowsInside = $arrows !== false && ! in_array($arrowsPosition, ['outside', 'ov
                 '[grid-area:1/1] opacity-0 first:opacity-100 transition-opacity duration-300 ease-in-out' => $fade,
             ])
             ->wireKey($name ?? TALLKit::stableId('carousel-slide'))
-            ->merge(['aria-roledescription' => __('slide')])
-            ->mergeDefined(['data-thumbnail' => $thumbnail])
+            ->merge(['aria-roledescription' => __('slide'), 'data-thumbnail' => $thumbnail])
     }}
     role="group"
     :aria-label="{{ Js::from(__('Slide :n of :total')) }}.replace(':n', slideNumber($el)).replace(':total', slideCount)"

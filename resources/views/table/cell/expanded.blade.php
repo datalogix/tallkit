@@ -1,10 +1,11 @@
 <tk:table.cell
-    :attributes="$attributes->whereDoesntStartWith(['open:', 'close:'])->classes('p-1! w-8')"
+    :attributes="$attributes->whereDoesntStartWith(['open:', 'close:'])->except('align')->classes('p-1! w-8')"
     align="center"
 >
     @if ($slot->isEmpty())
         <tk:button
-            :attributes="TALLKit::attributesMerge($attributes->prefixed('open:'), $attributes->prefixed('close:'))->merge(['aria-label' => 'Row details'])"
+            :attributes="TALLKit::attributesMerge($attributes->prefixed('open:'), $attributes->prefixed('close:'))"
+            aria-label="Row details"
             data-role="row-expanded"
             aria-expanded="false"
             icon="chevron-down"

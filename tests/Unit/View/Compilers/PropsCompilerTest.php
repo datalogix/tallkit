@@ -3,6 +3,7 @@
 namespace TALLKit\Tests\Unit\View\Compilers;
 
 use Illuminate\View\ComponentAttributeBag;
+use Illuminate\View\ComponentSlot;
 use TALLKit\Tests\TestCase;
 use TALLKit\View\Compilers\PropsCompiler;
 
@@ -93,14 +94,55 @@ class PropsCompilerTest extends TestCase
         );
     }
 
-    public function test_unescape_does_not_override_variable_from_other_source(): void
+    public function test_unescape_keeps_the_tag_value_when_nothing_was_forwarded(): void
     {
         $attributes = new ComponentAttributeBag(['label' => 'a &amp; b']);
 
-        $result = PropsCompiler::unescape(['attributes' => $attributes, 'label' => 'other'], ['label']);
+        $result = PropsCompiler::unescape(['attributes' => $attributes, 'label' => 'a & b'], ['label']);
 
         $this->assertArrayNotHasKey('label', $result);
         $this->assertSame(['label' => 'a & b'], $result['attributes']->getAttributes());
+    }
+
+    public function test_unescape_lets_the_forwarded_value_win_over_the_tag_value(): void
+    {
+        $attributes = new ComponentAttributeBag(['label' => 'a &amp; b', 'icon' => null]);
+
+        $result = PropsCompiler::unescape(['attributes' => $attributes, 'label' => 'tag', 'icon' => 'tag'], ['label', 'icon']);
+
+        $this->assertSame('a & b', $result['label']);
+        $this->assertNull($result['icon']);
+    }
+
+    public function test_unescape_fills_a_null_tag_value_with_the_forwarded_one(): void
+    {
+        $attributes = new ComponentAttributeBag(['label' => 'a &amp; b']);
+
+        $this->assertSame('a & b', PropsCompiler::unescape(['attributes' => $attributes, 'label' => null], ['label'])['label']);
+    }
+
+    public function test_unescape_lets_a_forwarded_kebab_value_win_over_the_tag_camel_value(): void
+    {
+        $attributes = new ComponentAttributeBag(['iconTrailing' => 'tag', 'icon-trailing' => 'forwarded']);
+
+        $result = PropsCompiler::unescape(['attributes' => $attributes, 'iconTrailing' => 'tag'], ['iconTrailing' => null]);
+
+        $this->assertSame('forwarded', $result['iconTrailing']);
+    }
+
+    public function test_unescape_keeps_a_slot_over_the_forwarded_value(): void
+    {
+        $attributes = new ComponentAttributeBag(['icon' => 'star']);
+
+        $this->assertArrayNotHasKey('icon', PropsCompiler::unescape(['attributes' => $attributes, 'icon' => new ComponentSlot('<svg></svg>')], ['icon']));
+    }
+
+    public function test_unescape_keeps_non_string_tag_values(): void
+    {
+        $items = ['a' => 1];
+        $attributes = new ComponentAttributeBag(['items' => $items, 'count' => 2]);
+
+        $this->assertSame([], PropsCompiler::unescape(['attributes' => $attributes, 'items' => $items, 'count' => 2], ['items', 'count']));
     }
 
     public function test_unescape_renames_kebab_attribute_to_declared_camel_prop(): void

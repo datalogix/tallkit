@@ -33,7 +33,8 @@ $hasHelp = $shows($help, 'help:');
 
         @if ($hasDescription)
             <tk:text
-                :attributes="$attributes->prefixed('description:')->merge(['id' => $id ? $id.'-description' : null])"
+                :attributes="$attributes->prefixed('description:')"
+                :id="$id ? $id.'-description' : null"
                 :label="$description"
                 :$size
             />
@@ -58,7 +59,8 @@ $hasHelp = $shows($help, 'help:');
 
         @if ($hasHelp)
             <tk:text
-                :attributes="$attributes->prefixed('help:')->merge(['id' => $id ? $id.'-help' : null])"
+                :attributes="$attributes->prefixed('help:')"
+                :id="$id ? $id.'-help' : null"
                 :label="$help"
                 :$size
             />
@@ -66,7 +68,8 @@ $hasHelp = $shows($help, 'help:');
 
         @if ($showError !== false)
             <tk:error
-                :attributes="$attributes->prefixed('error:')->merge(['id' => $id ? $id.'-error' : null])"
+                :attributes="$attributes->prefixed('error:')"
+                :id="$id ? $id.'-error' : null"
                 :bag="TALLKit::fieldErrorBag($id)"
                 :$name
                 :$size
@@ -78,7 +81,8 @@ $hasHelp = $shows($help, 'help:');
 
     @if ($showError !== false && filled($name))
         <tk:error
-            :attributes="$attributes->prefixed('error:')->merge(['id' => $id ? $id.'-error' : null])"
+            :attributes="$attributes->prefixed('error:')"
+            :id="$id ? $id.'-error' : null"
             :bag="TALLKit::fieldErrorBag($id)"
             :$name
             :$size

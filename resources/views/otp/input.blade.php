@@ -10,7 +10,7 @@
     'total' => 1,
 ])
 <tk:input
-    :attributes="$attributes->withFieldProps(get_defined_vars(), TALLKit::fieldControlProps())->except('input:class')"
+    :attributes="$attributes->withFieldProps(get_defined_vars(), TALLKit::fieldControlProps())->except(['input:class', 'type', 'icon', 'iconTrailing', 'showError', 'mask', 'loading', 'clearable', 'kbd', 'copyable', 'viewable'])"
     :$size
     :$color
     :input:class="TALLKit::classes(

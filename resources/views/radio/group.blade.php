@@ -21,9 +21,9 @@ $errorId = $fieldName && filled(TALLKit::errorMessage(name: $fieldName, bag: TAL
         :$label
         :$size
         :attributes="$attributes->withProps(get_defined_vars(), ['description' => null])->whereDoesntStartWith(['heading:', 'radio:', 'error:', 'wire:model', 'x-model'])->except('required')
-            ->mergeDefined(['aria-describedby' => $errorId])
             ->classes('[&_[data-tallkit-heading]]:mb-2 [&>[data-tallkit-heading]:not(:first-of-type)]:pt-2')
         "
+        :aria-describedby="$errorId"
     >
         {{ $slot }}
 
@@ -40,12 +40,12 @@ $errorId = $fieldName && filled(TALLKit::errorMessage(name: $fieldName, bag: TAL
                         :attributes="$attributes->prefixed('radio:')
                             ->wireKey($optionId($optionItemGroupValue))
                             ->merge($modelAttributes, false)
-                        ->merge(['required' => $required], false)
                         "
                         :label="$optionItemGroupLabel"
                         :value="$optionItemGroupValue"
                         :checked="(string) $optionItemGroupValue === (string) $value"
                         :show-error="false"
+                        :$required
                         :id="$optionId($optionItemGroupValue)"
                         :name="$name ?? $groupId"
                         :$size
@@ -57,12 +57,12 @@ $errorId = $fieldName && filled(TALLKit::errorMessage(name: $fieldName, bag: TAL
                     :attributes="$attributes->prefixed('radio:')
                         ->wireKey($optionId($optionItemValue))
                         ->merge($modelAttributes, false)
-                        ->merge(['required' => $required], false)
                     "
                     :label="$optionItemLabel"
                     :value="$optionItemValue"
                     :checked="(string) $optionItemValue === (string) $value"
                     :show-error="false"
+                    :$required
                     :id="$optionId($optionItemValue)"
                     :name="$name ?? $groupId"
                     :$size
@@ -72,7 +72,8 @@ $errorId = $fieldName && filled(TALLKit::errorMessage(name: $fieldName, bag: TAL
         @endforeach
 
         <tk:error
-            :attributes="$attributes->prefixed('error:')->merge(['id' => $groupId.'-error'])"
+            :attributes="$attributes->prefixed('error:')"
+            :id="$groupId.'-error'"
             :bag="TALLKit::fieldErrorBag($groupId)"
             :name="$fieldName"
             :$size

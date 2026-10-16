@@ -68,7 +68,7 @@ $persistKey = 'nav-indicator-'.($attributes->get('id') ?? TALLKit::stableId('nav
         @if ($indicator !== false)
             @persist($persistKey)
                 <tk:nav.indicator
-                    :attributes="$attributes->prefixed('indicator:')"
+                    :attributes="$attributes->prefixed('indicator:')->except('mode')"
                     :mode="match ($list) {
                         true => in_array($indicator, ['line-left', 'line-right']) ? $indicator : 'bg',
                         default => in_array($indicator, ['line-top', 'line-bottom']) ? $indicator : 'bg',

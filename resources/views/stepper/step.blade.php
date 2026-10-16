@@ -60,7 +60,7 @@ $iconClass = TALLKit::classes(
 
 @endphp
 <tk:element
-    :attributes="$attributes->withElementProps(get_defined_vars())->whereDoesntStartWith(['icon:', 'bullet:', 'line:'])
+    :attributes="$attributes->withElementProps(get_defined_vars())->except(['current', 'as'])->whereDoesntStartWith(['icon:', 'bullet:', 'line:'])
         ->classes([
             '
                 flex flex-col items-center gap-2
@@ -70,12 +70,10 @@ $iconClass = TALLKit::classes(
             'flex-row' => $vertical,
             TALLKit::fontSize(size: $size),
         ])
-        ->merge([
-            'aria-label' => $stepName,
-            TALLKit::dataKey('stepper-step') => true,
-            'data-status' => $status ?? 'pending',
-        ])
+        ->merge([TALLKit::dataKey('stepper-step') => true])
     "
+    :aria-label="$stepName"
+    :data-status="$status ?? 'pending'"
     :content:class="match ($status) {
         'completed' => 'opacity-100',
         'active' => 'opacity-100',

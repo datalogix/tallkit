@@ -116,7 +116,8 @@ $read_at = data_get($data, 'read_at') ?? data_get($notification, 'read_at');
             @if ($read_at)
                 <tk:button.group :$size>
                     <tk:button
-                        :attributes="$attributes->prefixed('remove:')->dataKey('dismissible')->merge(['tooltip' => 'Remove notification'])"
+                        :attributes="$attributes->prefixed('remove:')->dataKey('dismissible')"
+                        tooltip="Remove notification"
                         :size="TALLKit::adjustSize(size: $size, move: $compact ? -2 : -1)"
                         action="notificationDelete({{ Js::from($id) }}{{ $guard ? ', '.Js::from($guard) : '' }})"
                         icon="trash-outline"
@@ -146,7 +147,8 @@ $read_at = data_get($data, 'read_at') ?? data_get($notification, 'read_at');
                     class="sr-only group-hover:not-sr-only group-focus-within:not-sr-only pointer-coarse:not-sr-only"
                 >
                     <tk:button
-                        :attributes="$attributes->prefixed('read:')->dataKey('dismissible')->merge(['tooltip' => 'Mark as read'])"
+                        :attributes="$attributes->prefixed('read:')->dataKey('dismissible')"
+                        tooltip="Mark as read"
                         :size="TALLKit::adjustSize(size: $size, move: $compact ? -2 : -1)"
                         action="notificationMarkAsRead({{ Js::from($id) }}{{ $guard ? ', '.Js::from($guard) : '' }})"
                         icon="check-circle-outline"

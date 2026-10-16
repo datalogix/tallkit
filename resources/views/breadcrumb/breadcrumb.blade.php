@@ -20,7 +20,7 @@
                     <tk:breadcrumb.item
                         :attributes="$attributes->prefixed('item:')
                             ->merge(TALLKit::attributesFromItem($item), false)
-                            ->mergeDefined(['aria-current' => $loop->last ? 'page' : null], false)
+                            ->merge($loop->last ? ['aria-current' => 'page'] : [], false)
                             ->wireKey(TALLKit::generateId(prefix: 'breadcrumb-item', name: (string) data_get($item, 'label', $index)))
                         "
                         :$size

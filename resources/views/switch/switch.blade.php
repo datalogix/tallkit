@@ -31,7 +31,7 @@ $loadingModel = $liveModel;
     :inline="! $hasStateLabel"
     :$align
     :$name
-    :attributes="$attributes->withFieldProps(get_defined_vars())"
+    :attributes="$attributes->withFieldProps(get_defined_vars())->except('label')"
     :label="$slot->isEmpty() ? $label : $slot"
 >
     @if ($hasStateLabel)

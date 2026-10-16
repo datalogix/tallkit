@@ -13,7 +13,7 @@
     }}
 >
     <tk:menu.item
-        :attributes="$attributes->withElementProps(get_defined_vars())->whereDoesntStartWith(['container:', 'menu:'])"
+        :attributes="$attributes->withElementProps(get_defined_vars())->except('iconTrailing')->whereDoesntStartWith(['container:', 'menu:'])"
         :$size
         keepOpen
         iconTrailing="chevron-right"

@@ -26,9 +26,9 @@ $errorId = $fieldName && filled(TALLKit::errorMessage(name: $fieldName, bag: TAL
         :$label
         :$size
         :attributes="$attributes->withProps(get_defined_vars(), ['description' => null])->whereDoesntStartWith(['heading:', 'checkbox:', 'error:', 'wire:model', 'x-model'])
-            ->mergeDefined(['aria-describedby' => $errorId])
             ->classes('[&_[data-tallkit-heading]]:mb-2 [&>[data-tallkit-heading]:not(:first-of-type)]:pt-2')
         "
+        :aria-describedby="$errorId"
     >
         {{ $slot }}
 
@@ -81,7 +81,8 @@ $errorId = $fieldName && filled(TALLKit::errorMessage(name: $fieldName, bag: TAL
         @endforeach
 
         <tk:error
-            :attributes="$attributes->prefixed('error:')->merge(['id' => $groupId.'-error'])"
+            :attributes="$attributes->prefixed('error:')"
+            :id="$groupId.'-error'"
             :bag="TALLKit::fieldErrorBag($groupId)"
             :name="$fieldName"
             :$size

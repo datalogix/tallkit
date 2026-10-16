@@ -74,7 +74,8 @@ $description ??= match ((string) $code) {
 
     @if ($homeUrl)
         <tk:button
-            :attributes="$attributes->prefixed('home:')->merge(['label' => 'Go back home'])"
+            :attributes="$attributes->prefixed('home:')"
+            label="Go back home"
             :href="$homeUrl"
             :$size
             variant="accent"

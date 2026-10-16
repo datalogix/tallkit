@@ -3,7 +3,10 @@
     'unlink' => 'unlink',
 ])
 <tk:section
-    :attributes="$attributes->whereDoesntStartWith(['error:', 'link:', 'unlink:'])->merge(['title' => 'Connected accounts', 'subtitle' => 'Link the accounts you use to sign in, or remove them.', 'separator' => false])"
+    :attributes="$attributes->whereDoesntStartWith(['error:', 'link:', 'unlink:'])"
+    title="Connected accounts"
+    subtitle="Link the accounts you use to sign in, or remove them."
+    :separator="false"
 >
     @error('oauth')
         <tk:alert :attributes="$attributes->prefixed('error:')" type="danger" :$message />
@@ -23,13 +26,16 @@
 
                 @if ($item['linked'])
                     <tk:button
-                        :attributes="$attributes->prefixed('unlink:')->merge(['label' => 'Unlink', 'wire:confirm' => __('Unlink your :provider account?', ['provider' => $item['label']])])"
+                        :attributes="$attributes->prefixed('unlink:')"
+                        label="Unlink"
+                        :wire:confirm="__('Unlink your :provider account?', ['provider' => $item['label']])"
                         :action="$unlink.'('.Js::from($item['provider']).')'"
                         variant="danger"
                     />
                 @else
                     <tk:button
-                        :attributes="$attributes->prefixed('link:')->merge(['label' => 'Link account'])"
+                        :attributes="$attributes->prefixed('link:')"
+                        label="Link account"
                         :href="$item['linkUrl']"
                         variant="outline"
                     />

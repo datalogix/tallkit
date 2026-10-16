@@ -33,7 +33,8 @@
         {{ $header ?? '' }}
 
         <tk:nav
-            :attributes="$attributes->prefixed('sidebar-menu:')->merge(['label' => 'Main menu'])"
+            :attributes="$attributes->prefixed('sidebar-menu:')"
+            label="Main menu"
             :items="$menu"
             list
         >

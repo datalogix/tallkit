@@ -642,7 +642,7 @@ skip code that has not changed since.
 - resources/views/page/auth/forgot-password.blade.php 75110d9500c6e51459805775ec15b81da31ed745
 - resources/views/page/auth/identifier.blade.php e24f5f6a4bb8a353ba7ab64c1660fce46101a3c4
 - resources/views/page/auth/login.blade.php 0a9ad22d6a32b6f568a4e6bdf3d80607574ae8fd
-- resources/views/page/auth/magic-link.blade.php 17c6e29f703775b07694a634744e37d04b29ef98
+- resources/views/page/auth/email-login.blade.php 17c6e29f703775b07694a634744e37d04b29ef98
 - resources/views/page/auth/oauth-complete-registration.blade.php d18eebcb199fe2d302072fc99a95ba29c6172630
 - resources/views/page/auth/oauth.blade.php 18983a18d904cd9315dba2765a856b071e52ee33
 - resources/views/page/auth/reset-password.blade.php f203f13fc11f2e3f7edb994f9c80ece30cc533dd

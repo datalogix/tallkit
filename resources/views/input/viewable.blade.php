@@ -6,9 +6,10 @@
     x-cloak
     x-data="inputViewable()"
     ::aria-pressed="viewed ? 'true' : 'false'"
-    :attributes="$attributes->withElementProps(get_defined_vars())
-        ->merge(['variant' => 'none', 'tooltip' => 'Toggle password visibility'])
+    :attributes="$attributes->withElementProps(get_defined_vars())->except(['icon', 'iconTrailing'])
         ->classes('min-w-6 min-h-6')"
+    variant="none"
+    tooltip="Toggle password visibility"
     icon="eye"
     icon:class="hidden"
     icon::class="{ 'hidden': !viewed }"

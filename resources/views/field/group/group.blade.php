@@ -13,7 +13,7 @@
 $groupId = ($label || $description) && ! $attributes->has('label:for') ? ($attributes->get('id') ?? TALLKit::stableId('field-group')) : null;
 @endphp
 <tk:field.wrapper
-    :attributes="$attributes->withProps(get_defined_vars(), ['label' => null, 'labelAppend' => null, 'labelPrepend' => null, 'description' => null, 'help' => null, 'badge' => null, 'info' => null, 'showError' => null])->whereDoesntStartWith(['prefix:', 'suffix:'])"
+    :attributes="$attributes->withProps(get_defined_vars(), ['label' => null, 'labelAppend' => null, 'labelPrepend' => null, 'description' => null, 'help' => null, 'badge' => null, 'info' => null, 'showError' => null])->whereDoesntStartWith(['prefix:', 'suffix:'])->except('id')"
     :prefix="null"
     :suffix="null"
     :id="$groupId"

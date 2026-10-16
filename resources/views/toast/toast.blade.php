@@ -175,7 +175,8 @@
                         </div>
                     </div>
                     <tk:button
-                        :attributes="$attributes->prefixed('close:')->merge(['tooltip' => 'Close'])"
+                        :attributes="$attributes->prefixed('close:')"
+                        tooltip="Close"
                         ::class="toast.invert ? 'text-white hover:text-zinc-300 dark:text-zinc-800 dark:hover:text-zinc-500' : ''"
                         x-on:click="removeToast(toast.id)"
                         icon="close"

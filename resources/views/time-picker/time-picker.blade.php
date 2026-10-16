@@ -55,14 +55,11 @@ $readonly = $attributes->enabled('readonly');
                     'tk-control-wrapper-expanded',
                     TALLKit::roundedSize(size: $size, mode: 'large'),
                     TALLKit::controlFocusRingNested(color: $color, expanded: true),
-                )
-                ->merge([
-                    'icon' => $icon ?? 'clock-outline',
-                    'icon:size' => TALLKit::adjustSize(size: $size),
-                    'iconTrailing' => $dropdown === false ? null : 'chevron-down',
-                    'icon-trailing:size' => TALLKit::adjustSize(size: $size),
-                ])
-            "
+                )"
+            :icon="$icon ?? 'clock-outline'"
+            :icon:size="TALLKit::adjustSize(size: $size)"
+            :iconTrailing="$dropdown === false ? null : 'chevron-down'"
+            :icon-trailing:size="TALLKit::adjustSize(size: $size)"
         >
             <input
                 type="hidden"
@@ -122,13 +119,7 @@ $readonly = $attributes->enabled('readonly');
                 <tk:button
                     :attributes="$attributes->prefixed('trigger:')
                         ->dataKey('control')
-                        ->merge([
-                            'id' => $id,
-                            'aria-labelledby' => trim(($label ? $id.'-label ' : '').$id.'-value'),
-                            'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
-                            ...TALLKit::fieldInvalid($invalid),
-                            'aria-readonly' => $readonly ? 'true' : null,
-                        ])
+                        ->merge(TALLKit::fieldInvalid($invalid))
                         ->classes(
                             '
                                 [:where(&)]:w-full
@@ -143,6 +134,10 @@ $readonly = $attributes->enabled('readonly');
                         )
                     "
                     variant="none"
+                    :$id
+                    :aria-labelledby="trim(($label ? $id.'-label ' : '').$id.'-value')"
+                    :aria-describedby="TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError)"
+                    :aria-readonly="$readonly ? 'true' : null"
                     :$disabled
                     :$size
                 >

@@ -29,7 +29,9 @@ $place = implode(', ', array_filter([implode(' - ', array_filter([$city, $state]
 @if ($street !== '' || $place !== '' || $slot->hasActualContent())
     <tk:text
         as="address"
-        :attributes="$attributes->withElementProps(get_defined_vars())->merge(['icon' => 'map-marker', 'scale' => 'large'])"
+        :attributes="$attributes->withElementProps(get_defined_vars())"
+        icon="map-marker"
+        scale="large"
     >
         {{ $street }}
 

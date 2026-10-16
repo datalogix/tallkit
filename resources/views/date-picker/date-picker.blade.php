@@ -107,14 +107,13 @@ $showPresets = count($presetKeys) > 0;
     >
         <tk:field.control
             :$size
-            :attributes="$attributes->withFieldControlProps(get_defined_vars())
+            :attributes="$attributes->withFieldControlProps(get_defined_vars())->except('iconTrailing')
                 ->classes(
                     'tk-control-wrapper-expanded',
                     TALLKit::roundedSize(size: $size, mode: 'large'),
                     TALLKit::controlFocusRingNested(color: $color, expanded: true),
-                )
-                ->merge(['icon' => 'calendar'])
-            "
+                )"
+            icon="calendar"
             :icon:size="$innerSize"
             icon-trailing="chevron-down"
             :icon-trailing:size="$innerSize"
@@ -179,13 +178,7 @@ $showPresets = count($presetKeys) > 0;
                 <tk:button
                     :attributes="$attributes->prefixed('trigger:')
                         ->dataKey('control')
-                        ->merge([
-                            'id' => $id,
-                            'aria-labelledby' => trim(($label ? $id.'-label ' : '').$id.'-value'),
-                            'aria-describedby' => $describedBy,
-                            ...TALLKit::fieldInvalid($invalid),
-                            'aria-readonly' => $readonly ? 'true' : null,
-                        ])
+                        ->merge(TALLKit::fieldInvalid($invalid))
                         ->classes(
                             '
                                 [:where(&)]:w-full
@@ -200,6 +193,10 @@ $showPresets = count($presetKeys) > 0;
                         )
                     "
                     variant="none"
+                    :$id
+                    :aria-labelledby="trim(($label ? $id.'-label ' : '').$id.'-value')"
+                    :aria-describedby="$describedBy"
+                    :aria-readonly="$readonly ? 'true' : null"
                     :$disabled
                     :$size
                 >
@@ -239,7 +236,7 @@ $showPresets = count($presetKeys) > 0;
                     <div {{ $attributes->prefixed('presets:')->classes('flex flex-col gap-0.5 p-1') }}>
                         @foreach ($presetKeys as $key)
                             <tk:button
-                                :attributes="$attributes->prefixed('preset:')->classes('w-full justify-start')"
+                                :attributes="$attributes->prefixed('preset:')->except('type')->classes('w-full justify-start')"
                                 :size="$innerSize"
                                 :label="$presetLabels[$key]"
                                 ::data-active="isPresetActive('{{ $key }}')"
@@ -284,11 +281,11 @@ $showPresets = count($presetKeys) > 0;
                                                 TALLKit::controlFocusRing(color: $color),
                                             )
                                             ->merge([
-                                                'min' => $min ?? null,
-                                                'max' => $max ?? null,
+                                                'min' => $min,
+                                                'max' => $max,
                                                 'disabled' => $disabled ?: null,
+                                                'aria-label' => __('Start date'),
                                             ])
-                                            ->merge(['aria-label' => __('Start date')])
                                     }}
                                     type="date"
                                     x-bind:value="value?.start ?? ''"
@@ -317,11 +314,11 @@ $showPresets = count($presetKeys) > 0;
                                                 TALLKit::controlFocusRing(color: $color),
                                             )
                                             ->merge([
-                                                'min' => $min ?? null,
-                                                'max' => $max ?? null,
+                                                'min' => $min,
+                                                'max' => $max,
                                                 'disabled' => $disabled ?: null,
+                                                'aria-label' => __('End date'),
                                             ])
-                                            ->merge(['aria-label' => __('End date')])
                                     }}
                                     type="date"
                                     x-bind:value="value?.end ?? ''"
@@ -344,11 +341,11 @@ $showPresets = count($presetKeys) > 0;
                                                 TALLKit::controlFocusRing(color: $color),
                                             )
                                             ->merge([
-                                                'min' => $min ?? null,
-                                                'max' => $max ?? null,
+                                                'min' => $min,
+                                                'max' => $max,
                                                 'disabled' => $disabled ?: null,
+                                                'aria-label' => __('Date'),
                                             ])
-                                            ->merge(['aria-label' => __('Date')])
                                     }}
                                     type="date"
                                     x-bind:value="value ?? ''"
@@ -385,14 +382,16 @@ $showPresets = count($presetKeys) > 0;
 
                     @if ($confirm)
                         <tk:button
-                            :attributes="$attributes->prefixed('cancel:')->merge(['label' => 'Cancel'])"
+                            :attributes="$attributes->prefixed('cancel:')"
+                            label="Cancel"
                             :size="$innerSize"
                             @click="cancel()"
                             variant="none"
                         />
 
                         <tk:button
-                            :attributes="$attributes->prefixed('apply:')->merge(['label' => 'Apply'])"
+                            :attributes="$attributes->prefixed('apply:')"
+                            label="Apply"
                             :size="$innerSize"
                             @click="apply()"
                             variant="filled"

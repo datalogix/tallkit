@@ -74,16 +74,18 @@ Also accepts the props of `tk:section` (`title`, `subtitle`, `description`, `siz
 
 | Tag | Shows | Props |
 |-----|-------|-------|
-| `login` | Identifier, password, remember me, sign in, OAuth buttons, sign-up link. | `identifier`, `oauth`, `forgotPasswordUrl`, `signUpUrl`, `magicLinkUrl`, `size` |
-| `sign-up` | Name, identifier, email (when the identifier is not one), password and confirmation, terms checkbox, OAuth buttons, sign-in link. | `identifier`, `requiresEmail`, `terms`, `oauth`, `loginUrl`, `size` |
+| `login` | Identifier, password, remember me, sign in, OAuth buttons, sign-up link. | `identifier`, `oauth`, `forgotPasswordUrl`, `signUpUrl`, `emailLoginUrl`, `size` |
+| `sign-up` | Name, identifier, email (when the identifier is not one), password and confirmation, the fields of its slot, terms checkbox, OAuth buttons, sign-in link. | `identifier`, `requiresEmail`, `terms`, `oauth`, `loginUrl`, `size` |
 | `forgot-password` | Identifier and a "send link" button. | `identifier`, `loginUrl`, `size` |
 | `reset-password` | The token, identifier, new password and confirmation. | `token`, `identifier`, `identifierValue`, `size` |
 | `confirm-password` | The password, for a secure area. | `oauth`, `size` |
 | `verify-email` | A "resend" button and a log-out link. | `logoutUrl`, `size` |
-| `magic-link` | Identifier to receive a sign-in link; with `confirmEmail`, a confirmation step. | `identifier`, `confirmEmail`, `loginUrl`, `size` |
+| `accept-terms` | Each document to accept, its content in a scrolling box, its PDF in a frame or a link to it, with a checkbox of its own; a "continue" button and a log-out link. | `documents` (`key`, `label`, `url`, `html`, `pdf`), `logoutUrl`, `size` |
+| `email-login` | Identifier to receive a sign-in link or code (`mode`: `link`, `code`, `both`); with `confirmEmail`, a confirmation step; with `codeStep`, the code field. | `identifier`, `mode`, `codeStep`, `confirmEmail`, `loginUrl`, `size` |
 | `two-factor` | The code (and a recovery code toggle); for email and SMS, a resend button. | `method` (`totp`, `email`, `sms`), `resendUrl`, `size` |
 | `two-factor-setup` | Enable or disable two-factor, the QR code and secret, recovery codes and trusted devices. | State: `enabled`, `method`, `secret`, `uri`, `qrSvg`, `secretUnreadable`, `canDisable`, `awaitingContinue`, `recoveryCodes`, `recoveryCodesCount`, `canManageRecoveryCodes`, `trustedDevices`. Names of the Livewire methods it calls: `prepare`, `enable`, `disable`, `continue`, `regenerate`, `revokeDevice`, `revokeAllDevices`. |
 | `accept-invitation` | New password and confirmation; or, by `status`, an expired or used invitation. | `email`, `status`, `loginUrl`, `size` |
+| `profile` | With `avatar`, a photo; the name, then a language and a time zone when given, then the slot, for fields of your own. | `avatar`, `avatarDisk`, `avatarDirectory`, `avatarMaxSize`, `locales`, `timezones` (nested arrays are groups), `size` |
 | `change-email` | The current address and a new one. | `currentEmail`, `size` |
 | `change-password` | Current password (with `currentPassword`), new password and confirmation. | `currentPassword`, `reason`, `logoutUrl`, `size` |
 | `delete-account` | A warning and a field to type a confirmation word. | `confirmation`, `size` |
@@ -96,7 +98,7 @@ Also accepts the props of `tk:section` (`title`, `subtitle`, `description`, `siz
 | `oauth` | "Continue with" buttons for the configured providers. | `items`, `route`, `label`, `separator`, `error` |
 | `identifier` | The identifier field alone. | `identifier`, `size` |
 
-`identifier` is the sign-in field: `email` (default), `username`, `login`, `cpf` or `cnpj`; it sets the field's name, label, placeholder, mask and autocomplete. `oauth` takes provider names; without it, the providers with a `client_id` in `config('services')` are shown. The URL props default to routes with the usual names when they exist (`login`, `logout`, `forgot-password`, `register`...).
+`identifier` is the sign-in field: `email` (default), `username`, `login`, `cpf` or `cnpj`; it sets the field's name, label, placeholder, mask and autocomplete, and any of them given with the `identifier:` prefix takes their place (`identifier:name="registration" identifier:label="Registration"`). `oauth` takes provider names; without it, the providers with a `client_id` in `config('services')` are shown. The URL props default to routes with the usual names when they exist (`login`, `logout`, `forgot-password`, `register`...).
 
 ## Slots
 

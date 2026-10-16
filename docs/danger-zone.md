@@ -79,7 +79,7 @@ One box per project, each with its own dialog. Confirming in the second box call
 | `prepend` | slot | `null` | Content before the title. |
 | `actions` | slot | `null` | Controls at the end of the row. |
 
-The box is a `tk:alert`, and the other [alert props](alert.md#props) pass to it (`variant`, `icon`, `border`, `closable`, `size`...), except `type`, which is always `danger`.
+The box is a `tk:alert`, and the other [alert props](alert.md#props) pass to it (`type`, `variant`, `icon`, `border`, `closable`, `size`...); `type` defaults to `danger`.
 
 ## Slots
 
@@ -154,7 +154,7 @@ The dialog follows the WAI-ARIA alert dialog pattern: `role="alertdialog"`, name
 
 ## Behavior notes
 
-- `type` is ignored: the box is always red. So is `trigger:variant`: the Delete button is always `danger`.
+- The box and the Delete button are red by default; `type` and `trigger:variant` change them.
 - `title` and `message` take only strings. A `title` or `message` slot is ignored, and the default text shows in its place.
 - `modal:` and `trigger:` attributes do nothing when the default slot has content, since there is no dialog or button to receive them.
 - The confirm button is red, but its label is "Confirm" (translated); pass `modal:confirm:label` for a label that names the action.

@@ -8,8 +8,8 @@
 <tk:modal
     :attributes="$attributes->prefixed('modal:')
         ->classes('fixed mt-20 mx-auto')
-        ->mergeDefined(['x-on:opened' => $focusOnOpen !== false ? '$el.querySelector(\''.TALLKit::dataSelector('input').'\')?.focus()' : null])
     "
+    :x-on:opened="$focusOnOpen !== false ? '$el.querySelector(\''.TALLKit::dataSelector('input').'\')?.focus()' : null"
     variant="bare"
     :$name
     :$size
@@ -19,7 +19,8 @@
     <x-slot:trigger>
         @if ($slot->isEmpty())
             <tk:button
-                :attributes="$attributes->prefixed('trigger:')->merge(['label' => 'Search'])"
+                :attributes="$attributes->prefixed('trigger:')"
+                label="Search"
                 :$size
                 icon="search"
                 variant="filled"
@@ -32,8 +33,8 @@
     <tk:command
         :attributes="$attributes->whereDoesntStartWith(['trigger:', 'modal:'])
             ->classes('[:where(&)]:w-md')
-            ->mergeDefined(['x-on:selected' => $closeOnSelect !== false ? 'close' : null])
         "
+        :x-on:selected="$closeOnSelect !== false ? 'close' : null"
         :$size
         search:x-on:keydown.escape.prevent="close"
     >

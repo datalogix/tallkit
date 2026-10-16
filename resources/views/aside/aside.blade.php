@@ -5,7 +5,6 @@
 <aside {{
     $attributes
         ->dataKey('aside')
-        ->merge(['aria-label' => $ariaLabel ? __($ariaLabel) : null])
         ->classes(
             '
                 [grid-area:aside]
@@ -15,7 +14,11 @@
             '
         )
         ->when($sticky, fn ($attrs) => $attrs->classes('lg:overflow-y-auto lg:overscroll-contain max-lg:static! max-lg:max-h-none!'))
-        ->mergeDefined(['x-data' => $sticky ? 'aside' : null, 'wire:ignore.self' => $sticky ? true : null])
+        ->merge([
+            'aria-label' => $ariaLabel ? __($ariaLabel) : null,
+            'x-data' => $sticky ? 'aside' : null,
+            'wire:ignore.self' => $sticky ? true : null,
+        ])
 }}>
     {{ $slot }}
 </aside>

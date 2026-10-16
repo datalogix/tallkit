@@ -13,7 +13,8 @@
 >
     <x-slot:prepend>
         <tk:button
-            :attributes="$attributes->prefixed('button:')->merge(['label' => 'Open in new tab'])"
+            :attributes="$attributes->prefixed('button:')"
+            label="Open in new tab"
             :$size
             @click="openFile"
         />

@@ -61,11 +61,10 @@ $channel = match (true) {
     @else
         <tk:dropdown :attributes="$attributes->prefixed('dropdown:')">
             <tk:button
-                :attributes="$attributes->prefixed('trigger:')->merge([
-                    'aria-label' => $unreadCount
-                        ? __('Notifications (:count unread)', ['count' => $unreadCount])
-                        : __('Notifications'),
-                ])"
+                :attributes="$attributes->prefixed('trigger:')"
+                :aria-label="$unreadCount
+                    ? __('Notifications (:count unread)', ['count' => $unreadCount])
+                    : __('Notifications')"
                 :$size
                 variant="subtle"
                 icon="bell-outline"

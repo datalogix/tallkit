@@ -82,7 +82,7 @@ Also accepts the [field props](shared-props.md#field-props) (`label`, `help`, `p
 |------|------|---------|-------------|
 | `label` | string \| slot | `null` | The option text, translated. It is what the search matches and what the field shows once picked. |
 
-`value` is the value stored when the option is picked; without it, the option's text is used. `disabled` keeps the option in the list but stops it from being picked. `size` is inherited from the combobox. Also accepts the [element props](shared-props.md#element-props) (`badge`, `iconTrailing`, `suffix`...) except `icon`: its place is taken by the check mark of the chosen options.
+`value` is the value stored when the option is picked; without it, the option's text is used. `disabled` keeps the option in the list but stops it from being picked. `size` is inherited from the combobox. Also accepts the [element props](shared-props.md#element-props) (`badge`, `iconTrailing`, `suffix`...); `icon` replaces the check mark of the chosen options (`check` by default), shown only while the option is chosen.
 
 ## Slots
 

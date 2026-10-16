@@ -26,7 +26,7 @@ $square ??= $slot->isEmpty() && ! $label;
         'flex-1 leading-none whitespace-nowrap justify-start text-start',
         TALLKit::fontSize(size: $size, weight: true)
     )"
-    :attributes="$attributes->withElementProps(get_defined_vars())
+    :attributes="$attributes->withElementProps(get_defined_vars())->except('kind')
         ->classes([
             TALLKit::padding(size: $size),
             TALLKit::roundedSize(size: $size),

@@ -226,11 +226,9 @@ $tableAttributes = array_filter([
                     @forelse ($rows as $index => $row)
                         <tk:table.row
                             data-id="{{ data_get($row, $rowKey ?? 'id', $index) }}"
-                            :attributes="$attributes->prefixed('row:')
-                                ->mergeDefined(['data-state' => $hasRowSelection ? 'unchecked' : null])
-                                ->mergeDefined(['data-expanded' => $hasRowExpanded ? 'close' : null])
-                                ->wireKey(data_get($row, $rowKey ?? 'id', $index))
-                            "
+                            :attributes="$attributes->prefixed('row:')->wireKey(data_get($row, $rowKey ?? 'id', $index))"
+                            :data-state="$hasRowSelection ? 'unchecked' : null"
+                            :data-expanded="$hasRowExpanded ? 'close' : null"
                         >
                             @if ($hasRowExpanded)
                                 <tk:table.cell.expanded :attributes="$attributes->prefixed('cell-expanded:')">
@@ -323,10 +321,11 @@ $tableAttributes = array_filter([
                         </tk:table.row>
 
                         @if ($hasRowExpanded)
-                            <tk:table.row.expanded :attributes="$attributes->prefixed('row-expanded:')
-                                ->merge(['colspan' => $colspan])
-                                ->mergeDefined(['x-bind:colspan' => $resizable ? 'columnColspan()' : null])
-                            ">
+                            <tk:table.row.expanded
+                                :attributes="$attributes->prefixed('row-expanded:')"
+                                :x-bind:colspan="$resizable ? 'columnColspan()' : null"
+                                :colspan="$colspan"
+                            >
                                 @php
                                     $expandedContent = $expanded ?? $rowExpanded;
                                 @endphp
@@ -338,10 +337,11 @@ $tableAttributes = array_filter([
                             </tk:table.row.expanded>
                         @endif
                     @empty
-                        <tk:table.row.no-records :attributes="$attributes->prefixed('no-records:')
-                            ->merge(['colspan' => $colspan])
-                            ->mergeDefined(['x-bind:colspan' => $resizable ? 'columnColspan()' : null])
-                        ">
+                        <tk:table.row.no-records
+                            :attributes="$attributes->prefixed('no-records:')"
+                            :x-bind:colspan="$resizable ? 'columnColspan()' : null"
+                            :colspan="$colspan"
+                        >
                             {{ $noRecords }}
                         </tk:table.row.no-records>
                     @endforelse
@@ -349,9 +349,7 @@ $tableAttributes = array_filter([
             @endif
 
             @if (! $slotHas('tfoot') && isset($footer))
-                <tk:table.footer :attributes="$attributes->prefixed('footer:')
-                    ->merge(['cell:colspan' => $colspan])
-                ">
+                <tk:table.footer :attributes="$attributes->prefixed('footer:')" :cell:colspan="$colspan">
                     {{ $footer }}
                 </tk:table.footer>
             @endif

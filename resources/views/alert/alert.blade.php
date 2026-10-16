@@ -46,14 +46,12 @@ $border ??= $variant === 'outline' ? true : null;
         'pauseOnHover' => $pauseOnHover ?? true,
     ]) }})"
     aria-atomic="true"
+    :role="in_array($type, ['danger', 'warning']) ? 'alert' : 'status'"
+    :aria-live="in_array($type, ['danger', 'warning']) ? 'assertive' : 'polite'"
     :attributes="TALLKit::attributesMerge(
             $attributes->dataKey('alert')->whereDoesntStartWith(['message:', 'close:', 'progress:']),
             $attributes->prefixed('message:', keepPrefix: 'description:'),
         )
-        ->merge([
-            'role' => in_array($type, ['danger', 'warning']) ? 'alert' : 'status',
-            'aria-live' => in_array($type, ['danger', 'warning']) ? 'assertive' : 'polite',
-        ])
         ->classes(
             'relative overflow-hidden transition-all duration-300 ease-out opacity-100',
             TALLKit::padding(size: $size),
@@ -107,17 +105,15 @@ $border ??= $variant === 'outline' ? true : null;
                     :attributes="$attributes->prefixed('progress:')
                         ->dataKey('alert-progress')
                         ->except('bar:class')
-                        ->merge([
-                            'bar:class' => (string) TALLKit::classes(
-                                match (true) {
-                                    ! in_array($progress, ['top', 'bottom'], true) => 'bg-black/5 dark:bg-white/10',
-                                    $variant === 'soft' => 'bg-current/40',
-                                    default => TALLKit::background(color: $palette),
-                                },
-                                $attributes->get('progress:bar:class'),
-                            ),
-                        ])
                     "
+                    :bar:class="TALLKit::classes(
+                        match (true) {
+                            ! in_array($progress, ['top', 'bottom'], true) => 'bg-black/5 dark:bg-white/10',
+                            $variant === 'soft' => 'bg-current/40',
+                            default => TALLKit::background(color: $palette),
+                        },
+                        $attributes->get('progress:bar:class'),
+                    )"
                     :overlay="in_array($progress, ['top', 'bottom'], true) ? $progress : 'fill'"
                     variable="progressValue"
                 />

@@ -17,4 +17,4 @@ $columnAttributes = $fixed !== null && $fixed !== ''
     );
 
 @endphp
-<col {{ $attributes->mergeDefined($columnAttributes, escape: false) }}>
+<col {{ $attributes->merge($columnAttributes->getAttributes(), escape: false) }}>

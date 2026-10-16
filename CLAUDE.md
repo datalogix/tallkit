@@ -26,7 +26,7 @@ pnpm watch                     # rebuilds both bundles on change
 
 **`tk:` tag syntax** comes from two Blade precompilers registered in `TALLKitServiceProvider::bootTagCompiler()`:
 - `View/Compilers/ComponentTagCompiler` turns `<tk:foo>` into `tallkit::foo` components (and supports `slot="name"` on self-closing tags).
-- `View/Compilers/PropsCompiler` rewrites `@props(...)` **only in package views** to fix forwarded bound props being escaped twice and kebab-case props not reaching their camelCase name.
+- `View/Compilers/PropsCompiler` rewrites `@props(...)` **only in package views and their app overrides in `resources/views/tallkit/`** to fix forwarded bound props being escaped twice, kebab-case props not reaching their camelCase name, and a prop written on the tag beating the same prop forwarded through `:attributes` (a slot still wins). Values written on a tag are defaults the caller can replace; to force one, drop the key from the forwarded bag (`->except('icon')`).
 
 **`TALLKit` class (`src/TALLKit.php`)** is a singleton exposed as the `TALLKit` facade/alias and used directly in views (`TALLKit::elementProps()`, `TALLKit::isColor()`, `TALLKit::dataKey()`...). Its logic lives in the `src/Concerns/InteractsWith*` traits, one per domain (field, color, icon, toast, modal, upload, ...). Global helpers in `src/helpers.php` (`has_content`, `string_value`, `in_livewire`, `unless_livewire`, `toast`, `alert`, `route_detect`).
 
@@ -38,7 +38,7 @@ pnpm watch                     # rebuilds both bundles on change
 
 **Assets**: `Assets/AssetManager` registers `@tallkitScripts` and the `/tallkit/tallkit.js` route (`AssetController` serves `dist/`, versioned by `dist/manifest.json`); `AssetInjector` injects the script tag before `</body>` according to `tallkit.inject_assets`. Config defaults are in `config/tallkit.php`; translations in `lang/`.
 
-**JavaScript** (`resources/js`): `tallkit.js` is the UMD entry (reads `data-*` options from its script tag, loads Alpine from unpkg when absent), `esm.js` exports an `Alpine.plugin`. `alpine.js` auto-registers every function exported from `components/*.js` as `Alpine.data`. Shared behavior lives in `mixins/` and `utils/`; the global object (`window.tallkit`, `$tk`, `$tallkit`, store `tallkit`) is defined in `core.js`.
+**JavaScript** (`resources/js`): `tallkit.js` is the UMD entry (reads `data-*` options from its script tag), `esm.js` exports an `Alpine.plugin`. The global object is defined in `core.js` and exposed as `window.tallkit` (also `TALLKit`, `TK`, `tk`). `alpine.js` loads Alpine from unpkg when absent, adds the `$tk`/`$tallkit` magics and the `tallkit` store, and auto-registers every function exported from `components/*.js` as `Alpine.data`. Shared behavior lives in `mixins/` and `utils/`.
 
 **CSS** (`resources/css/tallkit.css`) is imported by the app's Tailwind entry and `@source`s the package views; colors are CSS-variable palettes (`tk-color-*`).
 
@@ -46,5 +46,7 @@ pnpm watch                     # rebuilds both bundles on change
 
 - Names derived from the prefix (`data-tallkit-*` attributes, `tallkit:*` events, `tallkit.*` storage keys) always come from the paired PHP/JS helpers (`TALLKit::PREFIX`, `dataKey`, `eventName`, ...), never string literals.
 - `string|slot` props are tested with `has_content()` in views, not truthiness or `isset` (`false` is empty, `0` is content).
+- `with*Props(get_defined_vars())` puts the view's own props back in the bag, so a value written on the tag after it (`:icon="..."`) is only forced with `->except()`.
+- A `null` in a forwarded bag (from `merge` or written on the tag) beats the child's own default for that key: send a key only when it has a value (`merge($cond ? ['aria-current' => 'page'] : [])`).
 - Each component is documented in `docs/<component>.md`; the README only indexes them. Project skills in `.claude/skills/` cover documenting (`document-component`), reviewing (`review-component`) and browser-testing (`browser-test`, against `../app`) a component.
 - `docs/`, `tests/`, `.claude/` and JS tooling are `export-ignore`d in `.gitattributes`; keep new dev-only files listed there.

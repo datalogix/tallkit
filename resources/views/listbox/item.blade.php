@@ -13,9 +13,9 @@
     role="option"
 >
     <tk:button
-        :attributes="$attributes->withElementProps(get_defined_vars())->whereDoesntStartWith(['container:'])
-            ->merge(['variant' => 'ghost'])
+        :attributes="$attributes->withElementProps(get_defined_vars())->except('type')->whereDoesntStartWith(['container:'])
             ->classes('w-full justify-start pointer-events-none [&[disabled]]:opacity-disabled')"
+        variant="ghost"
         :$size
         :$label
         as="div"

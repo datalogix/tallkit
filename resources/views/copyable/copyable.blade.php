@@ -13,14 +13,12 @@
     ]) }})"
     :attributes="$attributes->withElementProps(get_defined_vars())
         ->classes('min-w-6 min-h-6')
-        ->merge([
-            'variant' => 'none',
-            'tooltip' => 'Copied',
-            ...(has_content($ariaLabel) || has_content($label) || $slot->isNotEmpty())
-                ? []
-                : ['x-bind:aria-label' => 'copied ? '.Js::from(__('Copied')).' : '.Js::from(__('Copy'))]
-        ])
     "
+    :x-bind:aria-label="has_content($ariaLabel) || has_content($label) || $slot->isNotEmpty()
+        ? null
+        : 'copied ? '.Js::from(__('Copied')).' : '.Js::from(__('Copy'))"
+    variant="none"
+    tooltip="Copied"
     :aria-label="has_content($ariaLabel) || has_content($label) || $slot->isNotEmpty() ? $ariaLabel : 'Copy'"
     tooltip:open="manual"
     icon="clipboard-multiple"

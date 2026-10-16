@@ -164,7 +164,8 @@ $readonly = $attributes->enabled('readonly');
 
                     @unless ($multiple)
                         <tk:button
-                            :attributes="$attributes->prefixed('selected-clear:')->classes('shrink-0 order-last')->merge(['tooltip' => 'Clear'])"
+                            :attributes="$attributes->prefixed('selected-clear:')->classes('shrink-0 order-last')"
+                            tooltip="Clear"
                             :size="TALLKit::adjustSize(size: $size)"
                             :$disabled
                             x-show="!opened && selectedLabel()"
@@ -302,7 +303,8 @@ $readonly = $attributes->enabled('readonly');
                             ></span>
 
                             <tk:button
-                                :attributes="$attributes->prefixed('selected-clear:')->classes('shrink-0')->merge(['tooltip' => 'Clear'])"
+                                :attributes="$attributes->prefixed('selected-clear:')->classes('shrink-0')"
+                                tooltip="Clear"
                                 :size="TALLKit::adjustSize(size: $size)"
                                 :$disabled
                                 tabindex="-1"
@@ -367,7 +369,8 @@ $readonly = $attributes->enabled('readonly');
                             ob_start();
                         @endphp
                         <tk:combobox.option
-                            :attributes="$attributes->prefixed('option:')->merge(['wire:key' => '__tallkit_option_key__'])"
+                            :attributes="$attributes->prefixed('option:')"
+                            wire:key="__tallkit_option_key__"
                             value="__tallkit_option_value__"
                             label="__tallkit_option_label__"
                         />

@@ -26,15 +26,13 @@ $named = $attributes->has('aria-label') || $attributes->has('aria-labelledby');
 $prefixes = ['zipcode:', 'address:', 'number:', 'complement:', 'neighborhood:', 'city:', 'state:', 'error:'];
 $container = $attributes
     ->whereDoesntStartWith($prefixes)
-    ->mergeDefined([
+    ->merge([
         'role' => 'group',
         'aria-labelledby' => $named ? null : $titleId,
         'aria-label' => $named || $titleId ? null : __('Address'),
         'title:id' => $named ? null : $titleId,
-    ])
-    ->merge($lookup ? [
-        'x-data' => 'addressForm(' . Js::from($options) . ')',
-    ] : []);
+        ...$lookup ? ['x-data' => 'addressForm('.Js::from($options).')'] : [],
+    ]);
 
 @endphp
 @if ($card)

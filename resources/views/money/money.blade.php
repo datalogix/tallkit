@@ -101,7 +101,7 @@ if (is_numeric($value)) {
 
 @endphp
 <tk:input
-    :attributes="$attributes->whereDoesntStartWith(['wire:model', 'value'])->withFieldProps(get_defined_vars(), TALLKit::fieldControlProps())"
+    :attributes="$attributes->whereDoesntStartWith(['wire:model', 'value'])->withFieldProps(get_defined_vars(), TALLKit::fieldControlProps())->except('wireModel')"
     :$name
     :$value
     :$placeholder

@@ -40,7 +40,7 @@ $tipText = $tip['attributes'][TALLKit::dataKey('tooltip')] ?? null;
     inline
     :$align
     :$name
-    :attributes="$attributes->withFieldProps(get_defined_vars())"
+    :attributes="$attributes->withFieldProps(get_defined_vars())->except('label')"
     :label="false"
 >
     <label

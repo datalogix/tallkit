@@ -175,10 +175,9 @@ $subtitleId = TALLKit::generateId(prefix: 'modal', name: $name, suffix: 'subtitl
             @elseif ($closable !== false)
                 <tk:modal.close
                     :attributes="$attributes->prefixed('close:')
-                        ->classes('absolute top-0 end-0 mt-4 me-4')
-                        ->merge(['size' => TALLKit::adjustSize(size: $size)])
-                        ->merge(['tooltip' => 'Close'])
-                    "
+                        ->classes('absolute top-0 end-0 mt-4 me-4')"
+                    :size="TALLKit::adjustSize(size: $size)"
+                    tooltip="Close"
                     variant="ghost"
                     icon="close"
                 />

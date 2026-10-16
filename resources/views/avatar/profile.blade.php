@@ -34,8 +34,8 @@ $description ??= data_get($user, 'description', $showEmail ? $email : null);
         <tk:avatar
             :attributes="$attributes->withProps(get_defined_vars(), array_diff_key(TALLKit::elementProps(), ['prepend' => null, 'append' => null]))->whereDoesntStartWith([
                 'content:', 'container:', 'name:', 'description:', 'list:', 'actions:',
-            ])
-            ->merge(['alt' => ''])"
+            ])"
+            alt=""
             :$user
             :$name
             :$email

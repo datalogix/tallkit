@@ -20,9 +20,8 @@
                 'overlap' => 'pointer-events-auto',
                 'outside' => '',
                 default => 'pointer-events-auto bg-white/80 dark:bg-zinc-800/80 backdrop-blur'
-            }, 'rounded-full')
-            ->merge(['tooltip' => 'Previous slide'])
-        "
+            }, 'rounded-full')"
+        tooltip="Previous slide"
         variant="subtle"
         icon="chevron-left"
         icon:class="rtl:-scale-x-100"
@@ -36,9 +35,8 @@
                 'overlap' => 'pointer-events-auto',
                 'outside' => '',
                 default => 'pointer-events-auto bg-white/80 dark:bg-zinc-800/80 backdrop-blur'
-            }, 'rounded-full')
-            ->merge(['tooltip' => 'Next slide'])
-        "
+            }, 'rounded-full')"
+        tooltip="Next slide"
         variant="subtle"
         icon="chevron-right"
         icon:class="rtl:-scale-x-100"

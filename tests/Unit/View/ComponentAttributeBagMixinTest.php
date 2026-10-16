@@ -50,17 +50,6 @@ class ComponentAttributeBagMixinTest extends TestCase
         $this->assertSame('a b', $bag->get('class'));
     }
 
-    public function test_merge_defined_skips_null_defaults(): void
-    {
-        $bag = new ComponentAttributeBag(['id' => 'a']);
-
-        $merged = $bag->mergeDefined(['type' => 'button', 'role' => null, 'title' => '<b>']);
-        $this->assertEquals(['type' => 'button', 'title' => '&lt;b&gt;', 'id' => 'a'], $merged->getAttributes());
-
-        $merged = $bag->mergeDefined(new ComponentAttributeBag(['title' => '<b>', 'role' => null]), false);
-        $this->assertEquals(['title' => '<b>', 'id' => 'a'], $merged->getAttributes());
-    }
-
     public function test_enabled(): void
     {
         $bag = new ComponentAttributeBag(['a' => true, 'b' => 'false', 'c' => '0', 'd' => 'yes', 'e' => '']);

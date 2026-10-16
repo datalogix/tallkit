@@ -111,7 +111,8 @@ $counterExpression = $maxlength ? sprintf("length + ' / %d'", $maxlength) : 'len
 </tk:field.wrapper>
     @if ($hasCounter)
         <tk:text
-            :attributes="$attributes->prefixed('counter:')->classes('text-end mt-1.5')->merge(['id' => $id ? $id.'-counter' : null])"
+            :attributes="$attributes->prefixed('counter:')->classes('text-end mt-1.5')"
+            :id="$id ? $id.'-counter' : null"
             :size="TALLKit::adjustSize(size: $size)"
             variant="subtle"
             x-text="{{ $counterExpression }}"

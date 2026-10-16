@@ -4,7 +4,7 @@
     'animate' => null,
 ])
 <tk:button
-    :attributes="$attributes->withElementProps(get_defined_vars())->when($animate !== false, fn ($attrs) => $attrs->merge([
+    :attributes="$attributes->withElementProps(get_defined_vars())->except('iconTrailing')->when($animate !== false, fn ($attrs) => $attrs->merge([
         'icon-trailing:class' => 'transition-transform',
         'icon-trailing::class' => '{ \'rotate-180\': opened }',
     ]))"

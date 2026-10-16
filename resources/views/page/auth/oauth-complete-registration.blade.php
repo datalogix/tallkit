@@ -10,7 +10,8 @@ $providerName = filled($provider) && $provider === strtolower($provider) ? TALLK
 
 @endphp
 <tk:form.section
-    :attributes="$attributes->whereDoesntStartWith(['identifier:', 'submit:', 'error:'])->merge(['title' => 'Complete your registration'])"
+    :attributes="$attributes->whereDoesntStartWith(['identifier:', 'submit:', 'error:'])"
+    title="Complete your registration"
     :$size
     :subtitle="__('Signed in with :provider as :email. We just need a bit more information to finish creating your account.', [
         'provider' => $providerName,
@@ -28,7 +29,8 @@ $providerName = filled($provider) && $provider === strtolower($provider) ? TALLK
     />
 
     <tk:submit
-        :attributes="$attributes->prefixed('submit:')->classes('w-full')->merge(['label' => 'Create account'])"
+        :attributes="$attributes->prefixed('submit:')->classes('w-full')"
+        label="Create account"
         :$size
         variant="accent"
     />

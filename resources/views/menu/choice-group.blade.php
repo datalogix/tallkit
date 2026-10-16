@@ -8,7 +8,8 @@
     'label' => null,
 ])
 <tk:menu.group
-    :attributes="$attributes->withProps(get_defined_vars(), ['label' => null])->whereDoesntStartWith(['item:'])->merge(['data-keep-open' => $keepOpen])"
+    :attributes="$attributes->withProps(get_defined_vars(), ['label' => null])->whereDoesntStartWith(['item:'])"
+    :data-keep-open="$keepOpen"
     :$size
     wire:ignore.self
     x-data="{{ Js::from([

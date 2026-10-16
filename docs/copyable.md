@@ -63,7 +63,7 @@ One icon button per row, each copying its own value. An `aria-label` per row tel
 | `content` | string | `null` | The text to copy. When set, `target` and the field around the button are ignored. |
 | `target` | string | `null` | The id of the element to copy. Without it, or when no element has that id, the button copies the control of the field it sits in (see Behavior notes). |
 
-Also accepts the [element props](shared-props.md#element-props) (`label`, `badge`, `ariaLabel`...). The icons are fixed: `icon` and `iconTrailing` are ignored.
+Also accepts the [element props](shared-props.md#element-props) (`label`, `badge`, `ariaLabel`...). `icon` replaces the clipboard icon and `iconTrailing` the check shown after a copy.
 
 ### Through `tk:input`, `tk:textarea` and `tk:color-picker`
 

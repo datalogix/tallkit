@@ -88,7 +88,8 @@
     </div>
 
     <tk:button
-        :attributes="$attributes->prefixed('view:')->merge(['tooltip' => 'View'])"
+        :attributes="$attributes->prefixed('view:')"
+        tooltip="View"
         :size="TALLKit::adjustSize(size: $size)"
         x-show="file.url"
         variant="none"
@@ -97,7 +98,8 @@
     />
 
     <tk:button
-        :attributes="$attributes->prefixed('retry:')->merge(['tooltip' => 'Retry'])"
+        :attributes="$attributes->prefixed('retry:')"
+        tooltip="Retry"
         :size="TALLKit::adjustSize(size: $size)"
         x-show="canRetry(file)"
         variant="none"
@@ -106,7 +108,8 @@
     />
 
     <tk:button
-        :attributes="$attributes->prefixed('cancel:')->merge(['tooltip' => 'Cancel'])"
+        :attributes="$attributes->prefixed('cancel:')"
+        tooltip="Cancel"
         :size="TALLKit::adjustSize(size: $size)"
         x-show="file.status === 'uploading'"
         variant="none"
@@ -115,7 +118,8 @@
     />
 
     <tk:button
-        :attributes="$attributes->prefixed('remove:')->merge(['tooltip' => 'Remove'])"
+        :attributes="$attributes->prefixed('remove:')"
+        tooltip="Remove"
         :size="TALLKit::adjustSize(size: $size)"
         x-show="file.status !== 'uploading'"
         variant="none"

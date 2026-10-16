@@ -67,13 +67,9 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
                     )
                     ->dataKey('control')
                     ->merge([
-                        'variant' => 'subtle',
-                        'id' => $id,
-                        'aria-describedby' => TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError),
                         ...TALLKit::fieldInvalid($invalid),
                         TALLKit::dataKey('group-target') => true,
                     ])
-                    ->mergeDefined(['aria-label' => ! $label && ! $attributes->has('trigger:tooltip') ? 'Pick color' : null])
                     ->classes(
                         TALLKit::roundedSize(size: $size, mode: 'large'),
                         TALLKit::widthHeight(size: $size, mode: 'large'),
@@ -87,6 +83,10 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
                         },
                     )
                 "
+                variant="subtle"
+                :$id
+                :aria-describedby="TALLKit::fieldDescribedBy(id: $id, description: $description, help: $help, invalid: $invalid, showError: $showError)"
+                :aria-label="! $label && ! $attributes->has('trigger:tooltip') ? 'Pick color' : null"
                 :$preview
                 :$icon
                 :$swatches
@@ -123,8 +123,8 @@ $placeholderText = is_string($placeholder) ? __($placeholder) : match ($format) 
                             ->merge([
                                 TALLKit::dataKey('group-target') => false,
                             ])
-                            ->mergeDefined(['aria-label' => ! $attributes->has('trigger:tooltip') ? 'Pick color' : null])
                         "
+                        :aria-label="! $attributes->has('trigger:tooltip') ? 'Pick color' : null"
                         :disabled="$locked"
                         :icon="false"
                         :$swatches

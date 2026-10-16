@@ -14,7 +14,7 @@ $checked = TALLKit::fieldOldChecked($fieldName, $checked, $value);
     inline
     :$align
     :$name
-    :attributes="$attributes->withFieldProps(get_defined_vars())"
+    :attributes="$attributes->withFieldProps(get_defined_vars())->except('label')"
     :label="$slot->isEmpty() ? $label : $slot"
 >
     <div

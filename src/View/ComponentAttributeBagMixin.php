@@ -28,15 +28,6 @@ class ComponentAttributeBagMixin
         };
     }
 
-    public function mergeDefined()
-    {
-        return function (array|ComponentAttributeBag $defaults, bool $escape = true) {
-            $defaults = $defaults instanceof ComponentAttributeBag ? $defaults->getAttributes() : $defaults;
-
-            return $this->merge(array_filter($defaults, static fn (mixed $value): bool => $value !== null), $escape);
-        };
-    }
-
     public function enabled()
     {
         return fn (string $key): bool => TALLKit::isAttributeEnabled($this->get($key));

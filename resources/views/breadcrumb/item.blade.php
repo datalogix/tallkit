@@ -24,10 +24,9 @@ $elementAttributes = $attributes->withElementProps(get_defined_vars())
     @else
         <tk:element
             :$label
-            :attributes="$elementAttributes
-                ->merge(['current' => $current, 'exact' => true])
-                ->classes('min-w-0')
-            "
+            :attributes="$elementAttributes->classes('min-w-0')"
+            :$current
+            exact
             content:class="truncate"
             :icon:size="TALLKit::adjustSize(size: $size)"
         >{{ $slot }}</tk:element>

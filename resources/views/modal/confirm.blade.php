@@ -13,8 +13,8 @@
 ])
 <tk:modal
     :attributes="$attributes->withProps(get_defined_vars(), ['description' => null, 'prepend' => null, 'append' => null])->whereDoesntStartWith(['actions:', 'cancel:', 'confirm:'])
-        ->classes('[:where(&)]:max-w-sm')
-        ->merge(['role' => 'alertdialog'])"
+        ->classes('[:where(&)]:max-w-sm')"
+    role="alertdialog"
     :$size
     :title="$title ?? match ($variant) {
         default => 'Are you sure?',
@@ -36,7 +36,8 @@
             {{ $actions }}
         @else
             <tk:modal.close
-                :attributes="$attributes->prefixed('cancel:')->merge(['label' => 'Cancel'])"
+                :attributes="$attributes->prefixed('cancel:')"
+                label="Cancel"
                 :$size
                 :action="$cancel"
                 autofocus
@@ -45,9 +46,8 @@
             <tk:button
                 :attributes="$attributes->prefixed('confirm:')
                     ->dataKey($autoClose === false ? null : 'modal-auto-close')
-                    ->classes('ms-auto')
-                    ->merge(['label' => 'Confirm'])
-                "
+                    ->classes('ms-auto')"
+                label="Confirm"
                 :$size
                 :action="$confirm"
                 x-on:click="$dispatch('confirmed')"

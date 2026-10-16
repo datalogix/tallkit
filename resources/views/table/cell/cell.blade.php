@@ -29,7 +29,7 @@ $columnAttributes = TALLKit::tableColumnAttributes(
         ',
         TALLKit::textNeutral(prefix: '[:where(&)]:'),
     ])
-    ->mergeDefined($columnAttributes, escape: false)
+    ->merge($columnAttributes->getAttributes(), escape: false)
 }}>
     <div {{ $attributes->prefixed('container:')->classes(
         'flex items-center gap-2',

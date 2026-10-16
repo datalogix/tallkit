@@ -4,7 +4,7 @@
 ])
 <tk:field.group.side
     side="suffix"
-    :attributes="$attributes->withElementProps(get_defined_vars())"
+    :attributes="$attributes->withElementProps(get_defined_vars())->except('side')"
     :$size
 >
     {{ $slot }}

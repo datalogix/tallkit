@@ -17,7 +17,8 @@
             {{ $empty }}
         @else
             <tk:text
-                :attributes="$attributes->prefixed('empty:')->merge(['label' => 'Nothing to show'])"
+                :attributes="$attributes->prefixed('empty:')"
+                label="Nothing to show"
                 variant="subtle"
             />
         @endisset

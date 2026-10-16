@@ -39,7 +39,8 @@
                     {{ $header }}
                 @else
                     <tk:nav
-                        :attributes="$attributes->prefixed('menu:')->merge(['label' => 'Main menu'])"
+                        :attributes="$attributes->prefixed('menu:')"
+                        label="Main menu"
                         :items="$menu"
                     >
                         {{ $nav ?? '' }}
@@ -67,7 +68,8 @@
         @if (has_content($header ?? null) && (has_content($nav ?? null) || filled($menu)))
             <div class="hidden lg:block">
                 <tk:nav
-                    :attributes="$attributes->prefixed('menu:')->merge(['label' => 'Main menu'])"
+                    :attributes="$attributes->prefixed('menu:')"
+                    label="Main menu"
                     :items="$menu"
                     indicator="line-bottom"
                 >
@@ -96,7 +98,8 @@
         {{ $header ?? '' }}
 
         <tk:nav
-            :attributes="$attributes->prefixed('sidebar-menu:')->merge(['label' => 'Main menu'])"
+            :attributes="$attributes->prefixed('sidebar-menu:')"
+            label="Main menu"
             :items="$menu"
             :indicator="false"
             list

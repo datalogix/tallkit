@@ -1,5 +1,5 @@
 <tk:table.column
-    :attributes="$attributes->whereDoesntStartWith(['checkbox:'])->classes('p-2! w-8')"
+    :attributes="$attributes->whereDoesntStartWith(['checkbox:'])->except(['sortable', 'align'])->classes('p-2! w-8')"
     :sortable="false"
     align="center"
 >
@@ -7,7 +7,8 @@
         {{ $slot }}
     @else
         <tk:checkbox
-            :attributes="$attributes->prefixed('checkbox:')->merge(['aria-label' => __('Select all rows')])"
+            :attributes="$attributes->prefixed('checkbox:')"
+            :aria-label="__('Select all rows')"
             x-model="selectAllChecked"
             x-on:change="toggleAll"
             :label="false"

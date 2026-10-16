@@ -42,7 +42,7 @@ $tag = $as ?? ($for ? 'label' : 'span');
         x-data="label"
         {{
             $attributes->prefixed('container:')
-                ->mergeDefined([
+                ->merge([
                     'id' => $for ? $for.'-label' : null,
                     'for' => $for && $tag === 'label' ? $for : null,
                 ])

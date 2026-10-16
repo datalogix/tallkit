@@ -71,7 +71,9 @@ $button = $attributes->withElementProps(get_defined_vars(), ['tooltip' => null])
 
         <tk:button
             x-show="files.length > 0"
-            :attributes="$attributes->prefixed('edit:')->merge(['icon' => 'pencil', 'tooltip' => 'Change photo'])->classes('absolute inset-0 size-full! p-0! shadow')"
+            :attributes="$attributes->prefixed('edit:')->classes('absolute inset-0 size-full! p-0! shadow')"
+            icon="pencil"
+            tooltip="Change photo"
             :size="TALLKit::adjustSize(size: $size)"
             variant="filled"
             circle
@@ -98,7 +100,9 @@ $button = $attributes->withElementProps(get_defined_vars(), ['tooltip' => null])
 
         <tk:button
             x-show="files[0]?.status === 'uploading'"
-            :attributes="$attributes->prefixed('cancel:')->merge(['icon' => 'close', 'tooltip' => 'Cancel'])->classes('absolute z-10 shadow top-[14.6%] end-[14.6%] -translate-y-1/2 translate-x-1/2 rtl:-translate-x-1/2', $edgeButton[0])"
+            :attributes="$attributes->prefixed('cancel:')->classes('absolute z-10 shadow top-[14.6%] end-[14.6%] -translate-y-1/2 translate-x-1/2 rtl:-translate-x-1/2', $edgeButton[0])"
+            icon="close"
+            tooltip="Cancel"
             size="xs"
             :icon:class="$edgeButton[1]"
             variant="filled"
@@ -108,7 +112,9 @@ $button = $attributes->withElementProps(get_defined_vars(), ['tooltip' => null])
 
         <tk:button
             x-show="files.length > 0 && files[0].status !== 'uploading'"
-            :attributes="$attributes->prefixed('remove:')->merge(['icon' => 'trash', 'tooltip' => 'Remove photo'])->classes('absolute z-10 shadow top-[14.6%] end-[14.6%] -translate-y-1/2 translate-x-1/2 rtl:-translate-x-1/2', $edgeButton[0])"
+            :attributes="$attributes->prefixed('remove:')->classes('absolute z-10 shadow top-[14.6%] end-[14.6%] -translate-y-1/2 translate-x-1/2 rtl:-translate-x-1/2', $edgeButton[0])"
+            icon="trash"
+            tooltip="Remove photo"
             size="xs"
             :icon:class="$edgeButton[1]"
             variant="filled"

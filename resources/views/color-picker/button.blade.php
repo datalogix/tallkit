@@ -43,7 +43,8 @@ $ariaLabelBinding = has_content($ariaLabel) ?Js::from(__($ariaLabel))." + (shown
 
 <tk:dropdown :attributes="$attributes->prefixed('dropdown:')">
     <tk:dropdown.button
-        :attributes="$attributes->withElementProps(get_defined_vars())->whereDoesntStartWith(['dropdown:', 'popover:', 'swatch:', 'option:', 'footer:', 'custom:', 'dropper:', 'clearable:', 'wire:model', 'x-model'])->except('name')->merge(['icon' => 'palette'])->merge($ariaLabelBinding ? ['x-bind:aria-label' => $ariaLabelBinding] : [])"
+        :attributes="$attributes->withElementProps(get_defined_vars())->whereDoesntStartWith(['dropdown:', 'popover:', 'swatch:', 'option:', 'footer:', 'custom:', 'dropper:', 'clearable:', 'wire:model', 'x-model'])->except('name')->merge($ariaLabelBinding ? ['x-bind:aria-label' => $ariaLabelBinding] : [])"
+        icon="palette"
         :$size
         ::style="{{ $style }}"
         :icon::class="$preview === 'underline' ? null : '{
@@ -112,7 +113,9 @@ $ariaLabelBinding = has_content($ariaLabel) ?Js::from(__($ariaLabel))." + (shown
 
                 @if ($dropper)
                     <tk:button
-                        :attributes="$attributes->prefixed('dropper:')->merge(['tooltip' => 'Pick color from screen', 'variant' => 'none'])"
+                        :attributes="$attributes->prefixed('dropper:')"
+                        tooltip="Pick color from screen"
+                        variant="none"
                         :size="TALLKit::adjustSize(size: $size)"
                         @click="dropColor()"
                         x-show="hasEyeDropper()"

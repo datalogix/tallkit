@@ -9,7 +9,8 @@ $resendUrl ??= route_detect(['two-factor.resend', 'auth.two-factor.resend'], def
 
 @endphp
 <tk:form.section
-    :attributes="$attributes->whereDoesntStartWith(['code:', 'recovery-code:', 'recovery-toggle:', 'submit:', 'resend:'])->merge(['title' => 'Two-factor authentication'])"
+    :attributes="$attributes->whereDoesntStartWith(['code:', 'recovery-code:', 'recovery-toggle:', 'submit:', 'resend:'])"
+    title="Two-factor authentication"
     :$size
     :subtitle="match ($method) {
         'totp' => 'Enter the 6-digit authentication code from your authenticator app or a recovery code.',
@@ -22,7 +23,8 @@ $resendUrl ??= route_detect(['two-factor.resend', 'auth.two-factor.resend'], def
         <div x-data="{ recovery: false }" class="space-y-6">
             <template x-if="! recovery">
                 <tk:otp
-                    :attributes="$attributes->prefixed('code:')->merge(['label' => 'Authentication code'])"
+                    :attributes="$attributes->prefixed('code:')"
+                    label="Authentication code"
                     :$size
                     name="code"
                 />
@@ -30,7 +32,8 @@ $resendUrl ??= route_detect(['two-factor.resend', 'auth.two-factor.resend'], def
 
             <template x-if="recovery">
                 <tk:input
-                    :attributes="$attributes->prefixed('recovery-code:')->merge(['label' => 'Recovery code'])"
+                    :attributes="$attributes->prefixed('recovery-code:')"
+                    label="Recovery code"
                     :$size
                     name="recovery_code"
                     maxlength="64"
@@ -51,7 +54,8 @@ $resendUrl ??= route_detect(['two-factor.resend', 'auth.two-factor.resend'], def
         </div>
     @else
         <tk:input
-            :attributes="$attributes->prefixed('code:')->merge(['label' => 'Authentication or recovery code'])"
+            :attributes="$attributes->prefixed('code:')"
+            label="Authentication or recovery code"
             :$size
             name="code"
             maxlength="64"
@@ -62,7 +66,8 @@ $resendUrl ??= route_detect(['two-factor.resend', 'auth.two-factor.resend'], def
     {{ $slot }}
 
     <tk:submit
-        :attributes="$attributes->prefixed('submit:')->classes('w-full')->merge(['label' => 'Verify code'])"
+        :attributes="$attributes->prefixed('submit:')->classes('w-full')"
+        label="Verify code"
         :$size
         variant="accent"
     />
@@ -70,19 +75,19 @@ $resendUrl ??= route_detect(['two-factor.resend', 'auth.two-factor.resend'], def
     @if (in_array($method, ['email', 'sms'], true))
         @if (in_livewire())
             <tk:button
-                :attributes="$attributes->prefixed('resend:')->merge(['label' => 'Resend code'])"
+                :attributes="$attributes->prefixed('resend:')->except('type')"
+                label="Resend code"
                 :$size
                 action="resend"
             />
         @else
             <tk:button
-                :attributes="$attributes->prefixed('resend:')->merge(array_filter([
-                    'formaction' => $resendUrl,
-                    'formnovalidate' => true,
-                    'name' => $resendUrl ? null : 'resend',
-                    'value' => $resendUrl ? null : '1',
-                ]))
-                    ->merge(['label' => 'Resend code'])"
+                :attributes="$attributes->prefixed('resend:')"
+                :formaction="$resendUrl"
+                :name="$resendUrl ? null : 'resend'"
+                :value="$resendUrl ? null : '1'"
+                formnovalidate
+                label="Resend code"
                 :$size
                 type="submit"
             />

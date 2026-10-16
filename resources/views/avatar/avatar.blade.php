@@ -85,7 +85,8 @@ $avatarName = $alt ?? $name ?? string_value($tooltip) ?? $email ?? $username;
         </span>
     @else
         <tk:icon
-            :attributes="$attributes->prefixed('icon:')->classes('shrink-0 opacity-75')->merge(['hidden' => (bool) $src])"
+            :attributes="$attributes->prefixed('icon:')->classes('shrink-0 opacity-75')"
+            :hidden="(bool) $src"
             :icon="string_value($icon, 'user')"
             :$size
         />

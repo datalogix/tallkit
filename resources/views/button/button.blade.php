@@ -234,7 +234,8 @@ if ($loading && $type !== 'submit' && ! $isJsMethod) {
                 }}
             >
                 <tk:loading
-                    :attributes="$attributes->prefixed('loading:')->when(is_string($loading), fn ($attrs, $value) => $attrs->merge(['variant' => $value]))"
+                    :attributes="$attributes->prefixed('loading:')"
+                    :variant="is_string($loading) ? $loading : null"
                     :size="TALLKit::adjustSize(size: $size)"
                 />
             </div>

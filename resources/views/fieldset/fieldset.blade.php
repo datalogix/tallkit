@@ -26,9 +26,11 @@ $descriptionId = "{$id}-description";
                 [&>[data-tallkit-legend]+[data-tallkit-text]]:mb-4
             '
         )
-        ->merge(['id' => $id])
         ->except('aria-describedby')
-        ->merge(['aria-describedby' => collect([$attributes->get('aria-describedby'), has_content($description) ? $descriptionId : null])->filter()->implode(' ') ?: null])
+        ->merge([
+            'id' => $id,
+            'aria-describedby' => collect([$attributes->get('aria-describedby'), has_content($description) ? $descriptionId : null])->filter()->implode(' ') ?: null,
+        ])
 }}>
     @if (has_content($label, $description))
         <tk:legend

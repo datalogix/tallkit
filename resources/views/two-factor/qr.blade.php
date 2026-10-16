@@ -16,9 +16,9 @@
         @foreach (['secret' => [$secret, 'Use this secret in your authenticator app:', 'Copy secret'], 'uri' => [$uri, 'OTPAuth URI (for QR generation):', 'Copy URI']] as $part => [$value, $label, $copy])
             @if ($value)
                 <div class="space-y-2">
-                    <tk:text :attributes="$attributes->prefixed($part.':label:')->merge(['label' => $label])" />
+                    <tk:text :attributes="$attributes->prefixed($part.':label:')" :label="$label" />
                     <pre {{ $attributes->prefixed($part.':value:')->classes('whitespace-pre-wrap break-all border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 p-4 rounded-lg') }}>{{ $value }}</pre>
-                    <tk:copyable :attributes="$attributes->prefixed($part.':copy:')->merge(['label' => $copy])" :content="$value" />
+                    <tk:copyable :attributes="$attributes->prefixed($part.':copy:')" :label="$copy" :content="$value" />
                 </div>
             @endif
         @endforeach

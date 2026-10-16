@@ -5,8 +5,7 @@
 ])
 <tk:button
     :icon="$slot->isEmpty() ? $icon ?? 'close' : null"
-    :attributes="$attributes->withElementProps(get_defined_vars())
-        ->merge(['variant' => 'none', 'tooltip' => 'Close'])
+    :attributes="$attributes->withElementProps(get_defined_vars())->except('icon')
         ->dataKey('dismissible')
         ->dataKey('alert-close')
         ->classes(
@@ -15,6 +14,8 @@
             'text-(--tk-on-soft) hover:bg-(--tk-soft-hover) focus-visible:ring-(--tk-ring)',
         )
     "
+    variant="none"
+    tooltip="Close"
 >
     {{ $slot }}
 </tk:button>

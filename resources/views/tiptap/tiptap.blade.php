@@ -196,8 +196,8 @@ $toolbarSections = $toolbarSections->map(fn ($section, $index) => [
                                             $attributes->prefixed('toolbar-button-size:'),
                                         )
                                         ->classes('h-auto w-auto rounded-md px-2 py-1.5 text-xs')
-                                        ->merge(['label' => 'Size'])
                                     "
+                                    label="Size"
                                     variant="subtle"
                                 />
 
@@ -219,8 +219,8 @@ $toolbarSections = $toolbarSections->map(fn ($section, $index) => [
                                                 $attributes->prefixed('toolbar-size-menu-item:'),
                                                 $attributes->prefixed('toolbar-size-menu-item-reset:'),
                                             )
-                                                ->merge(['label' => 'Reset'])
                                         "
+                                        label="Reset"
                                         @click="setFontSize('')"
                                     />
                                 </tk:menu>

@@ -3,7 +3,9 @@
     'currentEmail' => null,
 ])
 <tk:form.section
-    :attributes="$attributes->whereDoesntStartWith(['current:', 'email:', 'submit:'])->merge(['title' => 'Change e-mail', 'subtitle' => 'We will send a link to the new address. Your e-mail changes once you open it.'])"
+    :attributes="$attributes->whereDoesntStartWith(['current:', 'email:', 'submit:'])"
+    title="Change e-mail"
+    subtitle="We will send a link to the new address. Your e-mail changes once you open it."
     :$size
 >
     {{ $slot }}
@@ -17,7 +19,9 @@
     @endif
 
     <tk:input
-        :attributes="$attributes->prefixed('email:')->merge(['placeholder' => true])->merge(['label' => 'New e-mail'])"
+        :attributes="$attributes->prefixed('email:')->except('type')"
+        placeholder
+        label="New e-mail"
         :$size
         type="email"
         name="email"
@@ -26,7 +30,8 @@
     />
 
     <tk:submit
-        :attributes="$attributes->prefixed('submit:')->classes('w-full')->merge(['label' => 'Send link'])"
+        :attributes="$attributes->prefixed('submit:')->classes('w-full')"
+        label="Send link"
         :$size
         variant="accent"
     />

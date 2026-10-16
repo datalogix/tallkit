@@ -44,10 +44,9 @@ $listId = $attributes->get('items:id') ?? TALLKit::stableId('listbox');
 
     <tk:listbox.items
         :attributes="$attributes->prefixed('items:', with: ['item:'])
-            ->when($hasSearchable, fn ($attrs) => $attrs->classes(TALLKit::generateClassBySize(size: $size, name: 'max-h', values: ['48', '56', '64', '72', '80', '88', '96'])))
-            ->mergeDefined(['aria-label' => $label ? __($label) : null])
-            ->merge(['id' => $listId])
-        "
+            ->when($hasSearchable, fn ($attrs) => $attrs->classes(TALLKit::generateClassBySize(size: $size, name: 'max-h', values: ['48', '56', '64', '72', '80', '88', '96'])))"
+        :aria-label="$label ? __($label) : null"
+        :id="$listId"
         :$items
         :$size
         :$multiple

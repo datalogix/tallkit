@@ -4,7 +4,7 @@
     'size' => null,
     'identifier' => null,
     'oauth' => null,
-    'magicLinkUrl' => null,
+    'emailLoginUrl' => null,
 ])
 @php
 
@@ -21,7 +21,9 @@ $signUpUrl ??= route_detect([
 
 @endphp
 <tk:form.section
-    :attributes="$attributes->whereDoesntStartWith(['identifier:', 'password:', 'forgot-password:', 'remember:', 'submit:', 'magic-link:', 'oauth:', 'sign-up:'])->merge(['title' => 'Sign in to your account', 'subtitle' => 'Enter your access details below to sign in:'])"
+    :attributes="$attributes->whereDoesntStartWith(['identifier:', 'password:', 'forgot-password:', 'remember:', 'submit:', 'email-login:', 'oauth:', 'sign-up:'])"
+    title="Sign in to your account"
+    subtitle="Enter your access details below to sign in:"
     :$size
 >
     {{ $slot }}
@@ -33,7 +35,8 @@ $signUpUrl ??= route_detect([
     />
 
     <tk:password
-        :attributes="$attributes->prefixed('password:')->merge(['placeholder' => true])"
+        :attributes="$attributes->prefixed('password:')"
+        placeholder
         :$size
         name="password"
         required
@@ -41,7 +44,8 @@ $signUpUrl ??= route_detect([
         @if ($forgotPasswordUrl)
             <x-slot:labelAppend>
                 <tk:link
-                    :attributes="$attributes->prefixed('forgot-password:')->merge(['label' => 'Forgot your password?'])"
+                    :attributes="$attributes->prefixed('forgot-password:')"
+                    label="Forgot your password?"
                     :href="$forgotPasswordUrl"
                     :$size
                 />
@@ -50,22 +54,25 @@ $signUpUrl ??= route_detect([
     </tk:password>
 
     <tk:checkbox
-        :attributes="$attributes->prefixed('remember:')->merge(['label' => 'Remember me'])"
+        :attributes="$attributes->prefixed('remember:')"
+        label="Remember me"
         :$size
         name="remember"
     />
 
     <tk:submit
-        :attributes="$attributes->prefixed('submit:')->classes('w-full')->merge(['label' => 'Sign in'])"
+        :attributes="$attributes->prefixed('submit:')->classes('w-full')"
+        label="Sign in"
         :$size
         variant="accent"
     />
 
-    @if ($magicLinkUrl)
+    @if ($emailLoginUrl)
         <tk:button
-            :attributes="$attributes->prefixed('magic-link:')->classes('w-full')->merge(['label' => 'E-mail me a sign-in link'])"
+            :attributes="$attributes->prefixed('email-login:')->classes('w-full')"
+            label="E-mail me a sign-in link"
             :$size
-            :href="$magicLinkUrl"
+            :href="$emailLoginUrl"
             variant="ghost"
         />
     @endif
@@ -86,12 +93,14 @@ $signUpUrl ??= route_detect([
             }}
         >
             <tk:text
-                :attributes="$attributes->prefixed('sign-up:label:')->merge(['label' => 'Don\'t have an account?'])"
+                :attributes="$attributes->prefixed('sign-up:label:')"
+                label="Don't have an account?"
                 :$size
             />
 
             <tk:link
-                :attributes="$attributes->prefixed('sign-up:link:')->merge(['label' => 'Sign up'])"
+                :attributes="$attributes->prefixed('sign-up:link:')"
+                label="Sign up"
                 :href="$signUpUrl"
                 :$size
             />

@@ -16,14 +16,14 @@
                 'pt-0!',
             )
             ->when($region !== false, fn ($attrs) => $attrs->merge(['role' => 'region']))
-            ->merge(['x-show' => 'opened'])
-            ->merge(
-                match (true) {
+            ->merge([
+                'x-show' => 'opened',
+                ...match (true) {
                     $collapse === false => [],
                     is_string($collapse) => ['x-collapse.'.$collapse => ''],
                     default => ['x-collapse' => ''],
-                }
-            )
+                },
+            ])
     }}
 >
     {{ $slot }}

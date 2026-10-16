@@ -5,8 +5,7 @@
 ])
 <tk:button
     :icon="$slot->isEmpty() ? $icon ?? 'close' : null"
-    :attributes="$attributes->withElementProps(get_defined_vars())
-        ->merge(['variant' => 'none', 'tooltip' => 'Close'])
+    :attributes="$attributes->withElementProps(get_defined_vars())->except('icon')
         ->dataKey('dismissible')
         ->dataKey('badge-close')
         ->classes(
@@ -18,6 +17,8 @@
         ',
         TALLKit::iconSize(size: $size),
     )"
+    variant="none"
+    tooltip="Close"
 >
     {{ $slot }}
 </tk:button>

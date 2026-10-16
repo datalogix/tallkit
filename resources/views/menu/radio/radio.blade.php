@@ -6,7 +6,7 @@
 ])
 <tk:menu.choice
     type="radio"
-    :attributes="$attributes->withElementProps(get_defined_vars(), ['checked' => null, 'iconOn' => null, 'iconOff' => null, 'keepOpen' => null])"
+    :attributes="$attributes->withElementProps(get_defined_vars(), ['checked' => null, 'iconOn' => null, 'iconOff' => null, 'keepOpen' => null])->except('type')"
 >
     {{ $slot }}
 </tk:menu.choice>

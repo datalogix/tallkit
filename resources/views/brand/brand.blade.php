@@ -25,7 +25,7 @@ if ($href && ! has_content($name) && (TALLKit::isSlot(slot: $logo) || (! $logo &
     kind="brand"
     as="div"
     :$href
-    :attributes="$attributes->withElementProps(get_defined_vars())->whereDoesntStartWith(['logo:', 'image:', 'image-dark:', 'name:'])
+    :attributes="$attributes->withElementProps(get_defined_vars())->except(['kind', 'as'])->whereDoesntStartWith(['logo:', 'image:', 'image-dark:', 'name:'])
         ->classes(
             'justify-center',
             TALLKit::paddingBlock(size: $size),
@@ -55,7 +55,7 @@ if ($href && ! has_content($name) && (TALLKit::isSlot(slot: $logo) || (! $logo &
                         {{
                             $attributes->prefixed('image-dark:')
                                 ->classes('hidden dark:block h-full')
-                                ->mergeDefined(['alt' => $alt])
+                                ->merge(['alt' => $alt])
                         }}
                     />
                 @endif
@@ -83,7 +83,7 @@ if ($href && ! has_content($name) && (TALLKit::isSlot(slot: $logo) || (! $logo &
                     {{
                         $attributes->prefixed('image-dark:')
                             ->classes('hidden dark:block h-full')
-                            ->mergeDefined(['alt' => $alt])
+                            ->merge(['alt' => $alt])
                     }}
                 />
             @endif
@@ -94,7 +94,7 @@ if ($href && ! has_content($name) && (TALLKit::isSlot(slot: $logo) || (! $logo &
                     {{
                         $attributes->prefixed('image:')
                             ->classes(['block dark:hidden' => !!$logoDark, 'h-full'])
-                            ->mergeDefined(['alt' => $alt])
+                            ->merge(['alt' => $alt])
                     }}
                 />
             @elseif ($logoDark)
